@@ -445,3 +445,16 @@ pub(crate) fn get_service_module_cache(service_type: &Module) -> Option<String> 
         _ => None,
     }
 }
+
+// Sync constants - directories and services to ignore during sync operations
+pub(crate) const DIRS_TO_IGNORE: &[&str] = &[
+    "node_modules",
+    "assets",
+    "patches",
+    ".git",
+    ".github",
+    ".vscode",
+    "monitoring",
+    "core",
+    "universal-sdk",
+];

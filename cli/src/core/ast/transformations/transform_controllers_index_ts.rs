@@ -71,3 +71,81 @@ pub(crate) fn transform_controllers_index_ts_delete(
         .build(&controllers_index_program)
         .code)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs::{create_dir_all, write};
+    use tempfile::TempDir;
+
+    fn create_test_controllers_index() -> &'static str {
+        r#"export * from './user.controller';
+export * from './role.controller';
+"#
+    }
+
+    fn create_temp_controllers_structure(content: &str) -> TempDir {
+        let temp_dir = TempDir::new().expect("Failed to create temp directory");
+        let temp_path = temp_dir.path();
+
+        create_dir_all(temp_path.join("api/controllers"))
+            .expect("Failed to create api/controllers directory");
+
+        write(temp_path.join("api/controllers/index.ts"), content)
+            .expect("Failed to write index.ts");
+
+        temp_dir
+    }
+
+    #[test]
+    fn test_transform_controllers_index_adds_export() {
+        let content = create_test_controllers_index();
+        let temp_dir = create_temp_controllers_structure(content);
+        let temp_path = temp_dir.path();
+
+        let result = transform_controllers_index_ts("product", temp_path);
+
+        assert!(result.is_ok());
+
+        let transformed = result.unwrap();
+
+        assert!(transformed.contains("export * from \"./product.controller\";"));
+        assert!(transformed.contains("export * from \"./user.controller\";"));
+        assert!(transformed.contains("export * from \"./role.controller\";"));
+    }
+
+    #[test]
+    fn test_transform_controllers_index_kebab_case() {
+        let content = create_test_controllers_index();
+        let temp_dir = create_temp_controllers_structure(content);
+        let temp_path = temp_dir.path();
+
+        let result = transform_controllers_index_ts("order-item", temp_path);
+
+        assert!(result.is_ok());
+
+        let transformed = result.unwrap();
+
+        assert!(transformed.contains("export * from \"./orderItem.controller\";"));
+    }
+
+    #[test]
+    fn test_transform_controllers_index_delete() {
+        let content = r#"export * from './user.controller';
+export * from './product.controller';
+export * from './role.controller';
+"#;
+        let temp_dir = create_temp_controllers_structure(content);
+        let temp_path = temp_dir.path();
+
+        let result = transform_controllers_index_ts_delete("product", temp_path);
+
+        assert!(result.is_ok());
+
+        let transformed = result.unwrap();
+
+        assert!(!transformed.contains("export * from \"./product.controller\";"));
+        assert!(transformed.contains("export * from \"./user.controller\";"));
+        assert!(transformed.contains("export * from \"./role.controller\";"));
+    }
+}

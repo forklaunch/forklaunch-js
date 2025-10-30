@@ -45,3 +45,82 @@ pub(crate) fn transform_seeders_index_ts(router_name: &str, base_path: &Path) ->
         .build(&seeders_index_program)
         .code)
 }
+
+#[cfg(test)]
+mod tests {
+    use std::fs::{create_dir_all, write};
+
+    use tempfile::TempDir;
+
+    use super::*;
+
+    fn create_test_seeders_index() -> &'static str {
+        r#"export { UserRecordSeeder } from './userRecord.seeder';
+export { RoleRecordSeeder } from './roleRecord.seeder';
+"#
+    }
+
+    fn create_temp_seeders_structure(content: &str) -> TempDir {
+        let temp_dir = TempDir::new().expect("Failed to create temp directory");
+        let temp_path = temp_dir.path();
+
+        create_dir_all(temp_path.join("persistence/seeders"))
+            .expect("Failed to create persistence/seeders directory");
+
+        write(temp_path.join("persistence/seeders/index.ts"), content)
+            .expect("Failed to write index.ts");
+
+        temp_dir
+    }
+
+    #[test]
+    fn test_transform_seeders_index_adds_export() {
+        let content = create_test_seeders_index();
+        let temp_dir = create_temp_seeders_structure(content);
+        let temp_path = temp_dir.path();
+
+        let result = transform_seeders_index_ts("product", temp_path);
+
+        assert!(result.is_ok());
+
+        let transformed = result.unwrap();
+
+        assert!(transformed.contains("export { ProductRecordSeeder }"));
+        assert!(transformed.contains("from \"./productRecord.seeder\""));
+
+        assert!(transformed.contains("export { UserRecordSeeder }"));
+        assert!(transformed.contains("export { RoleRecordSeeder }"));
+    }
+
+    #[test]
+    fn test_transform_seeders_index_kebab_case() {
+        let content = create_test_seeders_index();
+        let temp_dir = create_temp_seeders_structure(content);
+        let temp_path = temp_dir.path();
+
+        let result = transform_seeders_index_ts("order-item", temp_path);
+
+        assert!(result.is_ok());
+
+        let transformed = result.unwrap();
+
+        assert!(transformed.contains("export { OrderItemRecordSeeder }"));
+        assert!(transformed.contains("from \"./orderItemRecord.seeder\""));
+    }
+
+    #[test]
+    fn test_transform_seeders_index_empty_file() {
+        let content = "";
+        let temp_dir = create_temp_seeders_structure(content);
+        let temp_path = temp_dir.path();
+
+        let result = transform_seeders_index_ts("category", temp_path);
+
+        assert!(result.is_ok());
+
+        let transformed = result.unwrap();
+
+        assert!(transformed.contains("export { CategoryRecordSeeder }"));
+        assert!(transformed.contains("from \"./categoryRecord.seeder\""));
+    }
+}

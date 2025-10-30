@@ -45,3 +45,84 @@ pub(crate) fn transform_entities_index_ts(router_name: &str, base_path: &Path) -
         .build(&entities_index_program)
         .code)
 }
+
+#[cfg(test)]
+mod tests {
+    use std::fs::{create_dir_all, write};
+
+    use tempfile::TempDir;
+
+    use super::*;
+
+    fn create_test_entities_index() -> &'static str {
+        r#"export { UserRecord } from './userRecord.entity';
+export { RoleRecord } from './roleRecord.entity';
+export { PermissionRecord } from './permissionRecord.entity';
+"#
+    }
+
+    fn create_temp_entities_structure(content: &str) -> TempDir {
+        let temp_dir = TempDir::new().expect("Failed to create temp directory");
+        let temp_path = temp_dir.path();
+
+        create_dir_all(temp_path.join("persistence/entities"))
+            .expect("Failed to create persistence/entities directory");
+
+        write(temp_path.join("persistence/entities/index.ts"), content)
+            .expect("Failed to write index.ts");
+
+        temp_dir
+    }
+
+    #[test]
+    fn test_transform_entities_index_adds_export() {
+        let content = create_test_entities_index();
+        let temp_dir = create_temp_entities_structure(content);
+        let temp_path = temp_dir.path();
+
+        let result = transform_entities_index_ts("organization", temp_path);
+
+        assert!(result.is_ok());
+
+        let transformed = result.unwrap();
+
+        assert!(transformed.contains("export { OrganizationRecord }"));
+        assert!(transformed.contains("from \"./organizationRecord.entity\""));
+
+        assert!(transformed.contains("export { UserRecord }"));
+        assert!(transformed.contains("export { RoleRecord }"));
+        assert!(transformed.contains("export { PermissionRecord }"));
+    }
+
+    #[test]
+    fn test_transform_entities_index_kebab_case_router() {
+        let content = create_test_entities_index();
+        let temp_dir = create_temp_entities_structure(content);
+        let temp_path = temp_dir.path();
+
+        let result = transform_entities_index_ts("order-item", temp_path);
+
+        assert!(result.is_ok());
+
+        let transformed = result.unwrap();
+
+        assert!(transformed.contains("export { OrderItemRecord }"));
+        assert!(transformed.contains("from \"./orderItemRecord.entity\""));
+    }
+
+    #[test]
+    fn test_transform_entities_index_empty_file() {
+        let content = "";
+        let temp_dir = create_temp_entities_structure(content);
+        let temp_path = temp_dir.path();
+
+        let result = transform_entities_index_ts("product", temp_path);
+
+        assert!(result.is_ok());
+
+        let transformed = result.unwrap();
+
+        assert!(transformed.contains("export { ProductRecord }"));
+        assert!(transformed.contains("from \"./productRecord.entity\""));
+    }
+}

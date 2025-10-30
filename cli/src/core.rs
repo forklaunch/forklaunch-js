@@ -26,6 +26,7 @@ pub(crate) mod rendered_template;
 pub(crate) mod string;
 pub(crate) mod symlink_template;
 pub(crate) mod symlinks;
+pub(crate) mod sync;
 pub(crate) mod template;
 pub(crate) mod token;
 pub(crate) mod tsconfig;

@@ -227,27 +227,3 @@ pub(crate) fn remove_project_definition_to_package_json(
     Ok(to_string_pretty(&full_package_json)
         .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?)
 }
-
-pub(crate) fn remove_project_definition_from_package_json(
-    package_json: &mut ApplicationPackageJson,
-    project_name: &str,
-) -> Result<()> {
-    if let Some(workspaces) = package_json.workspaces.as_mut() {
-        if let Some(position) = workspaces.iter().position(|name| name == project_name) {
-            workspaces.remove(position);
-        }
-    }
-    Ok(())
-}
-
-pub(crate) fn add_project_definition_to_package_json_mut(
-    package_json: &mut ApplicationPackageJson,
-    project_name: &str,
-) -> Result<()> {
-    if let Some(workspaces) = package_json.workspaces.as_mut() {
-        if !workspaces.contains(&project_name.to_string()) {
-            workspaces.push(project_name.to_string().clone());
-        }
-    }
-    Ok(())
-}

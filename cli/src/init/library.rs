@@ -191,7 +191,7 @@ fn generate_library_package_json(
         keywords: Some(vec![]),
         license: Some(manifest_data.license.clone()),
         author: Some(manifest_data.author.clone()),
-        types: Some("index.d.ts".to_string()),
+        types: None,
         scripts: Some(ProjectScripts {
             build: Some(PROJECT_BUILD_SCRIPT.to_string()),
             clean: Some(project_clean_script(&manifest_data.runtime.parse()?)),

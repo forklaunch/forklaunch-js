@@ -1,184 +1,224 @@
-use std::{path::Path, 
-    collections::{HashSet, HashMap}};
+use std::io::Write;
 
-use convert_case::{Case, Casing};
-use anyhow::{Context, Result};
-use rustyline::{Editor, history::DefaultHistory};
-use termcolor::{StandardStream};
+use anyhow::{Context, Result, bail};
 use clap::ArgMatches;
+use rustyline::{Editor, history::DefaultHistory};
+use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 use crate::{
-    constants::{
-        Runtime,
-        ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
-        ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
-        ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE,
-    },
+    constants::ERROR_FAILED_TO_PARSE_MANIFEST,
     core::{
-        manifest::{
-            ProjectType, 
-            application::ApplicationManifestData,
-            add_project_definition_to_manifest, 
-            library::LibraryManifestData
+        base_path::{RequiredLocation, find_app_root_path},
+        manifest::{ProjectType, application::ApplicationManifestData},
+        rendered_template::{RenderedTemplatesCache, write_rendered_templates},
+        sync::{
+            artifacts::{
+                ArtifactType, ProjectSyncMetadata, remove_project_from_artifacts,
+                sync_project_to_artifacts,
+            },
+            resolvers::resolve_description,
         },
-        package_json::{add_project_definition_to_package_json},
-        pnpm_workspace::{add_project_definition_to_pnpm_workspace},
     },
-    prompt::{ArrayCompleter, prompt_without_validation, prompt_without_validation_with_answers},
-    sync::{constants::{DIRS_TO_IGNORE,
-        RUNTIME_PROJECTS_TO_IGNORE},
-        utils::validate_addition_to_artifact,
-    },
+    prompt::{ArrayCompleter, prompt_for_confirmation},
 };
 
-pub(crate) fn add_library_to_manifest_with_validation(
-    manifest_data: &mut LibraryManifestData,
-    stdout: &mut StandardStream,
-) -> Result<String> {
-    let forklaunch_manifest_buffer = add_project_definition_to_manifest(
-        ProjectType::Library,
-        manifest_data,
-        None,
-        None,
-        None,
-        None,
-    )
-    .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
-    let library_name = manifest_data.library_name.clone();
-    let new_manifest_projects: HashSet<String> = manifest_data.projects
-        .iter()
-        .map(|project| project.name.clone())
-        .filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str()))
-        .collect();
-    
-    let validation_result = validate_addition_to_artifact(
-        &library_name,
-        &new_manifest_projects,
-        &format!("Successfully added {} to manifest.toml", library_name),
-        &format!("Library {} was not added to manifest.toml", library_name),
-        "sync:library:55",
-        stdout,
-    )?;
-    if validation_result {
-        Ok(forklaunch_manifest_buffer)
-    } else {
-        return Err(anyhow::anyhow!("Failed to add {} to manifest.toml", library_name))
+#[derive(Debug)]
+pub(crate) struct LibrarySyncCommand;
+
+impl LibrarySyncCommand {
+    pub(crate) fn new() -> Self {
+        Self {}
     }
 }
 
-// pub(crate) fn add_library_to_runtime_files_with_validation(
-//     manifest_data: &mut LibraryManifestData,
-//     base_path: &Path,
-//     stdout: &mut StandardStream,
-// ) -> Result<(Option<String>, Option<String>)> {
-//     let runtime = manifest_data.runtime.parse()?;
-
-//     let mut package_json_buffer: Option<String> = None;
-//     let mut pnpm_workspace_buffer: Option<String> = None;
-
-//     match runtime {
-//         Runtime::Bun => {
-//             package_json_buffer = Some(
-//                 add_project_definition_to_package_json(base_path, manifest_data)
-//                     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?,
-//             );
-//             let new_package_json_projects: HashSet<String> = package_json_buffer.iter().cloned().filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str())).collect();
-//             let validation_result = validate_addition_to_artifact(
-//                 &manifest_data.library_name,
-//                 &new_package_json_projects,
-//                 &format!("Successfully added {} to package.json", manifest_data.library_name),
-//                 &format!("Library {} was not added to package.json", manifest_data.library_name),
-//                 "sync:library:86",
-//                 stdout,
-//             )?;
-//             if !validation_result {
-//                 return Err(anyhow::anyhow!("Failed to add {} to package.json", manifest_data.library_name))
-//             }
-//         }
-//         Runtime::Node => {
-//             pnpm_workspace_buffer = Some(
-//                 add_project_definition_to_pnpm_workspace(base_path, manifest_data)
-//                     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?,
-//             );
-//             let new_pnpm_workspace_projects: HashSet<String> = pnpm_workspace_buffer.iter().cloned().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).collect();
-//             let validation_result = validate_addition_to_artifact(
-//                 &manifest_data.library_name,
-//                 &new_pnpm_workspace_projects,
-//                 &format!("Successfully added {} to pnpm-workspace.yaml", manifest_data.library_name),
-//                 &format!("Library {} was not added to pnpm-workspace.yaml", manifest_data.library_name),
-//                 "sync:library:95",
-//                 stdout,
-//             )?;
-//             if !validation_result {
-//                 return Err(anyhow::anyhow!("Failed to add {} to pnpm-workspace.yaml", manifest_data.library_name))
-//             }
-//         }
-//     }
-//     Ok((package_json_buffer, pnpm_workspace_buffer))
-// }
-
-pub(crate) fn sync_library_setup(
+pub(crate) fn sync_library_with_cache(
     library_name: &str,
-    manifest_data: &mut ApplicationManifestData,
-    stdout: &mut StandardStream,
+    app_root_path: &std::path::Path,
+    manifest_data: &ApplicationManifestData,
     matches: &ArgMatches,
-    prompts_map: &HashMap<String, HashMap<String, String>>,
-) -> Result<LibraryManifestData> {
-    let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
+    prompts_map: &std::collections::HashMap<String, std::collections::HashMap<String, String>>,
+    rendered_templates_cache: &mut RenderedTemplatesCache,
+    stdout: &mut StandardStream,
+) -> Result<()> {
+    let modules_path = app_root_path.join(&manifest_data.modules_path);
+    let library_path = modules_path.join(library_name);
 
-    let description = prompt_without_validation_with_answers(
-        &mut line_editor,
+    if !library_path.exists() {
+        if let Some(project) = manifest_data
+            .projects
+            .iter()
+            .find(|p| p.name == library_name)
+        {
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+            writeln!(
+                stdout,
+                "[WARN] Library directory not found, but exists in manifest"
+            )?;
+            stdout.reset()?;
+
+            let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
+            let should_cleanup = prompt_for_confirmation(
+                &mut line_editor,
+                &format!(
+                    "Remove library '{}' from all artifacts? (y/N) ",
+                    library_name
+                ),
+            )?;
+
+            if !should_cleanup {
+                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+                writeln!(stdout, "[INFO] Skipping cleanup")?;
+                stdout.reset()?;
+                bail!("Library directory not found: {}", library_path.display());
+            }
+
+            writeln!(
+                stdout,
+                "[INFO] Removing '{}' from artifacts...",
+                library_name
+            )?;
+
+            remove_project_from_artifacts(
+                rendered_templates_cache,
+                manifest_data,
+                library_name,
+                project.r#type.clone(),
+                &[ArtifactType::Manifest, ArtifactType::Runtime],
+                app_root_path,
+                &modules_path,
+                stdout,
+            )?;
+
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+            writeln!(stdout, "[OK] Removed orphaned library '{}'", library_name)?;
+            stdout.reset()?;
+            return Ok(());
+        } else {
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
+            writeln!(
+                stdout,
+                "[ERROR] Library directory not found: {}",
+                library_path.display()
+            )?;
+            stdout.reset()?;
+            bail!("Library directory not found: {}", library_path.display());
+        }
+    }
+
+    if manifest_data
+        .projects
+        .iter()
+        .any(|p| p.name == library_name)
+    {
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+        writeln!(stdout, "Library '{}' already synced", library_name)?;
+        stdout.reset()?;
+        return Ok(());
+    }
+
+    let description =
+        resolve_description(library_name, &library_path, matches, prompts_map, stdout)?;
+
+    let sync_metadata = ProjectSyncMetadata {
+        project_type: ProjectType::Library,
+        project_name: library_name.to_string(),
+        description,
+        database: None,
+        infrastructure: vec![],
+        worker_type: None,
+    };
+
+    sync_project_to_artifacts(
+        rendered_templates_cache,
+        &sync_metadata,
+        &[
+            ArtifactType::Manifest,
+            ArtifactType::Runtime,
+            ArtifactType::ModulesTsconfig,
+        ],
+        &app_root_path,
+        &modules_path,
         stdout,
-        "description",
-        matches,
-        "library description (optional)",
-        None,
-        library_name,
-        prompts_map,
     )?;
 
-    let manifest_data: LibraryManifestData = LibraryManifestData {
-            // Common fields from ApplicationManifestData
-            id: manifest_data.id.clone(),
-            app_name: manifest_data.app_name.clone(),
-            modules_path: manifest_data.modules_path.clone(),
-            docker_compose_path: manifest_data.docker_compose_path.clone(),
-            camel_case_app_name: manifest_data.camel_case_app_name.clone(),
-            pascal_case_app_name: manifest_data.pascal_case_app_name.clone(),
-            kebab_case_app_name: manifest_data.kebab_case_app_name.clone(),
-            title_case_app_name: manifest_data.title_case_app_name.clone(),
-            app_description: manifest_data.app_description.clone(),
-            author: manifest_data.author.clone(),
-            cli_version: manifest_data.cli_version.clone(),
-            formatter: manifest_data.formatter.clone(),
-            linter: manifest_data.linter.clone(),
-            validator: manifest_data.validator.clone(),
-            runtime: manifest_data.runtime.clone(),
-            test_framework: manifest_data.test_framework.clone(),
-            projects: manifest_data.projects.clone(),
-            http_framework: manifest_data.http_framework.clone(),
-            license: manifest_data.license.clone(),
-            project_peer_topology: manifest_data.project_peer_topology.clone(),
-            is_biome: manifest_data.is_biome,
-            is_eslint: manifest_data.is_eslint,
-            is_oxlint: manifest_data.is_oxlint,
-            is_prettier: manifest_data.is_prettier,
-            is_express: manifest_data.is_express,
-            is_hyper_express: manifest_data.is_hyper_express,
-            is_zod: manifest_data.is_zod,
-            is_typebox: manifest_data.is_typebox,
-            is_bun: manifest_data.is_bun,
-            is_node: manifest_data.is_node,
-            is_vitest: manifest_data.is_vitest,
-            is_jest: manifest_data.is_jest,
+    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+    writeln!(
+        stdout,
+        "[OK] Library '{}' synced successfully",
+        library_name
+    )?;
+    stdout.reset()?;
 
-            // Library-specific fields
-            library_name: library_name.to_string(),
-            camel_case_name: library_name.to_case(Case::Camel),
-            kebab_case_name: library_name.to_case(Case::Kebab),
-            title_case_name: library_name.to_case(Case::Title),
-            description: description.clone(),
+    Ok(())
+}
+
+impl crate::CliCommand for LibrarySyncCommand {
+    fn command(&self) -> clap::Command {
+        use clap::Arg;
+        crate::core::command::command(
+            "library",
+            "Sync a specific library to application artifacts",
+        )
+        .arg(
+            Arg::new("name")
+                .help("The name of the library")
+                .required(true),
+        )
+        .arg(
+            Arg::new("base_path")
+                .short('p')
+                .long("path")
+                .help("The application path"),
+        )
+        .arg(
+            Arg::new("prompts")
+                .short('P')
+                .long("prompts")
+                .help("JSON object with pre-provided answers")
+                .value_name("JSON"),
+        )
+    }
+
+    fn handler(&self, matches: &ArgMatches) -> Result<()> {
+        let library_name = matches.get_one::<String>("name").unwrap();
+
+        let prompts_map: std::collections::HashMap<
+            String,
+            std::collections::HashMap<String, String>,
+        > = if let Some(prompts_json) = matches.get_one::<String>("prompts") {
+            serde_json::from_str(prompts_json).context("Failed to parse prompts JSON")?
+        } else {
+            std::collections::HashMap::new()
         };
 
-    Ok(manifest_data)
+        let (app_root_path, _) = find_app_root_path(matches, RequiredLocation::Application)?;
+
+        let mut stdout = StandardStream::stdout(ColorChoice::Always);
+        let mut rendered_templates_cache = RenderedTemplatesCache::new();
+        let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
+        rendered_templates_cache.get(&manifest_path)?;
+
+        let manifest_template = rendered_templates_cache.get(&manifest_path)?.unwrap();
+        let manifest_data: ApplicationManifestData =
+            toml::from_str(&manifest_template.content).context(ERROR_FAILED_TO_PARSE_MANIFEST)?;
+
+        sync_library_with_cache(
+            library_name,
+            &app_root_path,
+            &manifest_data,
+            matches,
+            &prompts_map,
+            &mut rendered_templates_cache,
+            &mut stdout,
+        )?;
+
+        let rendered_templates: Vec<_> = rendered_templates_cache
+            .drain()
+            .map(|(_, template)| template)
+            .collect();
+
+        write_rendered_templates(&rendered_templates, false, &mut stdout)?;
+
+        Ok(())
+    }
 }
