@@ -34,7 +34,7 @@ impl LibrarySyncCommand {
 pub(crate) fn sync_library_with_cache(
     library_name: &str,
     app_root_path: &std::path::Path,
-    manifest_data: &ApplicationManifestData,
+    manifest_data: &mut ApplicationManifestData,
     matches: &ArgMatches,
     prompts_map: &std::collections::HashMap<String, std::collections::HashMap<String, String>>,
     rendered_templates_cache: &mut RenderedTemplatesCache,
@@ -111,7 +111,7 @@ pub(crate) fn sync_library_with_cache(
         .any(|p| p.name == library_name)
     {
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-        writeln!(stdout, "Library '{}' already synced", library_name)?;
+        writeln!(stdout, "[INFO] Library '{}' already synced", library_name)?;
         stdout.reset()?;
         return Ok(());
     }
@@ -130,6 +130,7 @@ pub(crate) fn sync_library_with_cache(
 
     sync_project_to_artifacts(
         rendered_templates_cache,
+        manifest_data,
         &sync_metadata,
         &[
             ArtifactType::Manifest,
@@ -199,19 +200,31 @@ impl crate::CliCommand for LibrarySyncCommand {
         rendered_templates_cache.get(&manifest_path)?;
 
         let manifest_template = rendered_templates_cache.get(&manifest_path)?.unwrap();
-        let manifest_data: ApplicationManifestData =
+        let mut manifest_data: ApplicationManifestData =
             toml::from_str(&manifest_template.content).context(ERROR_FAILED_TO_PARSE_MANIFEST)?;
 
         sync_library_with_cache(
             library_name,
             &app_root_path,
-            &manifest_data,
+            &mut manifest_data,
             matches,
             &prompts_map,
             &mut rendered_templates_cache,
             &mut stdout,
         )?;
 
+        // Write the updated manifest back to cache
+        rendered_templates_cache.insert(
+            manifest_path.to_string_lossy().to_string(),
+            crate::core::rendered_template::RenderedTemplate {
+                path: manifest_path.clone(),
+                content: toml::to_string_pretty(&manifest_data)
+                    .context("Failed to serialize manifest")?,
+                context: Some("Failed to write manifest".to_string()),
+            },
+        );
+
+        // Collect and write all rendered templates (including manifest)
         let rendered_templates: Vec<_> = rendered_templates_cache
             .drain()
             .map(|(_, template)| template)

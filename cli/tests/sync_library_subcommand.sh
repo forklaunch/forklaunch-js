@@ -5,31 +5,36 @@
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TEST_NAME="sync-library-subcommand"
-OUTPUT_DIR="$SCRIPT_DIR/output/$TEST_NAME"
+if [ -d "output/sync-library-subcommand" ]; then
+    rm -rf output/sync-library-subcommand
+fi
+
+mkdir -p output/sync-library-subcommand
+cd output/sync-library-subcommand
 
 echo "[TEST] sync library subcommand"
 
-# Cleanup
-rm -rf "$OUTPUT_DIR"
-mkdir -p "$OUTPUT_DIR"
-
 # Create test application
-cd "$OUTPUT_DIR"
-forklaunch init application test-app \
-    --database postgresql \
-    --formatter prettier \
-    --linter eslint \
-    --http-framework express \
-    --runtime node \
-    --test-framework vitest > /dev/null 2>&1
+RUST_BACKTRACE=1 cargo run --release init application test-app \
+    -p test-app \
+    -o src/modules \
+    -d postgresql \
+    -f prettier \
+    -l eslint \
+    -v zod \
+    -F express \
+    -r node \
+    -t vitest \
+    -D "Test application" \
+    -A "Test Author" \
+    -L 'MIT'
 
 cd test-app
 
 # Initialize first library
-forklaunch init library shared-types \
-    --path . > /dev/null 2>&1
+RUST_BACKTRACE=1 cargo run --release init library shared-types \
+    -p src/modules \
+    -D "Shared types library"
 
 # Manually create a second library directory
 mkdir -p src/modules/common-utils
@@ -55,7 +60,7 @@ fi
 # Test 2: Sync specific library with prompts
 PROMPTS_JSON='{"common-utils": {"description": "Common utilities library"}}'
 
-if forklaunch sync library common-utils --path . --prompts "$PROMPTS_JSON" > /dev/null 2>&1; then
+if RUST_BACKTRACE=1 cargo run --release sync library common-utils -p . -P "$PROMPTS_JSON" > /dev/null 2>&1; then
     echo "[PASS] Sync library command executed"
 else
     echo "[FAIL] Sync library command failed"
@@ -72,7 +77,7 @@ else
 fi
 
 # Test 4: Verify library added to runtime files (not docker-compose - libraries don't go there)
-if grep -q "common-utils" pnpm-workspace.yaml; then
+if grep -q "common-utils" src/modules/pnpm-workspace.yaml; then
     echo "[PASS] Library added to pnpm-workspace"
 else
     echo "[FAIL] Library NOT in pnpm-workspace"
@@ -89,7 +94,7 @@ else
 fi
 
 # Test 6: Idempotency check
-if forklaunch sync library common-utils --path . --prompts "$PROMPTS_JSON" > /dev/null 2>&1; then
+if RUST_BACKTRACE=1 cargo run --release sync library common-utils -p . -P "$PROMPTS_JSON" > /dev/null 2>&1; then
     echo "[PASS] Sync is idempotent"
 else
     echo "[FAIL] Sync should be idempotent"
@@ -97,7 +102,7 @@ else
 fi
 
 # Test 7: Non-existent library handling
-if ! forklaunch sync library nonexistent --path . 2>&1 | grep -q "not found"; then
+if ! RUST_BACKTRACE=1 cargo run --release sync library nonexistent -p . 2>&1 | grep -q "not found"; then
     echo "[FAIL] Should fail for non-existent library"
     exit 1
 else
@@ -105,7 +110,3 @@ else
 fi
 
 echo "[SUCCESS] All sync library tests passed"
-
-
-
-

@@ -1,25 +1,35 @@
-use std::{fs::read_to_string, path::Path};
+use std::path::Path;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use convert_case::{Case, Casing};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::SourceType;
 use oxc_codegen::{Codegen, CodegenOptions};
 
-use crate::core::ast::{
-    deletions::delete_from_index_ts::delete_from_index_ts_export,
-    injections::inject_into_index_ts::inject_into_index_ts_export,
-    parse_ast_program::parse_ast_program,
+use crate::{
+    constants::error_failed_to_read_file,
+    core::{
+        ast::{
+            deletions::delete_from_index_ts::delete_from_index_ts_export,
+            injections::inject_into_index_ts::inject_into_index_ts_export,
+            parse_ast_program::parse_ast_program,
+        },
+        rendered_template::RenderedTemplatesCache,
+    },
 };
 
 pub(crate) fn transform_controllers_index_ts(
+    rendered_templates_cache: &RenderedTemplatesCache,
     router_name: &str,
     base_path: &Path,
 ) -> Result<String> {
     let allocator = Allocator::default();
     let controllers_index_path = base_path.join("api").join("controllers").join("index.ts");
-    let controllers_index_source_text = read_to_string(&controllers_index_path).unwrap();
-    let controllers_index_source_type = SourceType::from_path(&controllers_index_path).unwrap();
+    let template = rendered_templates_cache
+        .get(&controllers_index_path)?
+        .context(error_failed_to_read_file(&controllers_index_path))?;
+    let controllers_index_source_text = template.content;
+    let controllers_index_source_type = SourceType::from_path(&controllers_index_path)?;
     let router_name_camel_case = router_name.to_case(Case::Camel);
 
     let mut controllers_index_program = parse_ast_program(
@@ -45,13 +55,17 @@ pub(crate) fn transform_controllers_index_ts(
 }
 
 pub(crate) fn transform_controllers_index_ts_delete(
+    rendered_templates_cache: &RenderedTemplatesCache,
     router_name: &str,
     base_path: &Path,
 ) -> Result<String> {
     let allocator = Allocator::default();
     let controllers_index_path = base_path.join("api").join("controllers").join("index.ts");
-    let controllers_index_source_text = read_to_string(&controllers_index_path).unwrap();
-    let controllers_index_source_type = SourceType::from_path(&controllers_index_path).unwrap();
+    let template = rendered_templates_cache
+        .get(&controllers_index_path)?
+        .context(error_failed_to_read_file(&controllers_index_path))?;
+    let controllers_index_source_text = template.content;
+    let controllers_index_source_type = SourceType::from_path(&controllers_index_path)?;
     let router_name_camel_case = router_name.to_case(Case::Camel);
 
     let mut controllers_index_program = parse_ast_program(
@@ -74,9 +88,12 @@ pub(crate) fn transform_controllers_index_ts_delete(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::fs::{create_dir_all, write};
+
     use tempfile::TempDir;
+
+    use super::*;
+    use crate::core::rendered_template::RenderedTemplatesCache;
 
     fn create_test_controllers_index() -> &'static str {
         r#"export * from './user.controller';
@@ -103,7 +120,8 @@ export * from './role.controller';
         let temp_dir = create_temp_controllers_structure(content);
         let temp_path = temp_dir.path();
 
-        let result = transform_controllers_index_ts("product", temp_path);
+        let cache = RenderedTemplatesCache::new();
+        let result = transform_controllers_index_ts(&cache, "product", temp_path);
 
         assert!(result.is_ok());
 
@@ -120,7 +138,8 @@ export * from './role.controller';
         let temp_dir = create_temp_controllers_structure(content);
         let temp_path = temp_dir.path();
 
-        let result = transform_controllers_index_ts("order-item", temp_path);
+        let cache = RenderedTemplatesCache::new();
+        let result = transform_controllers_index_ts(&cache, "order-item", temp_path);
 
         assert!(result.is_ok());
 
@@ -137,8 +156,9 @@ export * from './role.controller';
 "#;
         let temp_dir = create_temp_controllers_structure(content);
         let temp_path = temp_dir.path();
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_controllers_index_ts_delete("product", temp_path);
+        let result = transform_controllers_index_ts_delete(&cache, "product", temp_path);
 
         assert!(result.is_ok());
 

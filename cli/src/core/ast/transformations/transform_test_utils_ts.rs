@@ -1,34 +1,41 @@
-use std::{fs::read_to_string, path::Path};
+use std::path::Path;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::SourceType;
 use oxc_codegen::{Codegen, CodegenOptions};
 
 use crate::{
-    constants::{Database, Infrastructure},
-    core::ast::{
-        deletions::delete_from_test_utils::{
-            delete_database_imports_from_test_utils, delete_database_setup_from_test_utils,
-            delete_redis_imports_from_test_utils, delete_redis_setup_from_test_utils,
+    constants::{Database, Infrastructure, error_failed_to_read_file},
+    core::{
+        ast::{
+            deletions::delete_from_test_utils::{
+                delete_database_imports_from_test_utils, delete_database_setup_from_test_utils,
+                delete_redis_imports_from_test_utils, delete_redis_setup_from_test_utils,
+            },
+            infrastructure::test_utils::{
+                add_database_config_to_test_utils, add_database_imports_to_test_utils,
+                add_kafka_env_vars_to_test_utils, add_redis_config_to_test_utils,
+                add_redis_imports_to_test_utils, add_s3_env_vars_to_test_utils,
+                remove_kafka_env_vars_from_test_utils, remove_s3_env_vars_from_test_utils,
+            },
+            parse_ast_program::parse_ast_program,
         },
-        infrastructure::test_utils::{
-            add_database_config_to_test_utils, add_database_imports_to_test_utils,
-            add_kafka_env_vars_to_test_utils, add_redis_config_to_test_utils,
-            add_redis_imports_to_test_utils, add_s3_env_vars_to_test_utils,
-            remove_kafka_env_vars_from_test_utils, remove_s3_env_vars_from_test_utils,
-        },
-        parse_ast_program::parse_ast_program,
+        rendered_template::RenderedTemplatesCache,
     },
 };
 
 pub(crate) fn transform_test_utils_add_database(
+    rendered_templates_cache: &RenderedTemplatesCache,
     base_path: &Path,
     database: &Database,
 ) -> Result<String> {
     let allocator = Allocator::default();
     let test_utils_path = base_path.join("__test__").join("test-utils.ts");
-    let test_utils_text = read_to_string(&test_utils_path)?;
+    let template = rendered_templates_cache
+        .get(&test_utils_path)?
+        .context(error_failed_to_read_file(&test_utils_path))?;
+    let test_utils_text = template.content;
     let test_utils_type = SourceType::from_path(&test_utils_path)?;
 
     let mut test_utils_program = parse_ast_program(&allocator, &test_utils_text, test_utils_type);
@@ -42,10 +49,16 @@ pub(crate) fn transform_test_utils_add_database(
         .code)
 }
 
-pub(crate) fn transform_test_utils_remove_database(base_path: &Path) -> Result<String> {
+pub(crate) fn transform_test_utils_remove_database(
+    rendered_templates_cache: &RenderedTemplatesCache,
+    base_path: &Path,
+) -> Result<String> {
     let allocator = Allocator::default();
     let test_utils_path = base_path.join("__test__").join("test-utils.ts");
-    let test_utils_text = read_to_string(&test_utils_path)?;
+    let template = rendered_templates_cache
+        .get(&test_utils_path)?
+        .context(error_failed_to_read_file(&test_utils_path))?;
+    let test_utils_text = template.content;
     let test_utils_type = SourceType::from_path(&test_utils_path)?;
 
     let mut test_utils_program = parse_ast_program(&allocator, &test_utils_text, test_utils_type);
@@ -59,10 +72,16 @@ pub(crate) fn transform_test_utils_remove_database(base_path: &Path) -> Result<S
         .code)
 }
 
-pub(crate) fn transform_test_utils_add_redis(base_path: &Path) -> Result<String> {
+pub(crate) fn transform_test_utils_add_redis(
+    rendered_templates_cache: &RenderedTemplatesCache,
+    base_path: &Path,
+) -> Result<String> {
     let allocator = Allocator::default();
     let test_utils_path = base_path.join("__test__").join("test-utils.ts");
-    let test_utils_text = read_to_string(&test_utils_path)?;
+    let template = rendered_templates_cache
+        .get(&test_utils_path)?
+        .context(error_failed_to_read_file(&test_utils_path))?;
+    let test_utils_text = template.content;
     let test_utils_type = SourceType::from_path(&test_utils_path)?;
 
     let mut test_utils_program = parse_ast_program(&allocator, &test_utils_text, test_utils_type);
@@ -76,10 +95,16 @@ pub(crate) fn transform_test_utils_add_redis(base_path: &Path) -> Result<String>
         .code)
 }
 
-pub(crate) fn transform_test_utils_remove_redis(base_path: &Path) -> Result<String> {
+pub(crate) fn transform_test_utils_remove_redis(
+    rendered_templates_cache: &RenderedTemplatesCache,
+    base_path: &Path,
+) -> Result<String> {
     let allocator = Allocator::default();
     let test_utils_path = base_path.join("__test__").join("test-utils.ts");
-    let test_utils_text = read_to_string(&test_utils_path)?;
+    let template = rendered_templates_cache
+        .get(&test_utils_path)?
+        .context(error_failed_to_read_file(&test_utils_path))?;
+    let test_utils_text = template.content;
     let test_utils_type = SourceType::from_path(&test_utils_path)?;
 
     let mut test_utils_program = parse_ast_program(&allocator, &test_utils_text, test_utils_type);
@@ -94,10 +119,16 @@ pub(crate) fn transform_test_utils_remove_redis(base_path: &Path) -> Result<Stri
         .code)
 }
 
-pub(crate) fn transform_test_utils_add_kafka(base_path: &Path) -> Result<String> {
+pub(crate) fn transform_test_utils_add_kafka(
+    rendered_templates_cache: &RenderedTemplatesCache,
+    base_path: &Path,
+) -> Result<String> {
     let allocator = Allocator::default();
     let test_utils_path = base_path.join("__test__").join("test-utils.ts");
-    let test_utils_text = read_to_string(&test_utils_path)?;
+    let template = rendered_templates_cache
+        .get(&test_utils_path)?
+        .context(error_failed_to_read_file(&test_utils_path))?;
+    let test_utils_text = template.content;
     let test_utils_type = SourceType::from_path(&test_utils_path)?;
 
     let mut test_utils_program = parse_ast_program(&allocator, &test_utils_text, test_utils_type);
@@ -110,10 +141,16 @@ pub(crate) fn transform_test_utils_add_kafka(base_path: &Path) -> Result<String>
         .code)
 }
 
-pub(crate) fn transform_test_utils_remove_kafka(base_path: &Path) -> Result<String> {
+pub(crate) fn transform_test_utils_remove_kafka(
+    rendered_templates_cache: &RenderedTemplatesCache,
+    base_path: &Path,
+) -> Result<String> {
     let allocator = Allocator::default();
     let test_utils_path = base_path.join("__test__").join("test-utils.ts");
-    let test_utils_text = read_to_string(&test_utils_path)?;
+    let template = rendered_templates_cache
+        .get(&test_utils_path)?
+        .context(error_failed_to_read_file(&test_utils_path))?;
+    let test_utils_text = template.content;
     let test_utils_type = SourceType::from_path(&test_utils_path)?;
 
     let mut test_utils_program = parse_ast_program(&allocator, &test_utils_text, test_utils_type);
@@ -126,10 +163,16 @@ pub(crate) fn transform_test_utils_remove_kafka(base_path: &Path) -> Result<Stri
         .code)
 }
 
-pub(crate) fn transform_test_utils_add_s3(base_path: &Path) -> Result<String> {
+pub(crate) fn transform_test_utils_add_s3(
+    rendered_templates_cache: &RenderedTemplatesCache,
+    base_path: &Path,
+) -> Result<String> {
     let allocator = Allocator::default();
     let test_utils_path = base_path.join("__test__").join("test-utils.ts");
-    let test_utils_text = read_to_string(&test_utils_path)?;
+    let template = rendered_templates_cache
+        .get(&test_utils_path)?
+        .context(error_failed_to_read_file(&test_utils_path))?;
+    let test_utils_text = template.content;
     let test_utils_type = SourceType::from_path(&test_utils_path)?;
 
     let mut test_utils_program = parse_ast_program(&allocator, &test_utils_text, test_utils_type);
@@ -142,10 +185,16 @@ pub(crate) fn transform_test_utils_add_s3(base_path: &Path) -> Result<String> {
         .code)
 }
 
-pub(crate) fn transform_test_utils_remove_s3(base_path: &Path) -> Result<String> {
+pub(crate) fn transform_test_utils_remove_s3(
+    rendered_templates_cache: &RenderedTemplatesCache,
+    base_path: &Path,
+) -> Result<String> {
     let allocator = Allocator::default();
     let test_utils_path = base_path.join("__test__").join("test-utils.ts");
-    let test_utils_text = read_to_string(&test_utils_path)?;
+    let template = rendered_templates_cache
+        .get(&test_utils_path)?
+        .context(error_failed_to_read_file(&test_utils_path))?;
+    let test_utils_text = template.content;
     let test_utils_type = SourceType::from_path(&test_utils_path)?;
 
     let mut test_utils_program = parse_ast_program(&allocator, &test_utils_text, test_utils_type);
@@ -159,33 +208,43 @@ pub(crate) fn transform_test_utils_remove_s3(base_path: &Path) -> Result<String>
 }
 
 pub(crate) fn transform_test_utils_add_infrastructure(
+    rendered_templates_cache: &RenderedTemplatesCache,
     base_path: &Path,
     infrastructure: &Infrastructure,
 ) -> Result<String> {
     match infrastructure {
-        Infrastructure::Redis => transform_test_utils_add_redis(base_path),
-        Infrastructure::S3 => transform_test_utils_add_s3(base_path),
+        Infrastructure::Redis => {
+            transform_test_utils_add_redis(rendered_templates_cache, base_path)
+        }
+        Infrastructure::S3 => transform_test_utils_add_s3(rendered_templates_cache, base_path),
     }
 }
 
 pub(crate) fn transform_test_utils_remove_infrastructure(
+    rendered_templates_cache: &RenderedTemplatesCache,
     base_path: &Path,
     infrastructure: &Infrastructure,
 ) -> Result<String> {
     match infrastructure {
-        Infrastructure::Redis => transform_test_utils_remove_redis(base_path),
-        Infrastructure::S3 => transform_test_utils_remove_s3(base_path),
+        Infrastructure::Redis => {
+            transform_test_utils_remove_redis(rendered_templates_cache, base_path)
+        }
+        Infrastructure::S3 => transform_test_utils_remove_s3(rendered_templates_cache, base_path),
     }
 }
 
 pub(crate) fn transform_test_utils_add_router(
+    rendered_templates_cache: &RenderedTemplatesCache,
     base_path: &Path,
     router_name_camel: &str,
     router_name_pascal: &str,
 ) -> Result<String> {
     let allocator = Allocator::default();
     let test_utils_path = base_path.join("__test__").join("test-utils.ts");
-    let test_utils_text = read_to_string(&test_utils_path)?;
+    let template = rendered_templates_cache
+        .get(&test_utils_path)?
+        .context(error_failed_to_read_file(&test_utils_path))?;
+    let test_utils_text = template.content;
     let test_utils_type = SourceType::from_path(&test_utils_path)?;
 
     let mut test_utils_program = parse_ast_program(&allocator, &test_utils_text, test_utils_type);
@@ -265,13 +324,17 @@ fn add_router_entity_to_setup_test_data<'a>(
 }
 
 pub(crate) fn transform_test_utils_remove_router(
+    rendered_templates_cache: &RenderedTemplatesCache,
     base_path: &Path,
     router_name_camel: &str,
     router_name_pascal: &str,
 ) -> Result<String> {
     let allocator = Allocator::default();
     let test_utils_path = base_path.join("__test__").join("test-utils.ts");
-    let test_utils_text = read_to_string(&test_utils_path)?;
+    let template = rendered_templates_cache
+        .get(&test_utils_path)?
+        .context(error_failed_to_read_file(&test_utils_path))?;
+    let test_utils_text = template.content;
     let test_utils_type = SourceType::from_path(&test_utils_path)?;
 
     let mut test_utils_program = parse_ast_program(&allocator, &test_utils_text, test_utils_type);
@@ -441,7 +504,10 @@ mod tests {
         transform_test_utils_remove_kafka, transform_test_utils_remove_redis,
         transform_test_utils_remove_router, transform_test_utils_remove_s3,
     };
-    use crate::constants::{Database, Infrastructure};
+    use crate::{
+        constants::{Database, Infrastructure},
+        core::rendered_template::RenderedTemplatesCache,
+    };
 
     fn create_test_utils_base() -> String {
         r#"import {
@@ -500,8 +566,9 @@ export const mockTestData = {
     #[test]
     fn test_add_database_imports() {
         let (_temp_dir, base_path) = setup_test_env();
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_test_utils_add_database(&base_path, &Database::PostgreSQL);
+        let result = transform_test_utils_add_database(&cache, &base_path, &Database::PostgreSQL);
         assert!(result.is_ok());
 
         let content = result.unwrap();
@@ -514,8 +581,9 @@ export const mockTestData = {
     #[test]
     fn test_add_database_config() {
         let (_temp_dir, base_path) = setup_test_env();
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_test_utils_add_database(&base_path, &Database::PostgreSQL);
+        let result = transform_test_utils_add_database(&cache, &base_path, &Database::PostgreSQL);
         assert!(result.is_ok());
 
         let content = result.unwrap();
@@ -530,8 +598,9 @@ export const mockTestData = {
     #[test]
     fn test_remove_database() {
         let (_temp_dir, base_path) = setup_test_env();
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_test_utils_add_database(&base_path, &Database::PostgreSQL);
+        let result = transform_test_utils_add_database(&cache, &base_path, &Database::PostgreSQL);
         assert!(result.is_ok());
         write(
             base_path.join("__test__").join("test-utils.ts"),
@@ -539,7 +608,8 @@ export const mockTestData = {
         )
         .unwrap();
 
-        let result = transform_test_utils_remove_database(&base_path);
+        let cache = RenderedTemplatesCache::new();
+        let result = transform_test_utils_remove_database(&cache, &base_path);
         assert!(result.is_ok());
 
         let content = result.unwrap();
@@ -551,8 +621,9 @@ export const mockTestData = {
     #[test]
     fn test_add_redis() {
         let (_temp_dir, base_path) = setup_test_env();
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_test_utils_add_redis(&base_path);
+        let result = transform_test_utils_add_redis(&cache, &base_path);
         assert!(result.is_ok());
 
         let content = result.unwrap();
@@ -567,8 +638,9 @@ export const mockTestData = {
     #[test]
     fn test_remove_redis() {
         let (_temp_dir, base_path) = setup_test_env();
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_test_utils_add_redis(&base_path);
+        let result = transform_test_utils_add_redis(&cache, &base_path);
         assert!(result.is_ok());
         write(
             base_path.join("__test__").join("test-utils.ts"),
@@ -576,7 +648,8 @@ export const mockTestData = {
         )
         .unwrap();
 
-        let result = transform_test_utils_remove_redis(&base_path);
+        let cache = RenderedTemplatesCache::new();
+        let result = transform_test_utils_remove_redis(&cache, &base_path);
         assert!(result.is_ok());
 
         let content = result.unwrap();
@@ -588,8 +661,9 @@ export const mockTestData = {
     #[test]
     fn test_add_kafka_env_vars() {
         let (_temp_dir, base_path) = setup_test_env();
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_test_utils_add_kafka(&base_path);
+        let result = transform_test_utils_add_kafka(&cache, &base_path);
         assert!(result.is_ok());
 
         let content = result.unwrap();
@@ -601,8 +675,9 @@ export const mockTestData = {
     #[test]
     fn test_remove_kafka_env_vars() {
         let (_temp_dir, base_path) = setup_test_env();
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_test_utils_add_kafka(&base_path);
+        let result = transform_test_utils_add_kafka(&cache, &base_path);
         assert!(result.is_ok());
         write(
             base_path.join("__test__").join("test-utils.ts"),
@@ -610,7 +685,8 @@ export const mockTestData = {
         )
         .unwrap();
 
-        let result = transform_test_utils_remove_kafka(&base_path);
+        let cache = RenderedTemplatesCache::new();
+        let result = transform_test_utils_remove_kafka(&cache, &base_path);
         assert!(result.is_ok());
 
         let content = result.unwrap();
@@ -620,8 +696,9 @@ export const mockTestData = {
     #[test]
     fn test_add_s3_env_vars() {
         let (_temp_dir, base_path) = setup_test_env();
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_test_utils_add_s3(&base_path);
+        let result = transform_test_utils_add_s3(&cache, &base_path);
         assert!(result.is_ok());
 
         let content = result.unwrap();
@@ -633,8 +710,9 @@ export const mockTestData = {
     #[test]
     fn test_remove_s3_env_vars() {
         let (_temp_dir, base_path) = setup_test_env();
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_test_utils_add_s3(&base_path);
+        let result = transform_test_utils_add_s3(&cache, &base_path);
         assert!(result.is_ok());
         write(
             base_path.join("__test__").join("test-utils.ts"),
@@ -642,7 +720,8 @@ export const mockTestData = {
         )
         .unwrap();
 
-        let result = transform_test_utils_remove_s3(&base_path);
+        let cache = RenderedTemplatesCache::new();
+        let result = transform_test_utils_remove_s3(&cache, &base_path);
         assert!(result.is_ok());
 
         let content = result.unwrap();
@@ -652,8 +731,10 @@ export const mockTestData = {
     #[test]
     fn test_add_infrastructure_redis() {
         let (_temp_dir, base_path) = setup_test_env();
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_test_utils_add_infrastructure(&base_path, &Infrastructure::Redis);
+        let result =
+            transform_test_utils_add_infrastructure(&cache, &base_path, &Infrastructure::Redis);
         assert!(result.is_ok());
 
         let content = result.unwrap();
@@ -665,8 +746,10 @@ export const mockTestData = {
     #[test]
     fn test_add_infrastructure_s3() {
         let (_temp_dir, base_path) = setup_test_env();
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_test_utils_add_infrastructure(&base_path, &Infrastructure::S3);
+        let result =
+            transform_test_utils_add_infrastructure(&cache, &base_path, &Infrastructure::S3);
         assert!(result.is_ok());
 
         let content = result.unwrap();
@@ -677,15 +760,19 @@ export const mockTestData = {
     #[test]
     fn test_remove_infrastructure_redis() {
         let (_temp_dir, base_path) = setup_test_env();
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_test_utils_add_infrastructure(&base_path, &Infrastructure::Redis);
+        let result =
+            transform_test_utils_add_infrastructure(&cache, &base_path, &Infrastructure::Redis);
         write(
             base_path.join("__test__").join("test-utils.ts"),
             &result.unwrap(),
         )
         .unwrap();
 
-        let result = transform_test_utils_remove_infrastructure(&base_path, &Infrastructure::Redis);
+        let cache = RenderedTemplatesCache::new();
+        let result =
+            transform_test_utils_remove_infrastructure(&cache, &base_path, &Infrastructure::Redis);
         assert!(result.is_ok());
 
         let content = result.unwrap();
@@ -696,8 +783,9 @@ export const mockTestData = {
     #[test]
     fn test_multiple_operations() {
         let (_temp_dir, base_path) = setup_test_env();
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_test_utils_add_database(&base_path, &Database::PostgreSQL);
+        let result = transform_test_utils_add_database(&cache, &base_path, &Database::PostgreSQL);
         assert!(result.is_ok());
         write(
             base_path.join("__test__").join("test-utils.ts"),
@@ -705,7 +793,8 @@ export const mockTestData = {
         )
         .unwrap();
 
-        let result = transform_test_utils_add_redis(&base_path);
+        let cache = RenderedTemplatesCache::new();
+        let result = transform_test_utils_add_redis(&cache, &base_path);
         assert!(result.is_ok());
         write(
             base_path.join("__test__").join("test-utils.ts"),
@@ -713,7 +802,8 @@ export const mockTestData = {
         )
         .unwrap();
 
-        let result = transform_test_utils_add_kafka(&base_path);
+        let cache = RenderedTemplatesCache::new();
+        let result = transform_test_utils_add_kafka(&cache, &base_path);
         assert!(result.is_ok());
         write(
             base_path.join("__test__").join("test-utils.ts"),
@@ -721,7 +811,8 @@ export const mockTestData = {
         )
         .unwrap();
 
-        let result = transform_test_utils_add_s3(&base_path);
+        let cache = RenderedTemplatesCache::new();
+        let result = transform_test_utils_add_s3(&cache, &base_path);
         assert!(result.is_ok());
 
         let content = result.unwrap();
@@ -734,13 +825,15 @@ export const mockTestData = {
     #[test]
     fn test_idempotent_add() {
         let (_temp_dir, base_path) = setup_test_env();
+        let cache = RenderedTemplatesCache::new();
 
-        let result1 = transform_test_utils_add_redis(&base_path);
+        let result1 = transform_test_utils_add_redis(&cache, &base_path);
         assert!(result1.is_ok());
         let content1 = result1.unwrap();
         write(base_path.join("__test__").join("test-utils.ts"), &content1).unwrap();
 
-        let result2 = transform_test_utils_add_redis(&base_path);
+        let cache = RenderedTemplatesCache::new();
+        let result2 = transform_test_utils_add_redis(&cache, &base_path);
         assert!(result2.is_ok());
         let content2 = result2.unwrap();
 
@@ -752,23 +845,30 @@ export const mockTestData = {
     #[test]
     fn test_different_database_types() {
         let (_temp_dir, base_path) = setup_test_env();
+        let cache = RenderedTemplatesCache::new();
 
-        let postgres_result = transform_test_utils_add_database(&base_path, &Database::PostgreSQL);
+        let postgres_result =
+            transform_test_utils_add_database(&cache, &base_path, &Database::PostgreSQL);
         assert!(postgres_result.is_ok());
         let content = postgres_result.unwrap();
         assert!(content.contains("postgres") && content.contains("databaseType"));
 
-        let mysql_result = transform_test_utils_add_database(&base_path, &Database::MySQL);
+        let cache = RenderedTemplatesCache::new();
+        let mysql_result = transform_test_utils_add_database(&cache, &base_path, &Database::MySQL);
         assert!(mysql_result.is_ok());
         let content = mysql_result.unwrap();
         assert!(content.contains("mysql") && content.contains("databaseType"));
 
-        let mongodb_result = transform_test_utils_add_database(&base_path, &Database::MongoDB);
+        let cache = RenderedTemplatesCache::new();
+        let mongodb_result =
+            transform_test_utils_add_database(&cache, &base_path, &Database::MongoDB);
         assert!(mongodb_result.is_ok());
         let content = mongodb_result.unwrap();
         assert!(content.contains("mongodb") && content.contains("databaseType"));
 
-        let sqlite_result = transform_test_utils_add_database(&base_path, &Database::SQLite);
+        let cache = RenderedTemplatesCache::new();
+        let sqlite_result =
+            transform_test_utils_add_database(&cache, &base_path, &Database::SQLite);
         assert!(sqlite_result.is_ok());
         let content = sqlite_result.unwrap();
         assert!(content.contains("sqlite") && content.contains("databaseType"));
@@ -841,8 +941,9 @@ export const mockTestData = {
     #[test]
     fn test_add_router_entity_to_setup_test_data() {
         let (_temp_dir, base_path) = setup_test_env_with_database();
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_test_utils_add_router(&base_path, "user", "User");
+        let result = transform_test_utils_add_router(&cache, &base_path, "user", "User");
         assert!(result.is_ok());
 
         let content = result.unwrap();
@@ -870,8 +971,9 @@ export const mockTestData = {
     #[test]
     fn test_add_router_mock_data_export() {
         let (_temp_dir, base_path) = setup_test_env_with_database();
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_test_utils_add_router(&base_path, "product", "Product");
+        let result = transform_test_utils_add_router(&cache, &base_path, "product", "Product");
         assert!(result.is_ok());
 
         let content = result.unwrap();
@@ -890,8 +992,9 @@ export const mockTestData = {
     #[test]
     fn test_transform_test_utils_add_router_full() {
         let (_temp_dir, base_path) = setup_test_env_with_database();
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_test_utils_add_router(&base_path, "order", "Order");
+        let result = transform_test_utils_add_router(&cache, &base_path, "order", "Order");
         assert!(result.is_ok());
 
         let content = result.unwrap();
@@ -921,8 +1024,10 @@ export const mockTestData = {
     #[test]
     fn test_router_with_different_casing() {
         let (_temp_dir, base_path) = setup_test_env_with_database();
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_test_utils_add_router(&base_path, "userProfile", "UserProfile");
+        let result =
+            transform_test_utils_add_router(&cache, &base_path, "userProfile", "UserProfile");
         assert!(result.is_ok());
 
         let content = result.unwrap();
@@ -936,8 +1041,9 @@ export const mockTestData = {
     #[test]
     fn test_router_preserves_existing_content() {
         let (_temp_dir, base_path) = setup_test_env_with_database();
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_test_utils_add_router(&base_path, "category", "Category");
+        let result = transform_test_utils_add_router(&cache, &base_path, "category", "Category");
         assert!(result.is_ok());
 
         let content = result.unwrap();
@@ -957,8 +1063,9 @@ export const mockTestData = {
     #[test]
     fn test_multiple_routers_sequentially() {
         let (_temp_dir, base_path) = setup_test_env_with_database();
+        let cache = RenderedTemplatesCache::new();
 
-        let result1 = transform_test_utils_add_router(&base_path, "post", "Post");
+        let result1 = transform_test_utils_add_router(&cache, &base_path, "post", "Post");
         assert!(result1.is_ok());
         let content1 = result1.unwrap();
         write(base_path.join("__test__").join("test-utils.ts"), &content1).unwrap();
@@ -966,7 +1073,8 @@ export const mockTestData = {
         assert!(content1.contains("PostRecord"));
         assert!(content1.contains("mockPostData"));
 
-        let result2 = transform_test_utils_add_router(&base_path, "comment", "Comment");
+        let cache = RenderedTemplatesCache::new();
+        let result2 = transform_test_utils_add_router(&cache, &base_path, "comment", "Comment");
         assert!(result2.is_ok());
         let content2 = result2.unwrap();
 
@@ -979,8 +1087,9 @@ export const mockTestData = {
     #[test]
     fn test_remove_router_entity_from_setup_test_data() {
         let (_temp_dir, base_path) = setup_test_env_with_database();
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_test_utils_add_router(&base_path, "user", "User");
+        let result = transform_test_utils_add_router(&cache, &base_path, "user", "User");
         assert!(result.is_ok());
         let content_after_add = result.unwrap();
         write(
@@ -992,7 +1101,8 @@ export const mockTestData = {
         assert!(content_after_add.contains("UserRecord"));
         assert!(content_after_add.contains("mockUserData"));
 
-        let result = transform_test_utils_remove_router(&base_path, "user", "User");
+        let cache = RenderedTemplatesCache::new();
+        let result = transform_test_utils_remove_router(&cache, &base_path, "user", "User");
         assert!(result.is_ok());
         let content_after_remove = result.unwrap();
 
@@ -1013,8 +1123,9 @@ export const mockTestData = {
     #[test]
     fn test_remove_router_preserves_other_routers() {
         let (_temp_dir, base_path) = setup_test_env_with_database();
+        let cache = RenderedTemplatesCache::new();
 
-        let result1 = transform_test_utils_add_router(&base_path, "user", "User");
+        let result1 = transform_test_utils_add_router(&cache, &base_path, "user", "User");
         assert!(result1.is_ok());
         write(
             base_path.join("__test__").join("test-utils.ts"),
@@ -1022,7 +1133,8 @@ export const mockTestData = {
         )
         .unwrap();
 
-        let result2 = transform_test_utils_add_router(&base_path, "product", "Product");
+        let cache = RenderedTemplatesCache::new();
+        let result2 = transform_test_utils_add_router(&cache, &base_path, "product", "Product");
         assert!(result2.is_ok());
         let content_with_both = result2.unwrap();
         write(
@@ -1036,7 +1148,8 @@ export const mockTestData = {
         assert!(content_with_both.contains("mockUserData"));
         assert!(content_with_both.contains("mockProductData"));
 
-        let result = transform_test_utils_remove_router(&base_path, "user", "User");
+        let cache = RenderedTemplatesCache::new();
+        let result = transform_test_utils_remove_router(&cache, &base_path, "user", "User");
         assert!(result.is_ok());
         let content_after_remove = result.unwrap();
 
@@ -1050,8 +1163,10 @@ export const mockTestData = {
     #[test]
     fn test_remove_nonexistent_router() {
         let (_temp_dir, base_path) = setup_test_env_with_database();
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_test_utils_remove_router(&base_path, "nonexistent", "Nonexistent");
+        let result =
+            transform_test_utils_remove_router(&cache, &base_path, "nonexistent", "Nonexistent");
         assert!(result.is_ok());
 
         let content = result.unwrap();
@@ -1063,8 +1178,9 @@ export const mockTestData = {
     #[test]
     fn test_add_and_remove_router_cycle() {
         let (_temp_dir, base_path) = setup_test_env_with_database();
+        let cache = RenderedTemplatesCache::new();
 
-        let result_add = transform_test_utils_add_router(&base_path, "order", "Order");
+        let result_add = transform_test_utils_add_router(&cache, &base_path, "order", "Order");
         assert!(result_add.is_ok());
         write(
             base_path.join("__test__").join("test-utils.ts"),
@@ -1072,7 +1188,9 @@ export const mockTestData = {
         )
         .unwrap();
 
-        let result_remove = transform_test_utils_remove_router(&base_path, "order", "Order");
+        let cache = RenderedTemplatesCache::new();
+        let result_remove =
+            transform_test_utils_remove_router(&cache, &base_path, "order", "Order");
         assert!(result_remove.is_ok());
         let final_content = result_remove.unwrap();
 

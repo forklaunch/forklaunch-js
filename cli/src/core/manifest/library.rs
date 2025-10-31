@@ -48,7 +48,10 @@ impl InitializableManifestConfig for LibraryManifestData {
             library_name: library_name.clone(),
             camel_case_name: library_name.clone().to_case(Case::Camel),
             kebab_case_name: library_name.clone().to_case(Case::Kebab),
-            description: project_entry.description.clone(),
+            description: library_metadata
+                .description
+                .clone()
+                .unwrap_or(project_entry.description.clone()),
             ..self.clone()
         }
     }

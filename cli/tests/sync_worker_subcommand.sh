@@ -5,31 +5,38 @@
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TEST_NAME="sync-worker-subcommand"
-OUTPUT_DIR="$SCRIPT_DIR/output/$TEST_NAME"
+if [ -d "output/sync-worker-subcommand" ]; then
+    rm -rf output/sync-worker-subcommand
+fi
+
+mkdir -p output/sync-worker-subcommand
+cd output/sync-worker-subcommand
 
 echo "[TEST] sync worker subcommand"
 
-# Cleanup
-rm -rf "$OUTPUT_DIR"
-mkdir -p "$OUTPUT_DIR"
-
 # Create test application
-cd "$OUTPUT_DIR"
-forklaunch init application test-app \
-    --database postgresql \
-    --formatter prettier \
-    --linter eslint \
-    --http-framework express \
-    --runtime node \
-    --test-framework vitest > /dev/null 2>&1
+RUST_BACKTRACE=1 cargo run --release init application test-app \
+    -p test-app \
+    -o src/modules \
+    -d postgresql \
+    -f prettier \
+    -l eslint \
+    -v zod \
+    -F express \
+    -r node \
+    -t vitest \
+    -D "Test application" \
+    -A "Test Author" \
+    -L 'MIT'
 
 cd test-app
 
 # Initialize first worker
-forklaunch init worker email-sender \
-    --path . > /dev/null 2>&1
+RUST_BACKTRACE=1 cargo run --release init worker email-sender \
+    -t database \
+    -d postgresql \
+    -p src/modules \
+    -D "Email sender worker"
 
 # Manually create a second worker directory
 mkdir -p src/modules/video-processor
@@ -53,9 +60,9 @@ else
 fi
 
 # Test 2: Sync specific worker with prompts
-PROMPTS_JSON='{"video-processor": {"type": "standard", "description": "Video processing worker"}}'
+PROMPTS_JSON='{"video-processor": {"type": "database", "database": "postgresql", "description": "Video processing worker"}}'
 
-if forklaunch sync worker video-processor --path . --prompts "$PROMPTS_JSON" > /dev/null 2>&1; then
+if RUST_BACKTRACE=1 cargo run --release sync worker video-processor -p . -P "$PROMPTS_JSON" > /dev/null 2>&1; then
     echo "[PASS] Sync worker command executed"
 else
     echo "[FAIL] Sync worker command failed"
@@ -81,7 +88,7 @@ else
 fi
 
 # Test 5: Verify worker added to runtime files
-if grep -q "video-processor" pnpm-workspace.yaml; then
+if grep -q "video-processor" src/modules/pnpm-workspace.yaml; then
     echo "[PASS] Worker added to pnpm-workspace"
 else
     echo "[FAIL] Worker NOT in pnpm-workspace"
@@ -90,7 +97,7 @@ else
 fi
 
 # Test 6: Idempotency check
-if forklaunch sync worker video-processor --path . --prompts "$PROMPTS_JSON" > /dev/null 2>&1; then
+if RUST_BACKTRACE=1 cargo run --release sync worker video-processor -p . -P "$PROMPTS_JSON" > /dev/null 2>&1; then
     echo "[PASS] Sync is idempotent"
 else
     echo "[FAIL] Sync should be idempotent"
@@ -98,7 +105,7 @@ else
 fi
 
 # Test 7: Non-existent worker handling
-if ! forklaunch sync worker nonexistent --path . 2>&1 | grep -q "not found"; then
+if ! RUST_BACKTRACE=1 cargo run --release sync worker nonexistent -p . 2>&1 | grep -q "not found"; then
     echo "[FAIL] Should fail for non-existent worker"
     exit 1
 else
@@ -106,7 +113,3 @@ else
 fi
 
 echo "[SUCCESS] All sync worker tests passed"
-
-
-
-

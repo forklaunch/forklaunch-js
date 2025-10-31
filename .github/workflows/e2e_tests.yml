@@ -13,6 +13,28 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [1, 2, 3, 4, 5]
+        include:
+          - group: 1
+            name: "Init Tests"
+            pattern: "init*.sh"
+          - group: 2
+            name: "Sync Tests"
+            pattern: "sync*.sh"
+          - group: 3
+            name: "Change Tests"
+            pattern: "change*.sh"
+          - group: 4
+            name: "Delete Tests"
+            pattern: "delete*.sh"
+          - group: 5
+            name: "Other Tests"
+            pattern: "!(init|sync|change|delete)*.sh"
+
+    name: ${{ matrix.name }}
 
     steps:
       - uses: actions/checkout@v4
@@ -50,13 +72,15 @@ jobs:
       - name: Create token file
         run: touch ~/.forklaunch/token
 
-      - name: Find and run all test scripts
+      - name: Run ${{ matrix.name }}
         working-directory: ./cli/tests
         run: |
           set -e
-          for test_script in *.sh; do
+          shopt -s extglob nullglob
+          for test_script in ${{ matrix.pattern }}; do
             if [ -f "$test_script" ]; then
-              echo "Running test: $test_script"
-              ./$test_script
+              echo "[INFO] Running test: $test_script"
+              ./"$test_script"
+              echo "[OK] Test passed: $test_script"
             fi
           done

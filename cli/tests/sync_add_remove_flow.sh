@@ -5,57 +5,62 @@
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TEST_NAME="sync-add-remove-flow"
-OUTPUT_DIR="$SCRIPT_DIR/output/$TEST_NAME"
+if [ -d "output/sync-add-remove-flow" ]; then
+    rm -rf output/sync-add-remove-flow
+fi
+
+mkdir -p output/sync-add-remove-flow
+cd output/sync-add-remove-flow
 
 echo "[TEST] Sync Complete Add/Remove Flow"
 
-# Cleanup
-rm -rf "$OUTPUT_DIR"
-mkdir -p "$OUTPUT_DIR"
-
 # Create test application
-cd "$OUTPUT_DIR"
-forklaunch init application test-app \
-    --database postgresql \
-    --formatter prettier \
-    --linter eslint \
-    --http-framework express \
-    --runtime node \
-    --test-framework vitest > /dev/null 2>&1
+RUST_BACKTRACE=1 cargo run --release init application test-app \
+    -p test-app \
+    -o src/modules \
+    -d postgresql \
+    -f prettier \
+    -l eslint \
+    -v zod \
+    -F express \
+    -r node \
+    -t vitest \
+    -D "Test application" \
+    -A "Test Author" \
+    -L 'MIT'
 
 cd test-app
 
-# Initialize initial service
-forklaunch init service users \
-    --path . \
-    --database postgresql > /dev/null 2>&1
+RUST_BACKTRACE=1 cargo run --release init service users \
+    -p src/modules \
+    -d postgresql \
+    -D "Users service"
 
-# Test 1: Sync with no changes
-if forklaunch sync all --path . --confirm > /dev/null 2>&1; then
+echo "[INFO] Test 1: Sync with no changes"
+if RUST_BACKTRACE=1 cargo run --release sync all -p . -c; then
     echo "[PASS] Sync with no changes"
 else
     echo "[FAIL] Sync failed with no changes"
     exit 1
 fi
 
-# Test 2: Create new service manually
+echo "[INFO] Test 2: Creating new service manually"
 mkdir -p src/modules/products
 cp -r src/modules/users/* src/modules/products/
 sed -i.bak 's/"users"/"products"/g' src/modules/products/package.json
+sed -i.bak 's/"description": "Users service"/"description": "Products service"/g' src/modules/products/package.json
+rm -f src/modules/products/package.json.bak
 
-# Test 3: Sync adds new service
+echo "[INFO] Test 3: Syncing new service"
 PROMPTS_JSON='{"products": {"category": "service", "database": "postgresql", "infrastructure": "none", "description": "Products service"}}'
 
-if forklaunch sync all --path . --confirm --prompts "$PROMPTS_JSON" > /dev/null 2>&1; then
+if RUST_BACKTRACE=1 cargo run --release sync all -p . -c -P "$PROMPTS_JSON"; then
     echo "[PASS] Sync added new service"
 else
     echo "[FAIL] Sync failed to add service"
     exit 1
 fi
 
-# Test 4: Verify addition to manifest
 if grep -q "products" .forklaunch/manifest.toml; then
     echo "[PASS] Service in manifest"
 else
@@ -63,7 +68,6 @@ else
     exit 1
 fi
 
-# Test 5: Verify addition to docker-compose
 if grep -q "products" docker-compose.yaml; then
     echo "[PASS] Service in docker-compose"
 else
@@ -71,18 +75,17 @@ else
     exit 1
 fi
 
-# Test 6: Remove service directory
+echo "[INFO] Test 6: Removing service directory"
 rm -rf src/modules/products
 
-# Test 7: Sync removes service
-if forklaunch sync all --path . --confirm > /dev/null 2>&1; then
+echo "[INFO] Test 7: Syncing removal"
+if RUST_BACKTRACE=1 cargo run --release sync all -p . -c; then
     echo "[PASS] Sync removed service"
 else
     echo "[FAIL] Sync failed to remove"
     exit 1
 fi
 
-# Test 8: Verify removal from manifest
 if ! grep -q "products" .forklaunch/manifest.toml; then
     echo "[PASS] Service removed from manifest"
 else
@@ -91,4 +94,3 @@ else
 fi
 
 echo "[SUCCESS] Complete sync workflow validated"
-

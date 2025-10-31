@@ -1,4 +1,4 @@
-use std::{io::Write, collections::HashMap};
+use std::{collections::HashMap, io::Write};
 
 use anyhow::{Result, bail};
 use clap::ArgMatches;
@@ -275,19 +275,24 @@ where
     ErrorFunction: Fn(&str) -> String,
     ValidatorFunction: Fn(&str) -> bool,
 {
-    println!("prompts:278: Prompts for project {}: {:?}", project_name, prompts_map.get(project_name).unwrap());
-    println!("prompts:279: Matches key: {}", matches_key);
-    // Check if we have a pre-provided answer for this project and field
     if let Some(project_prompts) = prompts_map.get(project_name) {
         if let Some(pre_answer) = project_prompts.get(matches_key) {
             if validator(pre_answer) {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-                writeln!(stdout, "Using pre-provided answer for {}: {}", matches_key, pre_answer)?;
+                writeln!(
+                    stdout,
+                    "Using pre-provided answer for {}: {}",
+                    matches_key, pre_answer
+                )?;
                 stdout.reset()?;
                 return Ok(pre_answer.clone());
             } else {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
-                writeln!(stdout, "Pre-provided answer '{}' for {} is invalid, prompting for input", pre_answer, matches_key)?;
+                writeln!(
+                    stdout,
+                    "Pre-provided answer '{}' for {} is invalid, prompting for input",
+                    pre_answer, matches_key
+                )?;
                 stdout.reset()?;
             }
         }
@@ -320,7 +325,11 @@ pub(crate) fn prompt_without_validation_with_answers(
     if let Some(project_prompts) = prompts_map.get(project_name) {
         if let Some(pre_answer) = project_prompts.get(matches_key) {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-            writeln!(stdout, "Using pre-provided answer for {}: {}", matches_key, pre_answer)?;
+            writeln!(
+                stdout,
+                "Using pre-provided answer for {}: {}",
+                matches_key, pre_answer
+            )?;
             stdout.reset()?;
             return Ok(pre_answer.clone());
         }
@@ -357,13 +366,13 @@ pub(crate) fn prompt_comma_separated_list_with_answers(
                 .map(|s| s.trim().to_string())
                 .filter(|s| !s.is_empty())
                 .collect();
-            
+
             // Validate that all values are in valid_options
             let invalid_values: Vec<&String> = values
                 .iter()
                 .filter(|v| !valid_options.contains(&v.as_str()))
                 .collect();
-            
+
             if invalid_values.is_empty() {
                 return Ok(values);
             }

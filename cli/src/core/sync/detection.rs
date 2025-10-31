@@ -219,9 +219,8 @@ pub fn detect_project_type(project_path: &Path) -> Result<Option<InitializeType>
         return Ok(Some(InitializeType::Service));
     }
 
-    let index_ts_path = project_path.join("index.ts");
     let has_package_json = project_path.join("package.json").exists();
-    if index_ts_path.exists() && has_package_json && !server_ts_path.exists() {
+    if has_package_json && !server_ts_path.exists() {
         return Ok(Some(InitializeType::Library));
     }
 
@@ -250,12 +249,10 @@ pub fn detect_routers_from_service(service_path: &Path) -> Result<Vec<String>> {
             None => continue,
         };
 
-        // Skip index.ts
         if file_name == "index.ts" {
             continue;
         }
 
-        // Match pattern: {routerName}.routes.ts
         if file_name.ends_with(".routes.ts") {
             let router_name = file_name.strip_suffix(".routes.ts").unwrap().to_string();
             routers.push(router_name);

@@ -5,32 +5,37 @@
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TEST_NAME="sync-service-subcommand"
-OUTPUT_DIR="$SCRIPT_DIR/output/$TEST_NAME"
+if [ -d "output/sync-service-subcommand" ]; then
+    rm -rf output/sync-service-subcommand
+fi
+
+mkdir -p output/sync-service-subcommand
+cd output/sync-service-subcommand
 
 echo "[TEST] sync service subcommand"
 
-# Cleanup
-rm -rf "$OUTPUT_DIR"
-mkdir -p "$OUTPUT_DIR"
-
 # Create test application
-cd "$OUTPUT_DIR"
-forklaunch init application test-app \
-    --database postgresql \
-    --formatter prettier \
-    --linter eslint \
-    --http-framework express \
-    --runtime node \
-    --test-framework vitest > /dev/null 2>&1
+RUST_BACKTRACE=1 cargo run --release init application test-app \
+    -p test-app \
+    -o src/modules \
+    -d postgresql \
+    -f prettier \
+    -l eslint \
+    -v zod \
+    -F express \
+    -r node \
+    -t vitest \
+    -D "Test application" \
+    -A "Test Author" \
+    -L 'MIT'
 
 cd test-app
 
 # Initialize first service
-forklaunch init service users \
-    --path . \
-    --database postgresql > /dev/null 2>&1
+RUST_BACKTRACE=1 cargo run --release init service users \
+    -p src/modules \
+    -d postgresql \
+    -D "Users service"
 
 # Manually create a second service directory (simulating manual copy)
 mkdir -p src/modules/products
@@ -56,7 +61,7 @@ fi
 # Test 2: Sync specific service with prompts
 PROMPTS_JSON='{"products": {"database": "postgresql", "infrastructure": "none", "description": "Products service"}}'
 
-if forklaunch sync service products --path . --prompts "$PROMPTS_JSON" > /dev/null 2>&1; then
+if RUST_BACKTRACE=1 cargo run --release sync service products -p . -P "$PROMPTS_JSON" > /dev/null 2>&1; then
     echo "[PASS] Sync service command executed"
 else
     echo "[FAIL] Sync service command failed"
@@ -82,7 +87,7 @@ else
 fi
 
 # Test 5: Verify service added to runtime files (pnpm-workspace for node)
-if grep -q "products" pnpm-workspace.yaml; then
+if grep -q "products" src/modules/pnpm-workspace.yaml; then
     echo "[PASS] Service added to pnpm-workspace"
 else
     echo "[FAIL] Service NOT in pnpm-workspace"
@@ -91,7 +96,7 @@ else
 fi
 
 # Test 6: Try syncing same service again (should be idempotent)
-if forklaunch sync service products --path . --prompts "$PROMPTS_JSON" > /dev/null 2>&1; then
+if RUST_BACKTRACE=1 cargo run --release sync service products -p . -P "$PROMPTS_JSON" > /dev/null 2>&1; then
     echo "[PASS] Sync is idempotent (no error when already synced)"
 else
     echo "[FAIL] Sync should be idempotent"
@@ -99,7 +104,7 @@ else
 fi
 
 # Test 7: Try syncing non-existent service (should fail gracefully)
-if ! forklaunch sync service nonexistent --path . 2>&1 | grep -q "not found"; then
+if ! RUST_BACKTRACE=1 cargo run --release sync service nonexistent -p . 2>&1 | grep -q "not found"; then
     echo "[FAIL] Should fail for non-existent service"
     exit 1
 else
@@ -107,7 +112,3 @@ else
 fi
 
 echo "[SUCCESS] All sync service tests passed"
-
-
-
-

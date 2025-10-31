@@ -40,7 +40,7 @@ use crate::{
             RouterInitializationMetadata, remove_router_definition_from_manifest,
             router::RouterManifestData,
         },
-        rendered_template::{RenderedTemplate, write_rendered_templates},
+        rendered_template::{RenderedTemplate, RenderedTemplatesCache, write_rendered_templates},
     },
     prompt::{ArrayCompleter, prompt_for_confirmation, prompt_with_validation},
 };
@@ -152,6 +152,8 @@ impl CliCommand for RouterCommand {
         let camel_case_name = router_name.to_case(Case::Camel);
         let pascal_case_name = router_name.to_case(Case::Pascal);
 
+        let rendered_templates_cache = RenderedTemplatesCache::new();
+
         let file_paths = [
             router_base_path
                 .join("api")
@@ -233,8 +235,11 @@ impl CliCommand for RouterCommand {
             .join("api")
             .join("controllers")
             .join("index.ts");
-        let new_controllers_index_content =
-            transform_controllers_index_ts_delete(&router_name, &router_base_path)?;
+        let new_controllers_index_content = transform_controllers_index_ts_delete(
+            &rendered_templates_cache,
+            &router_name,
+            &router_base_path,
+        )?;
 
         let seed_data_path = router_base_path.join("persistence").join("seed.data.ts");
         let seed_data_source_text = read_to_string(&seed_data_path).unwrap();
@@ -285,6 +290,7 @@ impl CliCommand for RouterCommand {
             delete_from_sdk_client_input(&allocator, &mut sdk_program, &camel_case_name)?;
 
         let new_test_utils_content = transform_test_utils_remove_router(
+            &rendered_templates_cache,
             &router_base_path,
             &camel_case_name,
             &pascal_case_name,

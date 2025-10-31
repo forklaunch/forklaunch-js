@@ -79,8 +79,9 @@ impl CliCommand for SyncAllCommand {
         rendered_templates_cache.get(&manifest_path)?;
 
         let manifest_template = rendered_templates_cache.get(&manifest_path)?.unwrap();
-        let manifest_data = toml_from_str::<ApplicationManifestData>(&manifest_template.content)
-            .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+        let mut manifest_data =
+            toml_from_str::<ApplicationManifestData>(&manifest_template.content)
+                .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
 
         let modules_path = app_root_path.join(&manifest_data.modules_path);
 
@@ -133,7 +134,7 @@ impl CliCommand for SyncAllCommand {
             )?;
             stdout.reset()?;
             for project_name in &orphaned_projects {
-                writeln!(stdout, "  {}", project_name)?;
+                writeln!(stdout, "{}", project_name)?;
             }
 
             if !matches.get_flag("confirm") {
@@ -149,7 +150,7 @@ impl CliCommand for SyncAllCommand {
                     stdout.reset()?;
                 } else {
                     for project_name in &orphaned_projects {
-                        writeln!(stdout, "  Removing '{}'...", project_name)?;
+                        writeln!(stdout, "[INFO] Removing '{}'...", project_name)?;
 
                         let project = manifest_data
                             .projects
@@ -161,7 +162,7 @@ impl CliCommand for SyncAllCommand {
 
                         remove_project_from_artifacts(
                             &mut rendered_templates_cache,
-                            &manifest_data,
+                            &mut manifest_data,
                             project_name,
                             project_type,
                             &[
@@ -187,7 +188,7 @@ impl CliCommand for SyncAllCommand {
                 }
             } else {
                 for project_name in &orphaned_projects {
-                    writeln!(stdout, "  Removing '{}'...", project_name)?;
+                    writeln!(stdout, "[INFO] Removing '{}'...", project_name)?;
 
                     let project = manifest_data
                         .projects
@@ -199,7 +200,7 @@ impl CliCommand for SyncAllCommand {
 
                     remove_project_from_artifacts(
                         &mut rendered_templates_cache,
-                        &manifest_data,
+                        &mut manifest_data,
                         project_name,
                         project_type,
                         &[
@@ -251,11 +252,11 @@ impl CliCommand for SyncAllCommand {
             let detected_type = detect_project_type(&project_path)?;
 
             let project_type = if let Some(detected) = detected_type {
-                writeln!(stdout, "  Detected as: {}", detected.to_string())?;
+                writeln!(stdout, "[INFO] Detected as: {}", detected.to_string())?;
                 detected
             } else {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
-                writeln!(stdout, "  [WARN] Could not auto-detect project type")?;
+                writeln!(stdout, "[WARN] Could not auto-detect project type")?;
                 stdout.reset()?;
 
                 let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
@@ -286,72 +287,84 @@ impl CliCommand for SyncAllCommand {
                 )?;
 
                 if !should_sync {
-                    writeln!(stdout, "  [INFO] Skipped")?;
+                    writeln!(stdout, "[INFO] Skipped")?;
                     continue;
                 }
             }
 
             match project_type {
                 InitializeType::Service => {
-                    writeln!(stdout, "  Syncing service...")?;
+                    writeln!(stdout, "[INFO] Syncing service...")?;
 
                     if let Err(e) = crate::sync::service::sync_service_with_cache(
                         &project_name,
                         &app_root_path,
-                        &manifest_data,
+                        &mut manifest_data,
                         matches,
                         &prompts_map,
                         &mut rendered_templates_cache,
                         &mut stdout,
                     ) {
                         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
-                        writeln!(stdout, "  [ERROR] {}", e)?;
+                        writeln!(stdout, "[ERROR] {}", e)?;
                         stdout.reset()?;
                     }
                 }
                 InitializeType::Worker => {
-                    writeln!(stdout, "  Syncing worker...")?;
+                    writeln!(stdout, "[INFO] Syncing worker...")?;
 
                     if let Err(e) = crate::sync::worker::sync_worker_with_cache(
                         &project_name,
                         &app_root_path,
-                        &manifest_data,
+                        &mut manifest_data,
                         matches,
                         &prompts_map,
                         &mut rendered_templates_cache,
                         &mut stdout,
                     ) {
                         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
-                        writeln!(stdout, "  [ERROR] {}", e)?;
+                        writeln!(stdout, "[ERROR] {}", e)?;
                         stdout.reset()?;
                     }
                 }
                 InitializeType::Library => {
-                    writeln!(stdout, "  Syncing library...")?;
+                    writeln!(stdout, "[INFO] Syncing library...")?;
 
                     if let Err(e) = crate::sync::library::sync_library_with_cache(
                         &project_name,
                         &app_root_path,
-                        &manifest_data,
+                        &mut manifest_data,
                         matches,
                         &prompts_map,
                         &mut rendered_templates_cache,
                         &mut stdout,
                     ) {
                         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
-                        writeln!(stdout, "  [ERROR] {}", e)?;
+                        writeln!(stdout, "[ERROR] {}", e)?;
                         stdout.reset()?;
                     }
                 }
                 InitializeType::Router | InitializeType::Module => {
                     writeln!(
                         stdout,
-                        "  [INFO] Skipped (routers and modules are synced as part of their parent service)"
+                        "[INFO] Skipped (routers and modules are synced as part of their parent service)"
                     )?;
                 }
             }
         }
 
+        // Write the updated manifest back to cache
+        rendered_templates_cache.insert(
+            manifest_path.to_string_lossy().to_string(),
+            crate::core::rendered_template::RenderedTemplate {
+                path: manifest_path.clone(),
+                content: toml::to_string_pretty(&manifest_data)
+                    .context("Failed to serialize manifest")?,
+                context: Some("Failed to write manifest".to_string()),
+            },
+        );
+
+        // Collect and write all rendered templates (including manifest)
         let rendered_templates: Vec<_> = rendered_templates_cache
             .drain()
             .map(|(_, template)| template)

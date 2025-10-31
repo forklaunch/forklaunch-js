@@ -1,13 +1,13 @@
-use std::{fs::read_to_string, path::Path};
+use std::path::Path;
 
-use anyhow::{Ok, Result};
+use anyhow::{Context, Ok, Result};
 use convert_case::{Case, Casing};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::SourceType;
 use oxc_codegen::{Codegen, CodegenOptions};
 
 use crate::{
-    constants::WorkerType,
+    constants::{WorkerType, error_failed_to_read_file},
     core::{
         ast::{
             deletions::delete_from_registrations_ts::delete_from_registrations_ts_worker_type,
@@ -33,6 +33,7 @@ use crate::{
             },
         },
         manifest::ProjectType,
+        rendered_template::RenderedTemplatesCache,
         worker_type::{
             get_default_worker_options, get_worker_consumer_factory, get_worker_producer_factory,
             get_worker_type_name,
@@ -41,14 +42,18 @@ use crate::{
 };
 
 pub(crate) fn transform_registrations_ts_add_router(
+    rendered_templates_cache: &RenderedTemplatesCache,
     router_name: &str,
     project_type: &ProjectType,
     base_path: &Path,
 ) -> Result<String> {
     let allocator = Allocator::default();
     let registrations_path = base_path.join("registrations.ts");
-    let registrations_source_text = read_to_string(&registrations_path).unwrap();
-    let registrations_source_type = SourceType::from_path(&registrations_path).unwrap();
+    let template = rendered_templates_cache
+        .get(&registrations_path)?
+        .context(error_failed_to_read_file(&registrations_path))?;
+    let registrations_source_text = template.content;
+    let registrations_source_type = SourceType::from_path(&registrations_path)?;
     let router_name_camel_case = router_name.to_case(Case::Camel);
     let router_name_pascal_case = router_name.to_case(Case::Pascal);
 
@@ -125,16 +130,15 @@ pub(crate) fn transform_registrations_ts_add_router(
 }
 
 pub(crate) fn transform_registrations_ts_infrastructure_redis(
+    rendered_templates_cache: &RenderedTemplatesCache,
     base_path: &Path,
-    registrations_text: Option<String>,
 ) -> Result<String> {
     let allocator = Allocator::default();
     let registrations_path = base_path.join("registrations.ts");
-    let registrations_text = if let Some(registrations_text) = registrations_text {
-        registrations_text
-    } else {
-        read_to_string(&registrations_path)?
-    };
+    let template = rendered_templates_cache
+        .get(&registrations_path)?
+        .context(error_failed_to_read_file(&registrations_path))?;
+    let registrations_text = template.content;
 
     let registrations_type = SourceType::from_path(&registrations_path)?;
 
@@ -152,16 +156,15 @@ pub(crate) fn transform_registrations_ts_infrastructure_redis(
 }
 
 pub(crate) fn transform_registrations_ts_infrastructure_s3(
+    rendered_templates_cache: &RenderedTemplatesCache,
     base_path: &Path,
-    registrations_text: Option<String>,
 ) -> Result<String> {
     let allocator = Allocator::default();
     let registrations_path = base_path.join("registrations.ts");
-    let registrations_text = if let Some(registrations_text) = registrations_text {
-        registrations_text
-    } else {
-        read_to_string(&registrations_path)?
-    };
+    let template = rendered_templates_cache
+        .get(&registrations_path)?
+        .context(error_failed_to_read_file(&registrations_path))?;
+    let registrations_text = template.content;
 
     let registrations_type = SourceType::from_path(&registrations_path)?;
 
@@ -179,20 +182,19 @@ pub(crate) fn transform_registrations_ts_infrastructure_s3(
 }
 
 pub(crate) fn transform_registrations_ts_worker_type(
+    rendered_templates_cache: &RenderedTemplatesCache,
     base_path: &Path,
     app_name: &str,
     pascal_case_name: &str,
     existing_type: &WorkerType,
     r#type: &WorkerType,
-    registrations_text: Option<String>,
 ) -> Result<String> {
     let allocator = Allocator::default();
     let registrations_path = base_path.join("registrations.ts");
-    let registrations_text = if let Some(registrations_text) = registrations_text {
-        registrations_text
-    } else {
-        read_to_string(&registrations_path)?
-    };
+    let template = rendered_templates_cache
+        .get(&registrations_path)?
+        .context(error_failed_to_read_file(&registrations_path))?;
+    let registrations_text = template.content;
 
     let mut registration_program = parse_ast_program(
         &allocator,
@@ -388,6 +390,7 @@ mod tests {
     use tempfile::TempDir;
 
     use super::*;
+    use crate::core::rendered_template::RenderedTemplatesCache;
 
     fn create_temp_project_structure(registrations_content: &str) -> TempDir {
         let temp_dir = TempDir::new().unwrap();
@@ -480,9 +483,14 @@ const serviceDependencies = runtimeDependencies.chain({
 
         let temp_dir = create_temp_project_structure(registrations_content);
         let project_path = temp_dir.path().join("test-project");
+        let cache = RenderedTemplatesCache::new();
 
-        let result =
-            transform_registrations_ts_add_router("user", &ProjectType::Service, &project_path);
+        let result = transform_registrations_ts_add_router(
+            &cache,
+            "user",
+            &ProjectType::Service,
+            &project_path,
+        );
 
         assert!(result.is_ok());
 
@@ -571,9 +579,14 @@ const serviceDependencies = runtimeDependencies.chain({
 
         let temp_dir = create_temp_project_structure(registrations_content);
         let project_path = temp_dir.path().join("test-project");
+        let cache = RenderedTemplatesCache::new();
 
-        let result =
-            transform_registrations_ts_add_router("order", &ProjectType::Worker, &project_path);
+        let result = transform_registrations_ts_add_router(
+            &cache,
+            "order",
+            &ProjectType::Worker,
+            &project_path,
+        );
 
         assert!(result.is_ok());
 
@@ -662,8 +675,9 @@ const serviceDependencies = runtimeDependencies.chain({
 
         let temp_dir = create_temp_project_structure(registrations_content);
         let project_path = temp_dir.path().join("test-project");
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_registrations_ts_infrastructure_redis(&project_path, None);
+        let result = transform_registrations_ts_infrastructure_redis(&cache, &project_path);
 
         assert!(result.is_ok());
 
@@ -751,11 +765,21 @@ const serviceDependencies = runtimeDependencies.chain({
 "#;
 
         let temp_dir = TempDir::new().unwrap();
-
-        let result = transform_registrations_ts_infrastructure_redis(
-            &temp_dir.path(),
-            Some(registrations_content.to_string()),
+        let mut cache = RenderedTemplatesCache::new();
+        cache.insert(
+            temp_dir
+                .path()
+                .join("registrations.ts")
+                .to_string_lossy()
+                .to_string(),
+            crate::core::rendered_template::RenderedTemplate {
+                path: temp_dir.path().join("registrations.ts"),
+                content: registrations_content.to_string(),
+                context: None,
+            },
         );
+
+        let result = transform_registrations_ts_infrastructure_redis(&cache, &temp_dir.path());
 
         assert!(result.is_ok());
 
@@ -844,8 +868,9 @@ const serviceDependencies = runtimeDependencies.chain({
 
         let temp_dir = create_temp_project_structure(registrations_content);
         let project_path = temp_dir.path().join("test-project");
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_registrations_ts_infrastructure_s3(&project_path, None);
+        let result = transform_registrations_ts_infrastructure_s3(&cache, &project_path);
 
         assert!(result.is_ok());
 
@@ -933,11 +958,21 @@ const serviceDependencies = runtimeDependencies.chain({
 "#;
 
         let temp_dir = TempDir::new().unwrap();
-
-        let result = transform_registrations_ts_infrastructure_s3(
-            &temp_dir.path(),
-            Some(registrations_content.to_string()),
+        let mut cache = RenderedTemplatesCache::new();
+        cache.insert(
+            temp_dir
+                .path()
+                .join("registrations.ts")
+                .to_string_lossy()
+                .to_string(),
+            crate::core::rendered_template::RenderedTemplate {
+                path: temp_dir.path().join("registrations.ts"),
+                content: registrations_content.to_string(),
+                context: None,
+            },
         );
+
+        let result = transform_registrations_ts_infrastructure_s3(&cache, &temp_dir.path());
 
         assert!(result.is_ok());
 
@@ -1047,14 +1082,15 @@ const serviceDependencies = runtimeDependencies.chain({
 
         let temp_dir = create_temp_project_structure(registrations_content);
         let project_path = temp_dir.path().join("test-project");
+        let cache = RenderedTemplatesCache::new();
 
         let result = transform_registrations_ts_worker_type(
+            &cache,
             &project_path,
             "test-app",
             "UserEvent",
             &WorkerType::BullMQCache,
             &WorkerType::Database,
-            None,
         );
 
         if result.is_ok() {
@@ -1164,14 +1200,15 @@ const serviceDependencies = runtimeDependencies.chain({
 
         let temp_dir = create_temp_project_structure(registrations_content);
         let project_path = temp_dir.path().join("test-project");
+        let cache = RenderedTemplatesCache::new();
 
         let result = transform_registrations_ts_worker_type(
+            &cache,
             &project_path,
             "test-app",
             "OrderEvent",
             &WorkerType::Database,
             &WorkerType::RedisCache,
-            None,
         );
 
         if result.is_ok() {
@@ -1281,14 +1318,15 @@ const serviceDependencies = runtimeDependencies.chain({
 
         let temp_dir = create_temp_project_structure(registrations_content);
         let project_path = temp_dir.path().join("test-project");
+        let cache = RenderedTemplatesCache::new();
 
         let result = transform_registrations_ts_worker_type(
+            &cache,
             &project_path,
             "test-app",
             "ProductEvent",
             &WorkerType::RedisCache,
             &WorkerType::Kafka,
-            None,
         );
 
         if result.is_ok() {
@@ -1397,14 +1435,27 @@ const serviceDependencies = runtimeDependencies.chain({
 "#;
 
         let temp_dir = TempDir::new().unwrap();
+        let mut cache = RenderedTemplatesCache::new();
+        cache.insert(
+            temp_dir
+                .path()
+                .join("registrations.ts")
+                .to_string_lossy()
+                .to_string(),
+            crate::core::rendered_template::RenderedTemplate {
+                path: temp_dir.path().join("registrations.ts"),
+                content: registrations_content.to_string(),
+                context: None,
+            },
+        );
 
         let result = transform_registrations_ts_worker_type(
+            &cache,
             &temp_dir.path(),
             "test-app",
             "UserEvent",
             &WorkerType::BullMQCache,
             &WorkerType::Database,
-            Some(registrations_content.to_string()),
         );
 
         if result.is_ok() {

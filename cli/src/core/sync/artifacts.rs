@@ -7,7 +7,11 @@ use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
 use toml::{from_str as toml_from_str, to_string_pretty as toml_to_string_pretty};
 
 use crate::{
-    constants::{Database, Infrastructure, Runtime, WorkerType},
+    constants::{
+        Database, ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE,
+        ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE, ERROR_FAILED_TO_WRITE_DOCKER_COMPOSE, Infrastructure,
+        Runtime, WorkerType,
+    },
     core::{
         docker::{
             DockerCompose, add_service_definition_to_docker_compose,
@@ -92,58 +96,39 @@ impl ProjectSyncMetadata {
 /// Sync a project to multiple artifacts using RenderedTemplatesCache
 ///
 /// This is the core sync function that implements the pattern:
-/// - Load artifact object from cache
-/// - Check if project is present
+/// - Check if project is present in artifacts
 /// - Add if not present
-/// - Save object back to cache
+/// - Save changes back to cache
 ///
 /// Matches the pattern used in change command.
 pub fn sync_project_to_artifacts(
     cache: &mut RenderedTemplatesCache,
+    manifest_data: &mut ApplicationManifestData,
     metadata: &ProjectSyncMetadata,
     artifacts: &[ArtifactType],
     app_root_path: &Path,
     modules_path: &Path,
     stdout: &mut StandardStream,
 ) -> Result<()> {
-    let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
-
-    let template = cache
-        .get(&manifest_path)?
-        .context("Manifest file not found")?;
-
-    let mut manifest_data: ApplicationManifestData =
-        toml_from_str(&template.content).context("Failed to parse manifest")?;
-
     for artifact_type in artifacts {
         match artifact_type {
             ArtifactType::Manifest => {
-                sync_to_manifest(&mut manifest_data, metadata, modules_path, stdout)?;
+                sync_to_manifest(manifest_data, metadata, modules_path, stdout)?;
             }
             ArtifactType::DockerCompose => {
-                sync_to_docker_compose(&mut manifest_data, cache, metadata, app_root_path, stdout)?;
+                sync_to_docker_compose(manifest_data, cache, metadata, app_root_path, stdout)?;
             }
             ArtifactType::Runtime => {
-                sync_to_runtime(&mut manifest_data, cache, metadata, modules_path, stdout)?;
+                sync_to_runtime(manifest_data, cache, metadata, modules_path, stdout)?;
             }
             ArtifactType::UniversalSdk => {
-                sync_to_universal_sdk(&mut manifest_data, cache, metadata, modules_path, stdout)?;
+                sync_to_universal_sdk(manifest_data, cache, metadata, modules_path, stdout)?;
             }
             ArtifactType::ModulesTsconfig => {
                 sync_to_modules_tsconfig(cache, metadata, modules_path, stdout)?;
             }
         }
     }
-
-    cache.insert(
-        manifest_path.to_string_lossy().to_string(),
-        RenderedTemplate {
-            path: manifest_path.clone(),
-            content: toml_to_string_pretty(&manifest_data)
-                .context("Failed to serialize manifest")?,
-            context: Some("Failed to write manifest".to_string()),
-        },
-    );
 
     Ok(())
 }
@@ -160,7 +145,11 @@ fn sync_to_manifest(
         .any(|p| p.name == metadata.project_name)
     {
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
-        writeln!(stdout, "  Already in manifest: {}", metadata.project_name)?;
+        writeln!(
+            stdout,
+            "[INFO] Already in manifest: {}",
+            metadata.project_name
+        )?;
         stdout.reset()?;
         return Ok(());
     }
@@ -189,7 +178,7 @@ fn sync_to_manifest(
         .push(metadata.project_name.clone());
 
     stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-    writeln!(stdout, "  Added to manifest: {}", metadata.project_name)?;
+    writeln!(stdout, "[OK] Added to manifest: {}", metadata.project_name)?;
     stdout.reset()?;
 
     Ok(())
@@ -211,7 +200,7 @@ fn detect_routers_for_project(
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
                 writeln!(
                     stdout,
-                    "  Detected {} router(s): {}",
+                    "[INFO] Detected {} router(s): {}",
                     detected_routers.len(),
                     detected_routers.join(", ")
                 )?;
@@ -257,14 +246,16 @@ fn sync_to_docker_compose(
         .get(&docker_path)?
         .context("Docker compose file not found")?;
 
+    let mut docker_compose_content = template.content.clone();
+
     let docker_compose: DockerCompose =
-        yaml_from_str(&template.content).context("Failed to parse docker-compose")?;
+        yaml_from_str(&docker_compose_content).context(ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE)?;
 
     if docker_compose.services.contains_key(&metadata.project_name) {
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
         writeln!(
             stdout,
-            "  Already in docker-compose: {}",
+            "[INFO] Already in docker-compose: {}",
             metadata.project_name
         )?;
         stdout.reset()?;
@@ -275,13 +266,17 @@ fn sync_to_docker_compose(
         ProjectType::Service => {
             let service_manifest_data: &ServiceManifestData =
                 &toml_from_str(&toml_to_string_pretty(manifest_data)?)?;
-            service_manifest_data.initialize(InitializableManifestConfigMetadata::Project(
-                ProjectInitializationMetadata {
+            let service_manifest_data = service_manifest_data.initialize(
+                InitializableManifestConfigMetadata::Project(ProjectInitializationMetadata {
                     project_name: metadata.project_name.clone(),
-                },
-            ));
-            add_service_definition_to_docker_compose(
-                service_manifest_data,
+                    database: Some(metadata.database.clone().unwrap()),
+                    infrastructure: Some(metadata.infrastructure.clone()),
+                    description: Some(metadata.description.clone()),
+                    worker_type: metadata.worker_type.clone(),
+                }),
+            );
+            docker_compose_content = add_service_definition_to_docker_compose(
+                &service_manifest_data,
                 app_root_path,
                 Some(template.content),
             )?;
@@ -289,19 +284,32 @@ fn sync_to_docker_compose(
         ProjectType::Worker => {
             let worker_manifest_data: &WorkerManifestData =
                 &toml_from_str(&toml_to_string_pretty(manifest_data)?)?;
-            worker_manifest_data.initialize(InitializableManifestConfigMetadata::Project(
-                ProjectInitializationMetadata {
+            let worker_manifest_data = worker_manifest_data.initialize(
+                InitializableManifestConfigMetadata::Project(ProjectInitializationMetadata {
                     project_name: metadata.project_name.clone(),
-                },
-            ));
-            add_worker_definition_to_docker_compose(
-                worker_manifest_data,
+                    database: Some(metadata.database.clone().unwrap()),
+                    infrastructure: Some(metadata.infrastructure.clone()),
+                    description: Some(metadata.description.clone()),
+                    worker_type: metadata.worker_type.clone(),
+                }),
+            );
+            docker_compose_content = add_worker_definition_to_docker_compose(
+                &worker_manifest_data,
                 app_root_path,
                 Some(template.content),
             )?;
         }
         ProjectType::Library => (),
     };
+
+    cache.insert(
+        docker_path.to_string_lossy().to_string(),
+        RenderedTemplate {
+            path: docker_path.clone(),
+            content: docker_compose_content,
+            context: Some(ERROR_FAILED_TO_WRITE_DOCKER_COMPOSE.to_string()),
+        },
+    );
 
     Ok(())
 }
@@ -347,7 +355,7 @@ fn sync_to_package_json(
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
         writeln!(
             stdout,
-            "  Already in package.json: {}",
+            "[INFO] Already in package.json: {}",
             metadata.project_name
         )?;
         stdout.reset()?;
@@ -367,7 +375,11 @@ fn sync_to_package_json(
     );
 
     stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-    writeln!(stdout, "  Added to package.json: {}", metadata.project_name)?;
+    writeln!(
+        stdout,
+        "[OK] Added to package.json: {}",
+        metadata.project_name
+    )?;
     stdout.reset()?;
 
     Ok(())
@@ -426,7 +438,7 @@ fn sync_to_universal_sdk(
     stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
     writeln!(
         stdout,
-        "  Added to universal SDK: {}",
+        "[OK] Added to universal SDK: {}",
         metadata.project_name
     )?;
     stdout.reset()?;
@@ -450,7 +462,7 @@ fn sync_to_modules_tsconfig(
     stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
     writeln!(
         stdout,
-        "  Added to modules/tsconfig.json: {}",
+        "[OK] Added to modules/tsconfig.json: {}",
         metadata.project_name
     )?;
     stdout.reset()?;
@@ -477,7 +489,7 @@ fn sync_to_pnpm_workspace(
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
         writeln!(
             stdout,
-            "  Already in pnpm-workspace: {}",
+            "[INFO] Already in pnpm-workspace: {}",
             metadata.project_name
         )?;
         stdout.reset()?;
@@ -490,15 +502,16 @@ fn sync_to_pnpm_workspace(
         workspace_path.to_string_lossy().to_string(),
         RenderedTemplate {
             path: workspace_path.clone(),
-            content: yaml_to_string(&workspace).context("Failed to serialize pnpm-workspace")?,
-            context: Some("Failed to write pnpm-workspace".to_string()),
+            content: yaml_to_string(&workspace)
+                .context(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?,
+            context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE.to_string()),
         },
     );
 
     stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
     writeln!(
         stdout,
-        "  Added to pnpm-workspace: {}",
+        "[OK] Added to pnpm-workspace: {}",
         metadata.project_name
     )?;
     stdout.reset()?;
@@ -508,7 +521,7 @@ fn sync_to_pnpm_workspace(
 
 pub fn remove_project_from_artifacts(
     rendered_templates_cache: &mut RenderedTemplatesCache,
-    manifest_data: &ApplicationManifestData,
+    manifest_data: &mut ApplicationManifestData,
     project_name: &str,
     project_type: ProjectType,
     artifact_types: &[ArtifactType],
@@ -516,32 +529,13 @@ pub fn remove_project_from_artifacts(
     modules_path: &Path,
     stdout: &mut StandardStream,
 ) -> Result<()> {
-    let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
-
     for artifact_type in artifact_types {
         match artifact_type {
             ArtifactType::Manifest => {
-                let manifest_template = rendered_templates_cache.get(&manifest_path)?.unwrap();
-                let mut manifest_data_mut: ApplicationManifestData =
-                    toml_from_str(&manifest_template.content)
-                        .context("Failed to parse manifest")?;
-
-                remove_project_definition_from_manifest(
-                    &mut manifest_data_mut,
-                    &project_name.to_string(),
-                )?;
-
-                rendered_templates_cache.insert(
-                    manifest_path.to_string_lossy(),
-                    RenderedTemplate {
-                        path: manifest_path.clone(),
-                        content: toml_to_string_pretty(&manifest_data_mut)
-                            .context("Failed to serialize manifest")?,
-                        context: None,
-                    },
-                );
-
-                writeln!(stdout, "    [OK] Removed from manifest")?;
+                remove_project_definition_from_manifest(manifest_data, &project_name.to_string())?;
+                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+                writeln!(stdout, "[OK] Removed from manifest")?;
+                stdout.reset()?;
             }
             ArtifactType::DockerCompose => {
                 if matches!(project_type, ProjectType::Service | ProjectType::Worker) {
@@ -585,7 +579,9 @@ pub fn remove_project_from_artifacts(
                             },
                         );
 
-                        writeln!(stdout, "    [OK] Removed from docker-compose")?;
+                        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+                        writeln!(stdout, "[OK] Removed from docker-compose")?;
+                        stdout.reset()?;
                     }
                 }
             }
@@ -624,7 +620,9 @@ pub fn remove_project_from_artifacts(
                                 },
                             );
 
-                            writeln!(stdout, "    [OK] Removed from pnpm-workspace")?;
+                            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+                            writeln!(stdout, "[OK] Removed from pnpm-workspace")?;
+                            stdout.reset()?;
                         }
                     }
                     Runtime::Bun => {
@@ -656,31 +654,31 @@ pub fn remove_project_from_artifacts(
                                 },
                             );
 
-                            writeln!(stdout, "    [OK] Removed from package.json workspaces")?;
+                            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+                            writeln!(stdout, "[OK] Removed from package.json workspaces")?;
+                            stdout.reset()?;
                         }
                     }
                 }
             }
             ArtifactType::UniversalSdk => {
-                let mut rendered_templates = vec![];
-                remove_project_from_universal_sdk(
-                    &mut rendered_templates,
-                    modules_path,
-                    &manifest_data.app_name,
-                    project_name,
-                )?;
+                if project_type == ProjectType::Service || project_type == ProjectType::Worker {
+                    remove_project_from_universal_sdk(
+                        rendered_templates_cache,
+                        modules_path,
+                        &manifest_data.app_name,
+                        project_name,
+                    )?;
 
-                for template in rendered_templates {
-                    let path_string = template.path.to_string_lossy().to_string();
-                    rendered_templates_cache.insert(path_string, template);
+                    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+                    writeln!(stdout, "[OK] Removed from universal SDK")?;
+                    stdout.reset()?;
                 }
-
-                writeln!(stdout, "    [OK] Removed from universal SDK")?;
             }
             ArtifactType::ModulesTsconfig => {
                 writeln!(
                     stdout,
-                    "    [INFO] Modules tsconfig.json cleanup not yet implemented"
+                    "[INFO] Modules tsconfig.json cleanup not yet implemented"
                 )?;
             }
         }

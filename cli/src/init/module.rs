@@ -33,7 +33,7 @@ use crate::{
         modules::{ModuleConfig, validate_modules},
         package_json::add_project_definition_to_package_json,
         pnpm_workspace::add_project_definition_to_pnpm_workspace,
-        rendered_template::{RenderedTemplate, write_rendered_templates},
+        rendered_template::{RenderedTemplate, RenderedTemplatesCache, write_rendered_templates},
         symlinks::generate_symlinks,
         template::{PathIO, generate_with_template, get_routers_from_standard_package},
         universal_sdk::add_project_to_universal_sdk,
@@ -291,13 +291,18 @@ impl CliCommand for ModuleCommand {
             None,
         )?);
 
+        let mut rendered_templates_cache = RenderedTemplatesCache::new();
+        for template in rendered_templates {
+            rendered_templates_cache.insert(template.path.to_string_lossy().to_string(), template);
+        }
+
         let special_case = if module == Module::BetterAuthIam {
             Some(UniversalSdkSpecialCase::BetterAuth)
         } else {
             None
         };
         add_project_to_universal_sdk(
-            &mut rendered_templates,
+            &mut rendered_templates_cache,
             &base_path,
             &service_data.app_name,
             &service_data.service_name,
@@ -306,20 +311,36 @@ impl CliCommand for ModuleCommand {
 
         match runtime {
             Runtime::Node => {
-                rendered_templates.push(RenderedTemplate {
-                    path: base_path.join("pnpm-workspace.yaml"),
-                    content: add_project_definition_to_pnpm_workspace(&base_path, &service_data)?,
-                    context: Some(ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE.to_string()),
-                });
+                let pnpm_workspace_path = base_path.join("pnpm-workspace.yaml");
+                rendered_templates_cache.insert(
+                    pnpm_workspace_path.to_string_lossy().to_string(),
+                    RenderedTemplate {
+                        path: pnpm_workspace_path,
+                        content: add_project_definition_to_pnpm_workspace(
+                            &base_path,
+                            &service_data,
+                        )?,
+                        context: Some(ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE.to_string()),
+                    },
+                );
             }
             Runtime::Bun => {
-                rendered_templates.push(RenderedTemplate {
-                    path: base_path.join("package.json"),
-                    content: add_project_definition_to_package_json(&base_path, &service_data)?,
-                    context: Some(ERROR_FAILED_TO_CREATE_PACKAGE_JSON.to_string()),
-                });
+                let package_json_path = base_path.join("package.json");
+                rendered_templates_cache.insert(
+                    package_json_path.to_string_lossy().to_string(),
+                    RenderedTemplate {
+                        path: package_json_path,
+                        content: add_project_definition_to_package_json(&base_path, &service_data)?,
+                        context: Some(ERROR_FAILED_TO_CREATE_PACKAGE_JSON.to_string()),
+                    },
+                );
             }
         }
+
+        let rendered_templates: Vec<_> = rendered_templates_cache
+            .drain()
+            .map(|(_, template)| template)
+            .collect();
 
         write_rendered_templates(&rendered_templates, dryrun, &mut stdout)?;
 

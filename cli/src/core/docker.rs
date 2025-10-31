@@ -1372,7 +1372,12 @@ pub(crate) fn add_service_definition_to_docker_compose(
             &mut docker_compose,
             &mut environment,
         )
-        .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
+        .with_context(|| {
+            format!(
+                "{} Tried to add Redis to docker compose",
+                ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE
+            )
+        })?;
     }
 
     if manifest_data.is_s3_enabled {
@@ -1382,7 +1387,12 @@ pub(crate) fn add_service_definition_to_docker_compose(
             &mut docker_compose,
             &mut environment,
         )
-        .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
+        .with_context(|| {
+            format!(
+                "{} Tried to add S3 to docker compose",
+                ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE
+            )
+        })?;
     }
 
     add_database_to_docker_compose(
@@ -1390,7 +1400,12 @@ pub(crate) fn add_service_definition_to_docker_compose(
         &mut docker_compose,
         &mut environment,
     )
-    .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
+    .with_context(|| {
+        format!(
+            "{} Tried to add database to docker compose",
+            ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE
+        )
+    })?;
 
     let volumes = vec![
         format!(

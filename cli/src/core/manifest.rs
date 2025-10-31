@@ -11,9 +11,9 @@ use worker::WorkerManifestData;
 use super::rendered_template::RenderedTemplate;
 use crate::{
     constants::{
-        ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
+        Database, ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
         ERROR_FAILED_TO_ADD_ROUTER_METADATA_TO_MANIFEST, ERROR_FAILED_TO_CREATE_MANIFEST,
-        ERROR_FAILED_TO_REMOVE_PROJECT_METADATA_FROM_MANIFEST,
+        ERROR_FAILED_TO_REMOVE_PROJECT_METADATA_FROM_MANIFEST, Infrastructure, WorkerType,
     },
     core::manifest::{application::ApplicationManifestData, router::RouterManifestData},
 };
@@ -62,6 +62,10 @@ pub(crate) struct ApplicationInitializationMetadata {
 
 pub(crate) struct ProjectInitializationMetadata {
     pub(crate) project_name: String,
+    pub(crate) database: Option<Database>,
+    pub(crate) infrastructure: Option<Vec<Infrastructure>>,
+    pub(crate) description: Option<String>,
+    pub(crate) worker_type: Option<WorkerType>,
 }
 
 #[derive(Debug)]

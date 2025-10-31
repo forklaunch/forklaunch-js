@@ -137,7 +137,7 @@ pub fn resolve_description(
 
         if override_value.is_none() {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-            writeln!(stdout, "Detected description: {}", detected)?;
+            writeln!(stdout, "[INFO] Detected description: {}", detected)?;
             stdout.reset()?;
 
             let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
@@ -175,12 +175,15 @@ pub fn resolve_description(
     )
 }
 
-pub fn fallback_to_package_json(project_path: &Path, stdout: &mut StandardStream) -> Result<Database> {
+pub fn fallback_to_package_json(
+    project_path: &Path,
+    stdout: &mut StandardStream,
+) -> Result<Database> {
     let package_json_path = project_path.join("package.json");
 
     if !package_json_path.exists() {
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
-        writeln!(stdout, "package.json not found")?;
+        writeln!(stdout, "[ERROR] package.json not found")?;
         stdout.reset()?;
         bail!("Cannot determine database configuration: package.json not found");
     }
@@ -208,7 +211,7 @@ pub fn display_detection_results(
 ) -> Result<()> {
     if let Some(ref db) = detected.database {
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-        writeln!(stdout, "Detected database: {}", db.to_string())?;
+        writeln!(stdout, "[INFO] Detected database: {}", db.to_string())?;
         stdout.reset()?;
     }
 
@@ -229,7 +232,7 @@ pub fn display_detection_results(
 
     if let Some(ref desc) = detected.description {
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-        writeln!(stdout, "Detected description: {}", desc)?;
+        writeln!(stdout, "[INFO] Detected description: {}", desc)?;
         stdout.reset()?;
     }
 
@@ -239,7 +242,7 @@ pub fn display_detection_results(
         && detected.worker_type.is_none()
     {
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
-        writeln!(stdout, "No configuration auto-detected")?;
+        writeln!(stdout, "[INFO] No configuration auto-detected")?;
         stdout.reset()?;
     }
 

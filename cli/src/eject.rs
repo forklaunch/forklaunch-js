@@ -464,16 +464,10 @@ fn transform_schema_index_ts(
 ) -> Result<()> {
     let schema_index_ts_path = base_path.join("domain").join("schemas").join("index.ts");
 
-    let schema_index_ts_text = rendered_templates_cache
-        .get(&schema_index_ts_path)?
-        .unwrap()
-        .content
-        .clone();
-
     let new_index_ts_text = transform_domain_schemas_index_ts(
+        rendered_templates_cache,
         &base_path,
         &ejectable_dependencies,
-        Some(&schema_index_ts_text),
     )?;
 
     rendered_templates_cache.insert(

@@ -12,6 +12,7 @@ use crate::{
             add_env_vars_to_file, find_workspace_root, get_modules_path, get_target_env_file,
             is_env_var_defined,
         },
+        rendered_template::RenderedTemplatesCache,
     },
 };
 
@@ -59,7 +60,8 @@ impl CliCommand for SyncCommand {
         writeln!(stdout, "Workspace: {}", workspace_root.display())?;
         writeln!(stdout, "Modules path: {}", modules_path.display())?;
 
-        let project_env_vars = find_all_env_vars(&modules_path)?;
+        let rendered_templates_cache = RenderedTemplatesCache::new();
+        let project_env_vars = find_all_env_vars(&modules_path, &rendered_templates_cache)?;
 
         if project_env_vars.is_empty() {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;

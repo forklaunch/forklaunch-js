@@ -1,28 +1,36 @@
-use std::{fs::read_to_string, path::Path};
+use std::path::Path;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use convert_case::{Case, Casing};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::SourceType;
 use oxc_codegen::{Codegen, CodegenOptions};
 
-use crate::core::{
-    ast::{
-        injections::inject_into_import_statement::inject_into_import_statement,
-        parse_ast_program::parse_ast_program,
+use crate::{
+    constants::error_failed_to_read_file,
+    core::{
+        ast::{
+            injections::inject_into_import_statement::inject_into_import_statement,
+            parse_ast_program::parse_ast_program,
+        },
+        manifest::ProjectType,
+        rendered_template::RenderedTemplatesCache,
     },
-    manifest::ProjectType,
 };
 
 pub(crate) fn transform_seed_data_ts(
+    rendered_templates_cache: &RenderedTemplatesCache,
     router_name: &str,
     project_type: &ProjectType,
     base_path: &Path,
 ) -> Result<String> {
     let allocator = Allocator::default();
     let seed_data_path = base_path.join("persistence").join("seed.data.ts");
-    let seed_data_source_text = read_to_string(&seed_data_path).unwrap();
-    let seed_data_source_type = SourceType::from_path(&seed_data_path).unwrap();
+    let template = rendered_templates_cache
+        .get(&seed_data_path)?
+        .context(error_failed_to_read_file(&seed_data_path))?;
+    let seed_data_source_text = template.content;
+    let seed_data_source_type = SourceType::from_path(&seed_data_path)?;
     let router_name_camel_case = router_name.to_case(Case::Camel);
     let router_name_pascal_case = router_name.to_case(Case::Pascal);
 

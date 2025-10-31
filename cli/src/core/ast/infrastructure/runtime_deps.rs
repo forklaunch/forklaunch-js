@@ -1,12 +1,14 @@
 use std::{collections::HashSet, fs, path::Path};
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{ObjectProperty, PropertyKey, VariableDeclaration};
 use oxc_ast_visit::Visit;
 use oxc_parser::{Parser, ParserReturn};
 use oxc_span::SourceType;
 use serde::{Deserialize, Serialize};
+
+use crate::core::rendered_template::RenderedTemplatesCache;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -114,9 +116,11 @@ impl<'a> Visit<'a> for RuntimeDepsVisitor {
     }
 }
 
-pub fn extract_runtime_deps_from_file(file_path: &Path) -> Result<Vec<RuntimeDependency>> {
-    let source_code = fs::read_to_string(file_path)
-        .with_context(|| format!("Failed to read file: {}", file_path.display()))?;
+pub fn extract_runtime_deps_from_file(
+    file_path: &Path,
+    rendered_templates_cache: &RenderedTemplatesCache,
+) -> Result<Vec<RuntimeDependency>> {
+    let source_code = rendered_templates_cache.get(file_path)?.unwrap().content;
 
     extract_runtime_deps_from_source(&source_code)
 }
@@ -146,9 +150,9 @@ pub fn extract_runtime_deps_from_source(source_code: &str) -> Result<Vec<Runtime
     Ok(visitor.dependencies)
 }
 
-/// Find all runtime dependencies across all projects in a workspace
 pub fn find_all_runtime_deps(
     modules_path: &Path,
+    rendered_templates_cache: &RenderedTemplatesCache,
 ) -> Result<std::collections::HashMap<String, Vec<RuntimeDependency>>> {
     let mut all_deps = std::collections::HashMap::new();
 
@@ -169,7 +173,8 @@ pub fn find_all_runtime_deps(
                     .unwrap_or("unknown")
                     .to_string();
 
-                let deps = extract_runtime_deps_from_file(&registrations_path)?;
+                let deps =
+                    extract_runtime_deps_from_file(&registrations_path, rendered_templates_cache)?;
                 if !deps.is_empty() {
                     all_deps.insert(project_name, deps);
                 }
@@ -180,7 +185,6 @@ pub fn find_all_runtime_deps(
     Ok(all_deps)
 }
 
-/// Get unique resource types used by a project
 pub fn get_unique_resource_types(deps: &[RuntimeDependency]) -> Vec<String> {
     let unique: HashSet<ResourceType> = deps.iter().map(|d| d.resource_type.clone()).collect();
     let mut types: Vec<ResourceType> = unique.into_iter().collect();

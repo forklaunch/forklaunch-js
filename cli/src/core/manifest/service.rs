@@ -7,7 +7,7 @@ use super::{
 };
 use crate::{
     config_struct,
-    constants::{Database, Module, get_service_module_name},
+    constants::{Database, Infrastructure, Module, get_service_module_name},
     core::database::{get_database_port, get_db_driver},
 };
 
@@ -93,48 +93,68 @@ impl InitializableManifestConfig for ServiceManifestData {
             .iter()
             .find(|p| p.name == service_metadata.project_name.clone())
             .unwrap();
-        let database = project_entry
-            .resources
-            .as_ref()
-            .unwrap()
-            .database
-            .clone()
-            .unwrap();
-        let parsed_database = database.parse::<Database>().unwrap();
+        let database = service_metadata.database.clone().unwrap_or(
+            project_entry
+                .resources
+                .as_ref()
+                .unwrap()
+                .database
+                .clone()
+                .unwrap()
+                .parse()
+                .unwrap(),
+        );
         Self {
             service_name: service_name.clone(),
             camel_case_name: service_name.clone().to_case(Case::Camel),
             pascal_case_name: service_name.clone().to_case(Case::Pascal),
             kebab_case_name: service_name.clone().to_case(Case::Kebab),
-            database,
-            description: "".to_string(),
-            db_driver: get_db_driver(&parsed_database),
-            database_port: get_database_port(&parsed_database),
+            database: database.to_string(),
+            description: service_metadata
+                .description
+                .clone()
+                .unwrap_or(project_entry.description.clone()),
+            db_driver: get_db_driver(&database),
+            database_port: get_database_port(&database),
 
-            is_postgres: parsed_database == Database::PostgreSQL,
-            is_mongo: parsed_database == Database::MongoDB,
-            is_sqlite: parsed_database == Database::SQLite,
-            is_mysql: parsed_database == Database::MySQL,
-            is_mariadb: parsed_database == Database::MariaDB,
-            is_better_sqlite: parsed_database == Database::BetterSQLite,
-            is_libsql: parsed_database == Database::LibSQL,
-            is_mssql: parsed_database == Database::MsSQL,
-            is_in_memory_database: parsed_database == Database::LibSQL
-                || parsed_database == Database::SQLite
-                || parsed_database == Database::BetterSQLite,
+            is_postgres: database == Database::PostgreSQL,
+            is_mongo: database == Database::MongoDB,
+            is_sqlite: database == Database::SQLite,
+            is_mysql: database == Database::MySQL,
+            is_mariadb: database == Database::MariaDB,
+            is_better_sqlite: database == Database::BetterSQLite,
+            is_libsql: database == Database::LibSQL,
+            is_mssql: database == Database::MsSQL,
+            is_in_memory_database: database == Database::LibSQL
+                || database == Database::SQLite
+                || database == Database::BetterSQLite,
 
             is_iam: service_name == get_service_module_name(&Module::BaseIam)
                 || service_name == get_service_module_name(&Module::BetterAuthIam),
             is_billing: service_name == get_service_module_name(&Module::BaseBilling)
                 || service_name == get_service_module_name(&Module::StripeBilling),
-            is_cache_enabled: project_entry.resources.as_ref().unwrap().cache.is_some(),
-            is_s3_enabled: project_entry
-                .resources
+            is_cache_enabled: service_metadata
+                .infrastructure
                 .as_ref()
-                .unwrap()
-                .object_store
-                .is_some(),
-            is_database_enabled: project_entry.resources.as_ref().unwrap().database.is_some(),
+                .unwrap_or(&vec![])
+                .contains(&Infrastructure::Redis)
+                || project_entry.resources.as_ref().unwrap().cache.is_some(),
+            is_s3_enabled: service_metadata
+                .infrastructure
+                .as_ref()
+                .unwrap_or(&vec![])
+                .contains(&Infrastructure::S3)
+                || project_entry
+                    .resources
+                    .as_ref()
+                    .unwrap()
+                    .object_store
+                    .as_ref()
+                    .is_some_and(|object_store| {
+                        object_store.parse::<Infrastructure>().unwrap() == Infrastructure::S3
+                    }),
+            is_database_enabled: service_metadata.database.is_some()
+                || project_entry.resources.as_ref().unwrap().database.is_some(),
 
             is_better_auth: project_entry.variant.is_some()
                 && project_entry

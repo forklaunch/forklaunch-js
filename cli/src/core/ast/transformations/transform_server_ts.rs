@@ -1,23 +1,36 @@
-use std::{fs::read_to_string, path::Path};
+use std::path::Path;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use convert_case::{Case, Casing};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{Expression, SourceType, Statement};
 use oxc_codegen::{Codegen, CodegenOptions};
 
-use crate::core::ast::{
-    injections::{
-        inject_into_import_statement::inject_into_import_statement,
-        inject_into_server_ts::inject_into_server_ts,
+use crate::{
+    constants::error_failed_to_read_file,
+    core::{
+        ast::{
+            injections::{
+                inject_into_import_statement::inject_into_import_statement,
+                inject_into_server_ts::inject_into_server_ts,
+            },
+            parse_ast_program::parse_ast_program,
+        },
+        rendered_template::RenderedTemplatesCache,
     },
-    parse_ast_program::parse_ast_program,
 };
 
-pub(crate) fn transform_server_ts(router_name: &str, base_path: &Path) -> Result<String> {
+pub(crate) fn transform_server_ts(
+    rendered_templates_cache: &RenderedTemplatesCache,
+    router_name: &str,
+    base_path: &Path,
+) -> Result<String> {
     let allocator = Allocator::default();
     let server_path = base_path.join("server.ts");
-    let server_source_text = read_to_string(&server_path)?;
+    let template = rendered_templates_cache
+        .get(&server_path)?
+        .context(error_failed_to_read_file(&server_path))?;
+    let server_source_text = template.content;
     let server_source_type = SourceType::from_path(&server_path)?;
     let router_name_camel_case = router_name.to_case(Case::Camel);
 
@@ -89,6 +102,7 @@ mod tests {
     use tempfile::TempDir;
 
     use super::*;
+    use crate::core::rendered_template::RenderedTemplatesCache;
 
     fn create_test_server_ts() -> &'static str {
         r#"import { forklaunchExpress, schemaValidator } from '@forklaunch/blueprint-core';
@@ -199,8 +213,9 @@ app.listen(port, host, () => {
         let server_content = create_test_server_ts();
         let temp_dir = create_temp_project_structure(server_content);
         let temp_path = temp_dir.path();
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_server_ts("userManagement", temp_path);
+        let result = transform_server_ts(&cache, "userManagement", temp_path);
 
         assert!(result.is_ok());
 
@@ -228,8 +243,9 @@ app.listen(port, host, () => {
         let server_content = create_test_server_ts();
         let temp_dir = create_temp_project_structure(server_content);
         let temp_path = temp_dir.path();
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_server_ts("order-processing", temp_path);
+        let result = transform_server_ts(&cache, "order-processing", temp_path);
 
         assert!(result.is_ok());
 
@@ -286,8 +302,9 @@ app.listen(port, host, () => {
 "#;
         let temp_dir = create_temp_project_structure(server_content);
         let temp_path = temp_dir.path();
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_server_ts("newService", temp_path);
+        let result = transform_server_ts(&cache, "newService", temp_path);
 
         assert!(result.is_ok());
 
@@ -324,8 +341,9 @@ app.listen(port, host, () => {
     fn test_transform_server_ts_with_missing_server_file() {
         let temp_dir = TempDir::new().expect("Failed to create temp directory");
         let temp_path = temp_dir.path();
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_server_ts("testService", temp_path);
+        let result = transform_server_ts(&cache, "testService", temp_path);
 
         assert!(result.is_err());
     }
@@ -335,8 +353,9 @@ app.listen(port, host, () => {
         let server_content = create_test_server_ts();
         let temp_dir = create_temp_project_structure(server_content);
         let temp_path = temp_dir.path();
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_server_ts("testService", temp_path);
+        let result = transform_server_ts(&cache, "testService", temp_path);
 
         assert!(result.is_ok());
 
@@ -368,8 +387,9 @@ app.listen(port, host, () => {
         let server_content = create_test_server_ts_with_watermark();
         let temp_dir = create_temp_project_structure(server_content);
         let temp_path = temp_dir.path();
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_server_ts("userManagement", temp_path);
+        let result = transform_server_ts(&cache, "userManagement", temp_path);
 
         assert!(result.is_ok());
 

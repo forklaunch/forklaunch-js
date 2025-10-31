@@ -48,9 +48,11 @@ pub(crate) fn change_database_base_entity(
         _ => "SqlBaseEntity",
     };
 
-    if let Some(base_entity_ts_content) =
-        transform_base_entity_ts(&base_path.parent().unwrap(), database)?
-    {
+    if let Some(base_entity_ts_content) = transform_base_entity_ts(
+        rendered_templates_cache,
+        &base_path.parent().unwrap(),
+        database,
+    )? {
         let entity_path = base_path
             .parent()
             .unwrap()

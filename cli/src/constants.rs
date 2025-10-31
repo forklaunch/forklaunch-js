@@ -310,6 +310,13 @@ choice! {
 }
 
 // ERRORS
+pub(crate) fn error_failed_to_read_file(path: &Path) -> String {
+    format!(
+        "Failed to read file {}. Please check file permissions.",
+        path.to_string_lossy()
+    )
+}
+
 pub(crate) fn error_failed_to_write_file(path: &Path) -> String {
     format!(
         "Failed to write file {}. Please check file permissions.",

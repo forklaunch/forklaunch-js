@@ -144,21 +144,17 @@ fn change_type(
     resources.cache = None;
     resources.queue = None;
 
-    let template = rendered_templates_cache
-        .get(base_path.join("registrations.ts"))?
-        .unwrap();
-
     rendered_templates_cache.insert(
         base_path.join("registrations.ts").to_string_lossy(),
         RenderedTemplate {
             path: base_path.join("registrations.ts").into(),
             content: transform_registrations_ts_worker_type(
+                rendered_templates_cache,
                 base_path,
                 &manifest_data.app_name,
                 &manifest_data.worker_name.to_case(Case::Pascal),
                 &existing_type,
                 r#type,
-                Some(template.content),
             )?,
             context: None,
         },
@@ -309,7 +305,12 @@ fn change_type(
                         )?
                         .render(&manifest_data.clone())
                     } else {
-                        transform_mikroorm_config_ts(base_path, &existing_database, &db)?
+                        transform_mikroorm_config_ts(
+                            rendered_templates_cache,
+                            base_path,
+                            &existing_database,
+                            &db,
+                        )?
                     },
                     context: None,
                 },
@@ -378,25 +379,35 @@ fn change_type(
 
     let test_utils_path = base_path.join("__test__").join("test-utils.ts");
     if test_utils_path.exists() {
-        let _ = transform_test_utils_remove_database(&base_path);
-        let _ = transform_test_utils_remove_infrastructure(&base_path, &Infrastructure::Redis);
+        let _ = transform_test_utils_remove_database(rendered_templates_cache, &base_path);
+        let _ = transform_test_utils_remove_infrastructure(
+            rendered_templates_cache,
+            &base_path,
+            &Infrastructure::Redis,
+        );
 
         let test_content = match r#type {
             WorkerType::Database => {
                 let db = database.unwrap();
-                let content = transform_test_utils_add_database(&base_path, &db)?;
+                let content =
+                    transform_test_utils_add_database(rendered_templates_cache, &base_path, &db)?;
                 use crate::core::ast::transformations::transform_test_utils_ts::transform_test_utils_remove_kafka;
-                transform_test_utils_remove_kafka(&base_path).unwrap_or(content)
+                transform_test_utils_remove_kafka(rendered_templates_cache, &base_path)
+                    .unwrap_or(content)
             }
             WorkerType::RedisCache | WorkerType::BullMQCache => {
-                let content =
-                    transform_test_utils_add_infrastructure(&base_path, &Infrastructure::Redis)?;
+                let content = transform_test_utils_add_infrastructure(
+                    rendered_templates_cache,
+                    &base_path,
+                    &Infrastructure::Redis,
+                )?;
                 use crate::core::ast::transformations::transform_test_utils_ts::transform_test_utils_remove_kafka;
-                transform_test_utils_remove_kafka(&base_path).unwrap_or(content)
+                transform_test_utils_remove_kafka(rendered_templates_cache, &base_path)
+                    .unwrap_or(content)
             }
             WorkerType::Kafka => {
                 use crate::core::ast::transformations::transform_test_utils_ts::transform_test_utils_add_kafka;
-                transform_test_utils_add_kafka(&base_path)?
+                transform_test_utils_add_kafka(rendered_templates_cache, &base_path)?
             }
         };
 
@@ -493,6 +504,10 @@ impl CliCommand for WorkerCommand {
                     .to_string_lossy()
                     .to_string()
                     .clone(),
+                database: None,
+                infrastructure: None,
+                description: None,
+                worker_type: None,
             }),
         );
 

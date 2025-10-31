@@ -50,6 +50,7 @@ fn use_generated_sdk_mode(
         RenderedTemplate {
             path: universal_sdk_path.clone(),
             content: transform_universal_sdk_use_generated_path(
+                rendered_templates_cache,
                 &app_root_path.join(manifest_data.modules_path.clone()),
             )?,
             context: None,
@@ -117,6 +118,7 @@ fn use_live_sdk_mode(
         RenderedTemplate {
             path: universal_sdk_path.clone(),
             content: transform_universal_sdk_use_live_sdk(
+                rendered_templates_cache,
                 &app_root_path.join(manifest_data.modules_path.clone()),
             )?,
             context: None,

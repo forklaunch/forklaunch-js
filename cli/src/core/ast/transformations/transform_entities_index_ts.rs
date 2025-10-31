@@ -1,24 +1,37 @@
-use std::{fs::read_to_string, path::Path};
+use std::path::Path;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use convert_case::{Case, Casing};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::SourceType;
 use oxc_codegen::{Codegen, CodegenOptions};
 
-use crate::core::ast::{
-    injections::inject_into_index_ts::inject_into_index_ts_export,
-    parse_ast_program::parse_ast_program,
+use crate::{
+    constants::error_failed_to_read_file,
+    core::{
+        ast::{
+            injections::inject_into_index_ts::inject_into_index_ts_export,
+            parse_ast_program::parse_ast_program,
+        },
+        rendered_template::RenderedTemplatesCache,
+    },
 };
 
-pub(crate) fn transform_entities_index_ts(router_name: &str, base_path: &Path) -> Result<String> {
+pub(crate) fn transform_entities_index_ts(
+    rendered_templates_cache: &RenderedTemplatesCache,
+    router_name: &str,
+    base_path: &Path,
+) -> Result<String> {
     let allocator = Allocator::default();
     let entities_index_path = base_path
         .join("persistence")
         .join("entities")
         .join("index.ts");
-    let entities_index_source_text = read_to_string(&entities_index_path).unwrap();
-    let entities_index_source_type = SourceType::from_path(&entities_index_path).unwrap();
+    let template = rendered_templates_cache
+        .get(&entities_index_path)?
+        .context(error_failed_to_read_file(&entities_index_path))?;
+    let entities_index_source_text = template.content;
+    let entities_index_source_type = SourceType::from_path(&entities_index_path)?;
     let router_name_camel_case = router_name.to_case(Case::Camel);
     let router_name_pascal_case = router_name.to_case(Case::Pascal);
 
@@ -53,6 +66,7 @@ mod tests {
     use tempfile::TempDir;
 
     use super::*;
+    use crate::core::rendered_template::RenderedTemplatesCache;
 
     fn create_test_entities_index() -> &'static str {
         r#"export { UserRecord } from './userRecord.entity';
@@ -80,7 +94,8 @@ export { PermissionRecord } from './permissionRecord.entity';
         let temp_dir = create_temp_entities_structure(content);
         let temp_path = temp_dir.path();
 
-        let result = transform_entities_index_ts("organization", temp_path);
+        let cache = RenderedTemplatesCache::new();
+        let result = transform_entities_index_ts(&cache, "organization", temp_path);
 
         assert!(result.is_ok());
 
@@ -100,7 +115,8 @@ export { PermissionRecord } from './permissionRecord.entity';
         let temp_dir = create_temp_entities_structure(content);
         let temp_path = temp_dir.path();
 
-        let result = transform_entities_index_ts("order-item", temp_path);
+        let cache = RenderedTemplatesCache::new();
+        let result = transform_entities_index_ts(&cache, "order-item", temp_path);
 
         assert!(result.is_ok());
 
@@ -115,8 +131,9 @@ export { PermissionRecord } from './permissionRecord.entity';
         let content = "";
         let temp_dir = create_temp_entities_structure(content);
         let temp_path = temp_dir.path();
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_entities_index_ts("product", temp_path);
+        let result = transform_entities_index_ts(&cache, "product", temp_path);
 
         assert!(result.is_ok());
 

@@ -158,12 +158,15 @@ pub(crate) fn export_all_services(
     manifest: &ApplicationManifestData,
     output_dir: &Path,
 ) -> Result<Vec<String>> {
+    use crate::core::rendered_template::RenderedTemplatesCache;
+
     let mut exported_services = Vec::new();
 
     let runtime = manifest.runtime.as_str();
     let modules_path = app_root.join(&manifest.modules_path);
 
-    let all_env_vars = find_all_env_vars(&modules_path)?;
+    let rendered_templates_cache = RenderedTemplatesCache::new();
+    let all_env_vars = find_all_env_vars(&modules_path, &rendered_templates_cache)?;
 
     let services: Vec<_> = manifest
         .projects
