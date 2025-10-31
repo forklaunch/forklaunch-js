@@ -1,6 +1,9 @@
 import { isNever, isRecord, safeStringify } from '@forklaunch/common';
 import { FastMCP } from '@forklaunch/fastmcp-fork';
 import { string, ZodSchemaValidator, ZodType } from '@forklaunch/validator/zod';
+import { OAuthFlow } from '../oauth/oauthFlow';
+import { createOAuthStorage } from '../oauth/oauthStorage';
+import { OAuthToken } from '../oauth/types/oauth.types';
 import {
   discriminateBody,
   discriminateResponseBodies
@@ -72,7 +75,9 @@ function generateInputSchema(
               : {})
           })
         }
-      : {})
+      : {}),
+    // Always include sessionId as optional parameter for OAuth support
+    sessionId: string.optional()
   });
 }
 /**
@@ -106,6 +111,21 @@ export function generateMcpServer<
     throw new Error(
       'Schema validator must be an instance of ZodSchemaValidator'
     );
+  }
+
+  let oauthFlow: OAuthFlow | undefined;
+
+  if (appOptions && typeof appOptions === 'object' && appOptions.oauth) {
+    const oauthConfig = appOptions.oauth;
+    const oauthStorage = createOAuthStorage({
+      storeToken: oauthConfig.storeToken
+        ? (tokenId: string, token: OAuthToken) => oauthConfig.storeToken!(token)
+        : undefined,
+      retrieveToken: oauthConfig.retrieveToken,
+      deleteToken: oauthConfig.deleteToken
+    });
+
+    oauthFlow = new OAuthFlow(oauthConfig, oauthStorage);
   }
 
   const mcpServer = new FastMCP({
@@ -282,17 +302,51 @@ export function generateMcpServer<
               url += queryString ? `?${queryString}` : '';
             }
 
+            const processedHeaders: Record<string, string> = {};
+
+            if (headers) {
+              for (const [key, value] of Object.entries(headers)) {
+                if (typeof value === 'string') {
+                  processedHeaders[key] = value;
+                } else if (value !== null && value !== undefined) {
+                  processedHeaders[key] = String(value);
+                }
+              }
+            }
+
+            if (oauthFlow) {
+              const sessionId = (args as { sessionId?: string }).sessionId;
+              if (sessionId) {
+                console.log(
+                  `[MCP OAuth] Looking for token with sessionId: ${sessionId}`
+                );
+                const oauthToken =
+                  await oauthFlow.getTokenForSession(sessionId);
+
+                if (oauthToken) {
+                  console.log(
+                    `[MCP OAuth] Found token, expires at: ${oauthToken.expiresAt}`
+                  );
+                  processedHeaders['Authorization'] =
+                    `Bearer ${oauthToken.accessToken}`;
+                } else {
+                  console.log(
+                    `[MCP OAuth] No token found for sessionId: ${sessionId}`
+                  );
+                }
+              }
+            }
+
+            if (discriminatedBody?.contentType !== 'multipart/form-data') {
+              processedHeaders['Content-Type'] =
+                contentType ??
+                discriminatedBody?.contentType ??
+                'application/json';
+            }
+
             const response = await fetch(encodeURI(url), {
               method: route.method.toUpperCase(),
-              headers: {
-                ...headers,
-                ...(discriminatedBody?.contentType != 'multipart/form-data'
-                  ? {
-                      'Content-Type':
-                        contentType ?? discriminatedBody?.contentType
-                    }
-                  : {})
-              },
+              headers: processedHeaders,
               body: parsedBody as BodyInit | null | undefined
             });
 
@@ -362,6 +416,199 @@ export function generateMcpServer<
       });
     });
   });
+
+  if (oauthFlow) {
+    mcpServer.addTool({
+      name: 'OAuth Authorization',
+      description:
+        'Initiate OAuth authorization flow. Requires a unique sessionId to isolate user sessions.',
+      parameters: schemaValidator.schemify({
+        sessionId: string
+      }),
+      execute: async (args) => {
+        const { sessionId } = args as { sessionId?: string };
+        if (!sessionId) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: 'Error: sessionId is required for OAuth authorization'
+              }
+            ],
+            isError: true
+          };
+        }
+        const authUrl = await oauthFlow!.initiateAuthFlow(sessionId);
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: `Please visit this URL to authorize: ${authUrl}`
+            }
+          ]
+        };
+      }
+    });
+
+    mcpServer.addTool({
+      name: 'OAuth Token Exchange',
+      description:
+        'Exchange authorization code for access token. Use the same sessionId from OAuth Authorization.',
+      parameters: schemaValidator.schemify({
+        code: string,
+        state: string,
+        sessionId: string
+      }),
+      execute: async (args) => {
+        const { code, state, sessionId } = args as {
+          code: string;
+          state: string;
+          sessionId?: string;
+        };
+        if (!sessionId) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: 'Error: sessionId is required for token exchange'
+              }
+            ],
+            isError: true
+          };
+        }
+        try {
+          const token = await oauthFlow!.exchangeCodeForToken(
+            code,
+            state,
+            sessionId
+          );
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: `OAuth token obtained and stored successfully!
+
+Session ID: ${sessionId}
+Token Type: ${token.tokenType}
+Expires At: ${token.expiresAt.toISOString()}
+Expires In: ${token.expiresIn} seconds
+Scope: ${token.scope || 'Not specified'}
+Has Refresh Token: ${token.refreshToken ? 'Yes' : 'No'}
+
+✓ Token securely stored and ready to use
+✓ Use this sessionId (${sessionId}) when calling protected endpoints
+✓ The MCP server will automatically inject the token in API requests`
+              }
+            ]
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: `OAuth token exchange failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+              }
+            ],
+            isError: true
+          };
+        }
+      }
+    });
+
+    mcpServer.addTool({
+      name: 'OAuth Token Validation',
+      description: 'Validate OAuth token',
+      parameters: schemaValidator.schemify({
+        tokenId: string.optional(),
+        sessionId: string.optional()
+      }),
+      execute: async (args) => {
+        const { tokenId, sessionId } = args as {
+          tokenId?: string;
+          sessionId?: string;
+        };
+        try {
+          let validationResult;
+          if (tokenId) {
+            validationResult = await oauthFlow!.validateToken(tokenId);
+          } else if (sessionId) {
+            const token = await oauthFlow!.getTokenForSession(sessionId);
+            if (token) {
+              validationResult = { isValid: true, token };
+            } else {
+              validationResult = {
+                isValid: false,
+                error: 'No token found for session'
+              };
+            }
+          } else {
+            return {
+              content: [
+                {
+                  type: 'text' as const,
+                  text: 'Either tokenId or sessionId must be provided'
+                }
+              ],
+              isError: true
+            };
+          }
+
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: validationResult.isValid
+                  ? `Token is valid. Expires at: ${validationResult.token?.expiresAt.toISOString()}`
+                  : `Token validation failed: ${validationResult.error}`
+              }
+            ]
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: `Token validation error: ${error instanceof Error ? error.message : 'Unknown error'}`
+              }
+            ],
+            isError: true
+          };
+        }
+      }
+    });
+
+    mcpServer.addTool({
+      name: 'OAuth Token Revocation',
+      description: 'Revoke OAuth token and clear session',
+      parameters: schemaValidator.schemify({
+        sessionId: string
+      }),
+      execute: async (args) => {
+        const { sessionId } = args as { sessionId: string };
+        try {
+          await oauthFlow!.revokeToken(sessionId);
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: 'OAuth token revoked successfully'
+              }
+            ]
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: `Token revocation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+              }
+            ],
+            isError: true
+          };
+        }
+      }
+    });
+  }
 
   return mcpServer;
 }
