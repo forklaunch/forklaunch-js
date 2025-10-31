@@ -190,6 +190,9 @@ impl CliCommand for RouterCommand {
             router_base_path
                 .join("services")
                 .join(format!("{}.service.ts", camel_case_name)),
+            router_base_path
+                .join("__test__")
+                .join(format!("{}.test.ts", camel_case_name)),
         ];
 
         for path in file_paths {

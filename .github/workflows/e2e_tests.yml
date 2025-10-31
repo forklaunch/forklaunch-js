@@ -16,11 +16,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        group: [1, 2, 3, 4, 5]
+        group: [1, 2, 3, 4, 5, 6]
         include:
           - group: 1
-            name: "Init Tests"
-            pattern: "init*.sh"
+            name: "Init Tests (non-application)"
+            pattern: "init_!(application*).sh"
           - group: 2
             name: "Sync Tests"
             pattern: "sync*.sh"
@@ -32,7 +32,10 @@ jobs:
             pattern: "delete*.sh"
           - group: 5
             name: "Other Tests"
-            pattern: "!(init|sync|change|delete)*.sh"
+            pattern: "!(init*|sync*|change*|delete*).sh"
+          - group: 6
+            name: "Init Application Tests"
+            pattern: "init_application*.sh"
 
     name: ${{ matrix.name }}
 
@@ -77,10 +80,18 @@ jobs:
         run: |
           set -e
           shopt -s extglob nullglob
+          test_count=0
+          failed_test=""
           for test_script in ${{ matrix.pattern }}; do
             if [ -f "$test_script" ]; then
               echo "[INFO] Running test: $test_script"
-              ./"$test_script"
+              test_count=$((test_count + 1))
+              if ! ./"$test_script"; then
+                failed_test="$test_script"
+                echo "[ERROR] Test failed: $test_script"
+                exit 1
+              fi
               echo "[OK] Test passed: $test_script"
             fi
           done
+          echo "[SUCCESS] All $test_count tests passed in group: ${{ matrix.name }}"
