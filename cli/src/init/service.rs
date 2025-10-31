@@ -71,7 +71,7 @@ use crate::{
             update_application_package_json,
         },
         pnpm_workspace::add_project_definition_to_pnpm_workspace,
-        rendered_template::{RenderedTemplate, write_rendered_templates},
+        rendered_template::{RenderedTemplate, RenderedTemplatesCache, write_rendered_templates},
         symlinks::generate_symlinks,
         template::{PathIO, generate_with_template},
         tsconfig::{add_project_to_modules_tsconfig, generate_project_tsconfig},
@@ -155,18 +155,30 @@ fn generate_basic_service(
         });
     }
 
+    let mut rendered_templates_cache = RenderedTemplatesCache::new();
+    for template in rendered_templates {
+        rendered_templates_cache.insert(template.path.to_string_lossy().to_string(), template);
+    }
+
     add_project_to_universal_sdk(
-        &mut rendered_templates,
+        &mut rendered_templates_cache,
         base_path,
         &manifest_data.app_name,
         &manifest_data.service_name,
         None,
     )?;
 
-    rendered_templates.push(
-        add_project_to_modules_tsconfig(base_path, &manifest_data.service_name)
-            .with_context(|| "Failed to add service to modules tsconfig.json")?,
+    let tsconfig_template = add_project_to_modules_tsconfig(base_path, &manifest_data.service_name)
+        .with_context(|| "Failed to add service to modules tsconfig.json")?;
+    rendered_templates_cache.insert(
+        tsconfig_template.path.to_string_lossy().to_string(),
+        tsconfig_template,
     );
+
+    let rendered_templates: Vec<_> = rendered_templates_cache
+        .drain()
+        .map(|(_, template)| template)
+        .collect();
 
     write_rendered_templates(&rendered_templates, dryrun, stdout)
         .with_context(|| ERROR_FAILED_TO_WRITE_SERVICE_FILES)?;

@@ -145,6 +145,10 @@ impl CliCommand for LibraryCommand {
                     .to_string_lossy()
                     .to_string()
                     .clone(),
+                database: None,
+                infrastructure: None,
+                description: None,
+                worker_type: None,
             }),
         );
 

@@ -267,6 +267,34 @@ choice! {
         },
     }
 
+    pub(crate) enum InitializeType {
+        Service = Choice {
+            id: "service",
+            description: Some("service"),
+            exclusive_files: None,
+        },
+        Library = Choice {
+            id: "library",
+            description: Some("library"),
+            exclusive_files: None,
+        },
+        Worker = Choice {
+            id: "worker",
+            description: Some("worker"),
+            exclusive_files: None,
+        },
+        Module = Choice {
+            id: "module",
+            description: Some("module"),
+            exclusive_files: None,
+        },
+        Router = Choice {
+            id: "router",
+            description: Some("router"),
+            exclusive_files: None,
+        },
+    }
+
     pub(crate) enum SdkModeType {
         Generated = Choice {
             id: "generated",
@@ -282,6 +310,13 @@ choice! {
 }
 
 // ERRORS
+pub(crate) fn error_failed_to_read_file(path: &Path) -> String {
+    format!(
+        "Failed to read file {}. Please check file permissions.",
+        path.to_string_lossy()
+    )
+}
+
 pub(crate) fn error_failed_to_write_file(path: &Path) -> String {
     format!(
         "Failed to write file {}. Please check file permissions.",
@@ -417,3 +452,16 @@ pub(crate) fn get_service_module_cache(service_type: &Module) -> Option<String> 
         _ => None,
     }
 }
+
+// Sync constants - directories and services to ignore during sync operations
+pub(crate) const DIRS_TO_IGNORE: &[&str] = &[
+    "node_modules",
+    "assets",
+    "patches",
+    ".git",
+    ".github",
+    ".vscode",
+    "monitoring",
+    "core",
+    "universal-sdk",
+];

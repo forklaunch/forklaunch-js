@@ -33,6 +33,7 @@ use crate::{
         env_scope::determine_env_var_scopes,
         manifest::{ProjectType, application::ApplicationManifestData},
         openapi_export::export_all_services,
+        rendered_template::RenderedTemplatesCache,
         token::get_token,
     },
 };
@@ -209,7 +210,9 @@ impl CliCommand for CreateCommand {
 
         let workspace_root = find_workspace_root(&app_root)?;
         let modules_path = get_modules_path(&workspace_root)?;
-        let project_env_vars = find_all_env_vars(&modules_path)?;
+
+        let rendered_templates_cache = RenderedTemplatesCache::new();
+        let project_env_vars = find_all_env_vars(&modules_path, &rendered_templates_cache)?;
 
         let scoped_env_vars = determine_env_var_scopes(&project_env_vars, &manifest)?;
 
@@ -223,7 +226,7 @@ impl CliCommand for CreateCommand {
         stdout.flush()?;
         stdout.reset()?;
 
-        let all_runtime_deps = find_all_runtime_deps(&modules_path)?;
+        let all_runtime_deps = find_all_runtime_deps(&modules_path, &rendered_templates_cache)?;
 
         // Convert to resource types per project
         let mut project_runtime_deps: HashMap<String, Vec<String>> = HashMap::new();

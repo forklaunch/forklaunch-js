@@ -51,8 +51,7 @@ use crate::{
         name::validate_name,
         package_json::{
             application_package_json::{
-                ApplicationDevDependencies, ApplicationPackageJson, ApplicationPnpm,
-                ApplicationScripts,
+                ApplicationDevDependencies, ApplicationPackageJson, ApplicationScripts,
             },
             package_json_constants::{
                 AJV_VERSION, APP_DEV_BUILD_SCRIPT, APP_DEV_SCRIPT, APP_PREPARE_SCRIPT,
@@ -233,25 +232,8 @@ fn generate_application_package_json(
             },
             additional_deps: HashMap::new(),
         }),
-        pnpm: if data.is_node {
-            Some(ApplicationPnpm {
-                // TODO: Remove -- temporary patches for MikroORM CLI
-                patched_dependencies: Some(HashMap::from([(
-                    "@jercle/yargonaut".to_string(),
-                    "./patches/@jercle__yargonaut.patch".to_string(),
-                )])),
-            })
-        } else {
-            None
-        },
-        patched_dependencies: if data.is_bun {
-            Some(HashMap::from([(
-                "@jercle/yargonaut@1.1.5".to_string(),
-                "./patches/@jercle__yargonaut.patch".to_string(),
-            )]))
-        } else {
-            None
-        },
+        pnpm: None,
+        patched_dependencies: None,
         additional_entries: HashMap::new(),
     };
 

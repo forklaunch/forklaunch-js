@@ -2,7 +2,7 @@ use std::{collections::HashMap, fmt};
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Default)]
+#[derive(Debug, Serialize, Default, Clone)]
 pub(crate) struct ApplicationScripts {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) build: Option<String>,
@@ -133,7 +133,7 @@ impl<'de> Deserialize<'de> for ApplicationScripts {
     }
 }
 
-#[derive(Debug, Serialize, Default)]
+#[derive(Debug, Serialize, Default, Clone)]
 pub(crate) struct ApplicationDevDependencies {
     #[serde(rename = "@biomejs/biome", skip_serializing_if = "Option::is_none")]
     pub(crate) biome: Option<String>,
@@ -263,7 +263,7 @@ impl<'de> Deserialize<'de> for ApplicationDevDependencies {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub(crate) struct ApplicationPnpm {
     #[serde(
         rename = "patchedDependencies",
@@ -272,7 +272,7 @@ pub(crate) struct ApplicationPnpm {
     pub(crate) patched_dependencies: Option<HashMap<String, String>>,
 }
 
-#[derive(Debug, Serialize, Default)]
+#[derive(Debug, Serialize, Default, Clone)]
 pub(crate) struct ApplicationPackageJson {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) name: Option<String>,

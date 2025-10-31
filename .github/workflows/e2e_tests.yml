@@ -13,6 +13,31 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [1, 2, 3, 4, 5, 6]
+        include:
+          - group: 1
+            name: "Init Tests (heavy modules)"
+            pattern: "init_@(application|billing|iam)*.sh"
+          - group: 2
+            name: "Init Tests (components)"
+            pattern: "init_@(compile|library|module|router|service|worker)*.sh"
+          - group: 3
+            name: "Sync Tests"
+            pattern: "sync*.sh"
+          - group: 4
+            name: "Change Tests"
+            pattern: "change*.sh"
+          - group: 5
+            name: "Delete Tests"
+            pattern: "delete*.sh"
+          - group: 6
+            name: "Other Tests"
+            pattern: "!(init*|sync*|change*|delete*).sh"
+
+    name: ${{ matrix.name }}
 
     steps:
       - uses: actions/checkout@v4
@@ -50,13 +75,23 @@ jobs:
       - name: Create token file
         run: touch ~/.forklaunch/token
 
-      - name: Find and run all test scripts
+      - name: Run ${{ matrix.name }}
         working-directory: ./cli/tests
         run: |
           set -e
-          for test_script in *.sh; do
+          shopt -s extglob nullglob
+          test_count=0
+          failed_test=""
+          for test_script in ${{ matrix.pattern }}; do
             if [ -f "$test_script" ]; then
-              echo "Running test: $test_script"
-              ./$test_script
+              echo "[INFO] Running test: $test_script"
+              test_count=$((test_count + 1))
+              if ! ./"$test_script"; then
+                failed_test="$test_script"
+                echo "[ERROR] Test failed: $test_script"
+                exit 1
+              fi
+              echo "[OK] Test passed: $test_script"
             fi
           done
+          echo "[SUCCESS] All $test_count tests passed in group: ${{ matrix.name }}"

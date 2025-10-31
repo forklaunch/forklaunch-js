@@ -196,7 +196,12 @@ fn change_database(
         mikro_orm_config_path.to_string_lossy(),
         RenderedTemplate {
             path: mikro_orm_config_path.clone(),
-            content: transform_mikroorm_config_ts(&base_path, &Some(existing_database), database)?,
+            content: transform_mikroorm_config_ts(
+                rendered_templates_cache,
+                &base_path,
+                &Some(existing_database),
+                database,
+            )?,
             context: None,
         },
     );
@@ -235,8 +240,15 @@ fn change_database(
     if test_utils_path.exists() {
         let current_content = rendered_templates_cache.get(&test_utils_path)?;
         if current_content.is_some() || std::fs::read_to_string(&test_utils_path).is_ok() {
-            let new_content = transform_test_utils_remove_database(&base_path)
-                .and_then(|_| transform_test_utils_add_database(&base_path, database))?;
+            let new_content =
+                transform_test_utils_remove_database(rendered_templates_cache, &base_path)
+                    .and_then(|_| {
+                        transform_test_utils_add_database(
+                            rendered_templates_cache,
+                            &base_path,
+                            database,
+                        )
+                    })?;
             rendered_templates_cache.insert(
                 test_utils_path.to_string_lossy(),
                 RenderedTemplate {
@@ -319,10 +331,8 @@ fn change_infrastructure(
                     RenderedTemplate {
                         path: registrations_path.clone(),
                         content: transform_registrations_ts_infrastructure_redis(
+                            rendered_templates_cache,
                             &base_path,
-                            rendered_templates_cache
-                                .get(&registrations_path)?
-                                .and_then(|v| Some(v.content.clone())),
                         )?,
                         context: None,
                     },
@@ -335,6 +345,7 @@ fn change_infrastructure(
                         RenderedTemplate {
                             path: test_utils_path.clone(),
                             content: transform_test_utils_add_infrastructure(
+                                rendered_templates_cache,
                                 &base_path,
                                 &Infrastructure::Redis,
                             )?,
@@ -410,10 +421,8 @@ fn change_infrastructure(
                     RenderedTemplate {
                         path: registrations_path.clone(),
                         content: transform_registrations_ts_infrastructure_s3(
+                            rendered_templates_cache,
                             &base_path,
-                            rendered_templates_cache
-                                .get(&registrations_path)?
-                                .and_then(|v| Some(v.content.clone())),
                         )?,
                         context: None,
                     },
@@ -426,6 +435,7 @@ fn change_infrastructure(
                         RenderedTemplate {
                             path: test_utils_path.clone(),
                             content: transform_test_utils_add_infrastructure(
+                                rendered_templates_cache,
                                 &base_path,
                                 &Infrastructure::S3,
                             )?,
@@ -508,7 +518,8 @@ fn change_infrastructure(
                             &base_path,
                             rendered_templates_cache
                                 .get(&registrations_path)?
-                                .and_then(|v| Some(v.content.clone())),
+                                .unwrap()
+                                .content,
                         )?,
                         context: None,
                     },
@@ -521,6 +532,7 @@ fn change_infrastructure(
                         RenderedTemplate {
                             path: test_utils_path.clone(),
                             content: transform_test_utils_remove_infrastructure(
+                                rendered_templates_cache,
                                 &base_path,
                                 &Infrastructure::Redis,
                             )?,
@@ -601,7 +613,8 @@ fn change_infrastructure(
                             &base_path,
                             rendered_templates_cache
                                 .get(&registrations_path)?
-                                .and_then(|v| Some(v.content.clone())),
+                                .unwrap()
+                                .content,
                         )?,
                         context: None,
                     },
@@ -614,6 +627,7 @@ fn change_infrastructure(
                         RenderedTemplate {
                             path: test_utils_path.clone(),
                             content: transform_test_utils_remove_infrastructure(
+                                rendered_templates_cache,
                                 &base_path,
                                 &Infrastructure::S3,
                             )?,
@@ -725,6 +739,10 @@ impl CliCommand for ServiceCommand {
                     .to_string_lossy()
                     .to_string()
                     .clone(),
+                database: None,
+                infrastructure: None,
+                description: None,
+                worker_type: None,
             }),
         );
 

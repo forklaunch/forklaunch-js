@@ -1,19 +1,20 @@
-use std::{
-    fs::{exists, read_to_string},
-    path::Path,
-};
+use std::{fs::exists, path::Path};
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use oxc_allocator::{Allocator, CloneIn, HashMap, Vec};
 use oxc_ast::ast::{ClassElement, PropertyKey, SourceType, Statement};
 use oxc_codegen::{Codegen, CodegenOptions};
 
 use crate::{
-    constants::Database,
-    core::{ast::parse_ast_program::parse_ast_program, rendered_template::TEMPLATES_DIR},
+    constants::{Database, error_failed_to_read_file},
+    core::{
+        ast::parse_ast_program::parse_ast_program,
+        rendered_template::{RenderedTemplatesCache, TEMPLATES_DIR},
+    },
 };
 
 pub(crate) fn transform_base_entity_ts(
+    rendered_templates_cache: &RenderedTemplatesCache,
     base_path: &Path,
     database: &Database,
 ) -> Result<Option<String>> {
@@ -42,7 +43,10 @@ pub(crate) fn transform_base_entity_ts(
         .join("core")
         .join("persistence")
         .join(base_entity_file_name_to_copy);
-    let base_entity_to_copy_text = &read_to_string(&base_entity_to_copy_path)?;
+    let template = rendered_templates_cache
+        .get(&base_entity_to_copy_path)?
+        .context(error_failed_to_read_file(&base_entity_to_copy_path))?;
+    let base_entity_to_copy_text = template.content;
 
     let base_entity_to_copy_program = parse_ast_program(
         &allocator,

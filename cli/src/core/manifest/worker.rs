@@ -7,7 +7,7 @@ use super::{
 };
 use crate::{
     config_struct,
-    constants::{Database, WorkerType},
+    constants::{Database, Infrastructure},
     core::{
         database::{get_database_port, get_db_driver},
         worker_type::{
@@ -100,41 +100,55 @@ impl InitializableManifestConfig for WorkerManifestData {
             .iter()
             .find(|p| p.name == worker_metadata.project_name.clone())
             .unwrap();
-        let database = project_entry.resources.as_ref().unwrap().database.clone();
-        let parsed_database = database.clone().map(|d| d.parse::<Database>().unwrap());
-        let worker_type = project_entry
-            .metadata
+        let database = worker_metadata.database.clone().map(|d| d).or(project_entry
+            .resources
             .as_ref()
             .unwrap()
-            .r#type
-            .clone()
-            .unwrap();
-        let parsed_worker_type = worker_type.parse::<WorkerType>().unwrap();
+            .database
+            .as_ref()
+            .map(|d| d.parse::<Database>().unwrap()));
+        let worker_type = worker_metadata.worker_type.clone().unwrap_or(
+            project_entry
+                .metadata
+                .as_ref()
+                .unwrap()
+                .r#type
+                .clone()
+                .unwrap()
+                .parse()
+                .unwrap(),
+        );
         Self {
             worker_name: worker_name.clone(),
             camel_case_name: worker_name.clone().to_case(Case::Camel),
             pascal_case_name: worker_name.clone().to_case(Case::Pascal),
             kebab_case_name: worker_name.clone().to_case(Case::Kebab),
-            database,
+            database: database.map(|d| d.to_string()),
             description: project_entry.description.clone(),
-            db_driver: parsed_database.map(|d| get_db_driver(&d)),
-            database_port: parsed_database.map(|d| get_database_port(&d).unwrap()),
+            db_driver: database.map(|d| get_db_driver(&d)),
+            database_port: database.map(|d| get_database_port(&d).unwrap()),
             is_worker: true,
 
-            is_postgres: parsed_database == Some(Database::PostgreSQL),
-            is_mongo: parsed_database == Some(Database::MongoDB),
-            is_sqlite: parsed_database == Some(Database::SQLite),
-            is_mysql: parsed_database == Some(Database::MySQL),
-            is_mariadb: parsed_database == Some(Database::MariaDB),
-            is_better_sqlite: parsed_database == Some(Database::BetterSQLite),
-            is_libsql: parsed_database == Some(Database::LibSQL),
-            is_mssql: parsed_database == Some(Database::MsSQL),
-            is_in_memory_database: parsed_database == Some(Database::LibSQL)
-                || parsed_database == Some(Database::SQLite)
-                || parsed_database == Some(Database::BetterSQLite),
+            is_postgres: database == Some(Database::PostgreSQL),
+            is_mongo: database == Some(Database::MongoDB),
+            is_sqlite: database == Some(Database::SQLite),
+            is_mysql: database == Some(Database::MySQL),
+            is_mariadb: database == Some(Database::MariaDB),
+            is_better_sqlite: database == Some(Database::BetterSQLite),
+            is_libsql: database == Some(Database::LibSQL),
+            is_mssql: database == Some(Database::MsSQL),
+            is_in_memory_database: database == Some(Database::LibSQL)
+                || database == Some(Database::SQLite)
+                || database == Some(Database::BetterSQLite),
 
-            is_cache_enabled: project_entry.resources.as_ref().unwrap().cache.is_some(),
-            is_database_enabled: project_entry.resources.as_ref().unwrap().database.is_some(),
+            is_cache_enabled: worker_metadata
+                .infrastructure
+                .as_ref()
+                .unwrap()
+                .contains(&Infrastructure::Redis)
+                || project_entry.resources.as_ref().unwrap().cache.is_some(),
+            is_database_enabled: worker_metadata.database.is_some()
+                || project_entry.resources.as_ref().unwrap().database.is_some(),
             is_kafka_enabled: project_entry
                 .resources
                 .as_ref()
@@ -143,11 +157,11 @@ impl InitializableManifestConfig for WorkerManifestData {
                 .as_ref()
                 .is_some_and(|queue| queue == "kafka"),
 
-            worker_type: worker_type.clone(),
-            worker_type_lowercase: worker_type.to_lowercase(),
-            default_worker_options: get_default_worker_options(&parsed_worker_type),
-            worker_consumer_factory: get_worker_consumer_factory(&parsed_worker_type, &worker_name),
-            worker_producer_factory: get_worker_producer_factory(&parsed_worker_type),
+            worker_type: worker_type.to_string(),
+            worker_type_lowercase: worker_type.to_string().to_lowercase(),
+            default_worker_options: get_default_worker_options(&worker_type),
+            worker_consumer_factory: get_worker_consumer_factory(&worker_type, &worker_name),
+            worker_producer_factory: get_worker_producer_factory(&worker_type),
             ..self.clone()
         }
     }

@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::{collections::HashMap, io::Write};
 
 use anyhow::{Result, bail};
 use clap::ArgMatches;
@@ -256,4 +256,137 @@ pub(crate) fn prompt_comma_separated_list_from_selections(
     } else {
         Ok(None)
     }
+}
+
+// New prompt functions that support pre-provided answers
+pub(crate) fn prompt_with_validation_with_answers<ErrorFunction, ValidatorFunction>(
+    line_editor: &mut Editor<ArrayCompleter, DefaultHistory>,
+    stdout: &mut StandardStream,
+    matches_key: &str,
+    matches: &ArgMatches,
+    prompt: &str,
+    valid_options: Option<&[&str]>,
+    validator: ValidatorFunction,
+    error_message: ErrorFunction,
+    project_name: &str,
+    prompts_map: &HashMap<String, HashMap<String, String>>,
+) -> Result<String>
+where
+    ErrorFunction: Fn(&str) -> String,
+    ValidatorFunction: Fn(&str) -> bool,
+{
+    if let Some(project_prompts) = prompts_map.get(project_name) {
+        if let Some(pre_answer) = project_prompts.get(matches_key) {
+            if validator(pre_answer) {
+                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+                writeln!(
+                    stdout,
+                    "Using pre-provided answer for {}: {}",
+                    matches_key, pre_answer
+                )?;
+                stdout.reset()?;
+                return Ok(pre_answer.clone());
+            } else {
+                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+                writeln!(
+                    stdout,
+                    "Pre-provided answer '{}' for {} is invalid, prompting for input",
+                    pre_answer, matches_key
+                )?;
+                stdout.reset()?;
+            }
+        }
+    }
+
+    // Fall back to normal prompting
+    prompt_with_validation(
+        line_editor,
+        stdout,
+        matches_key,
+        matches,
+        prompt,
+        valid_options,
+        validator,
+        error_message,
+    )
+}
+
+pub(crate) fn prompt_without_validation_with_answers(
+    line_editor: &mut Editor<ArrayCompleter, DefaultHistory>,
+    stdout: &mut StandardStream,
+    matches_key: &str,
+    matches: &ArgMatches,
+    prompt: &str,
+    valid_options: Option<&[&str]>,
+    project_name: &str,
+    prompts_map: &HashMap<String, HashMap<String, String>>,
+) -> Result<String> {
+    // Check if we have a pre-provided answer for this project and field
+    if let Some(project_prompts) = prompts_map.get(project_name) {
+        if let Some(pre_answer) = project_prompts.get(matches_key) {
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+            writeln!(
+                stdout,
+                "Using pre-provided answer for {}: {}",
+                matches_key, pre_answer
+            )?;
+            stdout.reset()?;
+            return Ok(pre_answer.clone());
+        }
+    }
+
+    // Fall back to normal prompting
+    prompt_without_validation(
+        line_editor,
+        stdout,
+        matches_key,
+        matches,
+        prompt,
+        valid_options,
+    )
+}
+
+pub(crate) fn prompt_comma_separated_list_with_answers(
+    line_editor: &mut Editor<ArrayCompleter, DefaultHistory>,
+    matches_key: &str,
+    matches: &ArgMatches,
+    valid_options: &[&str],
+    active_options: Option<&[&str]>,
+    prompt_text: &str,
+    is_optional: bool,
+    project_name: &str,
+    prompts_map: &HashMap<String, HashMap<String, String>>,
+) -> Result<Vec<String>> {
+    // Check if we have a pre-provided answer for this project and field
+    if let Some(project_prompts) = prompts_map.get(project_name) {
+        if let Some(pre_answer) = project_prompts.get(matches_key) {
+            // Parse comma-separated values
+            let values: Vec<String> = pre_answer
+                .split(',')
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty())
+                .collect();
+
+            // Validate that all values are in valid_options
+            let invalid_values: Vec<&String> = values
+                .iter()
+                .filter(|v| !valid_options.contains(&v.as_str()))
+                .collect();
+
+            if invalid_values.is_empty() {
+                return Ok(values);
+            }
+        }
+    }
+
+    // Fall back to normal prompting
+    prompt_comma_separated_list(
+        line_editor,
+        matches_key,
+        matches,
+        valid_options,
+        active_options,
+        prompt_text,
+        is_optional,
+    )
 }

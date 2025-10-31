@@ -130,7 +130,7 @@ pub(crate) fn application_migrate_script<'a>(
     let db_init = get_db_init(databases);
 
     let sleep = if migration_suffix == "init" {
-        "sleep 5 && "
+        "sleep 15 && "
     } else {
         ""
     };

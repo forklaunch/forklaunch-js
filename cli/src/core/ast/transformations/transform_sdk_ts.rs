@@ -1,26 +1,39 @@
-use std::{fs::read_to_string, path::Path};
+use std::path::Path;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use convert_case::{Case, Casing};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::SourceType;
 use oxc_codegen::{Codegen, CodegenOptions};
 
-use crate::core::ast::{
-    injections::{
-        inject_into_import_statement::{
-            inject_into_import_statement, inject_specifier_into_import_statement,
+use crate::{
+    constants::error_failed_to_read_file,
+    core::{
+        ast::{
+            injections::{
+                inject_into_import_statement::{
+                    inject_into_import_statement, inject_specifier_into_import_statement,
+                },
+                inject_into_sdk::inject_into_sdk_client_input,
+            },
+            parse_ast_program::parse_ast_program,
         },
-        inject_into_sdk::inject_into_sdk_client_input,
+        rendered_template::RenderedTemplatesCache,
     },
-    parse_ast_program::parse_ast_program,
 };
 
-pub(crate) fn transform_sdk_ts(router_name: &str, base_path: &Path) -> Result<String> {
+pub(crate) fn transform_sdk_ts(
+    rendered_templates_cache: &RenderedTemplatesCache,
+    router_name: &str,
+    base_path: &Path,
+) -> Result<String> {
     let allocator = Allocator::default();
     let sdk_path = base_path.join("sdk.ts");
-    let sdk_source_text = read_to_string(&sdk_path).unwrap();
-    let sdk_source_type = SourceType::from_path(&sdk_path).unwrap();
+    let template = rendered_templates_cache
+        .get(&sdk_path)?
+        .context(error_failed_to_read_file(&sdk_path))?;
+    let sdk_source_text = template.content;
+    let sdk_source_type = SourceType::from_path(&sdk_path)?;
     let router_name_camel_case = router_name.to_case(Case::Camel);
 
     let mut sdk_program = parse_ast_program(&allocator, &sdk_source_text, sdk_source_type);
@@ -85,6 +98,7 @@ mod tests {
     use tempfile::TempDir;
 
     use super::*;
+    use crate::core::rendered_template::RenderedTemplatesCache;
 
     fn create_temp_project_structure(sdk_content: &str) -> TempDir {
         let temp_dir = TempDir::new().unwrap();
@@ -98,6 +112,7 @@ mod tests {
 
     #[test]
     fn test_transform_sdk_ts() {
+        let cache = RenderedTemplatesCache::new();
         let sdk_content = r#"
 import { SchemaValidator } from "@forklaunch/core";
 import { MapToSdk } from '@forklaunch/core/http';
@@ -119,7 +134,7 @@ export const svcSdkClient = {
         let temp_dir = create_temp_project_structure(sdk_content);
         let project_path = temp_dir.path().join("test-project");
 
-        let result = transform_sdk_ts("userManagement", &project_path);
+        let result = transform_sdk_ts(&cache, "userManagement", &project_path);
 
         assert!(result.is_ok());
 

@@ -1,22 +1,24 @@
-use std::{collections::HashSet, fs::read_to_string, path::Path};
+use std::{collections::HashSet, path::Path};
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use oxc_allocator::{Allocator, CloneIn, Vec};
 use oxc_ast::ast::{Argument, Expression, ObjectPropertyKind, PropertyKey, SourceType, Statement};
 use oxc_codegen::{Codegen, CodegenOptions};
 
 use crate::{
-    constants::Database,
+    constants::{Database, error_failed_to_read_file},
     core::{
         ast::{
             parse_ast_program::{parse_ast_expression, parse_ast_program},
             replacements::replace_import_statment::replace_import_statment,
         },
         database::{get_db_driver, is_in_memory_database},
+        rendered_template::RenderedTemplatesCache,
     },
 };
 
 pub(crate) fn transform_mikroorm_config_ts(
+    rendered_templates_cache: &RenderedTemplatesCache,
     base_path: &Path,
     existing_database: &Option<Database>,
     database: &Database,
@@ -30,7 +32,10 @@ pub(crate) fn transform_mikroorm_config_ts(
 
     let allocator = Allocator::default();
     let mikro_orm_config_path = base_path.join("mikro-orm.config.ts");
-    let mikro_orm_config_text = &read_to_string(&mikro_orm_config_path)?;
+    let template = rendered_templates_cache
+        .get(&mikro_orm_config_path)?
+        .context(error_failed_to_read_file(&mikro_orm_config_path))?;
+    let mikro_orm_config_text = &template.content;
     let mikro_orm_config_type = SourceType::from_path(&mikro_orm_config_path)?;
 
     let mut mikro_orm_config_program =

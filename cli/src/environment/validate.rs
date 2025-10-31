@@ -12,6 +12,7 @@ use crate::{
         env::{find_workspace_root, get_modules_path, is_env_var_defined},
         env_scope::{EnvironmentVariableScope, ScopedEnvVar, determine_env_var_scopes},
         manifest::application::ApplicationManifestData,
+        rendered_template::RenderedTemplatesCache,
     },
 };
 
@@ -45,7 +46,8 @@ impl CliCommand for ValidateCommand {
         writeln!(stdout, "Workspace: {}", workspace_root.display())?;
         writeln!(stdout, "Modules path: {}", modules_path.display())?;
 
-        let project_env_vars = find_all_env_vars(&modules_path)?;
+        let rendered_templates_cache = RenderedTemplatesCache::new();
+        let project_env_vars = find_all_env_vars(&modules_path, &rendered_templates_cache)?;
 
         if project_env_vars.is_empty() {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;

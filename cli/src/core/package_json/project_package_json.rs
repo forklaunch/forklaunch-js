@@ -25,7 +25,7 @@ impl Serialize for ProjectDependenciesWithProjectName {
     }
 }
 
-#[derive(Debug, Serialize, Default)]
+#[derive(Debug, Serialize, Default, Clone)]
 pub(crate) struct ProjectScripts {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) build: Option<String>,
@@ -644,13 +644,13 @@ impl<'de> Deserialize<'de> for ProjectDevDependencies {
 pub(crate) static MIKRO_ORM_CONFIG_PATHS: &[&str] =
     &["./mikro-orm.config.ts", "./dist/mikro-orm.config.js"];
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub(crate) struct ProjectMikroOrm {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) manifest_paths: Option<Vec<String>>,
 }
 
-#[derive(Debug, Serialize, Default)]
+#[derive(Debug, Serialize, Default, Clone)]
 pub(crate) struct ProjectPackageJson {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) name: Option<String>,

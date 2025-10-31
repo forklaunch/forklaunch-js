@@ -44,8 +44,7 @@ use crate::{
         name::validate_name,
         package_json::{
             application_package_json::{
-                ApplicationDevDependencies, ApplicationPackageJson, ApplicationPnpm,
-                ApplicationScripts,
+                ApplicationDevDependencies, ApplicationPackageJson, ApplicationScripts,
             },
             package_json_constants::{
                 BIOME_VERSION, ESLINT_VERSION, EXPRESS_VERSION, HYPER_EXPRESS_VERSION,
@@ -730,12 +729,10 @@ fn change_validator(
         RenderedTemplate {
             path: base_path.join("core").join("registrations.ts"),
             content: transform_core_registrations_ts_validator(
+                rendered_templates_cache,
                 &validator.to_string(),
                 &existing_validator.to_string(),
                 base_path,
-                rendered_templates_cache
-                    .get(&validator_file_key)?
-                    .and_then(|v| Some(v.content.clone())),
             )?,
             context: None,
         },
@@ -779,12 +776,10 @@ fn change_http_framework(
         RenderedTemplate {
             path: base_path.join("core").join("registrations.ts"),
             content: transform_core_registrations_ts_http_framework(
+                rendered_templates_cache,
                 &http_framework.to_string(),
                 &existing_http_framework.to_string(),
                 base_path,
-                rendered_templates_cache
-                    .get(&http_framework_file_key)?
-                    .and_then(|v| Some(v.content.clone())),
             )?,
             context: None,
         },
@@ -1019,26 +1014,6 @@ fn change_runtime(
         &application_up_packages_script(runtime),
         None,
     ));
-
-    application_json_to_write.pnpm = if runtime == &Runtime::Node {
-        Some(ApplicationPnpm {
-            // TODO: Remove -- temporary patches for MikroORM CLI
-            patched_dependencies: Some(HashMap::from([(
-                "@jercle/yargonaut".to_string(),
-                "./patches/@jercle__yargonaut.patch".to_string(),
-            )])),
-        })
-    } else {
-        None
-    };
-    application_json_to_write.patched_dependencies = if runtime == &Runtime::Bun {
-        Some(HashMap::from([(
-            "@jercle/yargonaut@1.1.5".to_string(),
-            "./patches/@jercle__yargonaut.patch".to_string(),
-        )]))
-    } else {
-        None
-    };
 
     let mut is_in_memory_database = manifest_data.is_in_memory_database;
     for (project_name, project) in project_jsons_to_write {

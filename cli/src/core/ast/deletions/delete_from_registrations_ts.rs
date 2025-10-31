@@ -1,4 +1,4 @@
-use std::{collections::HashSet, fs::read_to_string, path::Path};
+use std::{collections::HashSet, path::Path};
 
 use anyhow::Result;
 use oxc_allocator::{Allocator, CloneIn, Vec};
@@ -165,15 +165,10 @@ pub(crate) fn delete_from_registrations_ts_worker_type<'a>(
 
 pub(crate) fn delete_from_registrations_ts_infrastructure_redis(
     base_path: &Path,
-    registrations_text: Option<String>,
+    registrations_text: String,
 ) -> Result<String> {
     let allocator = Allocator::default();
     let registrations_path = base_path.join("registrations.ts");
-    let registrations_text = if let Some(registrations_text) = registrations_text {
-        registrations_text
-    } else {
-        read_to_string(&registrations_path)?
-    };
 
     let registrations_type = SourceType::from_path(&registrations_path)?;
 
@@ -192,15 +187,10 @@ pub(crate) fn delete_from_registrations_ts_infrastructure_redis(
 
 pub(crate) fn delete_from_registrations_ts_infrastructure_s3(
     base_path: &Path,
-    registrations_text: Option<String>,
+    registrations_text: String,
 ) -> Result<String> {
     let allocator = Allocator::default();
     let registrations_path = base_path.join("registrations.ts");
-    let registrations_text = if let Some(registrations_text) = registrations_text {
-        registrations_text
-    } else {
-        read_to_string(&registrations_path)?
-    };
 
     let registrations_type = SourceType::from_path(&registrations_path)?;
 

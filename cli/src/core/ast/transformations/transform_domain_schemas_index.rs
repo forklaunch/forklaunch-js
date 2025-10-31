@@ -1,6 +1,6 @@
-use std::{collections::HashMap, fs::read_to_string, path::Path};
+use std::{collections::HashMap, path::Path};
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use convert_case::{Case, Casing};
 use oxc_allocator::{Allocator, CloneIn};
 use oxc_ast::ast::{
@@ -10,19 +10,21 @@ use oxc_ast::ast::{
 use oxc_codegen::{Codegen, CodegenOptions};
 use regex::Regex;
 
-use crate::core::ast::parse_ast_program::parse_ast_program;
+use crate::{
+    constants::error_failed_to_read_file,
+    core::{ast::parse_ast_program::parse_ast_program, rendered_template::RenderedTemplatesCache},
+};
 
 pub(crate) fn transform_domain_schemas_index_ts(
+    rendered_templates_cache: &RenderedTemplatesCache,
     base_path: &Path,
     ejectable_dependencies: &Vec<String>,
-    schema_index_ts_text: Option<&String>,
 ) -> Result<String> {
     let schema_index_ts_path = base_path.join("domain").join("schemas").join("index.ts");
-    let schema_index_ts_source_text = if let Some(schema_index_ts_text) = schema_index_ts_text {
-        schema_index_ts_text
-    } else {
-        &read_to_string(&schema_index_ts_path)?
-    };
+    let template = rendered_templates_cache
+        .get(&schema_index_ts_path)?
+        .context(error_failed_to_read_file(&schema_index_ts_path))?;
+    let schema_index_ts_source_text = &template.content;
 
     let allocator = Allocator::default();
 
@@ -218,6 +220,7 @@ mod tests {
     use tempfile::TempDir;
 
     use super::*;
+    use crate::core::rendered_template::RenderedTemplatesCache;
 
     fn create_temp_schema_file(content: &str) -> TempDir {
         let temp_dir = TempDir::new().unwrap();
@@ -265,11 +268,12 @@ export const {
 
         let temp_dir = create_temp_schema_file(input_content);
         let project_path = temp_dir.path().join("test-project");
+        let cache = RenderedTemplatesCache::new();
 
         let result = transform_domain_schemas_index_ts(
+            &cache,
             &project_path,
             &vec!["@forklaunch/implementation-billing-stripe/schemas".to_string()],
-            None,
         );
 
         assert!(result.is_ok());
@@ -315,11 +319,12 @@ export const {
 
         let temp_dir = create_temp_schema_file(input_content);
         let project_path = temp_dir.path().join("test-project");
+        let cache = RenderedTemplatesCache::new();
 
         let result = transform_domain_schemas_index_ts(
+            &cache,
             &project_path,
             &vec!["@forklaunch/implementation-iam-base/schemas".to_string()],
-            None,
         );
 
         assert!(result.is_ok());
@@ -352,11 +357,30 @@ const schemas = mapServiceSchemas(
 export const { ProductSchemas } = schemas;"#;
 
         let temp_dir = TempDir::new().unwrap();
+        let mut cache = RenderedTemplatesCache::new();
+        cache.insert(
+            temp_dir
+                .path()
+                .join("domain")
+                .join("schemas")
+                .join("index.ts")
+                .to_string_lossy()
+                .to_string(),
+            crate::core::rendered_template::RenderedTemplate {
+                path: temp_dir
+                    .path()
+                    .join("domain")
+                    .join("schemas")
+                    .join("index.ts"),
+                content: input_content.to_string(),
+                context: None,
+            },
+        );
 
         let result = transform_domain_schemas_index_ts(
+            &cache,
             &temp_dir.path(),
             &vec!["@forklaunch/implementation-billing-stripe/schemas".to_string()],
-            Some(&input_content.to_string()),
         );
 
         assert!(result.is_ok());
@@ -429,14 +453,15 @@ export const {
 
         let temp_dir = create_temp_schema_file(input_content);
         let project_path = temp_dir.path().join("test-project");
+        let cache = RenderedTemplatesCache::new();
 
         let result = transform_domain_schemas_index_ts(
+            &cache,
             &project_path,
             &vec![
                 "@forklaunch/implementation-billing-stripe/schemas".to_string(),
                 "@forklaunch/implementation-notification-base/schemas".to_string(),
             ],
-            None,
         );
 
         assert!(result.is_ok());
@@ -472,8 +497,9 @@ export const { CustomSchemas } = schemas;"#;
 
         let temp_dir = create_temp_schema_file(input_content);
         let project_path = temp_dir.path().join("test-project");
+        let cache = RenderedTemplatesCache::new();
 
-        let result = transform_domain_schemas_index_ts(&project_path, &vec![], None);
+        let result = transform_domain_schemas_index_ts(&cache, &project_path, &vec![]);
 
         assert!(result.is_ok());
         let transformed_code = result.unwrap();
@@ -517,11 +543,12 @@ export const {
 
         let temp_dir = create_temp_schema_file(input_content);
         let project_path = temp_dir.path().join("test-project");
+        let cache = RenderedTemplatesCache::new();
 
         let result = transform_domain_schemas_index_ts(
+            &cache,
             &project_path,
             &vec!["@forklaunch/implementation-billing-stripe/schemas".to_string()],
-            None,
         );
 
         assert!(result.is_ok());

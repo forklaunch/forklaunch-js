@@ -1,11 +1,13 @@
 use std::{collections::HashSet, fs, path::Path};
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{CallExpression, Expression};
 use oxc_ast_visit::Visit;
 use oxc_parser::{Parser, ParserReturn};
 use oxc_span::SourceType;
+
+use crate::core::rendered_template::RenderedTemplatesCache;
 
 #[derive(Debug, Clone)]
 pub struct EnvVarUsage {
@@ -52,9 +54,11 @@ impl<'a> Visit<'a> for EnvVarVisitor {
     }
 }
 
-pub fn extract_env_vars_from_file(file_path: &Path) -> Result<Vec<EnvVarUsage>> {
-    let source_code = fs::read_to_string(file_path)
-        .with_context(|| format!("Failed to read file: {}", file_path.display()))?;
+pub fn extract_env_vars_from_file(
+    file_path: &Path,
+    rendered_templates_cache: &RenderedTemplatesCache,
+) -> Result<Vec<EnvVarUsage>> {
+    let source_code = rendered_templates_cache.get(file_path)?.unwrap().content;
 
     extract_env_vars_from_source(&source_code)
 }
@@ -83,6 +87,7 @@ pub fn extract_env_vars_from_source(source_code: &str) -> Result<Vec<EnvVarUsage
 
 pub fn find_all_env_vars(
     modules_path: &Path,
+    rendered_templates_cache: &RenderedTemplatesCache,
 ) -> Result<std::collections::HashMap<String, Vec<EnvVarUsage>>> {
     let mut all_env_vars = std::collections::HashMap::new();
 
@@ -90,7 +95,7 @@ pub fn find_all_env_vars(
 
     for file_path in registrations_files {
         let project_name = get_project_name_from_path(&file_path)?;
-        let env_vars = extract_env_vars_from_file(&file_path)?;
+        let env_vars = extract_env_vars_from_file(&file_path, rendered_templates_cache)?;
         all_env_vars.insert(project_name, env_vars);
     }
 

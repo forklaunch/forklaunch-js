@@ -36,7 +36,7 @@ use crate::{
             router::RouterManifestData,
         },
         name::validate_name,
-        rendered_template::{RenderedTemplate, write_rendered_templates},
+        rendered_template::{RenderedTemplate, RenderedTemplatesCache, write_rendered_templates},
         template::{PathIO, generate_with_template},
     },
     prompt::{ArrayCompleter, prompt_comma_separated_list, prompt_with_validation},
@@ -91,79 +91,143 @@ fn add_router_to_artifacts(
         add_router_definition_to_manifest(manifest_data, service_name)
             .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
 
-    let mut rendered_templates = Vec::new();
+    let mut rendered_templates_cache = RenderedTemplatesCache::new();
 
-    rendered_templates.push(RenderedTemplate {
-        path: base_path.join("server.ts"),
-        content: transform_server_ts(manifest_data.router_name.as_str(), &base_path)?,
-        context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_APP.to_string()),
-    });
+    rendered_templates_cache.insert(
+        base_path.join("server.ts").to_string_lossy().to_string(),
+        RenderedTemplate {
+            path: base_path.join("server.ts"),
+            content: transform_server_ts(
+                &rendered_templates_cache,
+                manifest_data.router_name.as_str(),
+                &base_path,
+            )?,
+            context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_APP.to_string()),
+        },
+    );
 
-    rendered_templates.push(RenderedTemplate {
-        path: base_path.join("sdk.ts"),
-        content: transform_sdk_ts(manifest_data.router_name.as_str(), &base_path)?,
-        context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_APP.to_string()),
-    });
+    rendered_templates_cache.insert(
+        base_path.join("sdk.ts").to_string_lossy().to_string(),
+        RenderedTemplate {
+            path: base_path.join("sdk.ts"),
+            content: transform_sdk_ts(
+                &rendered_templates_cache,
+                manifest_data.router_name.as_str(),
+                &base_path,
+            )?,
+            context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_APP.to_string()),
+        },
+    );
 
-    rendered_templates.push(RenderedTemplate {
-        path: base_path.join("registrations.ts"),
-        content: transform_registrations_ts_add_router(
-            manifest_data.router_name.as_str(),
-            &project_type,
-            &base_path,
-        )?,
-        context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER.to_string()),
-    });
+    rendered_templates_cache.insert(
+        base_path
+            .join("registrations.ts")
+            .to_string_lossy()
+            .to_string(),
+        RenderedTemplate {
+            path: base_path.join("registrations.ts"),
+            content: transform_registrations_ts_add_router(
+                &rendered_templates_cache,
+                manifest_data.router_name.as_str(),
+                &project_type,
+                &base_path,
+            )?,
+            context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER.to_string()),
+        },
+    );
 
-    rendered_templates.push(RenderedTemplate {
-        path: Path::new(&base_path)
-            .join("persistence")
-            .join("entities")
-            .join("index.ts"),
-        content: transform_entities_index_ts(manifest_data.router_name.as_str(), &base_path)?,
-        context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER.to_string()),
-    });
+    let entities_index_path = Path::new(&base_path)
+        .join("persistence")
+        .join("entities")
+        .join("index.ts");
+    rendered_templates_cache.insert(
+        entities_index_path.to_string_lossy().to_string(),
+        RenderedTemplate {
+            path: entities_index_path,
+            content: transform_entities_index_ts(
+                &rendered_templates_cache,
+                manifest_data.router_name.as_str(),
+                &base_path,
+            )?,
+            context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER.to_string()),
+        },
+    );
 
-    rendered_templates.push(RenderedTemplate {
-        path: base_path
-            .join("persistence")
-            .join("seeders")
-            .join("index.ts"),
-        content: transform_seeders_index_ts(manifest_data.router_name.as_str(), &base_path)?,
-        context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER.to_string()),
-    });
+    let seeders_index_path = base_path
+        .join("persistence")
+        .join("seeders")
+        .join("index.ts");
+    rendered_templates_cache.insert(
+        seeders_index_path.to_string_lossy().to_string(),
+        RenderedTemplate {
+            path: seeders_index_path,
+            content: transform_seeders_index_ts(
+                &rendered_templates_cache,
+                manifest_data.router_name.as_str(),
+                &base_path,
+            )?,
+            context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER.to_string()),
+        },
+    );
 
-    rendered_templates.push(RenderedTemplate {
-        path: base_path.join("persistence").join("seed.data.ts"),
-        content: transform_seed_data_ts(
-            manifest_data.router_name.as_str(),
-            &project_type,
-            &base_path,
-        )?,
-        context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER.to_string()),
-    });
+    let seed_data_path = base_path.join("persistence").join("seed.data.ts");
+    rendered_templates_cache.insert(
+        seed_data_path.to_string_lossy().to_string(),
+        RenderedTemplate {
+            path: seed_data_path,
+            content: transform_seed_data_ts(
+                &rendered_templates_cache,
+                manifest_data.router_name.as_str(),
+                &project_type,
+                &base_path,
+            )?,
+            context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER.to_string()),
+        },
+    );
 
-    rendered_templates.push(RenderedTemplate {
-        path: base_path.join("api").join("controllers").join("index.ts"),
-        content: transform_controllers_index_ts(manifest_data.router_name.as_str(), &base_path)?,
-        context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER.to_string()),
-    });
+    let controllers_index_path = base_path.join("api").join("controllers").join("index.ts");
+    rendered_templates_cache.insert(
+        controllers_index_path.to_string_lossy().to_string(),
+        RenderedTemplate {
+            path: controllers_index_path,
+            content: transform_controllers_index_ts(
+                &rendered_templates_cache,
+                manifest_data.router_name.as_str(),
+                &base_path,
+            )?,
+            context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER.to_string()),
+        },
+    );
 
-    rendered_templates.push(RenderedTemplate {
-        path: base_path.join("__test__").join("test-utils.ts"),
-        content: transform_test_utils_add_router(
-            &base_path,
-            manifest_data.camel_case_name.as_str(),
-            manifest_data.pascal_case_name.as_str(),
-        )?,
-        context: Some(ERROR_FAILED_TO_ADD_ROUTER_TEST_UTILITIES.to_string()),
-    });
+    let test_utils_path = base_path.join("__test__").join("test-utils.ts");
+    rendered_templates_cache.insert(
+        test_utils_path.to_string_lossy().to_string(),
+        RenderedTemplate {
+            path: test_utils_path,
+            content: transform_test_utils_add_router(
+                &rendered_templates_cache,
+                &base_path,
+                manifest_data.camel_case_name.as_str(),
+                manifest_data.pascal_case_name.as_str(),
+            )?,
+            context: Some(ERROR_FAILED_TO_ADD_ROUTER_TEST_UTILITIES.to_string()),
+        },
+    );
 
-    rendered_templates.push(RenderedTemplate {
-        path: manifest_path.to_path_buf(),
-        content: forklaunch_definition_buffer,
-        context: Some(ERROR_FAILED_TO_ADD_ROUTER_METADATA_TO_MANIFEST.to_string()),
-    });
+    rendered_templates_cache.insert(
+        manifest_path.to_string_lossy().to_string(),
+        RenderedTemplate {
+            path: manifest_path.to_path_buf(),
+            content: forklaunch_definition_buffer,
+            context: Some(ERROR_FAILED_TO_ADD_ROUTER_METADATA_TO_MANIFEST.to_string()),
+        },
+    );
+
+    // Convert cache to Vec for return
+    let rendered_templates: Vec<_> = rendered_templates_cache
+        .drain()
+        .map(|(_, template)| template)
+        .collect();
 
     Ok(rendered_templates)
 }
