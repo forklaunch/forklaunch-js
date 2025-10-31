@@ -19,23 +19,23 @@ jobs:
         group: [1, 2, 3, 4, 5, 6]
         include:
           - group: 1
-            name: "Init Tests (non-application)"
-            pattern: "init_!(application*).sh"
+            name: "Init Tests (heavy modules)"
+            pattern: "init_@(application|billing|iam)*.sh"
           - group: 2
+            name: "Init Tests (components)"
+            pattern: "init_@(compile|library|module|router|service|worker)*.sh"
+          - group: 3
             name: "Sync Tests"
             pattern: "sync*.sh"
-          - group: 3
+          - group: 4
             name: "Change Tests"
             pattern: "change*.sh"
-          - group: 4
+          - group: 5
             name: "Delete Tests"
             pattern: "delete*.sh"
-          - group: 5
+          - group: 6
             name: "Other Tests"
             pattern: "!(init*|sync*|change*|delete*).sh"
-          - group: 6
-            name: "Init Application Tests"
-            pattern: "init_application*.sh"
 
     name: ${{ matrix.name }}
 

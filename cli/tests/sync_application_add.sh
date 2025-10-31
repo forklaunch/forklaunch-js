@@ -78,6 +78,11 @@ for source_path in "${!copy_operations[@]}"; do
     cp -rp "$source_path" "$destination_path"
 done
 
+# Fix package.json references to use the correct application name
+echo "[INFO] Fixing package.json references in copied projects"
+find sync-test-node-application/src/modules -name "package.json" -type f -exec sed -i.bak 's/@sync-test-dummy-application\//@sync-test-node-application\//g' {} \;
+find sync-test-node-application/src/modules -name "*.bak" -type f -delete
+
 # Run sync to add the new projects
 echo "[INFO] Running sync all to add new projects"
 PROMPTS_JSON='{"svc-dummy": {"category": "service", "database": "postgresql", "infrastructure": "none", "description": "Dummy service"}, "lib-dummy": {"category": "library", "description": "Dummy library"}, "wrk-dummy": {"category": "worker", "type": "database", "database": "postgresql", "description": "Dummy worker"}}'
