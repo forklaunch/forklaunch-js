@@ -1,6 +1,7 @@
 import { isNever, isRecord, safeStringify } from '@forklaunch/common';
 import { FastMCP } from '@forklaunch/fastmcp-fork';
 import { string, ZodSchemaValidator, ZodType } from '@forklaunch/validator/zod';
+import http from 'http';
 import {
   discriminateBody,
   discriminateResponseBodies
@@ -100,7 +101,10 @@ export function generateMcpServer<
     SessionObject<ZodSchemaValidator>
   >['mcp'],
   options?: ConstructorParameters<typeof FastMCP<T>>[0],
-  contentTypeMap?: Record<string, string>
+  contentTypeMap?: Record<string, string>,
+  authenticate?: (
+    request: http.IncomingMessage
+  ) => Promise<Record<string, unknown> | undefined>
 ) {
   if (!(schemaValidator instanceof ZodSchemaValidator)) {
     throw new Error(
@@ -111,7 +115,8 @@ export function generateMcpServer<
   const mcpServer = new FastMCP({
     ...options,
     name: options?.name ?? 'mcp-server',
-    version
+    version,
+    authenticate
   });
 
   [

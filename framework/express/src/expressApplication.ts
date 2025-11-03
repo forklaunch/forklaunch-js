@@ -170,7 +170,8 @@ export class Application<
         path: mcpPath,
         version,
         additionalTools,
-        contentTypeMapping
+        contentTypeMapping,
+        authenticate
       } = this.mcpConfiguration ?? {};
       const zodSchemaValidator = this.schemaValidator;
       const finalMcpPort = mcpPort ?? port + 2000;
@@ -184,7 +185,8 @@ export class Application<
         this as unknown as ForklaunchRouter<ZodSchemaValidator>,
         this.mcpConfiguration,
         options,
-        contentTypeMapping
+        contentTypeMapping,
+        authenticate
       );
 
       if (additionalTools) {
