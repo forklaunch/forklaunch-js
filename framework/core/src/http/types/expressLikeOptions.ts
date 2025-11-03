@@ -194,17 +194,12 @@ export type ExpressLikeApplicationOptions<
         /**
          * Optional authentication callback for validating MCP requests.
          * Called by FastMCP for each request to verify the session token.
-         * Return user info if authenticated, undefined otherwise.
+         * Return user info object if authenticated, undefined otherwise.
+         * Example: { email: 'user@example.com', name: 'User' }
          */
-        authenticate?: (request: http.IncomingMessage) => Promise<
-          | {
-              email?: string;
-              name?: string;
-              image?: string;
-              [key: string]: unknown;
-            }
-          | undefined
-        >;
+        authenticate?: (
+          request: http.IncomingMessage
+        ) => Promise<Record<string, unknown> | undefined>;
         /**
          * Additional tools to register with the MCP server.
          */
