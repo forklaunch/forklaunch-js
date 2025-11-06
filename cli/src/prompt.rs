@@ -158,7 +158,7 @@ pub(crate) fn prompt_comma_separated_list(
             line_editor.set_helper(Some(completer));
             let optional_text = if is_optional { " (optional)" } else { "" };
             let prompt = format!(
-                "Enter {} (comma-separated) [{}]{}: ",
+                "Enter {} (comma-separated, use space to select) [{}]{}: ",
                 prompt_text,
                 valid_options.join(", "),
                 optional_text

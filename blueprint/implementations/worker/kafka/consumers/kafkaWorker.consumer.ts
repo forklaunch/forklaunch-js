@@ -1,3 +1,7 @@
+import {
+  MetricsDefinition,
+  OpenTelemetryCollector
+} from '@forklaunch/core/http';
 import { WorkerConsumer } from '@forklaunch/interfaces-worker/interfaces';
 import {
   WorkerEventEntity,
@@ -20,12 +24,14 @@ export class KafkaWorkerConsumer<
   protected readonly options: Options;
   protected readonly processEventsFunction: WorkerProcessFunction<EventEntity>;
   protected readonly failureHandler: WorkerFailureHandler<EventEntity>;
+  protected readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
 
   constructor(
     queueName: string,
     options: Options,
     processEventsFunction: WorkerProcessFunction<EventEntity>,
-    failureHandler: WorkerFailureHandler<EventEntity>
+    failureHandler: WorkerFailureHandler<EventEntity>,
+    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
   ) {
     this.queueName = queueName;
     this.options = options;
@@ -40,6 +46,7 @@ export class KafkaWorkerConsumer<
     this.consumer = this.kafka.consumer({
       groupId: this.options.groupId
     });
+    this.openTelemetryCollector = openTelemetryCollector;
   }
 
   private async setupConsumer() {
@@ -179,8 +186,39 @@ export class KafkaWorkerConsumer<
   }
 
   async start(): Promise<void> {
-    await this.setupConsumer();
-    await this.producer.connect();
+    const maxAttempts = 30;
+    const delayMs = 2000;
+    let attempt = 1;
+
+    while (attempt <= maxAttempts) {
+      try {
+        await this.setupConsumer();
+        await this.producer.connect();
+        return;
+      } catch (error) {
+        const err = error as Error & {
+          code?: number;
+          type?: string;
+          message?: string;
+        };
+        const isUnknownTopic =
+          err?.code === 3 ||
+          err?.type === 'UNKNOWN_TOPIC_OR_PARTITION' ||
+          (err?.message || '').includes(
+            'This server does not host this topic-partition'
+          );
+
+        if (!isUnknownTopic || attempt >= maxAttempts) {
+          throw error;
+        }
+
+        this.openTelemetryCollector.warn(
+          `Kafka not ready for topic ${this.queueName} (attempt ${attempt}/${maxAttempts}). Retrying in ${delayMs}ms...`
+        );
+        await new Promise((r) => setTimeout(r, delayMs));
+        attempt += 1;
+      }
+    }
   }
 
   async close(): Promise<void> {

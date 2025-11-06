@@ -69,6 +69,9 @@ config_struct!(
         pub(crate) is_better_auth: bool,
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) is_stripe: bool,
+
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) is_iam_configured: bool,
     }
 );
 
@@ -164,6 +167,13 @@ impl InitializableManifestConfig for ServiceManifestData {
                     .parse::<Module>()
                     .unwrap()
                     == Module::BetterAuthIam,
+
+            is_iam_configured: self.projects.iter().any(|project_entry| {
+                if project_entry.name == "iam" {
+                    return true;
+                }
+                return false;
+            }),
             ..self.clone()
         }
     }

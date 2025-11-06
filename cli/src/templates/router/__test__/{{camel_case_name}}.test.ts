@@ -38,7 +38,11 @@ describe('{{pascal_case_name}} Routes E2E Tests', () => {
         '../api/routes/{{camel_case_name}}.routes'
       );
 
-      const response = await {{camel_case_name}}GetRoute.sdk.{{camel_case_name}}Get();
+      const response = await {{camel_case_name}}GetRoute.sdk.{{camel_case_name}}Get({{#is_iam_configured}}{ 
+        headers: {
+          authorization: `Bearer test-token`
+        }
+      }{{/is_iam_configured}});
 
       expect(response.code).toBe(200);
       expect(response.response).toBeDefined();
@@ -52,7 +56,10 @@ describe('{{pascal_case_name}} Routes E2E Tests', () => {
       );
 
       const response = await {{camel_case_name}}PostRoute.sdk.{{camel_case_name}}Post({
-        body: mock{{pascal_case_name}}Data
+        body: mock{{pascal_case_name}}Data{{#is_iam_configured}},
+        headers: {
+          authorization: `Bearer test-token`
+        }{{/is_iam_configured}}
       });
 
       expect(response.code).toBe(200);
@@ -73,7 +80,10 @@ describe('{{pascal_case_name}} Routes E2E Tests', () => {
 
       try {
         await {{camel_case_name}}PostRoute.sdk.{{camel_case_name}}Post({
-          body: invalidData
+          body: invalidData{{#is_iam_configured}},
+          headers: {
+            authorization: `Bearer test-token`
+          }{{/is_iam_configured}}
         });
         expect(true).toBe(false);
       } catch (error: unknown) {
@@ -88,7 +98,10 @@ describe('{{pascal_case_name}} Routes E2E Tests', () => {
       );
 
       await {{camel_case_name}}PostRoute.sdk.{{camel_case_name}}Post({
-        body: mock{{pascal_case_name}}Data
+        body: mock{{pascal_case_name}}Data{{#is_iam_configured}},
+        headers: {
+          authorization: `Bearer test-token`
+        }{{/is_iam_configured}}
       });
 
       if (!orm) throw new Error('ORM not initialized');

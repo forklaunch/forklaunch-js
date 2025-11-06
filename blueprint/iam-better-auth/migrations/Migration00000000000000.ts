@@ -51,6 +51,10 @@ export class Migration00000000000000 extends Migration {
     );
 
     this.addSql(
+      `create table "jwks" ("id" uuid not null, "created_at" timestamptz not null, "updated_at" timestamptz not null, "public_key" text not null, "private_key" text not null, constraint "jwks_pkey" primary key ("id"));`
+    );
+
+    this.addSql(
       `alter table "role_permissions" add constraint "role_permissions_role_id_foreign" foreign key ("role_id") references "role" ("id") on update cascade on delete cascade;`
     );
     this.addSql(
@@ -78,6 +82,7 @@ export class Migration00000000000000 extends Migration {
   }
 
   override async down(): Promise<void> {
+    this.addSql(`drop table if exists "jwks" cascade;`);
     this.addSql(`drop table if exists "verification" cascade;`);
     this.addSql(`drop table if exists "session" cascade;`);
     this.addSql(`drop table if exists "account" cascade;`);

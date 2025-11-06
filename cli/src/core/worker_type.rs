@@ -87,7 +87,7 @@ fn get_bullmq_worker_consumer_factory(pascal_case_name: &str) -> String {
 }
 fn get_kafka_worker_consumer_factory(pascal_case_name: &str) -> String {
     format!(
-        "({{ QUEUE_NAME, WorkerOptions }}) =>
+        "({{ QUEUE_NAME, WorkerOptions, OpenTelemetryCollector }}) =>
   (
     processEventsFunction: WorkerProcessFunction<{}EventRecord>,
     failureHandler: WorkerFailureHandler<{}EventRecord>
@@ -96,7 +96,8 @@ fn get_kafka_worker_consumer_factory(pascal_case_name: &str) -> String {
       QUEUE_NAME,
       WorkerOptions,
       processEventsFunction,
-      failureHandler
+      failureHandler,
+      OpenTelemetryCollector
     )",
         pascal_case_name, pascal_case_name
     )

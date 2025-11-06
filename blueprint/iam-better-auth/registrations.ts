@@ -116,9 +116,10 @@ const environmentConfig = configInjector.chain({
     lifetime: Lifetime.Singleton,
     type: string,
     value:
+      getEnvVar('PASSWORD_ENCRYPTION_SECRET') ||
       readFileSync(getEnvVar('PASSWORD_ENCRYPTION_SECRET_PATH'), 'utf8').split(
         '\n'
-      )[1] || getEnvVar('PASSWORD_ENCRYPTION_SECRET')
+      )[1]
   },
   BETTER_AUTH_BASE_PATH: {
     lifetime: Lifetime.Singleton,

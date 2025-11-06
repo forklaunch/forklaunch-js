@@ -124,7 +124,17 @@ const environmentConfig = configInjector.chain({
     lifetime: Lifetime.Singleton,
     type: string,
     value: getEnvVar('S3_BUCKET')
-  },{{/is_s3_enabled}}
+  },{{/is_s3_enabled}}{{#is_iam_configured}}
+  HMAC_SECRET_KEY: {
+    lifetime: Lifetime.Singleton,
+    type: string,
+    value: getEnvVar('HMAC_SECRET_KEY')
+  },
+  JWKS_PUBLIC_KEY_URL: {
+    lifetime: Lifetime.Singleton,
+    type: string,
+    value: getEnvVar('JWKS_PUBLIC_KEY_URL')
+  },{{/is_iam_configured}}
 });
 
 //! defines the runtime dependencies for the application

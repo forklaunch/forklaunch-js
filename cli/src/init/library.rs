@@ -298,7 +298,7 @@ impl CliCommand for LibraryCommand {
             &mut stdout,
             "description",
             matches,
-            "library description (optional)",
+            "library description",
             None,
         )?;
 

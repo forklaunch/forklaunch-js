@@ -23,22 +23,13 @@ export const setupTestDatabase = async (): Promise<TestSetupResult> => {
       return config;
     },
     databaseType: getEnvVar('DATABASE_TYPE') as DatabaseType,
-    useMigrations: false,
+    useMigrations: true,
+    migrationsPath: path.join(__dirname, getEnvVar("MIGRATIONS_PATH")),
     {{/is_database_enabled}}needsRedis: {{#is_cache_enabled}}true{{/is_cache_enabled}}{{^is_cache_enabled}}false{{/is_cache_enabled}},
     {{#is_kafka_enabled}}needsKafka: true,
     {{/is_kafka_enabled}}{{#is_s3_enabled}}needsS3: true,
     s3Bucket: 'test-bucket',
-    {{/is_s3_enabled}}customEnvVars: {
-      PROTOCOL: 'http',
-      HOST: 'localhost',
-      PORT: '3000',
-      VERSION: 'v1',
-      DOCS_PATH: '/docs',
-      OTEL_SERVICE_NAME: 'test-service',
-      OTEL_LEVEL: 'info',
-      OTEL_EXPORTER_OTLP_ENDPOINT: 'http://localhost:4318'{{#is_worker}},
-      QUEUE_NAME: 'test-queue'{{/is_worker}}
-    }
+    {{/is_s3_enabled}}
   });
 
   return await harness.setup();

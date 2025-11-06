@@ -222,6 +222,13 @@ impl CliCommand for ModuleCommand {
 
             is_better_auth: module.clone() == Module::BetterAuthIam,
             is_stripe: module.clone() == Module::StripeBilling,
+
+            is_iam_configured: manifest_data.projects.iter().any(|project_entry| {
+                if project_entry.name == "iam" {
+                    return true;
+                }
+                return false;
+            }),
         };
         let manifest_data = add_project_definition_to_manifest(
             ProjectType::Service,

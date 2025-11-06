@@ -76,6 +76,9 @@ config_struct!(
         pub(crate) worker_consumer_factory: String,
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) worker_producer_factory: String,
+
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) is_iam_configured: bool,
     }
 );
 
@@ -162,6 +165,13 @@ impl InitializableManifestConfig for WorkerManifestData {
             default_worker_options: get_default_worker_options(&worker_type),
             worker_consumer_factory: get_worker_consumer_factory(&worker_type, &worker_name),
             worker_producer_factory: get_worker_producer_factory(&worker_type),
+
+            is_iam_configured: self.projects.iter().any(|project_entry| {
+                if project_entry.name == "iam" {
+                    return true;
+                }
+                return false;
+            }),
             ..self.clone()
         }
     }

@@ -188,18 +188,15 @@ pub(crate) fn application_setup_script(runtime: &Runtime) -> String {
 }
 
 pub(crate) fn application_test_script<'a>(
-    runtime: &Runtime,
+    _runtime: &Runtime,
     test_framework: &Option<TestFramework>,
 ) -> Option<String> {
-    match runtime {
-        Runtime::Bun => None,
-        Runtime::Node => match test_framework {
-            Some(test_framework_definition) => match test_framework_definition {
-                TestFramework::Jest => Some("pnpm jest --passWithNoTests".to_string()),
-                TestFramework::Vitest => Some("pnpm vitest --passWithNoTests".to_string()),
-            },
-            None => None,
+    match test_framework {
+        Some(test_framework_definition) => match test_framework_definition {
+            TestFramework::Jest => Some("pnpm jest --passWithNoTests".to_string()),
+            TestFramework::Vitest => Some("pnpm vitest --passWithNoTests".to_string()),
         },
+        None => None,
     }
 }
 
@@ -242,7 +239,7 @@ pub(crate) const WORKER_REDIS_VERSION: &str = "~0.8.6";
 // @forklaunch/implementation-worker-database
 pub(crate) const WORKER_DATABASE_VERSION: &str = "~0.8.6";
 // @forklaunch/implementation-worker-kafka
-pub(crate) const WORKER_KAFKA_VERSION: &str = "~0.8.6";
+pub(crate) const WORKER_KAFKA_VERSION: &str = "~0.9.0";
 // @forklaunch/infrastructure-redis
 pub(crate) const INFRASTRUCTURE_REDIS_VERSION: &str = "~0.4.30";
 // @forklaunch/infrastructure-s3

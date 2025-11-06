@@ -24,7 +24,7 @@ export const setupTestDatabase = async (): Promise<TestSetupResult> => {
     },
     databaseType: getEnvVar('DATABASE_TYPE') as DatabaseType,
     useMigrations: true,
-    migrationsPath: path.join(__dirname, '../migrations'),
+    migrationsPath: path.join(__dirname, getEnvVar('MIGRATIONS_PATH')),
     customEnvVars: {
       PASSWORD_ENCRYPTION_SECRET: getEnvVar('PASSWORD_ENCRYPTION_SECRET'),
       PASSWORD_ENCRYPTION_SECRET_PATH: getEnvVar(
