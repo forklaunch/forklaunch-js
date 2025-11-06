@@ -240,4 +240,55 @@ describe('mcpGenerator tests', () => {
     expect(generatedMcpServer).toBeDefined();
     expect(generatedMcpServer).toBeInstanceOf(FastMCP);
   });
+
+  it('should accept authenticate callback parameter', () => {
+    const mockAuthenticate = async (request: {
+      headers?: { authorization?: string };
+    }) => {
+      const token = request.headers?.authorization?.replace('Bearer ', '');
+      if (token === 'valid-token') {
+        return {
+          email: 'test@example.com',
+          name: 'Test User'
+        };
+      }
+      return undefined;
+    };
+
+    const generatedMcpServer = generateMcpServer(
+      schemaValidator,
+      'http',
+      'localhost',
+      3000,
+      '1.0.0',
+      {
+        basePath: '/api' as const,
+        routes: [
+          {
+            basePath: '/test' as const,
+            path: '/protected',
+            method: 'get' as const,
+            contractDetails: {
+              name: 'ProtectedEndpoint',
+              summary: 'A protected endpoint',
+              responses: {
+                200: { message: schemaValidator.string }
+              }
+            }
+          }
+        ],
+        routers: [],
+        _fetchMap: {},
+        sdk: {},
+        sdkPaths: {}
+      },
+      undefined,
+      undefined,
+      undefined,
+      mockAuthenticate
+    );
+
+    expect(generatedMcpServer).toBeDefined();
+    expect(generatedMcpServer).toBeInstanceOf(FastMCP);
+  });
 });
