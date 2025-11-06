@@ -2,16 +2,16 @@
 ## ForkLaunch
 
 <div align="center">
-    <img src="./assets/logo.svg" alt="ForkLaunch Logo" width="200">
-    <br><br>
-    <b>TypeScript-first backend framework with incremental adoption, optional static typing, and code-driven architecture.</b>
-    <br><br>
-    Start new or drop into any TypeScript project. Grow into a fully typed services and workers platform, without lock-in.
+    <img src="./assets/logo.svg" alt="ForkLaunch Logo" width="200">    
 </div>
 
 ---
 
 ## Overview
+
+A TypeScript-first backend framework with incremental adoption, optional static typing, and code-driven architecture.
+
+Start new or drop into any TypeScript project. Grow into a fully typed services and workers platform, without lock-in.
 
 Most Node backends fall into one of two buckets:
 
@@ -159,10 +159,10 @@ Each command:
 Once done, run the following:
 
 ```bash
-// applies initial migrations and schemas
+# applies initial migrations and schemas
 pnpm/bun database:setup
 
-// alias for docker compose up
+# alias for docker compose up
 pnpm/bun dev
 ```
 
@@ -227,6 +227,7 @@ These showcase multi-service applications, typed routing, workers, and real work
 ## Feedback
 
 ForkLaunch is early and feedback is appreciated.  
+
 Issues, discussions, and contributions are welcome.
 
 The mission is to provide the flexibility of Express with the structure and productivity of a framework, without forcing a rewrite and without hiding the underlying infrastructure.
