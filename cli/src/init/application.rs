@@ -570,7 +570,7 @@ impl CliCommand for ApplicationCommand {
             iam: None,
             billing: None,
         };
-        let modules: Vec<Module> = if matches.ids().all(|id| id == "dryrun") {
+        let mut modules: Vec<Module> = if matches.ids().all(|id| id == "dryrun") {
             let mut modules_to_test;
             loop {
                 global_module_config = ModuleConfig {
@@ -607,6 +607,15 @@ impl CliCommand for ApplicationCommand {
             validate_modules(&modules_to_test, &mut global_module_config)?;
             modules_to_test
         };
+
+        modules.sort_by_key(|module| {
+            match module {
+                Module::BaseIam | Module::BetterAuthIam => 0,
+                Module::BaseBilling | Module::StripeBilling => 1,
+            }
+        });
+
+        
 
         let description = prompt_without_validation(
             &mut line_editor,
