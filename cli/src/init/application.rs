@@ -509,7 +509,7 @@ impl CliCommand for ApplicationCommand {
         .parse()?;
 
         let http_framework: HttpFramework = if runtime == Runtime::Bun {
-            if let Some(command_line_http_framework) = matches.get_one::<String>("http_framework") {
+            if let Some(command_line_http_framework) = matches.get_one::<String>("http-framework") {
                 if command_line_http_framework
                     .clone()
                     .parse::<HttpFramework>()?
@@ -538,17 +538,19 @@ impl CliCommand for ApplicationCommand {
             .parse()?
         };
 
-        let test_framework: Option<TestFramework> = if runtime == Runtime::Bun {
-            if matches.get_one::<String>("test-framework").is_some() {
-                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
-                writeln!(
-                    stdout,
-                    "Ignoring test-framework choice, defaulting to Bun built-in test runner.",
-                )?;
-                stdout.reset()?;
-            }
-            None
-        } else {
+        // TODO: Add support for Bun test framework
+        let test_framework: Option<TestFramework> = 
+        // if runtime == Runtime::Bun {
+        //     if matches.get_one::<String>("test-framework").is_some() {
+        //         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+        //         writeln!(
+        //             stdout,
+        //             "Ignoring test-framework choice, defaulting to Bun built-in test runner.",
+        //         )?;
+        //         stdout.reset()?;
+        //     }
+        //     None
+        // } else {
             Some(
                 prompt_with_validation(
                     &mut line_editor,
@@ -561,8 +563,8 @@ impl CliCommand for ApplicationCommand {
                     |_| "Invalid test framework. Please try again".to_string(),
                 )?
                 .parse()?,
-            )
-        };
+            );
+        // };
 
         let mut global_module_config = ModuleConfig {
             iam: None,

@@ -1,5 +1,11 @@
 # @forklaunch/implementation-billing-base
 
+## 0.9.0
+
+### Minor Changes
+
+- Add telemetry collector and retries to kafka worker
+
 ## 0.8.6
 
 ### Patch Changes

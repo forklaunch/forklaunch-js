@@ -666,7 +666,7 @@ impl CliCommand for ServiceCommand {
             &mut stdout,
             "description",
             matches,
-            "service description (optional)",
+            "service description",
             None,
         )?;
 

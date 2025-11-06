@@ -49,3 +49,4 @@ dirs = "5.0.1"
 colored = "2.1.0"
 derive_more = { version = "2.0.1", features = ["from"] }
 chrono = { version = "0.4", features = ["serde"] }
+wrk = "0.1.0"

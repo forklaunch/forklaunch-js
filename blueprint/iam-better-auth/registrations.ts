@@ -24,6 +24,7 @@ import {
 } from '@forklaunch/implementation-iam-base/services';
 import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
 import { betterAuth } from 'better-auth';
+import { readFileSync } from 'fs';
 import { BetterAuth, betterAuthConfig } from './auth';
 import { OrganizationStatus } from './domain/enum/organizationStatus.enum';
 import {
@@ -114,7 +115,11 @@ const environmentConfig = configInjector.chain({
   PASSWORD_ENCRYPTION_SECRET: {
     lifetime: Lifetime.Singleton,
     type: string,
-    value: getEnvVar('PASSWORD_ENCRYPTION_SECRET')
+    value:
+      getEnvVar('PASSWORD_ENCRYPTION_SECRET') ||
+      readFileSync(getEnvVar('PASSWORD_ENCRYPTION_SECRET_PATH'), 'utf8').split(
+        '\n'
+      )[1]
   },
   BETTER_AUTH_BASE_PATH: {
     lifetime: Lifetime.Singleton,

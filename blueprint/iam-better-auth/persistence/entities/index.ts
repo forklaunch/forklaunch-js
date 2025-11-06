@@ -1,4 +1,5 @@
 export { Account } from './account.entity';
+export { Jwks } from './jwks.entity';
 export { Organization } from './organization.entity';
 export { Permission } from './permission.entity';
 export { Role } from './role.entity';

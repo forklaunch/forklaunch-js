@@ -724,7 +724,7 @@ impl CliCommand for WorkerCommand {
             &mut stdout,
             "description",
             matches,
-            "worker description (optional)",
+            "worker description",
             None,
         )?;
 
