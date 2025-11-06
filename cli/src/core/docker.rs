@@ -5,9 +5,11 @@ use std::{
 };
 
 use anyhow::{Context, Result};
+use base64::{Engine, engine::general_purpose::STANDARD};
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use serde_yml::{Value, from_str, from_value, to_string};
+use uuid::Uuid;
 use walkdir::WalkDir;
 
 use super::manifest::{ManifestData, ProjectEntry};
@@ -15,7 +17,7 @@ use crate::{
     constants::{
         Database, ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE,
         ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE, ERROR_FAILED_TO_READ_DOCKER_COMPOSE, Infrastructure,
-        Runtime, WorkerType,
+        Module, Runtime, WorkerType,
     },
     core::manifest::{
         application::ApplicationManifestData, service::ServiceManifestData,
@@ -1363,6 +1365,50 @@ pub(crate) fn add_service_definition_to_docker_compose(
         environment.insert(
             "STRIPE_API_KEY".to_string(),
             "replace-with-stripe-api-key".to_string(),
+        );
+        environment.insert(
+            "STRIPE_WEBHOOK_SECRET".to_string(),
+            "replace-with-stripe-webhook-secret".to_string(),
+        );
+    }
+
+    if manifest_data.is_iam_configured {
+        let mut secret_bytes = Vec::new();
+        secret_bytes.extend_from_slice(
+            Uuid::new_v5(
+                &Uuid::NAMESPACE_DNS,
+                format!("{}-hmac-1", manifest_data.app_name).as_bytes(),
+            )
+            .as_bytes(),
+        );
+        secret_bytes.extend_from_slice(
+            Uuid::new_v5(
+                &Uuid::NAMESPACE_DNS,
+                format!("{}-hmac-2", manifest_data.app_name).as_bytes(),
+            )
+            .as_bytes(),
+        );
+        let hmac_secret = STANDARD.encode(&secret_bytes);
+        environment.insert("HMAC_SECRET_KEY".to_string(), hmac_secret);
+
+        let iam_project = manifest_data
+            .projects
+            .iter()
+            .find(|project| project.name == "iam");
+        let iam_project_variant = iam_project
+            .unwrap()
+            .variant
+            .as_ref()
+            .unwrap()
+            .parse::<Module>()
+            .unwrap();
+        environment.insert(
+            "JWKS_PUBLIC_KEY_URL".to_string(),
+            match iam_project_variant {
+                Module::BaseIam => "replace-with-jwks-public-key-url".to_string(),
+                Module::BetterAuthIam => "http://iam:8001/api/auth/jwks".to_string(),
+                _ => "replace-with-jwks-public-key-url".to_string(),
+            },
         );
     }
 

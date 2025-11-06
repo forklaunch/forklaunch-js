@@ -1770,7 +1770,7 @@ impl CliCommand for ApplicationCommand {
             &mut line_editor,
             &mut stdout,
             matches,
-            "project description (optional)",
+            "project description",
             None,
             |_input: &str| true,
             |_| "Invalid description. Please try again".to_string(),

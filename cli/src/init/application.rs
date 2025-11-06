@@ -611,7 +611,7 @@ impl CliCommand for ApplicationCommand {
             &mut stdout,
             "description",
             matches,
-            "project description (optional)",
+            "project description",
             None,
         )?;
 
@@ -921,6 +921,13 @@ impl CliCommand for ApplicationCommand {
 
                 is_better_auth: template_dir.module_id == Some(Module::BetterAuthIam),
                 is_stripe: template_dir.module_id == Some(Module::StripeBilling),
+
+                is_iam_configured: data.projects.iter().any(|project_entry| {
+                    if project_entry.name == "iam" {
+                        return true;
+                    }
+                    return false;
+                }),
             };
 
             if service_data.service_name == "universal-sdk" {

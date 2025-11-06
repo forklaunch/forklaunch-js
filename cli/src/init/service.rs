@@ -736,6 +736,13 @@ impl CliCommand for ServiceCommand {
 
             is_better_auth: false,
             is_stripe: false,
+
+            is_iam_configured: manifest_data.projects.iter().any(|project_entry| {
+                if project_entry.name == "iam" {
+                    return true;
+                }
+                return false;
+            }),
         };
 
         let dryrun = matches.get_flag("dryrun");

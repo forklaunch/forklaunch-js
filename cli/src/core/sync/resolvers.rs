@@ -168,7 +168,7 @@ pub fn resolve_description(
         stdout,
         "description",
         matches,
-        "project description (optional)",
+        "project description",
         None,
         project_name,
         prompts_map,

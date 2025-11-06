@@ -1,4 +1,4 @@
-import { handlers, schemaValidator } from '@{{app_name}}/core';
+import { handlers, {{#is_iam_configured}}ROLES, {{/is_iam_configured}}schemaValidator } from '@{{app_name}}/core';
 import { {{pascal_case_name}}RequestMapper, {{pascal_case_name}}ResponseMapper } from '../../domain/mappers/{{camel_case_name}}.mappers';
 import { ci, tokens } from '../../bootstrapper';
 
@@ -8,7 +8,9 @@ const scopeFactory = () => ci.createScope();
 // serviceFactory returns a new service instance on demand
 const serviceFactory = ci.scopedResolver(tokens.{{pascal_case_name}}Service);
 // openTelemetryCollector for collecting logs and metrics with appropriate context
-const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
+const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);{{#is_iam_configured}}
+//! resolve the JWKS public key URL
+const JWKS_PUBLIC_KEY_URL = ci.resolve(tokens.JWKS_PUBLIC_KEY_URL);{{/is_iam_configured}}
 
   // GET endpoint handler that returns a simple message
 export const {{camel_case_name}}Get = handlers.get(
@@ -16,7 +18,13 @@ export const {{camel_case_name}}Get = handlers.get(
   '/',
   {
     name: '{{title_case_name}} Get',
-    summary: 'Gets {{title_case_name}}',
+    summary: 'Gets {{title_case_name}}',{{#is_iam_configured}}
+     auth: {
+      jwt: {
+        jwksPublicKeyUrl: JWKS_PUBLIC_KEY_URL
+      },
+      allowedRoles: new Set([ROLES.ADMIN])
+    },{{/is_iam_configured}}
     responses: {
       // specifies the success response schema using Mapper constructs
       200: {{pascal_case_name}}ResponseMapper.schema
@@ -38,7 +46,13 @@ export const {{camel_case_name}}Post = handlers.post(
   '/',
   {
     name: '{{title_case_name}} Post', 
-    summary: 'Posts {{title_case_name}}',
+    summary: 'Posts {{title_case_name}}',{{#is_iam_configured}}
+     auth: {
+      jwt: {
+        jwksPublicKeyUrl: JWKS_PUBLIC_KEY_URL
+      },
+      allowedRoles: new Set([ROLES.ADMIN])
+    },{{/is_iam_configured}}
     // specifies the request body schema using Mapper constructs
     body: {{pascal_case_name}}RequestMapper.schema,
     responses: {
