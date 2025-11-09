@@ -16,6 +16,7 @@ The ForkLaunch CLI provides commands for managing your application development.
 | `forklaunch add` | Add new components to existing project | - |
 | `forklaunch change` | Modify existing project components | - |
 | `forklaunch delete` | Delete project components | `del` |
+| `forklaunch sync` | Sync existing project compenents with artifacts | - |
 
 ## Development Commands
 
@@ -57,6 +58,7 @@ For detailed information about specific commands:
 - [Changing Projects](/docs/changing-projects.md) - Modify existing components
 - [delete](/docs/cli/delete.md) - Delete project components
 - [Deleting Projects](/docs/deleting-projects.md) - Comprehensive deletion guide
+- [sync]() - Sync project components with artifacts
 
 ### Development Tools
 - [depcheck](/docs/cli/depcheck.md) - Dependency management
@@ -97,6 +99,14 @@ forklaunch delete service old-billing
 forklaunch delete worker deprecated-processor
 forklaunch delete router legacy-api
 forklaunch delete library unused-utils
+```
+
+**Sync Components:**
+```bash
+forklaunch sync all
+forklaunch sync service new-billing
+forklaunch sync worker custom-processer
+forklaunch sync library new-utils
 ```
 
 **Development Utilities:**

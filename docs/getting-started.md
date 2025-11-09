@@ -15,6 +15,8 @@ We're so glad you're here! Before you begin, make sure you have the following in
 
 ## Installation
 
+### Global Installation (Recommended)
+
 `ForkLaunch` can be installed globally using `npm`, `pnpm`, or `bun`. Open your terminal and run one of the following commands:
 
 <CodeTabs type="terminal">
@@ -40,6 +42,24 @@ We're so glad you're here! Before you begin, make sure you have the following in
 
   </Tab>
 </CodeTabs>
+
+After installation, you can use `forklaunch` commands directly:
+
+```bash
+forklaunch init application my-app
+```
+
+### Local Development (Building from Source)
+
+If you're developing ForkLaunch itself or building from source, use `cargo run --release --` from the `cli` directory:
+
+```bash
+cd cli
+cargo build --release
+cargo run --release -- init application my-app
+```
+
+**Note**: The `--` separates cargo arguments from forklaunch command arguments. This is only needed when running from source.
 
 ## Verification
 

@@ -6,10 +6,54 @@ description: Learn how to create your first ForkLaunch application.
 
 ## Generating a new Application
 
-To generate a new application, run:
+To generate a new application, you can use prompts or flags:
 
 ```bash
+# Interactive prompts
 forklaunch init application
+
+# Or with flags (for scripts/AIs)
+forklaunch init application my-app \
+  --database postgresql \
+  --validator zod \
+  --http-framework express \
+  --runtime node
+```
+
+### What Gets Created: Application Artifacts
+
+When you create an application, ForkLaunch creates **application artifacts** - configuration files that manage your entire application:
+
+| Artifact | Location | Purpose |
+|----------|----------|---------|
+| **Manifest** | `.forklaunch/manifest.toml` | Stores application metadata, project registry, and configuration |
+| **Docker Compose** | `docker-compose.yaml` | Defines monitoring services (Grafana, Prometheus, Loki, Tempo) |
+| **Runtime Workspace** | `pnpm-workspace.yaml` or `package.json` | Package manager workspace configuration |
+| **Universal SDK** | `modules/universal-sdk/` | Structure for auto-generated API clients (created when services are added) |
+| **TypeScript Config** | `modules/tsconfig.json` | TypeScript project references (created when projects are added) |
+
+**Initial Application State:**
+- Manifest created with application metadata
+- Docker Compose created with monitoring services only
+- Runtime workspace created
+- Universal SDK structure (empty until services added)
+- TypeScript config (created when first project added)
+
+### Projects Within an Application
+
+An **application** is a container that holds **projects** (services, workers, libraries). Projects are independent modules that live in your `src/modules/` or `modules/` directory.
+
+**Application Structure:**
+```
+my-app/                    ← Application
+├── .forklaunch/
+│   └── manifest.toml      ← Application artifact
+├── docker-compose.yaml     ← Application artifact
+└── src/modules/           ← Projects live here
+    ├── api-service/        ← Project (Service)
+    ├── email-worker/       ← Project (Worker)
+    ├── shared-utils/       ← Project (Library)
+    ├── pnpm-workspace.yaml    ← Application artifact
 ```
 
 ### Configuration Options
@@ -40,47 +84,78 @@ forklaunch/forklaunch-js).
 
 ```bash
 .
-├── Dockerfile
-├── LICENSE
-├── README.md
-├── assets
-│ └── logo.svg # the logo for your application. comes pre-generated with the forklaunch logo. Replace with your own
-├── core # the core logic for your application. Think of this as a `common` or `shared` library
-│ ├── eslint.config.mjs -> ../eslint.config.mjs # symlinked from parent for consistency
-│ ├── index.ts
-│ ├── models
-│ │ ├── index.ts
-│ │ ├── persistence # the common persistence layer for your application, defining base entities
-│ │ │ └── base.entity.ts # the base entity file for your application
-│ │ └── types # the common types for your application
-│ │ └── shapes.ts # useful utility types for data mappers
-│ ├── package.json
-│ ├── registrations.ts # the common registrations for your application, defining component choices
-│ ├── tsconfig.json
-│ └── vitest.config.ts -> ../vitest.config.ts # symlinked from parent for consistency
+│
 ├── docker-compose.yaml
-├── eslint.config.mjs # the linting configuration applied across all projects in the application
-├── monitoring
-│ ├── eslint.config.mjs -> ../eslint.config.mjs # symlinked from parent for consistency
-│ ├── grafana-provisioning
-│ │ ├── dashboards
-│ │ │ ├── application-overview.json # preconfigured application overview dashboard collecting basic correlated metrics, logs, and traces
-│ │ │ ├── default.yaml # default grafana provisioning configuration
-│ │ │ └── red.json # preconfigured RED dashboard
-│ │ └── datasources
-│ │ └── datasources.yaml
-│ ├── index.ts
-│ ├── metricsDefinitions.ts # where you should define your custom metrics
-│ ├── otel-collector-config.yaml
-│ ├── package.json
-│ ├── prometheus.yaml
-│ ├── tempo.yaml
-│ ├── tsconfig.json
-│ └── vitest.config.ts -> ../vitest.config.ts # symlinked from parent for consistency
-├── package.json
-├── pnpm-workspace.yaml (node runtime only)
-├── tsconfig.base.json # the base tsconfig for your application, used across all projects
-└── vitest.config.ts # the test runner configuration for your application, used across all projects
+│   # Services: tempo, loki, prometheus, grafana, otel-collector
+│   # LGTM Stack (Loki, Grafana, Tempo, Mimir) for observability
+│
+└── src/modules/ #modules/
+    │
+    ├── package.json # Root workspace config
+    ├── pnpm-workspace.yaml # Monorepo workspace definition for node projects
+    ├── tsconfig.json # TypeScript root config
+    ├── tsconfig.base.json (Shared TS config)
+    ├── vitest.config.ts (Root test config)
+    ├── eslint.config.mjs (Root linting config)
+    ├── LICENSE (MIT License)
+    ├── README.md (Project documentation)
+    ├── Dockerfile (Container build config)
+    │
+    ├── assets/
+    │   └── logo.svg (ForkLaunch logo)
+    │
+    ├── patches/
+    │   └── @jercle__yargonaut.patch (Dependency patch)
+    │
+    ├── @dice-roll-node-app/core/
+    │   ├── package.json
+    │   ├── index.ts (Main entry point)
+    │   ├── rbac.ts (Role-Based Access Control)
+    │   ├── registrations.ts (Dependency injection registrations)
+    │   ├── tsconfig.json
+    │   ├── vitest.config.ts
+    │   ├── eslint.config.mjs
+    │   │
+    │   └── persistence/
+    │       ├── index.ts
+    │       └── sql.base.entity.ts (Base SQL entity)
+    │
+    │   Purpose: Core library with shared foundational infrastructure
+    │   Dependencies: MikroORM, ForkLaunch packages, Express, Zod
+    │
+    ├── @dice-roll-node-app/monitoring/
+    │   ├── package.json
+    │   ├── index.ts (Main entry point)
+    │   ├── metricsDefinitions.ts (Custom metrics)
+    │   ├── otel-collector-config.yaml (OpenTelemetry config)
+    │   ├── prometheus.yaml (Prometheus config)
+    │   ├── tempo.yaml (Tempo tracing config)
+    │   ├── tsconfig.json
+    │   ├── vitest.config.ts
+    │   ├── eslint.config.mjs
+    │   │
+    │   └── grafana-provisioning/
+    │       ├── dashboards/
+    │       │   ├── application-overview.json
+    │       │   ├── default.yaml
+    │       │   └── red.json
+    │       └── datasources/
+    │           └── datasources.yaml
+    │
+    │   Purpose: Monitoring library for metrics, logs, and traces
+    │   Dependencies: ForkLaunch core
+    │
+    └── @dice-roll-node-app/universal-sdk/
+        ├── package.json
+        ├── index.ts (Main entry point)
+        ├── universalSdk.ts (SDK implementation)
+        ├── tsconfig.json
+        ├── vitest.config.ts
+        └── eslint.config.mjs
+        │
+        Purpose: Universal SDK for shared utilities
+        Dependencies: ForkLaunch common & universal-sdk
+
 ```
 
 ## Next Steps
