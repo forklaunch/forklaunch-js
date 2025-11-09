@@ -24,6 +24,13 @@ const nestedForklaunchRouterInstance = forklaunchRouter(
   openTelemetryCollector
 );
 
+// forklaunchRouterInstance.upgrade({
+//   'upgradeSchema': {
+//     x: string
+//   }
+// }, (req, res) => {
+//   res.upgrade()
+// })
 describe('Forklaunch Hyper-Express Tests', () => {
   beforeAll(async () => {
     forklaunchRouterInstance.get(

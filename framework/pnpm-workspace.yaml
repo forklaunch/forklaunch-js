@@ -11,3 +11,4 @@ packages:
   - infrastructure/S3
   - internal
   - bunrun
+  - ws
