@@ -4,6 +4,14 @@ category: Guides
 description: Learn how to get started with ForkLaunch.
 ---
 
+# Introduction
+## Welcome to Forklaunch!
+Launch your apps faster with Forklaunch. 
+
+Forklaunch provides the scaffolds you need to create your next application in TypeScript. From package.jsons to tsconfigs, we are here to help you launch faster and monitor your apps as you scale your user base.
+
+# QuickStart
+
 ## Prerequisites
 
 We're so glad you're here! Before you begin, make sure you have the following installed:
@@ -63,12 +71,26 @@ cargo run --release -- init application my-app
 
 ## Verification
 
-To verify your installation and set up your account:
+To verify your installation:
 
 ```bash
 # Check installed version
 forklaunch version
+```
 
-# Log in to your account
+## Create login
+
+Once you have verfied your installation, login into to your account to get started:
+```bash
 forklaunch login
 ```
+
+## Next Steps
+
+- **[Creating an Application](/docs/creating-an-application.md)** - Create your first application
+- **[Adding Projects](/docs/adding-projects.md)** - Learn how to add services, workers, and libraries
+- **[CLI Reference](/docs/cli.md)** - Complete command reference
+
+## Examples
+
+- **[Dice Roll Tutorial](/docs/examples/dice-roll-node-app.md)** - Complete "Hello World" example: Build a dice roll API with database persistence and statistics
