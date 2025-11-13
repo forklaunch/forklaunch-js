@@ -67,7 +67,7 @@ For detailed information about specific commands:
 ### Authentication & Platform
 - [authentication](/docs/cli/authentication.md) - Login, logout, and user management
 
-## Quick Reference
+## Quickstart Guide
 
 ### Common Workflows
 
