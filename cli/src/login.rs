@@ -1,4 +1,4 @@
-use std::{fs::write, io::Write};
+use std::{fs::{create_dir_all, write}, io::Write};
 
 use anyhow::Result;
 use clap::{ArgMatches, Command};
@@ -26,6 +26,10 @@ impl CliCommand for LoginCommand {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
         // TODO: call login API and serialize to ~/.forklaunch/token
         let token_path = get_token_path()?;
+        // Create parent directory if it doesn't exist
+        if let Some(parent) = token_path.parent() {
+            create_dir_all(parent)?;
+        }
         write(token_path, "TOKEN_CONTENT")?;
 
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
