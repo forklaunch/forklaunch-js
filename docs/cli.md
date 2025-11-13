@@ -54,11 +54,10 @@ For detailed information about specific commands:
 
 ### Project Management
 - [init](/docs/cli/init.md) - Project initialization
-- [Adding Projects](/docs/adding-projects.md) - Add components to projects
+- [Adding Projects](/docs/adding-projects.md) - Add components to projects, sync existing or new components
 - [Changing Projects](/docs/changing-projects.md) - Modify existing components
 - [delete](/docs/cli/delete.md) - Delete project components
-- [Deleting Projects](/docs/deleting-projects.md) - Comprehensive deletion guide
-- [sync]() - Sync project components with artifacts
+- [Deleting Projects](/docs/deleting-projects.md) - Comprehensive deletion guide, clean up project artifacts
 
 ### Development Tools
 - [depcheck](/docs/cli/depcheck.md) - Dependency management

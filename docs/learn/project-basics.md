@@ -80,14 +80,7 @@ When you initialize a project, ForkLaunch creates or updates the relevant artifa
 - **Libraries**: Share common code and business logic
 
 ### Project Building Blocks
-- **Routers**: Add RCSIDES stack to existing services/workers
-  - Routes
-  - Controllers
-  - Services
-  - Interfaces
-  - Mappers
-  - Entities
-  - Seeders
+- **Routers**: Add [RCSIDES](/docs/artifacts.md#rcsides-architecture-pattern) stack to existing services/workers
 
 ### Coming Soon
 - **Agents**: Optimized for AI-driven workflows

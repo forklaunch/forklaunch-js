@@ -64,9 +64,9 @@ forklaunch init service roll-dice-svc \
 ```
 
 **What gets created:**
-- Service directory with complete RCSIDES stack
+- Service directory with complete [RCSIDES](/docs/artifacts.md#rcsides-architecture-pattern) stack
 - Routes and controllers (empty, ready to customize)
-- Entity, mappers, schemas, types
+- Entity, schemas, types
 - Service registered in all artifacts (manifest, docker-compose, workspace, SDK, tsconfig)
 
 ## Step 3: Add a Router
@@ -81,7 +81,7 @@ forklaunch init router dice-rtr \
 
 **What gets created:**
 - New routes and controllers in the service
-- Additional RCSIDES files for the router
+- Additional [RCSIDES](/docs/artifacts.md#rcsides-architecture-pattern) files for the router
 - Router wired into `server.ts`
 
 ## Step 4: Configure Environment Variables
@@ -134,13 +134,23 @@ Edit `src/modules/roll-dice-svc/domain/schemas/diceRtr.schema.ts`:
 ```typescript
 import { number, string } from '@dice-roll-node-app/core';
 
-export const DiceRtrRequestSchema = { 
+export const DiceRtrRollRequestSchema = { 
   dieType: string
 };
 
-export const DiceRtrResponseSchema = {
+export const DiceRtrRollResponseSchema = {
   dieType: string,
   result: number
+};
+
+export const DiceRtrStatsResponseSchema = {
+    totalRolls: number,
+    byDieType: record(string, {
+        count: number,
+        average: number,
+        min: number,
+        max: number
+    })
 };
 ```
 
@@ -206,26 +216,39 @@ import { DiceRtrRecord } from '../persistence/entities/diceRtrRecord.entity';
 export class BaseDiceRtrService implements DiceRtrService { 
   // ... existing constructor ...
 
-  diceRtrPost = async (
-    dto: DiceRtrRequestDto
-  ): Promise<DiceRtrResponseDto> => {
-    const entity = await DiceRtrRequestMapper.toEntity(
+  diceRtrRoll = async (
+    dto: DiceRtrRollRequestDto
+  ): Promise<DiceRtrRollResponseDto> => {
+    // Validate die type
+    const sides = parseInt(dto.dieType.replace('d', ''));
+    if (isNaN(sides) || sides < 2) {
+      throw new Error(`Invalid die type: ${dto.dieType}. Use format d4, d6, d12, d20, etc.`);
+    }
+
+    // Create entity with roll result
+    const entity = await DiceRtrRollRequestMapper.toEntity(
       dto,
       this.entityManager
     );
-    
+
+    // Save to database
     await this.entityManager.persistAndFlush(entity);
-    
-    return DiceRtrResponseMapper.toDto(entity);
+
+    this.openTelemetryCollector.info('Dice rolled', {
+      dieType: dto.dieType,
+      result: entity.result
+    });
+
+    return DiceRtrRollResponseMapper.toDto(entity);
   };
 
   diceRtrStats = async (): Promise<DiceRtrStatsResponseDto> => {
     // Get all rolls
     const allRolls = await this.entityManager.find(DiceRtrRecord, {});
-    
+
     // Group by die type and calculate stats
     const byDieType: Record<string, { count: number; average: number; min: number; max: number }> = {};
-    
+
     allRolls.forEach(roll => {
       if (!byDieType[roll.dieType]) {
         byDieType[roll.dieType] = {
@@ -235,20 +258,20 @@ export class BaseDiceRtrService implements DiceRtrService {
           max: -Infinity
         };
       }
-      
+
       const stats = byDieType[roll.dieType];
       stats.count++;
       stats.min = Math.min(stats.min, roll.result);
       stats.max = Math.max(stats.max, roll.result);
     });
-    
+
     // Calculate averages
     Object.keys(byDieType).forEach(dieType => {
       const rolls = allRolls.filter(r => r.dieType === dieType);
       const sum = rolls.reduce((acc, r) => acc + r.result, 0);
       byDieType[dieType].average = sum / rolls.length;
     });
-    
+
     return {
       totalRolls: allRolls.length,
       byDieType
@@ -281,12 +304,31 @@ Edit `src/modules/roll-dice-svc/api/controllers/diceRtr.controller.ts`:
 ```typescript
 import { handlers, schemaValidator } from '@dice-roll-node-app/core';
 import { DiceRtrRequestMapper, DiceRtrResponseMapper } from '../../domain/mappers/diceRtr.mappers';
-import { DiceRtrStatsResponseSchema } from '../../domain/schemas/diceRtr.schema';
+import { DiceRtrRequestSchema, DiceRtrResponseSchema, DiceRtrStatsResponseSchema } from '../../domain/schemas/diceRtr.schema';
 import { ci, tokens } from '../../bootstrapper';
 
 const scopeFactory = () => ci.createScope();
 const serviceFactory = ci.scopedResolver(tokens.DiceRtrService);
 const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
+
+// POST endpoint handler that returns a simple message
+export const diceRtrPost = handlers.post(
+  schemaValidator,
+  '/',
+  {
+    name: 'Dice Rtr Post',
+    summary: 'Posts Dice Rtr',
+    body: DiceRtrRequestSchema,
+    responses: {
+      200: DiceRtrResponseSchema
+    }
+  },
+  async (req, res) => {
+    res.status(200).json({
+      message: 'hello, world!'
+    });
+  }
+);
 
 // Roll dice endpoint
 export const diceRtrRoll = handlers.post(
@@ -295,14 +337,14 @@ export const diceRtrRoll = handlers.post(
   {
     name: 'Roll Dice',
     summary: 'Rolls a dice with specified number of sides',
-    body: DiceRtrRequestMapper.schema,
+    body: DiceRtrRollRequestMapper.schema,
     responses: {
-      200: DiceRtrResponseMapper.schema
+      200: DiceRtrRollResponseMapper.schema
     }
   },
   async (req, res) => {
     res.status(200).json(
-      await serviceFactory(scopeFactory()).diceRtrPost(req.body)
+      await serviceFactory(scopeFactory()).diceRtrRoll(req.body)
     );
   }
 );
@@ -332,7 +374,7 @@ Edit `src/modules/roll-dice-svc/api/routes/diceRtr.routes.ts`:
 
 ```typescript
 import { forklaunchRouter, schemaValidator } from '@dice-roll-node-app/core';
-import { diceRtrRoll, diceRtrStats } from '../controllers/diceRtr.controller';
+import { diceRtrGet, diceRtrPost, diceRtrRoll, diceRtrStats } from '../controllers/diceRtr.controller';
 import { ci, tokens } from '../../bootstrapper';
 
 const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
@@ -344,6 +386,8 @@ export const diceRtrRouter = forklaunchRouter(
 );
 
 // Mount the routes
+export const diceRtrGetRoute = diceRtrRouter.get('/', diceRtrGet);
+export const diceRtrPostRoute = diceRtrRouter.post('/', diceRtrPost);
 export const diceRtrRollRoute = diceRtrRouter.post('/roll', diceRtrRoll);
 export const diceRtrStatsRoute = diceRtrRouter.get('/stats', diceRtrStats);
 ```
@@ -355,38 +399,70 @@ Edit `src/modules/roll-dice-svc/domain/types/diceRtr.types.ts` to add stats type
 ```typescript
 import { Schema } from '@forklaunch/validator';
 import { SchemaValidator } from '@dice-roll-node-app/core';
-import { DiceRtrRequestSchema, DiceRtrResponseSchema, DiceRtrStatsResponseSchema } from '../schemas/diceRtr.schema';
+import { DiceRtrRequestSchema, DiceRtrResponseSchema, DiceRtrRollRequestSchema, DiceRtrRollResponseSchema, DiceRtrStatsResponseSchema } from '../schemas/diceRtr.schema';
 
+
+// Exported type that matches the request schema
 export type DiceRtrRequestDto = Schema<typeof DiceRtrRequestSchema, SchemaValidator>;
+
+// Exported type that matches the response schema
 export type DiceRtrResponseDto = Schema<typeof DiceRtrResponseSchema, SchemaValidator>;
+
+// Exported types for roll operations
+export type DiceRtrRollRequestDto = Schema<typeof DiceRtrRollRequestSchema, SchemaValidator>;
+export type DiceRtrRollResponseDto = Schema<typeof DiceRtrRollResponseSchema, SchemaValidator>;
 export type DiceRtrStatsResponseDto = Schema<typeof DiceRtrStatsResponseSchema, SchemaValidator>;
 ```
 
 And add the stats schema to `diceRtr.schema.ts`:
 
 ```typescript
+import { number, record, string } from '@dice-roll-node-app/core';
+
+// idiomatic validator schema defines the request schema. This should extend the request type
+export const DiceRtrRequestSchema = {
+    message: string
+};
+
+// idiomatic validator schema defines the response schema. This should extend the response type
+export const DiceRtrResponseSchema = {
+    message: string
+};
+
+// Request schema for rolling dice
+export const DiceRtrRollRequestSchema = {
+    dieType: string // e.g., "d4", "d6", "d12", "d20"
+};
+
+// Response schema for roll result
+export const DiceRtrRollResponseSchema = {
+    dieType: string,
+    result: number,
+    id: string,
+    createdAt: string
+};
+
+// Response schema for stats
 export const DiceRtrStatsResponseSchema = {
-  totalRolls: number,
-  byDieType: {
-    [key: string]: {
-      count: number,
-      average: number,
-      min: number,
-      max: number
-    }
-  }
+    totalRolls: number,
+    byDieType: record(string, {
+        count: number,
+        average: number,
+        min: number,
+        max: number
+    })
 };
 ```
 
 ## Step 13: Set Up Database
 
-### Start Docker Containers
+### Start Docker Containers (optional)
 
 ```bash
 docker-compose up -d postgres
 ```
 
-### Initialize Migrations
+### Initialize Migrations (starts docker containers)
 
 ```bash
 pnpm migrate:init
@@ -474,21 +550,6 @@ curl http://localhost:8000/dice-rtr/stats
   }
 }
 ```
-
-## What We Learned
-
-This example demonstrates:
-
-1. **Application Creation**: Using `init application` with prompts or flags
-2. **Service Creation**: Adding a service with `init service`
-3. **Router Creation**: Adding routes with `init router`
-4. **Artifacts**: Understanding how ForkLaunch manages configuration files
-5. **Entity Updates**: Modifying database entities
-6. **Schema Validation**: Using schemas for API validation
-7. **Mappers**: Transforming data between API and database layers
-8. **Service Logic**: Implementing business logic
-9. **Database Migrations**: Setting up and running migrations
-10. **Testing**: Using curl to test the API
 
 ## Next Steps
 
