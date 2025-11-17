@@ -1,5 +1,11 @@
 # @forklaunch/bunrun
 
+## 0.0.17
+
+### Patch Changes
+
+- update framework pages
+
 ## 0.0.16
 
 ### Patch Changes
