@@ -1,5 +1,17 @@
 # @forklaunch/hyper-express
 
+## 0.10.0
+
+### Minor Changes
+
+- Introduce fl websockets for easy, fully typed socket communication
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.16.0
+  - @forklaunch/ws@0.1.0
+
 ## 0.9.31
 
 ### Patch Changes
