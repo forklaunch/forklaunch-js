@@ -1,5 +1,16 @@
 # @forklaunch/hyper-express
 
+## 0.10.2
+
+### Patch Changes
+
+- update framework pages
+- Updated dependencies
+  - @forklaunch/validator@0.10.23
+  - @forklaunch/common@0.6.23
+  - @forklaunch/core@0.16.1
+  - @forklaunch/ws@0.1.2
+
 ## 0.10.1
 
 ### Patch Changes

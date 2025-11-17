@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.6.23
+
+### Patch Changes
+
+- update framework pages
+
 ## 0.6.22
 
 ### Patch Changes

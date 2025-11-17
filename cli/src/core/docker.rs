@@ -877,7 +877,7 @@ pub(crate) fn add_database_to_docker_compose(
                         ])),
                         networks: Some(vec![format!("{}-network", app_name)]),
                         volumes: Some(vec![format!(
-                            "{}-postgresql-data:/var/lib/postgresql/data",
+                            "{}-postgresql-data:/var/lib/postgresql",
                             app_name
                         )]),
                         healthcheck: Some(Healthcheck {

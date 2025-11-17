@@ -1,5 +1,11 @@
 # @forklaunch/interfaces-billing
 
+## 0.7.7
+
+### Patch Changes
+
+- Update package versions
+
 ## 0.7.6
 
 ### Patch Changes

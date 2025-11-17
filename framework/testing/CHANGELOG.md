@@ -1,5 +1,11 @@
 # @forklaunch/testing
 
+## 0.0.12
+
+### Patch Changes
+
+- update framework pages
+
 ## 0.0.11
 
 ### Patch Changes
