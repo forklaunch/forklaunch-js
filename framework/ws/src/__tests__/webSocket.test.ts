@@ -111,7 +111,7 @@ describe('ForklaunchWebSocket', () => {
         // @ts-expect-error - Accessing protected method for testing
         const result = ws.decodeAndValidate(
           arrayBuffer,
-          schemas.serverMessages.chat
+          schemas.serverMessages.chat.shape
         );
 
         expect(result).toEqual(data);
@@ -130,7 +130,7 @@ describe('ForklaunchWebSocket', () => {
         // @ts-expect-error - Accessing protected method for testing
         const result = ws.decodeAndValidate(
           uint8Array,
-          schemas.serverMessages.chat
+          schemas.serverMessages.chat.shape
         );
 
         expect(result).toEqual(data);
@@ -148,7 +148,7 @@ describe('ForklaunchWebSocket', () => {
         // @ts-expect-error - Accessing protected method for testing
         const result = ws.decodeAndValidate(
           jsonString,
-          schemas.serverMessages.chat
+          schemas.serverMessages.chat.shape
         );
 
         expect(result).toEqual(data);
@@ -163,7 +163,10 @@ describe('ForklaunchWebSocket', () => {
         const data = { type: 'chat' as const, message: 'hello', userId: '123' };
 
         // @ts-expect-error - Accessing protected method for testing
-        const result = ws.decodeAndValidate(data, schemas.serverMessages.chat);
+        const result = ws.decodeAndValidate(
+          data,
+          schemas.serverMessages.chat.shape
+        );
 
         expect(result).toEqual(data);
       });
@@ -179,7 +182,7 @@ describe('ForklaunchWebSocket', () => {
 
         expect(() => {
           // @ts-expect-error - Accessing protected method for testing
-          ws.decodeAndValidate(buffer, schemas.serverMessages.chat);
+          ws.decodeAndValidate(buffer, schemas.serverMessages.chat.shape);
         }).toThrow();
       });
 
@@ -298,9 +301,12 @@ describe('ForklaunchWebSocket', () => {
         );
 
         // @ts-expect-error - Accessing protected method for testing
-        expect(ws.validateAndEncode(null, undefined)).toBe(null);
+        // normalizeEncodedValue converts null to undefined when allowUndefined is true
+        expect(ws.validateAndEncode(null, undefined, true)).toBe(undefined);
         // @ts-expect-error - Accessing protected method for testing
-        expect(ws.validateAndEncode(undefined, undefined)).toBe(undefined);
+        expect(ws.validateAndEncode(undefined, undefined, true)).toBe(
+          undefined
+        );
       });
 
       it('should throw error on invalid schema', () => {
@@ -313,7 +319,10 @@ describe('ForklaunchWebSocket', () => {
 
         expect(() => {
           // @ts-expect-error - Accessing protected method for testing
-          ws.validateAndEncode(invalidData, schemas.clientMessages.response);
+          ws.validateAndEncode(
+            invalidData,
+            schemas.clientMessages.response.shape
+          );
         }).toThrow();
       });
     });
