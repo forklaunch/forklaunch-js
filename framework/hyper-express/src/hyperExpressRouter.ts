@@ -28,7 +28,7 @@ import {
 } from '@forklaunch/hyper-express-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
 
-import { EventSchema } from '@forklaunch/ws';
+import { EventSchema } from '@forklaunch/core/ws';
 import { contentParse } from './middleware/contentParse.middleware';
 import { enrichResponseTransmission } from './middleware/enrichResponseTransmission.middleware';
 import { polyfillGetHeaders } from './middleware/polyfillGetHeaders.middleware';

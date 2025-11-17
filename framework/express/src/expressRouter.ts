@@ -129,8 +129,7 @@ export class Router<
     Request,
     Response,
     NextFunction,
-    ExpressRequestHandler,
-    unknown
+    ExpressRequestHandler
   > = <
     Name extends string,
     Path extends `/${string}`,
@@ -171,8 +170,7 @@ export class Router<
           Response,
           NextFunction,
           RouterSession,
-          Auth,
-          unknown
+          Auth
         >,
     contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
@@ -191,8 +189,7 @@ export class Router<
       Response,
       NextFunction,
       RouterSession,
-      Auth,
-      unknown
+      Auth
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -211,8 +208,7 @@ export class Router<
       Response,
       NextFunction,
       RouterSession,
-      Auth,
-      unknown
+      Auth
     >[]
   ) => {
     return this.registerMiddlewareHandler<

@@ -347,12 +347,12 @@ describe('handlers', () => {
       '/',
       {
         upgrade: {
-          type: string
+          a: string
         }
       },
       (req, res) => {
         res.upgrade({
-          type: 'fff'
+          a: 'fff'
         });
       }
     );

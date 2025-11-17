@@ -1,7 +1,7 @@
+import type { EventSchema } from '@forklaunch/core/ws';
 import { ZodSchemaValidator } from '@forklaunch/validator/zod';
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod/v3';
-import type { EventSchema } from '../types/eventSchema.types';
 
 // Mock the ws module to prevent actual connections
 vi.mock('ws', async () => {
@@ -39,31 +39,41 @@ import { ForklaunchWebSocket } from '../webSocket';
 describe('ForklaunchWebSocket', () => {
   // Use real Zod schemas for testing
   const schemas = {
-    ping: z.object({ ts: z.number() }),
-    pong: z.object({ ts: z.number() }),
+    ping: { shape: z.object({ ts: z.number() }) },
+    pong: { shape: z.object({ ts: z.number() }) },
     serverMessages: {
-      chat: z.object({
-        type: z.literal('chat'),
-        message: z.string(),
-        userId: z.string()
-      })
+      chat: {
+        shape: z.object({
+          type: z.literal('chat'),
+          message: z.string(),
+          userId: z.string()
+        })
+      }
     },
     clientMessages: {
-      response: z.object({
-        status: z.string(),
-        data: z.unknown()
-      })
+      response: {
+        shape: z.object({
+          status: z.string(),
+          data: z.unknown()
+        })
+      }
     },
     errors: {
-      error: z.object({
-        code: z.string(),
-        message: z.string()
-      })
+      error: {
+        shape: z.object({
+          code: z.string(),
+          message: z.string()
+        })
+      }
     },
-    closeReason: z.object({
-      code: z.number(),
-      message: z.string()
-    })
+    closeReason: {
+      reason: {
+        shape: z.object({
+          code: z.number(),
+          message: z.string()
+        })
+      }
+    }
   } satisfies EventSchema<ZodSchemaValidator>;
 
   const validator = new ZodSchemaValidator();
@@ -82,7 +92,7 @@ describe('ForklaunchWebSocket', () => {
         // @ts-expect-error - Accessing protected method for testing
         const result = ws.decodeAndValidate(
           buffer,
-          schemas.serverMessages.chat
+          schemas.serverMessages.chat.shape
         );
 
         expect(result).toEqual(data);
@@ -228,7 +238,7 @@ describe('ForklaunchWebSocket', () => {
         // @ts-expect-error - Accessing protected method for testing
         const result = ws.validateAndEncode(
           data,
-          schemas.clientMessages.response
+          schemas.clientMessages.response.shape
         );
 
         expect(Buffer.isBuffer(result)).toBe(true);
@@ -487,7 +497,7 @@ describe('ForklaunchWebSocket', () => {
 
         // The mock validator doesn't throw, so just verify send is called
         // In real usage with zod/typebox, this would throw
-        // @ts-expect-error - Invalid data
+        // @ts-expect-error - Invalid data type for testing
         ws.send(invalidData);
         expect(ws.send).toHaveBeenCalled();
       });

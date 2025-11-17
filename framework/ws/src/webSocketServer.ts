@@ -1,7 +1,7 @@
+import { EventSchema, ServerEventSchema } from '@forklaunch/core/ws';
 import type { AnySchemaValidator } from '@forklaunch/validator';
 import type { IncomingMessage } from 'http';
 import { WebSocketServer } from 'ws';
-import { EventSchema, ServerEventSchema } from './types/eventSchema.types';
 import { ForklaunchWebSocket } from './webSocket';
 
 /**

@@ -5,10 +5,10 @@ import {
   SchemaValidator
 } from '@forklaunch/validator';
 
-import { EventSchema } from './types/eventSchema.types';
+import { EventSchema, EventSchemaEntry } from './types/eventSchema.types';
 
 type SchemaRecord<SV extends AnySchemaValidator> =
-  | Record<string, IdiomaticSchema<SV>>
+  | Record<string, EventSchemaEntry<SV>>
   | undefined;
 
 export function buildUnionSchema<SV extends AnySchemaValidator>(
@@ -19,23 +19,9 @@ export function buildUnionSchema<SV extends AnySchemaValidator>(
     return undefined;
   }
 
-  const schemas = Object.values(record).filter(
-    (
-      schema
-    ): schema is IdiomaticSchema<SV> & {
-      channel?: string;
-      channels?: string[];
-    } => Boolean(schema)
-  );
-
-  schemas.forEach((schema) => {
-    schema.channel = undefined;
-    schema.channels = undefined;
-    Object.assign(schema, {
-      channel: schemaValidator.optional(schemaValidator.string)
-    });
-    return schema;
-  });
+  const schemas = Object.values(record)
+    .filter((entry): entry is EventSchemaEntry<SV> => Boolean(entry))
+    .map((entry) => entry.shape);
 
   if (schemas.length === 0) {
     return undefined;
@@ -208,9 +194,11 @@ export function createWebSocketSchemas<
     schemaValidator,
     eventSchemas.errors
   );
-  const pingSchema = eventSchemas.ping;
-  const pongSchema = eventSchemas.pong;
-  const closeReasonSchema = eventSchemas.closeReason;
+  const pingSchema = eventSchemas.ping?.shape;
+  const pongSchema = eventSchemas.pong?.shape;
+  const closeReasonSchema = eventSchemas.closeReason
+    ? buildUnionSchema<SV>(schemaValidator, eventSchemas.closeReason)
+    : undefined;
 
   return {
     clientMessagesSchema,

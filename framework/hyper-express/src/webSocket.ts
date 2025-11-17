@@ -1,17 +1,18 @@
-import { StringOnlyObject } from '@forklaunch/core/http';
+import {
+  createWebSocketSchemas,
+  encodeSchemaValue,
+  EventSchema,
+  EventSchemaEntry,
+  ExtractSchemaFromEntry,
+  ExtractSchemaFromRecord,
+  normalizeEncodedValue
+} from '@forklaunch/core/ws';
 import { SendableData, Websocket } from '@forklaunch/hyper-express-fork';
 import {
   AnySchemaValidator,
   Schema,
   SchemaValidator
 } from '@forklaunch/validator';
-import { EventSchema } from '@forklaunch/ws';
-import {
-  createWebSocketSchemas,
-  decodeSchemaValue,
-  encodeSchemaValue,
-  normalizeEncodedValue
-} from '../../ws/src/webSocketLike';
 
 export class WebSocket<
   SV extends AnySchemaValidator,
@@ -24,69 +25,15 @@ export class WebSocket<
     super();
     this.schemaValidator = schemaValidator as SchemaValidator;
     this.schemas = createWebSocketSchemas<SV, ES>(
-      schemaValidator,
+      schemaValidator as SchemaValidator,
       eventSchemas
-    );
-  }
-
-  public decodeClientMessage(message: unknown): unknown {
-    return decodeSchemaValue(
-      this.schemaValidator,
-      message,
-      this.schemas.clientMessagesSchema,
-      'web socket client message'
-    );
-  }
-
-  public decodeServerMessage(message: unknown): unknown {
-    return decodeSchemaValue(
-      this.schemaValidator,
-      message,
-      this.schemas.serverMessagesSchema,
-      'web socket server message'
-    );
-  }
-
-  public decodeErrorPayload(error: unknown): unknown {
-    return decodeSchemaValue(
-      this.schemaValidator,
-      error,
-      this.schemas.errorsSchema,
-      'web socket error'
-    );
-  }
-
-  public decodePingPayload(payload: unknown): unknown {
-    return decodeSchemaValue(
-      this.schemaValidator,
-      payload,
-      this.schemas.pingSchema,
-      'web socket ping'
-    );
-  }
-
-  public decodePongPayload(payload: unknown): unknown {
-    return decodeSchemaValue(
-      this.schemaValidator,
-      payload,
-      this.schemas.pongSchema,
-      'web socket pong'
-    );
-  }
-
-  public decodeCloseReason(reason: unknown): unknown {
-    return decodeSchemaValue(
-      this.schemaValidator,
-      reason,
-      this.schemas.closeReasonSchema,
-      'web socket close'
     );
   }
 
   // @ts-expect-error - Intentionally restricting types for compile-time schema validation
   override send(
-    message: ES['serverMessages'] extends StringOnlyObject<SV>
-      ? Schema<ES['serverMessages'][keyof ES['serverMessages']], SV>
+    message: ES['serverMessages'] extends Record<string, EventSchemaEntry<SV>>
+      ? Schema<ExtractSchemaFromRecord<SV, ES['serverMessages']>, SV>
       : SendableData,
     is_binary?: boolean,
     compress?: boolean
@@ -104,7 +51,12 @@ export class WebSocket<
     return super.send(payload, is_binary, compress);
   }
 
-  override ping(message?: SendableData): void {
+  // @ts-expect-error - Intentionally restricting types for compile-time schema validation
+  override ping(
+    message?: ES['ping'] extends EventSchemaEntry<SV>
+      ? Schema<ExtractSchemaFromEntry<SV, ES['ping']>, SV>
+      : SendableData
+  ): void {
     const payload =
       message !== undefined
         ? encodeSchemaValue(
@@ -118,7 +70,13 @@ export class WebSocket<
     super.ping(prepared);
   }
 
-  override close(code?: number, message?: SendableData): void {
+  // @ts-expect-error - Intentionally restricting types for compile-time schema validation
+  override close(
+    code?: number,
+    message?: ES['closeReason'] extends Record<string, EventSchemaEntry<SV>>
+      ? Schema<ExtractSchemaFromRecord<SV, ES['closeReason']>, SV>
+      : SendableData
+  ): void {
     const payload =
       message !== undefined
         ? encodeSchemaValue(

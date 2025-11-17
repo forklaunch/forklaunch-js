@@ -1,36 +1,46 @@
+import type { EventSchema } from '@forklaunch/core/ws';
 import { ZodSchemaValidator } from '@forklaunch/validator/zod';
 import { describe, expect, it, vi } from 'vitest';
 import { WebSocketServer } from 'ws';
 import { z } from 'zod/v3';
-import type { EventSchema } from '../types/eventSchema.types';
 import { ForklaunchWebSocketServer } from '../webSocketServer';
 
 describe('ForklaunchWebSocketServer', () => {
   const schemas = {
-    ping: { ts: z.number() },
-    pong: { ts: z.number() },
+    ping: { shape: z.object({ ts: z.number() }) },
+    pong: { shape: z.object({ ts: z.number() }) },
     serverMessages: {
       chat: {
-        type: z.literal('chat'),
-        message: z.string(),
-        userId: z.string()
+        shape: z.object({
+          type: z.literal('chat'),
+          message: z.string(),
+          userId: z.string()
+        })
       }
     },
     clientMessages: {
-      response: z.object({
-        status: z.string(),
-        data: z.unknown()
-      })
+      response: {
+        shape: z.object({
+          status: z.string(),
+          data: z.unknown()
+        })
+      }
     },
     errors: {
       error: {
-        code: z.string(),
-        message: z.string()
+        shape: z.object({
+          code: z.string(),
+          message: z.string()
+        })
       }
     },
     closeReason: {
-      code: z.number(),
-      message: z.string()
+      reason: {
+        shape: z.object({
+          code: z.number(),
+          message: z.string()
+        })
+      }
     }
   } satisfies EventSchema<ZodSchemaValidator>;
 

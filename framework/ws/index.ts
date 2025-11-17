@@ -53,21 +53,7 @@
 
 // Re-export main classes
 export { ForklaunchWebSocket } from './src/webSocket';
-export {
-  buildUnionSchema,
-  createWebSocketSchemas,
-  decodeSchemaValue,
-  encodeSchemaValue,
-  normalizeEncodedValue,
-  parseSchemaValue
-} from './src/webSocketLike';
 export { ForklaunchWebSocketServer } from './src/webSocketServer';
-
-// Re-export types
-export type {
-  EventSchema,
-  ServerEventSchema
-} from './src/types/eventSchema.types';
 
 // Re-export original ws types
 export { WebSocket, WebSocketServer } from 'ws';

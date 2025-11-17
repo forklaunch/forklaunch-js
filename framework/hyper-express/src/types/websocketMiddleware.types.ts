@@ -14,18 +14,20 @@ import {
   TypedHandler,
   VersionSchema
 } from '@forklaunch/core/http';
-import {
-  AnySchemaValidator,
-  IdiomaticSchema,
-  Schema
-} from '@forklaunch/validator';
+import { AnySchemaValidator, Schema } from '@forklaunch/validator';
 
 type WebSocketUpgradeContext<
   SV extends AnySchemaValidator,
   BaseResponse,
   Upgrade extends StringOnlyObject<SV>
 > = Omit<BaseResponse, 'upgrade'> & {
-  upgrade: (context: Schema<Upgrade, SV>) => void;
+  upgrade: (
+    context: Upgrade extends infer U
+      ? U extends StringOnlyObject<SV>
+        ? Schema<U, SV>
+        : U
+      : never
+  ) => void;
 };
 
 export type WebSocketContractDetails<
@@ -50,24 +52,21 @@ export type WebSocketContractDetails<
     BaseRequest
   >,
   Upgrade extends StringOnlyObject<SV>
-> = Omit<
-  MiddlewareContractDetails<
-    SV,
-    Name,
-    Path,
-    P,
-    ResBodyMap,
-    ReqBody,
-    ReqQuery,
-    ReqHeaders,
-    ResHeaders,
-    VersionedApi,
-    BaseRequest,
-    Auth
-  >,
-  'upgrade'
+> = MiddlewareContractDetails<
+  SV,
+  Name,
+  Path,
+  P,
+  ResBodyMap,
+  ReqBody,
+  ReqQuery,
+  ReqHeaders,
+  ResHeaders,
+  VersionedApi,
+  BaseRequest,
+  Auth
 > & {
-  upgrade: Upgrade;
+  upgrade?: Upgrade;
 };
 
 export type WebSocketTypedHandler<
@@ -110,9 +109,7 @@ export type WebSocketTypedHandler<
     LocalsObj,
     VersionedApi,
     BaseRequest,
-    Omit<BaseResponse, 'upgrade'> & {
-      upgrade: (context: Schema<Upgrade, SV>) => void;
-    },
+    WebSocketUpgradeContext<SV, BaseResponse, Upgrade>,
     NextFunction,
     Auth
   >,
@@ -387,7 +384,7 @@ export interface TypedWebSocketMiddlewareDefinition<
       VersionedApi,
       BaseRequest
     >,
-    Upgrade extends Record<string, IdiomaticSchema<SV>>
+    Upgrade extends StringOnlyObject<SV>
   >(
     contractDetails: WebSocketContractDetails<
       SV,

@@ -36,6 +36,7 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
+    "@asyncapi/parser": "^3.4.0",
     "@forklaunch/common": "workspace:*",
     "@forklaunch/core": "workspace:*",
     "@forklaunch/fastmcp-fork": "^1.0.5",

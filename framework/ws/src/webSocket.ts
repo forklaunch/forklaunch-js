@@ -1,3 +1,14 @@
+import type {
+  ExtractSchemaFromEntry,
+  ExtractSchemaFromRecord
+} from '@forklaunch/core/ws';
+import {
+  createWebSocketSchemas,
+  decodeSchemaValue,
+  encodeSchemaValue,
+  EventSchema,
+  normalizeEncodedValue
+} from '@forklaunch/core/ws';
 import {
   AnySchemaValidator,
   IdiomaticSchema,
@@ -6,13 +17,6 @@ import {
 } from '@forklaunch/validator';
 import { ClientRequest, IncomingMessage } from 'http';
 import { WebSocket } from 'ws';
-import { EventSchema } from './types/eventSchema.types';
-import {
-  createWebSocketSchemas,
-  decodeSchemaValue,
-  encodeSchemaValue,
-  normalizeEncodedValue
-} from './webSocketLike';
 
 /**
  * Event map for outgoing events (emit)
@@ -25,14 +29,17 @@ type OutgoingEventMap<
   ES extends EventSchema<SV>
 > = {
   message: [
-    data: Schema<ES['clientMessages'][keyof ES['clientMessages']], SV>,
+    data: Schema<ExtractSchemaFromRecord<SV, ES['clientMessages']>, SV>,
     isBinary: boolean
   ];
-  close: [code: number, reason: Schema<ES['closeReason'], SV>];
-  error: [error: Schema<ES['errors'][keyof ES['errors']], SV>];
+  close: [
+    code: number,
+    reason: Schema<ExtractSchemaFromRecord<SV, ES['closeReason']>, SV>
+  ];
+  error: [error: Schema<ExtractSchemaFromRecord<SV, ES['errors']>, SV>];
   open: [];
-  ping: [data: Schema<ES['ping'], SV>];
-  pong: [data: Schema<ES['pong'], SV>];
+  ping: [data: Schema<ExtractSchemaFromEntry<SV, ES['ping']>, SV>];
+  pong: [data: Schema<ExtractSchemaFromEntry<SV, ES['pong']>, SV>];
 };
 
 /**
@@ -322,7 +329,7 @@ export class ForklaunchWebSocket<
     listener: (
       this: WebSocket,
       code: number,
-      reason: Schema<ES['closeReason'], SV>
+      reason: Schema<ExtractSchemaFromRecord<SV, ES['closeReason']>, SV>
     ) => void
   ): this;
   on(event: 'error', listener: (this: WebSocket, error: Error) => void): this;
@@ -334,18 +341,24 @@ export class ForklaunchWebSocket<
     event: 'message',
     listener: (
       this: WebSocket,
-      data: Schema<ES['serverMessages'][keyof ES['serverMessages']], SV>,
+      data: Schema<ExtractSchemaFromRecord<SV, ES['serverMessages']>, SV>,
       isBinary: boolean
     ) => void
   ): this;
   on(event: 'open', listener: (this: WebSocket) => void): this;
   on(
     event: 'ping',
-    listener: (this: WebSocket, data: Schema<ES['ping'], SV>) => void
+    listener: (
+      this: WebSocket,
+      data: Schema<ExtractSchemaFromEntry<SV, ES['ping']>, SV>
+    ) => void
   ): this;
   on(
     event: 'pong',
-    listener: (this: WebSocket, data: Schema<ES['pong'], SV>) => void
+    listener: (
+      this: WebSocket,
+      data: Schema<ExtractSchemaFromEntry<SV, ES['pong']>, SV>
+    ) => void
   ): this;
   on(
     event: 'redirect',
@@ -405,7 +418,7 @@ export class ForklaunchWebSocket<
     listener: (
       this: WebSocket,
       code: number,
-      reason: Schema<ES['closeReason'], SV>
+      reason: Schema<ExtractSchemaFromRecord<SV, ES['closeReason']>, SV>
     ) => void
   ): this;
   once(event: 'error', listener: (this: WebSocket, error: Error) => void): this;
@@ -417,18 +430,24 @@ export class ForklaunchWebSocket<
     event: 'message',
     listener: (
       this: WebSocket,
-      data: Schema<ES['serverMessages'][keyof ES['serverMessages']], SV>,
+      data: Schema<ExtractSchemaFromRecord<SV, ES['serverMessages']>, SV>,
       isBinary: boolean
     ) => void
   ): this;
   once(event: 'open', listener: (this: WebSocket) => void): this;
   once(
     event: 'ping',
-    listener: (this: WebSocket, data: Schema<ES['ping'], SV>) => void
+    listener: (
+      this: WebSocket,
+      data: Schema<ExtractSchemaFromEntry<SV, ES['ping']>, SV>
+    ) => void
   ): this;
   once(
     event: 'pong',
-    listener: (this: WebSocket, data: Schema<ES['pong'], SV>) => void
+    listener: (
+      this: WebSocket,
+      data: Schema<ExtractSchemaFromEntry<SV, ES['pong']>, SV>
+    ) => void
   ): this;
   once(
     event: 'redirect',
@@ -488,7 +507,7 @@ export class ForklaunchWebSocket<
     listener: (
       this: WebSocket,
       code: number,
-      reason: Schema<ES['closeReason'], SV>
+      reason: Schema<ExtractSchemaFromRecord<SV, ES['closeReason']>, SV>
     ) => void
   ): this;
   off(event: 'error', listener: (this: WebSocket, error: Error) => void): this;
@@ -500,18 +519,24 @@ export class ForklaunchWebSocket<
     event: 'message',
     listener: (
       this: WebSocket,
-      data: Schema<ES['serverMessages'][keyof ES['serverMessages']], SV>,
+      data: Schema<ExtractSchemaFromRecord<SV, ES['serverMessages']>, SV>,
       isBinary: boolean
     ) => void
   ): this;
   off(event: 'open', listener: (this: WebSocket) => void): this;
   off(
     event: 'ping',
-    listener: (this: WebSocket, data: Schema<ES['ping'], SV>) => void
+    listener: (
+      this: WebSocket,
+      data: Schema<ExtractSchemaFromEntry<SV, ES['ping']>, SV>
+    ) => void
   ): this;
   off(
     event: 'pong',
-    listener: (this: WebSocket, data: Schema<ES['pong'], SV>) => void
+    listener: (
+      this: WebSocket,
+      data: Schema<ExtractSchemaFromEntry<SV, ES['pong']>, SV>
+    ) => void
   ): this;
   off(
     event: 'redirect',
@@ -560,7 +585,7 @@ export class ForklaunchWebSocket<
     listener: (
       this: WebSocket,
       code: number,
-      reason: Schema<ES['closeReason'], SV>
+      reason: Schema<ExtractSchemaFromRecord<SV, ES['closeReason']>, SV>
     ) => void
   ): this;
   addListener(
@@ -575,18 +600,24 @@ export class ForklaunchWebSocket<
     event: 'message',
     listener: (
       this: WebSocket,
-      data: Schema<ES['serverMessages'][keyof ES['serverMessages']], SV>,
+      data: Schema<ExtractSchemaFromRecord<SV, ES['serverMessages']>, SV>,
       isBinary: boolean
     ) => void
   ): this;
   addListener(event: 'open', listener: (this: WebSocket) => void): this;
   addListener(
     event: 'ping',
-    listener: (this: WebSocket, data: Schema<ES['ping'], SV>) => void
+    listener: (
+      this: WebSocket,
+      data: Schema<ExtractSchemaFromEntry<SV, ES['ping']>, SV>
+    ) => void
   ): this;
   addListener(
     event: 'pong',
-    listener: (this: WebSocket, data: Schema<ES['pong'], SV>) => void
+    listener: (
+      this: WebSocket,
+      data: Schema<ExtractSchemaFromEntry<SV, ES['pong']>, SV>
+    ) => void
   ): this;
   addListener(
     event: 'redirect',
@@ -635,7 +666,7 @@ export class ForklaunchWebSocket<
     listener: (
       this: WebSocket,
       code: number,
-      reason: Schema<ES['closeReason'], SV>
+      reason: Schema<ExtractSchemaFromRecord<SV, ES['closeReason']>, SV>
     ) => void
   ): this;
   removeListener(
@@ -650,18 +681,24 @@ export class ForklaunchWebSocket<
     event: 'message',
     listener: (
       this: WebSocket,
-      data: Schema<ES['serverMessages'][keyof ES['serverMessages']], SV>,
+      data: Schema<ExtractSchemaFromRecord<SV, ES['serverMessages']>, SV>,
       isBinary: boolean
     ) => void
   ): this;
   removeListener(event: 'open', listener: (this: WebSocket) => void): this;
   removeListener(
     event: 'ping',
-    listener: (this: WebSocket, data: Schema<ES['ping'], SV>) => void
+    listener: (
+      this: WebSocket,
+      data: Schema<ExtractSchemaFromEntry<SV, ES['ping']>, SV>
+    ) => void
   ): this;
   removeListener(
     event: 'pong',
-    listener: (this: WebSocket, data: Schema<ES['pong'], SV>) => void
+    listener: (
+      this: WebSocket,
+      data: Schema<ExtractSchemaFromEntry<SV, ES['pong']>, SV>
+    ) => void
   ): this;
   removeListener(
     event: 'redirect',
@@ -825,12 +862,12 @@ export class ForklaunchWebSocket<
    */
   // @ts-expect-error - Intentionally restricting types for compile-time schema validation
   override send(
-    data: Schema<ES['clientMessages'][keyof ES['clientMessages']], SV>,
+    data: Schema<ExtractSchemaFromRecord<SV, ES['clientMessages']>, SV>,
     cb?: (err?: Error) => void
   ): void;
   // @ts-expect-error - Intentionally restricting types for compile-time schema validation
   override send(
-    data: Schema<ES['clientMessages'][keyof ES['clientMessages']], SV>,
+    data: Schema<ExtractSchemaFromRecord<SV, ES['clientMessages']>, SV>,
     options: {
       mask?: boolean;
       binary?: boolean;
@@ -841,7 +878,7 @@ export class ForklaunchWebSocket<
   ): void;
   // @ts-expect-error - Implementation accepts unknown for internal validation
   override send(
-    data: Schema<ES['clientMessages'][keyof ES['clientMessages']], SV>,
+    data: Schema<ExtractSchemaFromRecord<SV, ES['clientMessages']>, SV>,
     optionsOrCb?: unknown,
     cb?: (err?: Error) => void
   ): void {
@@ -894,7 +931,10 @@ export class ForklaunchWebSocket<
    * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent/code|WebSocket Close Codes}
    */
   // @ts-expect-error - Intentionally restricting types for compile-time schema validation
-  override close(code?: number, reason?: Schema<ES['closeReason'], SV>): void {
+  override close(
+    code?: number,
+    reason?: Schema<ExtractSchemaFromRecord<SV, ES['closeReason']>, SV>
+  ): void {
     if (reason) {
       const encoded = this.validateAndEncode(
         reason,
@@ -930,7 +970,7 @@ export class ForklaunchWebSocket<
    * ```
    */
   override ping(
-    data?: Schema<ES['ping'], SV>,
+    data?: Schema<ExtractSchemaFromEntry<SV, ES['ping']>, SV>,
     mask?: boolean,
     cb?: (err: Error) => void
   ): void {
@@ -971,7 +1011,7 @@ export class ForklaunchWebSocket<
    * ```
    */
   override pong(
-    data?: Schema<ES['pong'], SV>,
+    data?: Schema<ExtractSchemaFromEntry<SV, ES['pong']>, SV>,
     mask?: boolean,
     cb?: (err: Error) => void
   ): void {
