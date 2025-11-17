@@ -1,5 +1,10 @@
-import { EventSchema, ServerEventSchema } from '@forklaunch/core/ws';
+import {
+  createWebSocketSchemas,
+  EventSchema,
+  ServerEventSchema
+} from '@forklaunch/core/ws';
 import type { AnySchemaValidator } from '@forklaunch/validator';
+import { SchemaValidator } from '@forklaunch/validator';
 import type { IncomingMessage } from 'http';
 import { WebSocketServer } from 'ws';
 import { ForklaunchWebSocket } from './webSocket';
@@ -88,11 +93,14 @@ export class ForklaunchWebSocketServer<
   SV extends AnySchemaValidator,
   const ES extends EventSchema<SV>
 > extends WebSocketServer {
+  private readonly schemaValidator: SV;
+  private readonly eventSchemas: ES;
+
   /**
    * Creates a new ForklaunchWebSocketServer with schema validation.
    *
-   * @param _schemaValidator - The schema validator instance (e.g., ZodSchemaValidator)
-   * @param _eventSchemas - Schema definitions for all WebSocket events
+   * @param schemaValidator - The schema validator instance (e.g., ZodSchemaValidator)
+   * @param eventSchemas - Schema definitions for all WebSocket events
    * @param options - Standard WebSocketServer options (port, host, server, etc.)
    * @param callback - Optional callback invoked when the server starts listening
    *
@@ -136,12 +144,63 @@ export class ForklaunchWebSocketServer<
    * ```
    */
   constructor(
-    _schemaValidator: SV,
-    _eventSchemas: ES,
+    schemaValidator: SV,
+    eventSchemas: ES,
     options?: ConstructorParameters<typeof WebSocketServer>[0],
     callback?: () => void
   ) {
     super(options, callback);
+    this.schemaValidator = schemaValidator;
+    this.eventSchemas = eventSchemas;
+
+    // Intercept connection events to enhance WebSocket with ForklaunchWebSocket functionality
+    super.on('connection', (ws, request) => {
+      // Enhance the existing WebSocket instance with ForklaunchWebSocket functionality
+      const forklaunchWs = this.enhanceWebSocket(ws);
+
+      // Emit connection with the enhanced WebSocket
+      this.emit('connection', forklaunchWs, request);
+    });
+  }
+
+  /**
+   * Enhances a plain WebSocket instance with ForklaunchWebSocket functionality.
+   *
+   * This method:
+   * 1. Changes the prototype to ForklaunchWebSocket.prototype to inject all methods
+   * 2. Initializes all required properties (schemaValidator, eventSchemas, schemas)
+   * 3. Ensures methods like on(), send(), close() etc. work with validation
+   *
+   * @internal
+   */
+  private enhanceWebSocket(
+    ws: InstanceType<typeof import('ws').WebSocket>
+  ): ForklaunchWebSocket<SV, ServerEventSchema<SV, ES>> {
+    Object.setPrototypeOf(ws, ForklaunchWebSocket.prototype);
+
+    const enhancedWs = ws as unknown as ForklaunchWebSocket<
+      SV,
+      ServerEventSchema<SV, ES>
+    >;
+    // @ts-expect-error - Intentionally restricting types for compile-time schema validation
+    enhancedWs.schemaValidator = this.schemaValidator;
+
+    // @ts-expect-error - Intentionally restricting types for compile-time schema validation
+    enhancedWs.eventSchemas = this.eventSchemas as ServerEventSchema<SV, ES>;
+
+    const serverEventSchemas: ServerEventSchema<SV, ES> = {
+      ...this.eventSchemas,
+      clientMessages: this.eventSchemas.serverMessages,
+      serverMessages: this.eventSchemas.clientMessages
+    } as ServerEventSchema<SV, ES>;
+
+    // @ts-expect-error - Intentionally restricting types for compile-time schema validation
+    enhancedWs.schemas = createWebSocketSchemas<SV, ServerEventSchema<SV, ES>>(
+      this.schemaValidator as SchemaValidator,
+      serverEventSchemas
+    );
+
+    return enhancedWs as ForklaunchWebSocket<SV, ServerEventSchema<SV, ES>>;
   }
 
   /**
