@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.16.0
+
+### Minor Changes
+
+- Introduce fl websockets for easy, fully typed socket communication
+
 ## 0.15.12
 
 ### Patch Changes
