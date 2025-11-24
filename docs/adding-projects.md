@@ -78,11 +78,14 @@ forklaunch init router products
 forklaunch init router orders --path ./commerce-service --infrastructure redis
 ```
 
+### Definitions
+
 | Concept | Definition | What It Does | Common Examples |
 |----------|-------------|---------------|------------------|
 | **Service** | A **self-contained part of your application** that handles a specific kind of task or related features. | It runs continuously (like an API) and responds to requests — from users, other services, or front-end apps. | - An **API service** that handles user logins and profiles.<br>- A **billing service** that manages payments.<br>- A **data ingestion service** that collects and processes data. |
 | **Worker** | A **background process** that runs tasks **asynchronously**, not directly responding to user requests. | It takes jobs from a queue or schedule, performs work, and reports results or stores data — often handling heavier or delayed work. | - Sending emails after a signup.<br>- Generating daily reports.<br>- Processing large datasets.<br>- Cleaning up logs or cache files. |
 | **Library** | A **shared collection of code**, utilities, or models used across services and workers. | Provides reusable logic (like validation, database models, or helper functions) that multiple parts of the system can import. | - **Core library** with shared models and validation schemas.<br>- **Auth library** with JWT and session utilities.<br>- **Utils library** for formatting, logging, or constants. |
+| **Modules** | 
 
 
 

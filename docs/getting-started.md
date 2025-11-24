@@ -5,6 +5,7 @@ description: Learn how to get started with ForkLaunch.
 ---
 
 # Introduction
+
 ## Welcome to Forklaunch!
 Launch your apps faster with Forklaunch. 
 
@@ -12,7 +13,11 @@ Forklaunch provides the scaffolds you need to create your next application in Ty
 
 # QuickStart
 
-## Prerequisites
+## Examples
+
+- **[Dice Roll Tutorial](/docs/examples/dice-roll-node-app.md)** - Complete "Hello World" example: Build a dice roll API with database persistence and statistics
+
+# Prerequisites
 
 We're so glad you're here! Before you begin, make sure you have the following installed:
 
@@ -21,9 +26,9 @@ We're so glad you're here! Before you begin, make sure you have the following in
 - **`Git`** (version 2.20 or higher)
 - **`Docker`** (version 20.10 or higher)
 
-## Installation
+# Installation
 
-### Global Installation (Recommended)
+## Global Installation (Recommended)
 
 `ForkLaunch` can be installed globally using `npm`, `pnpm`, or `bun`. Open your terminal and run one of the following commands:
 
@@ -57,7 +62,7 @@ After installation, you can use `forklaunch` commands directly:
 forklaunch init application my-app
 ```
 
-### Local Development (Building from Source)
+## Local Development (Building from Source)
 
 If you're developing ForkLaunch itself or building from source, use `cargo run --release --` from the `cli` directory:
 
@@ -85,12 +90,9 @@ Once you have verfied your installation, login into to your account to get start
 forklaunch login
 ```
 
-## Next Steps
+# Next Steps
 
 - **[Creating an Application](/docs/creating-an-application.md)** - Create your first application
 - **[Adding Projects](/docs/adding-projects.md)** - Learn how to add services, workers, and libraries
 - **[CLI Reference](/docs/cli.md)** - Complete command reference
 
-## Examples
-
-- **[Dice Roll Tutorial](/docs/examples/dice-roll-node-app.md)** - Complete "Hello World" example: Build a dice roll API with database persistence and statistics
