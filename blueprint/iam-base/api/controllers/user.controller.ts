@@ -7,6 +7,7 @@ import {
   schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
+import { IdsDto } from '@forklaunch/common';
 import { getCachedJwks } from '@forklaunch/core/http';
 import { jwtVerify } from 'jose';
 import { ci, tokens } from '../../bootstrapper';
@@ -152,7 +153,16 @@ export const getBatchUsers = handlers.get(
   },
   async (req, res) => {
     openTelemetryCollector.debug('Retrieving batch users', req.query);
-    res.status(200).json(await serviceFactory().getBatchUsers(req.query));
+    res.status(200).json(
+      await serviceFactory().getBatchUsers({
+        ...req.query,
+        organization: {
+          id:
+            req.session?.organizationId ||
+            '123e4567-e89b-12d3-a456-426614174001'
+        }
+      } as IdsDto)
+    );
   }
 );
 
