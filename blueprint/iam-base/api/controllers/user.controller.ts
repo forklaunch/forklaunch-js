@@ -134,6 +134,16 @@ export const getBatchUsers = handlers.get(
   {
     name: 'Get Batch Users',
     summary: 'Gets multiple users by IDs',
+    auth: {
+      sessionSchema: {
+        organizationId: string
+      },
+      jwt: {
+        jwksPublicKeyUrl: JWKS_PUBLIC_KEY_URL
+      },
+      decodeResource: decodeResourceWithOrganizationId,
+      allowedRoles: PLATFORM_READ_PERMISSIONS
+    },
     responses: {
       200: array(UserMapper.schema),
       500: string
@@ -152,6 +162,13 @@ export const updateUser = handlers.put(
   {
     name: 'Update User',
     summary: 'Updates a user by ID',
+    auth: {
+      hmac: {
+        secretKeys: {
+          default: HMAC_SECRET_KEY
+        }
+      }
+    },
     body: UpdateUserMapper.schema,
     responses: {
       200: string,
@@ -171,6 +188,13 @@ export const updateBatchUsers = handlers.put(
   {
     name: 'Update Batch Users',
     summary: 'Updates multiple users by IDs',
+    auth: {
+      hmac: {
+        secretKeys: {
+          default: HMAC_SECRET_KEY
+        }
+      }
+    },
     body: array(UpdateUserMapper.schema),
     responses: {
       200: string,
@@ -190,6 +214,13 @@ export const deleteUser = handlers.delete(
   {
     name: 'Delete User',
     summary: 'Deletes a user by ID',
+    auth: {
+      hmac: {
+        secretKeys: {
+          default: HMAC_SECRET_KEY
+        }
+      }
+    },
     responses: {
       200: string,
       500: string
@@ -209,6 +240,13 @@ export const deleteBatchUsers = handlers.delete(
   {
     name: 'Delete Batch Users',
     summary: 'Deletes multiple users by IDs',
+    auth: {
+      hmac: {
+        secretKeys: {
+          default: HMAC_SECRET_KEY
+        }
+      }
+    },
     responses: {
       200: string,
       500: string
