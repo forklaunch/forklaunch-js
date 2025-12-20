@@ -3,6 +3,8 @@ export function hasScopeChecks(maybePermissionedAuth: unknown) {
     typeof maybePermissionedAuth === 'object' &&
     maybePermissionedAuth !== null &&
     'requiredScope' in maybePermissionedAuth &&
-    maybePermissionedAuth.requiredScope != null
+    maybePermissionedAuth.requiredScope != null &&
+    'surfaceScopes' in maybePermissionedAuth &&
+    maybePermissionedAuth.surfaceScopes != null
   );
 }
