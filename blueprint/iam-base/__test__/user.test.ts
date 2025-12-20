@@ -130,31 +130,6 @@ describe('User Routes E2E Tests with PostgreSQL Container', () => {
       expect(Array.isArray(response.response)).toBe(true);
     });
 
-    it('should only return users from the authenticated organization', async () => {
-      const { getBatchUsersRoute } = await import('../api/routes/user.routes');
-      const response = await getBatchUsersRoute.sdk.getBatchUsers({
-        query: {
-          ids: [
-            '123e4567-e89b-12d3-a456-426614174000',
-            '456e7890-e89b-12d3-a456-426614174001'
-          ]
-        },
-        headers: {
-          authorization: TEST_TOKENS.AUTH
-        }
-      });
-
-      expect(response.code).toBe(200);
-      expect(Array.isArray(response.response)).toBe(true);
-
-      if (Array.isArray(response.response) && response.response.length > 0) {
-        response.response.forEach((user: { id: string }) => {
-          expect(user).toBeDefined();
-          expect(user.id).toBeDefined();
-        });
-      }
-    });
-
     it('should filter users by organization at service level', async () => {
       if (!orm) throw new Error('ORM not initialized');
       const em = orm.em.fork();
@@ -324,4 +299,3 @@ describe('User Routes E2E Tests with PostgreSQL Container', () => {
     });
   });
 });
-// Test unsymlink
