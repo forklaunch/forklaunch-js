@@ -2,6 +2,7 @@ use std::{collections::HashSet, io::Write, path::Path};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, Command};
+use convert_case::{Case, Casing};
 use dialoguer::{MultiSelect, theme::ColorfulTheme};
 use indexmap::IndexMap;
 use rustyline::{Editor, history::DefaultHistory};
@@ -21,6 +22,7 @@ use crate::{
     constants::{
         Database, ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_DOCKER_COMPOSE,
         ERROR_FAILED_TO_READ_MANIFEST, ERROR_FAILED_TO_READ_PACKAGE_JSON, Infrastructure,
+        WorkerType,
     },
     core::{
         ast::{
@@ -34,6 +36,7 @@ use crate::{
                     transform_registrations_ts_infrastructure_redis,
                     transform_registrations_ts_infrastructure_s3,
                 },
+                transform_service_to_worker::transform_registrations_ts_service_to_worker,
                 transform_test_utils_ts::{
                     transform_test_utils_add_database, transform_test_utils_add_infrastructure,
                     transform_test_utils_remove_database,
@@ -45,8 +48,8 @@ use crate::{
         command::command,
         database::{get_database_variants, is_in_memory_database},
         docker::{
-            DependencyCondition, DependsOn, DockerCompose, add_database_to_docker_compose,
-            add_redis_to_docker_compose, add_s3_to_docker_compose,
+            Command as DockerCommand, DependencyCondition, DependsOn, DockerCompose,
+            add_database_to_docker_compose, add_redis_to_docker_compose, add_s3_to_docker_compose,
             clean_up_unused_infrastructure_services, remove_redis_from_docker_compose,
             remove_s3_from_docker_compose, update_dockerfile_contents,
         },
@@ -54,7 +57,8 @@ use crate::{
         format::format_code,
         manifest::{
             InitializableManifestConfig, InitializableManifestConfigMetadata, ManifestData,
-            MutableManifestData, ProjectInitializationMetadata, service::ServiceManifestData,
+            MutableManifestData, ProjectInitializationMetadata, ProjectMetadata, ProjectType,
+            service::ServiceManifestData,
         },
         move_template::{MoveTemplate, move_template_files},
         name::validate_name,
@@ -656,6 +660,264 @@ fn change_infrastructure(
     Ok(())
 }
 
+/// Convert a service to a worker
+/// This adds worker.ts, event entity, updates registrations.ts, package.json, env vars, and manifest
+#[allow(clippy::too_many_arguments)]
+fn service_to_worker(
+    base_path: &Path,
+    worker_type: &WorkerType,
+    manifest_data: &mut ServiceManifestData,
+    project_package_json: &mut ProjectPackageJson,
+    docker_compose: &mut DockerCompose,
+    rendered_templates_cache: &mut RenderedTemplatesCache,
+    stdout: &mut StandardStream,
+) -> Result<()> {
+    let project_name = base_path.file_name().unwrap().to_string_lossy().to_string();
+    let pascal_case_name = project_name.to_case(Case::Pascal);
+    let camel_case_name = project_name.to_case(Case::Camel);
+
+    // 1. Update registrations.ts with worker dependencies
+    let registrations_path = base_path.join("registrations.ts");
+    rendered_templates_cache.insert(
+        registrations_path.to_string_lossy(),
+        RenderedTemplate {
+            path: registrations_path.clone(),
+            content: transform_registrations_ts_service_to_worker(
+                rendered_templates_cache,
+                base_path,
+                &manifest_data.app_name,
+                &project_name,
+                worker_type,
+            )?,
+            context: None,
+        },
+    );
+
+    // 2. Create worker.ts from template
+    let worker_ts_path = base_path.join("worker.ts");
+    let worker_ts_content = format!(
+        r#"import {{ ci, tokens }} from './bootstrapper';
+import {{ processEvents, processErrors }} from './services/{camel_case_name}.service';
+
+/**
+ * Creates an instance of OpenTelemetryCollector
+ */
+const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
+
+/**
+ * Main worker entry point
+ */
+(async () => {{
+  openTelemetryCollector.info('Starting {pascal_case_name} Worker...');
+
+  const workerConsumer = ci.resolve(tokens.WorkerConsumer);
+  const consumer = workerConsumer(processEvents, processErrors);
+
+  await consumer.start();
+
+  openTelemetryCollector.info('🎉 {pascal_case_name} Worker is running! 🎉');
+}})();
+"#,
+        camel_case_name = camel_case_name,
+        pascal_case_name = pascal_case_name
+    );
+    rendered_templates_cache.insert(
+        worker_ts_path.to_string_lossy().to_string(),
+        RenderedTemplate {
+            path: worker_ts_path.clone(),
+            content: worker_ts_content,
+            context: None,
+        },
+    );
+
+    // 3. Create event record entity
+    let entities_dir = base_path.join("persistence").join("entities");
+    let event_entity_path = entities_dir.join(format!("{}EventRecord.entity.ts", camel_case_name));
+    let is_mongo = manifest_data.database == "mongodb";
+    let event_entity_content = format!(
+        r#"import {{ Entity, Property }} from '@mikro-orm/core';
+import {{ {mongo_prefix}SqlBaseEntity }} from '@{app_name}/core';
+
+// Entity class that defines the structure of the {pascal_case_name}EventRecord table
+@Entity()
+export class {pascal_case_name}EventRecord extends {mongo_prefix}SqlBaseEntity {{
+  // message property that stores a message string
+  @Property()
+  message!: string;
+
+  @Property()
+  processed!: boolean;
+
+  @Property()
+  retryCount!: number;
+}}
+"#,
+        mongo_prefix = if is_mongo { "No" } else { "" },
+        app_name = manifest_data.app_name,
+        pascal_case_name = pascal_case_name
+    );
+    rendered_templates_cache.insert(
+        event_entity_path.to_string_lossy().to_string(),
+        RenderedTemplate {
+            path: event_entity_path.clone(),
+            content: event_entity_content,
+            context: None,
+        },
+    );
+
+    // 4. Update .env.local to add QUEUE_NAME
+    let env_local_path = base_path.join(".env.local");
+    let mut env_local_content = serde_envfile::from_str::<Env>(
+        &rendered_templates_cache
+            .get(&env_local_path)?
+            .unwrap()
+            .content,
+    )?;
+    env_local_content.queue_name =
+        Some(format!("{}-{}-queue", manifest_data.app_name, project_name));
+    rendered_templates_cache.insert(
+        env_local_path.to_string_lossy().to_string(),
+        RenderedTemplate {
+            path: env_local_path.clone(),
+            content: serde_envfile::to_string(&env_local_content)?,
+            context: None,
+        },
+    );
+
+    // 5. Update package.json scripts to add worker scripts
+    let scripts = project_package_json.scripts.as_mut().unwrap();
+    scripts.dev_worker = Some(format!(
+        "tsx watch --clear-screen=false ./worker.ts | pino-pretty",
+    ));
+    scripts.start_worker = Some("node ./dist/worker.js".to_string());
+
+    // 6. Add worker implementation dependency
+    use crate::core::package_json::package_json_constants::{
+        WORKER_BULLMQ_VERSION, WORKER_DATABASE_VERSION, WORKER_INTERFACES_VERSION,
+        WORKER_KAFKA_VERSION, WORKER_REDIS_VERSION,
+    };
+    let deps = project_package_json.dependencies.as_mut().unwrap();
+    deps.forklaunch_interfaces_worker = Some(WORKER_INTERFACES_VERSION.to_string());
+    match worker_type {
+        WorkerType::BullMQCache => {
+            deps.forklaunch_implementation_worker_bullmq = Some(WORKER_BULLMQ_VERSION.to_string());
+        }
+        WorkerType::Database => {
+            deps.forklaunch_implementation_worker_database =
+                Some(WORKER_DATABASE_VERSION.to_string());
+        }
+        WorkerType::RedisCache => {
+            deps.forklaunch_implementation_worker_redis = Some(WORKER_REDIS_VERSION.to_string());
+        }
+        WorkerType::Kafka => {
+            deps.forklaunch_implementation_worker_kafka = Some(WORKER_KAFKA_VERSION.to_string());
+        }
+    }
+
+    // 7. Update manifest - change project type to Worker
+    manifest_data.projects.iter_mut().for_each(|project| {
+        if project.name == project_name {
+            project.r#type = ProjectType::Worker;
+            if let Some(metadata) = project.metadata.as_mut() {
+                metadata.r#type = Some(worker_type.to_string());
+            } else {
+                project.metadata = Some(ProjectMetadata {
+                    r#type: Some(worker_type.to_string()),
+                });
+            }
+        }
+    });
+
+    // 8. Add comment to server.ts suggesting review
+    let server_ts_path = base_path.join("server.ts");
+    if let Some(server_template) = rendered_templates_cache.get(&server_ts_path)? {
+        let content = format!(
+            "// TODO: Review - This service has been converted to a worker.\n// You may want to remove or modify the HTTP server and routes below.\n// The worker logic is now in worker.ts\n\n{}",
+            server_template.content
+        );
+        rendered_templates_cache.insert(
+            server_ts_path.to_string_lossy(),
+            RenderedTemplate {
+                path: server_ts_path.clone(),
+                content,
+                context: None,
+            },
+        );
+    }
+
+    // 9. Add worker service to docker-compose
+    let docker_service_name = format!("{}-worker", project_name);
+    if let Some(server_service) = docker_compose.services.get(&project_name).cloned() {
+        let mut worker_service = server_service.clone();
+        worker_service.command = Some(DockerCommand::Simple("bun run start:worker".to_string()));
+        docker_compose
+            .services
+            .insert(docker_service_name, worker_service);
+    }
+
+    // 10. Generate migration README
+    let readme_path = base_path.join("README-MIGRATION.md");
+    let readme_content = format!(
+        r#"# Service to Worker Migration
+
+This service has been converted to a worker of type `{worker_type}`.
+
+## Changes Made
+
+1. **worker.ts** - New worker entry point created
+2. **{camel_case_name}EventRecord.entity.ts** - Event record entity for worker processing
+3. **registrations.ts** - Updated with WorkerConsumer, WorkerProducer, and WorkerOptions
+4. **package.json** - Added `dev:worker` and `start:worker` scripts
+5. **.env.local** - Added `QUEUE_NAME` environment variable
+6. **docker-compose.yaml** - Added `{project_name}-worker` service
+
+## Next Steps
+
+1. **Review server.ts** - Decide if you still need the HTTP server
+   - If yes, keep it for API endpoints alongside the worker
+   - If no, delete server.ts and remove `dev:server`/`start:server` scripts
+
+2. **Implement worker logic** - Update `processEvents` and `processErrors` in your service
+
+3. **Run migrations** - If using Database worker type:
+   ```bash
+   pnpm migrate:create
+   pnpm migrate:up
+   ```
+
+4. **Install dependencies**:
+   ```bash
+   pnpm install
+   ```
+
+5. **Start the worker**:
+   ```bash
+   pnpm dev:worker
+   ```
+"#,
+        worker_type = worker_type.to_string(),
+        camel_case_name = camel_case_name,
+        project_name = project_name
+    );
+    rendered_templates_cache.insert(
+        readme_path.to_string_lossy().to_string(),
+        RenderedTemplate {
+            path: readme_path.clone(),
+            content: readme_content,
+            context: None,
+        },
+    );
+
+    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+    writeln!(
+        stdout,
+        "Service converted to worker. See README-MIGRATION.md for next steps."
+    )?;
+    stdout.reset()?;
+
+    Ok(())
+}
+
 impl CliCommand for ServiceCommand {
     fn command(&self) -> Command {
         command("service", "Change a forklaunch service")
@@ -687,6 +949,19 @@ impl CliCommand for ServiceCommand {
                     .value_parser(Infrastructure::VARIANTS)
                     .num_args(0..)
                     .action(ArgAction::Append),
+            )
+            .arg(
+                Arg::new("to")
+                    .long("to")
+                    .help("Convert service to another type (worker)")
+                    .value_parser(["worker"]),
+            )
+            .arg(
+                Arg::new("type")
+                    .short('t')
+                    .long("type")
+                    .help("The worker type to use (required when --to worker)")
+                    .value_parser(WorkerType::VARIANTS),
             )
             .arg(
                 Arg::new("dryrun")
@@ -760,8 +1035,108 @@ impl CliCommand for ServiceCommand {
         let infrastructure = matches
             .get_many::<String>("infrastructure")
             .map(|v| v.map(|s| s.to_string()).collect());
+        let to = matches.get_one::<String>("to");
+        let worker_type_str = matches.get_one::<String>("type");
         let dryrun = matches.get_flag("dryrun");
         let confirm = matches.get_flag("confirm");
+
+        // Handle service to worker conversion
+        if let Some(to_type) = to {
+            if to_type == "worker" {
+                let worker_type = if let Some(t) = worker_type_str {
+                    t.parse::<WorkerType>()?
+                } else {
+                    let type_variants = WorkerType::VARIANTS;
+                    let selected_type = prompt_field_from_selections_with_validation(
+                        "type",
+                        None,
+                        &["type"],
+                        &mut line_editor,
+                        &mut stdout,
+                        matches,
+                        "worker type",
+                        Some(type_variants.as_slice()),
+                        |input: &str| type_variants.contains(&input),
+                        |_| "Invalid worker type. Please try again".to_string(),
+                    )?;
+                    selected_type
+                        .ok_or_else(|| anyhow::Error::msg("Worker type is required"))?
+                        .parse::<WorkerType>()?
+                };
+
+                let mut project_package_json_to_write = serde_json::from_str::<ProjectPackageJson>(
+                    &rendered_templates_cache
+                        .get(&service_base_path.join("package.json"))
+                        .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?
+                        .unwrap()
+                        .content,
+                )?;
+
+                let docker_compose_path =
+                    if let Some(docker_compose_path) = &manifest_data.docker_compose_path {
+                        app_root_path.join(docker_compose_path)
+                    } else {
+                        app_root_path.join("docker-compose.yaml")
+                    };
+                let mut docker_compose_data = serde_yml::from_str::<DockerCompose>(
+                    &rendered_templates_cache
+                        .get(&docker_compose_path)
+                        .with_context(|| ERROR_FAILED_TO_READ_DOCKER_COMPOSE)?
+                        .unwrap()
+                        .content,
+                )?;
+
+                service_to_worker(
+                    &service_base_path,
+                    &worker_type,
+                    &mut manifest_data,
+                    &mut project_package_json_to_write,
+                    &mut docker_compose_data,
+                    &mut rendered_templates_cache,
+                    &mut stdout,
+                )?;
+
+                // Write modified files
+                rendered_templates_cache.insert(
+                    manifest_path.clone().to_string_lossy(),
+                    RenderedTemplate {
+                        path: manifest_path.to_path_buf(),
+                        content: toml::to_string_pretty(&manifest_data)?,
+                        context: None,
+                    },
+                );
+
+                rendered_templates_cache.insert(
+                    docker_compose_path.clone().to_string_lossy(),
+                    RenderedTemplate {
+                        path: docker_compose_path.into(),
+                        content: serde_yml::to_string(&docker_compose_data)?,
+                        context: None,
+                    },
+                );
+
+                rendered_templates_cache.insert(
+                    service_base_path
+                        .join("package.json")
+                        .to_string_lossy()
+                        .to_string(),
+                    RenderedTemplate {
+                        path: service_base_path.join("package.json"),
+                        content: serde_json::to_string_pretty(&project_package_json_to_write)?,
+                        context: None,
+                    },
+                );
+
+                let rendered_templates: Vec<RenderedTemplate> = rendered_templates_cache
+                    .drain()
+                    .map(|(_, template)| template)
+                    .collect();
+
+                write_rendered_templates(&rendered_templates, dryrun, &mut stdout)?;
+
+                return Ok(());
+            }
+        }
 
         let selected_options = if matches.ids().all(|id| id == "dryrun" || id == "confirm") {
             let options = vec!["name", "database", "description", "infrastructure"];

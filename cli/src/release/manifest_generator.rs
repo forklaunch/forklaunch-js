@@ -531,46 +531,6 @@ pub(crate) fn generate_release_manifest(
         _ => None,
     };
 
-    if manifest.platform_application_id.is_some() {
-        services.push(ServiceDefinition {
-            id: "otel".to_string(),
-            name: "otel".to_string(),
-            status: None,
-            config: ServiceConfigEnum::Service(ServiceConfig {
-                service_type: ConfigType::Service,
-                controllers: None,
-                integrations: None,
-                open_api_spec: None,
-                dependencies: None,
-                runtime_dependencies: None,
-                instance_size: Some("small".to_string()),
-                health_check: None,
-                is_worker_service: None,
-            }),
-            build_context: None,
-            dockerfile: None,
-        });
-
-        services.push(ServiceDefinition {
-            id: "prometheus".to_string(),
-            name: "prometheus".to_string(),
-            status: None,
-            config: ServiceConfigEnum::Service(ServiceConfig {
-                service_type: ConfigType::Service,
-                controllers: None,
-                integrations: None,
-                open_api_spec: None,
-                dependencies: None,
-                runtime_dependencies: None,
-                instance_size: Some("small".to_string()),
-                health_check: None,
-                is_worker_service: None,
-            }),
-            build_context: None,
-            dockerfile: None,
-        });
-    }
-
     Ok(ReleaseManifest {
         schema_version: Some(RELEASE_MANIFEST_SCHEMA_VERSION.to_string()),
         application_id,

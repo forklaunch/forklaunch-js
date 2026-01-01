@@ -1,6 +1,7 @@
 use std::{fs::read_to_string, io::Write};
 
 use anyhow::{Context, Result, bail};
+use base64::{Engine as _, engine::general_purpose};
 use clap::{Arg, ArgMatches, Command};
 use dialoguer::{Input, theme::ColorfulTheme};
 use reqwest::blocking::Client;
@@ -54,7 +55,20 @@ struct DeploymentErrorDetail {
     id: String,
     name: String,
     #[serde(rename = "missingKeys")]
-    missing_keys: Vec<String>,
+    missing_keys: Vec<MissingKey>,
+}
+
+#[derive(Debug, Deserialize)]
+struct MissingKey {
+    name: String,
+    component: Option<ComponentMetadata>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+struct ComponentMetadata {
+    #[serde(rename = "type")]
+    component_type: String,
+    property: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -67,6 +81,66 @@ struct UpdateEnvironmentVariablesRequest {
 struct EnvironmentVariableUpdate {
     key: String,
     value: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    component: Option<ComponentMetadata>,
+}
+
+/// Validate environment variable input based on component metadata
+fn validate_env_var_input(
+    key_name: &str,
+    value: &str,
+    component: &Option<ComponentMetadata>,
+) -> Result<(), String> {
+    if value.is_empty() {
+        return Err("Value cannot be empty".to_string());
+    }
+
+    // Check for numeric values based on variable name suffixes
+    let key_upper = key_name.to_uppercase();
+    if key_upper.ends_with("_PORT") {
+        if value.parse::<u16>().is_err() {
+            return Err(format!(
+                "Expected a valid port number (0-65535) for '{}'",
+                key_name
+            ));
+        }
+    } else if key_upper.ends_with("_SECONDS")
+        || key_upper.ends_with("_TIMEOUT")
+        || key_upper.ends_with("_DURATION")
+    {
+        if value.parse::<u32>().is_err() {
+            return Err(format!("Expected a numeric value for '{}'", key_name));
+        }
+    }
+
+    if let Some(meta) = component {
+        match meta.property.as_str() {
+            // Numeric properties
+            "port" | "timeout" => {
+                if value.parse::<u16>().is_err() {
+                    return Err(format!(
+                        "Expected a valid port number (0-65535) for property '{}'",
+                        meta.property
+                    ));
+                }
+            }
+            // Base64 validation for cryptographic keys
+            "base64-bytes-32" => match general_purpose::STANDARD.decode(value) {
+                Ok(bytes) if bytes.len() == 32 => {}
+                Ok(_) => return Err("Expected a base64-encoded 32-byte value".to_string()),
+                Err(_) => return Err("Expected a valid base64 string".to_string()),
+            },
+            "base64-bytes-64" => match general_purpose::STANDARD.decode(value) {
+                Ok(bytes) if bytes.len() == 64 => {}
+                Ok(_) => return Err("Expected a base64-encoded 64-byte value".to_string()),
+                Err(_) => return Err("Expected a valid base64 string".to_string()),
+            },
+            // For other properties, accept any non-empty string
+            _ => {}
+        }
+    }
+
+    Ok(())
 }
 
 #[derive(Debug)]
@@ -278,7 +352,8 @@ impl CliCommand for CreateCommand {
                     // Collect all missing keys first to check if we've already prompted
                     let mut all_missing_keys: Vec<String> = Vec::new();
                     for detail in &blocked_error.details {
-                        all_missing_keys.extend(detail.missing_keys.clone());
+                        all_missing_keys
+                            .extend(detail.missing_keys.iter().map(|mk| mk.name.clone()));
                     }
 
                     // If no missing keys, something else is wrong - don't loop
@@ -305,15 +380,42 @@ impl CliCommand for CreateCommand {
                         stdout.reset()?;
 
                         let mut updates = Vec::new();
-                        for key in detail.missing_keys {
-                            let value: String = Input::with_theme(&ColorfulTheme::default())
-                                .with_prompt(format!("  Enter value for {}", key))
-                                .interact_text()?;
+                        for missing_key in detail.missing_keys {
+                            let prompt_text = if let Some(ref comp) = missing_key.component {
+                                format!(
+                                    "  Enter value for {} ({}:{})",
+                                    missing_key.name, comp.component_type, comp.property
+                                )
+                            } else {
+                                format!("  Enter value for {}", missing_key.name)
+                            };
 
-                            updates.push(EnvironmentVariableUpdate {
-                                key: key.clone(),
-                                value,
-                            });
+                            loop {
+                                let value: String = Input::with_theme(&ColorfulTheme::default())
+                                    .with_prompt(&prompt_text)
+                                    .interact_text()?;
+
+                                match validate_env_var_input(
+                                    &missing_key.name,
+                                    &value,
+                                    &missing_key.component,
+                                ) {
+                                    Ok(_) => {
+                                        updates.push(EnvironmentVariableUpdate {
+                                            key: missing_key.name.clone(),
+                                            value,
+                                            component: missing_key.component.clone(),
+                                        });
+                                        break;
+                                    }
+                                    Err(err) => {
+                                        stdout
+                                            .set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
+                                        writeln!(stdout, "  [ERROR] {}", err)?;
+                                        stdout.reset()?;
+                                    }
+                                }
+                            }
                         }
 
                         if !updates.is_empty() {

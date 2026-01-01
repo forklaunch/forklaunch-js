@@ -6,8 +6,9 @@ import {
   TEST_TOKENS,
   TestSetupResult
 } from '@forklaunch/testing';
-import { EntityManager } from '@mikro-orm/core';
+import { EntityManager, MikroORM } from '@mikro-orm/core';
 import dotenv from 'dotenv';
+import Redis from 'ioredis';
 import * as path from 'path';
 
 export { TEST_TOKENS, TestSetupResult };
@@ -37,8 +38,8 @@ export const cleanupTestDatabase = async (): Promise<void> => {
 };
 
 export const clearDatabase = async (options?: {
-  orm?: TestSetupResult['orm'];
-  redis?: TestSetupResult['redis'];
+  orm?: MikroORM;
+  redis?: Redis;
 }): Promise<void> => {
   await clearTestDatabase(options);
 };

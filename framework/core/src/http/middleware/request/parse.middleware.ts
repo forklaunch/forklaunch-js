@@ -174,7 +174,7 @@ export function parse<
         }
         return;
       case 'warning':
-        req.openTelemetryCollector.warn(
+        req.openTelemetryCollector?.warn(
           collectedParseErrors ??
             prettyPrintParseErrors(parsedRequest.errors, 'Request')
         );

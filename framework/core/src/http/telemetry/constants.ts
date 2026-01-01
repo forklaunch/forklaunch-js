@@ -7,6 +7,7 @@ import {
 
 export const ATTR_API_NAME = 'api.name';
 export const ATTR_CORRELATION_ID = 'correlation.id';
+export const ATTR_APPLICATION_ID = 'application_id';
 
 export {
   ATTR_HTTP_REQUEST_METHOD,
