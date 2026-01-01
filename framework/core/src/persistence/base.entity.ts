@@ -46,19 +46,30 @@ export class BaseEntity extends MikroORMBaseEntity {
    *
    * @template T - Entity type extending BaseEntity
    * @param this - The constructor of the entity
-   * @param data - Partial data to update the entity
-   * @param em - Optional MikroORM EntityManager. If passed, this will call em.upsert()
+   * @param data - Partial data to update the entity. Must include 'id' field to identify the entity.
+   * @param em - Optional MikroORM EntityManager. If passed, fetches existing entity and applies partial update
    * @returns A promise resolving to the updated entity
+   * @throws Error if entity with given id is not found (when em is provided)
    */
   static async update<T extends BaseEntity>(
     this: Constructor<T>,
-    data: EntityData<T>,
+    data: EntityData<T> & { id: unknown },
     em?: EntityManager,
     ...constructorArgs: ConstructorParameters<Constructor<T>>
   ): Promise<T> {
     const instance = new this(...constructorArgs);
     if (em) {
-      return em.merge(this, data);
+      const existingEntity = await em.findOneOrFail(this, { id: data.id });
+
+      const { id, ...updateData } = data as Record<string, unknown>;
+      void id;
+
+      em.assign(existingEntity, {
+        ...updateData,
+        updatedAt: new Date()
+      });
+
+      return existingEntity;
     } else {
       Object.assign(instance, {
         ...data,
