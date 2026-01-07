@@ -175,7 +175,7 @@ export function parse<
         }
         return;
       case 'warning':
-        req.openTelemetryCollector.warn(
+        req.openTelemetryCollector?.warn(
           `Invalid response:\n${parseErrors.join('\n\n')}`
         );
         break;

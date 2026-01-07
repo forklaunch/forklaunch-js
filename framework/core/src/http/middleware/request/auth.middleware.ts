@@ -246,7 +246,7 @@ async function checkAuthorizationToken<
             Extract<keyof VersionedReqs, string>,
             SessionSchema
           >
-        )?.openTelemetryCollector.error(error);
+        )?.openTelemetryCollector?.error(error);
         return invalidAuthorizationToken;
       }
 
@@ -507,7 +507,7 @@ export async function parseRequestAuth<
       req._globalOptions?.()?.auth
     )) ?? [];
   if (error != null) {
-    req.openTelemetryCollector.error(error, message);
+    req.openTelemetryCollector?.error(error, message);
     res.type('text/plain');
     res.status(error).send(message as never);
     return;

@@ -6,7 +6,7 @@ import {
   {{/is_database_enabled}}TEST_TOKENS,
   TestSetupResult
 } from '@forklaunch/testing';
-{{#is_database_enabled}}import { EntityManager } from '@mikro-orm/core';{{/is_database_enabled}}
+{{#is_database_enabled}}import { EntityManager, MikroORM } from '@mikro-orm/core';{{/is_database_enabled}}
 import dotenv from 'dotenv';
 import * as path from 'path';
 
@@ -42,8 +42,8 @@ export const cleanupTestDatabase = async (): Promise<void> => {
 };
 
 export const clearDatabase = async (options?: {
-  orm?: TestSetupResult['orm'];
-  redis?: TestSetupResult['redis'];
+  {{#is_database_enabled}}orm?: MikroORM;
+  {{/is_database_enabled}}redis?: TestSetupResult['redis'];
 }): Promise<void> => {
   await clearTestDatabase(options);
 };

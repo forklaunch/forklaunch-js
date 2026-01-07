@@ -85,7 +85,7 @@ export interface ForklaunchBaseRequest<
   originalPath: string;
 
   /** OpenTelemetry Collector */
-  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
+  openTelemetryCollector?: OpenTelemetryCollector<MetricsDefinition>;
 }
 
 /**
@@ -148,7 +148,7 @@ export interface ForklaunchRequest<
   originalPath: string;
 
   /** OpenTelemetry Collector */
-  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
+  openTelemetryCollector?: OpenTelemetryCollector<MetricsDefinition>;
 
   /** Session */
   session: JWTPayload & SessionSchema;

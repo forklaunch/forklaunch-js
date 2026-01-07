@@ -7,6 +7,7 @@ use crate::{CliCommand, core::command::command};
 mod create;
 mod git;
 mod manifest_generator;
+pub(crate) mod s3_upload;
 
 #[derive(Debug)]
 pub(crate) struct ReleaseCommand {

@@ -1,9 +1,19 @@
 import {
+  extractRouteHandlers,
+  HeadersObject,
+  Body as HttpBody,
+  Method,
   MetricsDefinition,
   OpenTelemetryCollector,
-  SessionObject
+  ParamsObject,
+  QueryObject,
+  ResponsesObject,
+  SchemaAuthMethods,
+  SessionObject,
+  VersionSchema
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
+import { RequestHandler } from 'express';
 import { Application } from './src/expressApplication';
 import { Router } from './src/expressRouter';
 import { checkout } from './src/handlers/checkout';
@@ -159,4 +169,82 @@ export const handlers: {
   unlink,
   unlock,
   unsubscribe
+};
+
+export const port = <
+  SV extends AnySchemaValidator,
+  Name extends string,
+  ContractMethod extends Method,
+  Path extends `/${string}`,
+  P extends ParamsObject<SV>,
+  ResBodyMap extends ResponsesObject<SV>,
+  ReqBody extends HttpBody<SV>,
+  ReqQuery extends QueryObject<SV>,
+  ReqHeaders extends HeadersObject<SV>,
+  ResHeaders extends HeadersObject<SV>,
+  LocalsObj extends Record<string, unknown>,
+  VersionedApi extends VersionSchema<SV, ContractMethod>,
+  RouterSession extends SessionObject<SV>,
+  BaseRequest,
+  BaseResponse,
+  NextFunction,
+  Auth extends SchemaAuthMethods<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    VersionedApi,
+    BaseRequest
+  >,
+  RouterHandler
+>(
+  params: Parameters<
+    typeof extractRouteHandlers<
+      SV,
+      Name,
+      ContractMethod,
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj,
+      VersionedApi,
+      RouterSession,
+      BaseRequest,
+      BaseResponse,
+      NextFunction,
+      Auth,
+      RouterHandler
+    >
+  >
+): RequestHandler[] => {
+  const handlers = extractRouteHandlers<
+    SV,
+    Name,
+    ContractMethod,
+    Path,
+    P,
+    ResBodyMap,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    ResHeaders,
+    LocalsObj,
+    VersionedApi,
+    RouterSession,
+    BaseRequest,
+    BaseResponse,
+    NextFunction,
+    Auth,
+    RouterHandler
+  >(...params);
+
+  return [
+    ...(handlers.middlewares as RequestHandler[]),
+    handlers.controllerHandler as unknown as RequestHandler
+  ];
 };

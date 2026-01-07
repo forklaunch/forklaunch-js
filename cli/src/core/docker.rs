@@ -239,7 +239,11 @@ pub(crate) struct DockerService {
     pub(crate) restart: Option<Restart>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) build: Option<DockerBuild>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_environment"
+    )]
     pub(crate) environment: Option<IndexMap<String, String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) depends_on: Option<IndexMap<String, DependsOn>>,
@@ -260,6 +264,87 @@ pub(crate) struct DockerService {
 
     #[serde(flatten)]
     pub(crate) additional_properties: HashMap<String, Value>,
+}
+
+#[allow(dead_code)]
+fn deserialize_environment<'de, D>(
+    deserializer: D,
+) -> Result<Option<IndexMap<String, String>>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let raw: Option<IndexMap<String, Value>> = Option::deserialize(deserializer)?;
+    let mapped = raw.map(|env| {
+        env.into_iter()
+            .map(|(key, value)| (key, yaml_value_to_string(value)))
+            .collect::<IndexMap<_, _>>()
+    });
+    Ok(mapped)
+}
+
+#[allow(dead_code)]
+fn yaml_value_to_string(value: Value) -> String {
+    match value {
+        Value::String(s) => s,
+        Value::Number(n) => n.to_string(),
+        Value::Bool(b) => b.to_string(),
+        Value::Null => String::new(),
+        Value::Sequence(seq) => seq
+            .into_iter()
+            .map(yaml_value_to_string)
+            .collect::<Vec<_>>()
+            .join(","),
+        Value::Mapping(map) => {
+            let mut pairs = Vec::new();
+            for (k, v) in map {
+                pairs.push(format!(
+                    "{}={}",
+                    yaml_value_to_string(k),
+                    yaml_value_to_string(v)
+                ));
+            }
+            pairs.join(",")
+        }
+        Value::Tagged(tagged) => yaml_value_to_string(tagged.value),
+    }
+}
+
+fn parse_environment_value(value: Value) -> Result<Option<IndexMap<String, String>>> {
+    match value {
+        Value::Null => Ok(None),
+        Value::Mapping(map) => {
+            let mut env = IndexMap::new();
+            for (k, v) in map {
+                env.insert(yaml_value_to_string(k), yaml_value_to_string(v));
+            }
+            Ok(Some(env))
+        }
+        Value::Sequence(seq) => {
+            let mut env = IndexMap::new();
+            for item in seq {
+                let entry = yaml_value_to_string(item);
+                if let Some((key, val)) = entry.split_once('=') {
+                    env.insert(key.to_string(), val.to_string());
+                } else {
+                    env.insert(entry, String::new());
+                }
+            }
+            Ok(Some(env))
+        }
+        Value::String(s) => {
+            if let Some((key, val)) = s.split_once('=') {
+                let mut env = IndexMap::new();
+                env.insert(key.to_string(), val.to_string());
+                Ok(Some(env))
+            } else {
+                Ok(None)
+            }
+        }
+        other => Ok(Some(IndexMap::from([(
+            String::new(),
+            yaml_value_to_string(other),
+        )]))),
+    }
 }
 
 impl<'de> Deserialize<'de> for DockerService {
@@ -306,7 +391,7 @@ impl<'de> Deserialize<'de> for DockerService {
                         }
                         "environment" => {
                             service.environment =
-                                from_value(value).map_err(serde::de::Error::custom)?
+                                parse_environment_value(value).map_err(serde::de::Error::custom)?;
                         }
                         "depends_on" => {
                             service.depends_on =

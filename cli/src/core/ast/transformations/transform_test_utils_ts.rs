@@ -538,7 +538,7 @@ export const cleanupTestDatabase = async (): Promise<void> => {
 };
 
 export const clearDatabase = async (): Promise<void> => {
-  await clearTestDatabase(undefined as any);
+  await clearTestDatabase(undefined);
 };
 
 export const setupTestData = async () => {

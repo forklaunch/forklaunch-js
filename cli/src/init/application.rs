@@ -929,6 +929,11 @@ impl CliCommand for ApplicationCommand {
                     || template_dir.module_id == Some(Module::StripeBilling),
                 is_s3_enabled: false,
                 is_database_enabled: true,
+                platform_application_id: data.platform_application_id.clone(),
+                platform_organization_id: data.platform_organization_id.clone(),
+                release_version: data.release_version.clone(),
+                release_git_commit: data.release_git_commit.clone(),
+                release_git_branch: data.release_git_branch.clone(),
 
                 is_better_auth: template_dir.module_id == Some(Module::BetterAuthIam),
                 is_stripe: template_dir.module_id == Some(Module::StripeBilling),

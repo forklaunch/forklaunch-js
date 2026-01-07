@@ -268,7 +268,8 @@ const runtimeDependencies = environmentConfig.chain({
             credentials: {
               accessKeyId: S3_ACCESS_KEY_ID,
               secretAccessKey: S3_SECRET_ACCESS_KEY
-            }
+            },
+            forcePathStyle: true // Required for MinIO and path-style S3
           }
         },
         {

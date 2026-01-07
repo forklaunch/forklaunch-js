@@ -11,7 +11,8 @@ const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
 /**
  * Creates an instance of forklaunchExpress
  */
-const app = forklaunchExpress(SchemaValidator(), openTelemetryCollector{{#is_iam_configured}}, {
+
+const app = forklaunchExpress(SchemaValidator(), openTelemetryCollector, {{#is_iam_configured}}{
   auth: {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     surfacePermissions: async (_payload, _req) => {
@@ -24,7 +25,7 @@ const app = forklaunchExpress(SchemaValidator(), openTelemetryCollector{{#is_iam
       return new Set([ROLES.ADMIN]);
     }
   }
-{{/is_iam_configured}}});
+}{{/is_iam_configured}});
 
 //! resolves the protocol, host, port, and version from the configuration
 const protocol = ci.resolve(tokens.PROTOCOL);

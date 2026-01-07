@@ -5,34 +5,34 @@ use std::{
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
-use rustyline::{Editor, history::DefaultHistory};
+use rustyline::{history::DefaultHistory, Editor};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use toml::to_string_pretty as toml_to_string_pretty;
 
 use crate::{
-    CliCommand,
     constants::{
-        ERROR_FAILED_TO_CREATE_PACKAGE_JSON, ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE,
+        Runtime, ERROR_FAILED_TO_CREATE_PACKAGE_JSON, ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE,
         ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE, ERROR_FAILED_TO_PARSE_MANIFEST,
         ERROR_FAILED_TO_READ_MANIFEST, ERROR_FAILED_TO_WRITE_DOCKER_COMPOSE,
-        ERROR_FAILED_TO_WRITE_MANIFEST, Runtime,
+        ERROR_FAILED_TO_WRITE_MANIFEST,
     },
     core::{
-        base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
+        base_path::{find_app_root_path, prompt_base_path, RequiredLocation},
         command::command,
-        docker::{DockerCompose, remove_worker_from_docker_compose},
+        docker::{remove_worker_from_docker_compose, DockerCompose},
         manifest::{
+            application::ApplicationManifestData, remove_project_definition_from_manifest,
             ApplicationInitializationMetadata, InitializableManifestConfig,
             InitializableManifestConfigMetadata, ManifestData, ProjectType,
-            application::ApplicationManifestData, remove_project_definition_from_manifest,
         },
         package_json::remove_project_definition_to_package_json,
         pnpm_workspace::remove_project_definition_to_pnpm_workspace,
-        rendered_template::{RenderedTemplate, RenderedTemplatesCache, write_rendered_templates},
+        rendered_template::{write_rendered_templates, RenderedTemplate, RenderedTemplatesCache},
         tsconfig::remove_project_from_modules_tsconfig,
         universal_sdk::remove_project_from_universal_sdk,
     },
-    prompt::{ArrayCompleter, prompt_for_confirmation, prompt_with_validation},
+    prompt::{prompt_for_confirmation, prompt_with_validation, ArrayCompleter},
+    CliCommand,
 };
 
 #[derive(Debug)]
@@ -138,7 +138,9 @@ impl CliCommand for WorkerCommand {
 
         remove_project_definition_from_manifest(&mut manifest_data, &worker_name)?;
 
-        remove_dir_all(&worker_base_path.join(&worker_name))?;
+        if worker_base_path.join(&worker_name).exists() {
+            remove_dir_all(&worker_base_path.join(&worker_name))?;
+        }
 
         let docker_compose_path =
             if let Some(docker_compose_path) = &manifest_data.docker_compose_path {
