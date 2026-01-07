@@ -1,12 +1,16 @@
 use std::{collections::HashMap, path::Path};
 
 use anyhow::Result;
+use convert_case::{Case, Casing};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::{
     constants::RELEASE_MANIFEST_SCHEMA_VERSION,
     core::{
+        library_scanner::{
+            CodeNode, LibraryDefinition, scan_project_libraries, scan_route_topology,
+        },
         manifest::{ProjectType, ResourceInventory, application::ApplicationManifestData},
         sync::detection::detect_routers_from_service,
     },
@@ -129,6 +133,8 @@ pub(crate) struct ReleaseManifest {
     pub git_branch: Option<String>,
     #[serde(rename = "gitRepository", skip_serializing_if = "Option::is_none")]
     pub git_repository: Option<String>,
+    #[serde(rename = "codeSourceUrl", skip_serializing_if = "Option::is_none")]
+    pub code_source_url: Option<String>,
     pub timestamp: String,
     pub services: Vec<ServiceDefinition>,
     pub infrastructure: InfrastructureConfig,
@@ -142,6 +148,8 @@ pub(crate) struct ReleaseManifest {
         skip_serializing_if = "Option::is_none"
     )]
     pub required_environment_variables: Option<Vec<EnvironmentVariableRequirement>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub libraries: Option<Vec<LibraryDefinition>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -226,6 +234,8 @@ pub(crate) struct ControllerDefinition {
     pub name: String,
     pub path: String,
     pub routes: Vec<RouteDefinition>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub topology: Option<CodeNode>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -297,6 +307,7 @@ pub(crate) fn generate_release_manifest(
     version: String,
     git_commit: String,
     git_branch: Option<String>,
+    code_source_url: Option<String>,
     manifest: &ApplicationManifestData,
     openapi_specs: &std::collections::HashMap<String, Value>,
     required_env_vars: Vec<EnvironmentVariableRequirement>,
@@ -309,6 +320,7 @@ pub(crate) fn generate_release_manifest(
         String,
         crate::core::ast::infrastructure::worker_config::WorkerConfig,
     >,
+    service_dependencies: &std::collections::HashMap<String, Vec<String>>,
 ) -> Result<ReleaseManifest> {
     let timestamp = chrono::Utc::now().to_rfc3339();
 
@@ -317,6 +329,7 @@ pub(crate) fn generate_release_manifest(
         if project.r#type == ProjectType::Service {
             let open_api_spec = openapi_specs.get(&project.name).cloned();
             let runtime_deps = project_runtime_deps.get(&project.name).cloned();
+            let deps = service_dependencies.get(&project.name).cloned();
             let integrations = project_integrations.get(&project.name).map(|integrations| {
                 integrations
                     .iter()
@@ -338,7 +351,7 @@ pub(crate) fn generate_release_manifest(
                     controllers: None,
                     integrations,
                     open_api_spec,
-                    dependencies: None,
+                    dependencies: deps,
                     runtime_dependencies: runtime_deps,
                     instance_size: None,
                     health_check: None,
@@ -360,6 +373,7 @@ pub(crate) fn generate_release_manifest(
             });
         } else if project.r#type == ProjectType::Worker {
             let runtime_deps = project_runtime_deps.get(&project.name).cloned();
+            let deps = service_dependencies.get(&project.name).cloned();
             let integrations = project_integrations.get(&project.name).map(|integrations| {
                 integrations
                     .iter()
@@ -387,6 +401,15 @@ pub(crate) fn generate_release_manifest(
                                     name: router_name.clone(),
                                     path: format!("/{}", router_name),
                                     routes: vec![], // Can be populated with full route analysis later
+                                    topology: scan_route_topology(
+                                        &worker_path.join("api").join("controllers").join(format!(
+                                            "{}.controller.ts",
+                                            router_name.to_case(Case::Camel)
+                                        )),
+                                        Path::new(&manifest.modules_path),
+                                        Path::new("package.json"),
+                                    )
+                                    .ok(),
                                 })
                                 .collect(),
                         )
@@ -421,7 +444,7 @@ pub(crate) fn generate_release_manifest(
                         },
                     ),
                     open_api_spec: open_api_spec.clone(),
-                    dependencies: None,
+                    dependencies: deps.clone(),
                     runtime_dependencies: runtime_deps.clone(),
                     instance_size: None,
                     health_check: None,
@@ -540,6 +563,7 @@ pub(crate) fn generate_release_manifest(
         git_commit,
         git_branch,
         git_repository: manifest.git_repository.clone(),
+        code_source_url,
         timestamp,
         services,
         infrastructure,
@@ -549,6 +573,7 @@ pub(crate) fn generate_release_manifest(
         } else {
             Some(required_env_vars)
         },
+        libraries: scan_project_libraries(Path::new("package.json")).ok(),
     })
 }
 

@@ -11,6 +11,7 @@ pub(crate) mod format;
 pub(crate) mod gitignore;
 pub(crate) mod husky;
 pub(crate) mod iam;
+pub(crate) mod library_scanner;
 pub(crate) mod license;
 pub(crate) mod manifest;
 pub(crate) mod modules;

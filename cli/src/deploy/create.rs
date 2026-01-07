@@ -381,6 +381,40 @@ impl CliCommand for CreateCommand {
 
                         let mut updates = Vec::new();
                         for missing_key in detail.missing_keys {
+                            // Special handling for NODE_ENV
+                            if missing_key.name == "NODE_ENV" {
+                                let selection =
+                                    dialoguer::Select::with_theme(&ColorfulTheme::default())
+                                        .with_prompt("Is this a production deployment?")
+                                        .item("Yes (set NODE_ENV=production)")
+                                        .item("No (set NODE_ENV=development)")
+                                        .item("Skip (enter manually)")
+                                        .default(0)
+                                        .interact()?;
+
+                                match selection {
+                                    0 => {
+                                        updates.push(EnvironmentVariableUpdate {
+                                            key: "NODE_ENV".to_string(),
+                                            value: "production".to_string(),
+                                            component: missing_key.component.clone(),
+                                        });
+                                        continue;
+                                    }
+                                    1 => {
+                                        updates.push(EnvironmentVariableUpdate {
+                                            key: "NODE_ENV".to_string(),
+                                            value: "development".to_string(),
+                                            component: missing_key.component.clone(),
+                                        });
+                                        continue;
+                                    }
+                                    _ => {
+                                        // Fall through to manual entry
+                                    }
+                                }
+                            }
+
                             let prompt_text = if let Some(ref comp) = missing_key.component {
                                 format!(
                                     "  Enter value for {} ({}:{})",

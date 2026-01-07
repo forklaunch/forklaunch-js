@@ -29,6 +29,7 @@ use crate::{
             env::find_all_env_vars,
             integrations::find_all_integrations,
             runtime_deps::{find_all_runtime_deps, get_unique_resource_types},
+            service_dependencies::find_all_service_dependencies,
         },
         base_path::{RequiredLocation, find_app_root_path},
         command::command,
@@ -89,6 +90,12 @@ impl CliCommand for CreateCommand {
                     .action(clap::ArgAction::SetTrue)
                     .help("Simulate release creation without uploading"),
             )
+            .arg(
+                Arg::new("local")
+                    .long("local")
+                    .action(clap::ArgAction::SetTrue)
+                    .help("Package local code and upload to S3 (for CI/CD testing without GitHub)"),
+            )
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
@@ -100,6 +107,7 @@ impl CliCommand for CreateCommand {
             .ok_or_else(|| anyhow::anyhow!("Version is required"))?;
 
         let dry_run = matches.get_flag("dry-run");
+        let local_mode = matches.get_flag("local");
 
         // Find application root
         let (app_root, _) = find_app_root_path(matches, RequiredLocation::Application)?;
@@ -123,7 +131,8 @@ impl CliCommand for CreateCommand {
             })?
             .clone();
 
-        if manifest.git_repository.is_none() {
+        // Skip git repository check if using local mode
+        if !local_mode && manifest.git_repository.is_none() {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
             writeln!(stdout, "[INFO] Git repository URL not set in manifest")?;
             stdout.reset()?;
@@ -149,6 +158,12 @@ impl CliCommand for CreateCommand {
             }
         }
 
+        if local_mode {
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
+            writeln!(stdout, "[INFO] Using local mode - packaging code directly")?;
+            stdout.reset()?;
+        }
+
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)).set_bold(true))?;
         writeln!(stdout, "[INFO] Creating release {}...", version)?;
         stdout.reset()?;
@@ -160,23 +175,36 @@ impl CliCommand for CreateCommand {
         stdout.flush()?;
         stdout.reset()?;
 
-        if !is_git_repo() {
+        let (git_commit, git_branch) = if is_git_repo() {
+            let commit = get_git_commit()?;
+            let branch = get_git_branch().ok();
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+            writeln!(stdout, " [OK]")?;
+            stdout.reset()?;
+            (commit, branch)
+        } else if local_mode {
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+            writeln!(
+                stdout,
+                " [WARN] Not a git repository (using local defaults)"
+            )?;
+            stdout.reset()?;
+            ("local-build".to_string(), Some("local".to_string()))
+        } else {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
             writeln!(stdout, " [WARN] Not a git repository")?;
             stdout.reset()?;
             bail!("Current directory is not a git repository. Initialize git first.");
-        }
+        };
 
-        let git_commit = get_git_commit()?;
-        let git_branch = get_git_branch().ok();
-
-        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-        writeln!(stdout, " [OK]")?;
-        stdout.reset()?;
         writeln!(
             stdout,
             "[INFO] Commit: {} ({})",
-            &git_commit[..8],
+            if git_commit == "local-build" {
+                "local"
+            } else {
+                &git_commit[..8]
+            },
             git_branch.as_deref().unwrap_or("unknown")
         )?;
 
@@ -380,6 +408,20 @@ impl CliCommand for CreateCommand {
         writeln!(stdout, " [OK] ({} workers)", total_worker_configs)?;
         stdout.reset()?;
 
+        // Detect service mesh dependencies (SDK client imports between services)
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
+        write!(stdout, "[INFO] Detecting service mesh connections...")?;
+        stdout.flush()?;
+        stdout.reset()?;
+
+        let all_service_deps =
+            find_all_service_dependencies(&modules_path, &rendered_templates_cache)?;
+
+        let total_service_deps: usize = all_service_deps.values().map(|v| v.len()).sum();
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+        writeln!(stdout, " [OK] ({} connections)", total_service_deps)?;
+        stdout.reset()?;
+
         let required_env_vars: Vec<EnvironmentVariableRequirement> = scoped_env_vars
             .iter()
             .map(|v| EnvironmentVariableRequirement {
@@ -437,17 +479,66 @@ impl CliCommand for CreateCommand {
         stdout.flush()?;
         stdout.reset()?;
 
+        // Handle local mode: create tarball and upload to S3
+        let code_source_url = if local_mode && !dry_run {
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
+            writeln!(stdout, "\n[INFO] Packaging local code...")?;
+            stdout.reset()?;
+
+            // Create tarball
+            let tarball_path = app_root.join(".forklaunch").join("release-code.tar.gz");
+            super::s3_upload::create_app_tarball(&app_root, &tarball_path)?;
+
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+            writeln!(stdout, "[INFO] Tarball created")?;
+            stdout.reset()?;
+
+            // Get presigned upload URL from platform
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
+            write!(stdout, "[INFO] Getting upload URL from platform...")?;
+            stdout.flush()?;
+            stdout.reset()?;
+
+            let upload_response =
+                super::s3_upload::get_presigned_upload_url(&application_id, version)?;
+
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+            writeln!(stdout, " [OK]")?;
+            stdout.reset()?;
+
+            // Upload tarball to S3
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
+            write!(stdout, "[INFO] Uploading code to S3...")?;
+            stdout.flush()?;
+            stdout.reset()?;
+
+            super::s3_upload::upload_to_s3(&tarball_path, &upload_response.upload_url)?;
+
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+            writeln!(stdout, " [OK]")?;
+            stdout.reset()?;
+
+            // Clean up tarball
+            std::fs::remove_file(&tarball_path).ok();
+
+            Some(upload_response.code_source_url)
+        } else {
+            None
+        };
+
         let release_manifest = generate_release_manifest(
             application_id.clone(),
             version.clone(),
             git_commit.clone(),
             git_branch.clone(),
+            code_source_url,
             &manifest,
             &openapi_specs,
             required_env_vars,
             &project_runtime_deps,
             &all_integrations,
             &all_worker_configs,
+            &all_service_deps,
         )?;
 
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;

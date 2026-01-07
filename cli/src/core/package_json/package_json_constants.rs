@@ -420,7 +420,7 @@ pub(crate) fn project_migrate_script(command: &str) -> String {
 
 pub(crate) fn project_start_server_script(runtime: &Runtime, database: Option<Database>) -> String {
     format!(
-        "{}DOTENV_FILE_PATH=.env.prod {} dist/server.js",
+        "{} {}DOTENV_FILE_PATH=.env.prod dist/server.js",
         match runtime {
             Runtime::Bun => "bun",
             Runtime::Node => "node --import=tsx",
@@ -441,7 +441,7 @@ pub(crate) fn project_start_server_script(runtime: &Runtime, database: Option<Da
 }
 pub(crate) fn project_start_worker_script(runtime: &Runtime, database: Option<Database>) -> String {
     format!(
-        "{}DOTENV_FILE_PATH=.env.prod {} dist/worker.js",
+        "{} {}DOTENV_FILE_PATH=.env.prod dist/worker.js",
         match runtime {
             Runtime::Bun => "bun",
             Runtime::Node => "node --import=tsx",
