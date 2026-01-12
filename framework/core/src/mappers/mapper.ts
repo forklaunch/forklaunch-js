@@ -40,7 +40,7 @@ export function requestMapper<
         throw new Error(prettyPrintParseErrors(parsedSchema.errors, 'DTO'));
       }
       return mapperDefinition.toEntity(
-        dto as Schema<DomainSchema, SV>,
+        parsedSchema.value as Schema<DomainSchema, SV>,
         ...(args as AdditionalArgs)
       );
     }
@@ -78,7 +78,7 @@ export function responseMapper<
       if (!parsedSchema.ok) {
         throw new Error(prettyPrintParseErrors(parsedSchema.errors, 'DTO'));
       }
-      return domain;
+      return parsedSchema.value;
     }
   };
 }
