@@ -300,7 +300,7 @@ pub(crate) fn generate_release_manifest(
                     instance_size: None,
                     health_check: None,
                 }),
-                build_context: Some(manifest.modules_path.clone()),
+                build_context: Some(format!("{}/{}", manifest.modules_path, project.name)),
                 dockerfile: manifest
                     .dockerfile
                     .clone()
