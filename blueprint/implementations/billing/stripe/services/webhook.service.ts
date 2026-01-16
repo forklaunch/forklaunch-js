@@ -122,7 +122,7 @@ export class StripeWebhookService<
 
     switch (eventType) {
       case 'billing_portal.session.created': {
-        this.billingPortalService.baseBillingPortalService.createBillingPortalSession(
+        await this.billingPortalService.baseBillingPortalService.createBillingPortalSession(
           {
             id: event.data.object.id,
             customerId: event.data.object.customer,
@@ -134,14 +134,14 @@ export class StripeWebhookService<
       }
 
       case 'checkout.session.expired': {
-        this.checkoutSessionService.handleCheckoutFailure({
+        await this.checkoutSessionService.handleCheckoutFailure({
           id: event.data.object.id
         });
         break;
       }
 
       case 'checkout.session.completed': {
-        this.checkoutSessionService.handleCheckoutSuccess({
+        await this.checkoutSessionService.handleCheckoutSuccess({
           id: event.data.object.id
         });
         break;
@@ -149,23 +149,25 @@ export class StripeWebhookService<
 
       case 'payment_link.created':
         {
-          this.paymentLinkService.basePaymentLinkService.createPaymentLink({
-            id: event.data.object.id,
-            amount:
-              event.data.object.line_items?.data.reduce<number>(
-                (total, item) => total + item.amount_total,
-                0
-              ) ?? 0,
-            paymentMethods: event.data.object
-              .payment_method_types as PaymentMethodEnum[],
-            status: 'CREATED' as StatusEnum[keyof StatusEnum],
-            currency: event.data.object.currency as CurrencyEnum
-          });
+          await this.paymentLinkService.basePaymentLinkService.createPaymentLink(
+            {
+              id: event.data.object.id,
+              amount:
+                event.data.object.line_items?.data.reduce<number>(
+                  (total, item) => total + item.amount_total,
+                  0
+                ) ?? 0,
+              paymentMethods: event.data.object
+                .payment_method_types as PaymentMethodEnum[],
+              status: 'CREATED' as StatusEnum[keyof StatusEnum],
+              currency: event.data.object.currency as CurrencyEnum
+            }
+          );
         }
         break;
 
       case 'payment_link.updated': {
-        this.paymentLinkService.basePaymentLinkService.updatePaymentLink({
+        await this.paymentLinkService.basePaymentLinkService.updatePaymentLink({
           id: event.data.object.id,
           amount:
             event.data.object.line_items?.data.reduce<number>(
@@ -186,7 +188,7 @@ export class StripeWebhookService<
           event.data.object.product != null &&
           event.data.object.amount != null
         ) {
-          this.planService.basePlanService.createPlan({
+          await this.planService.basePlanService.createPlan({
             id: event.data.object.id,
             billingProvider: BillingProviderEnum.STRIPE,
             cadence: event.data.object.interval as PlanCadenceEnum,
@@ -211,7 +213,7 @@ export class StripeWebhookService<
           event.data.object.product != null &&
           event.data.object.amount != null
         ) {
-          this.planService.basePlanService.updatePlan({
+          await this.planService.basePlanService.updatePlan({
             id: event.data.object.id,
             billingProvider: BillingProviderEnum.STRIPE,
             cadence: event.data.object.interval as PlanCadenceEnum,
@@ -231,72 +233,76 @@ export class StripeWebhookService<
       }
 
       case 'plan.deleted': {
-        this.planService.deletePlan({
+        await this.planService.deletePlan({
           id: event.data.object.id
         });
         break;
       }
 
       case 'customer.subscription.created': {
-        this.subscriptionService.baseSubscriptionService.createSubscription({
-          id: event.data.object.id,
-          partyId:
-            typeof event.data.object.customer === 'string'
-              ? event.data.object.customer
-              : event.data.object.customer.id,
-          partyType: 'USER' as PartyEnum[keyof PartyEnum],
-          description: event.data.object.description ?? undefined,
-          active: true,
-          productId: event.data.object.items.data[0].plan.id,
-          externalId: event.data.object.id,
-          billingProvider: BillingProviderEnum.STRIPE,
-          startDate: new Date(event.data.object.created),
-          endDate: event.data.object.cancel_at
-            ? new Date(event.data.object.cancel_at)
-            : new Date(Infinity),
-          status: event.data.object.status
-        });
+        await this.subscriptionService.baseSubscriptionService.createSubscription(
+          {
+            id: event.data.object.id,
+            partyId:
+              typeof event.data.object.customer === 'string'
+                ? event.data.object.customer
+                : event.data.object.customer.id,
+            partyType: 'USER' as PartyEnum[keyof PartyEnum],
+            description: event.data.object.description ?? undefined,
+            active: true,
+            productId: event.data.object.items.data[0].plan.id,
+            externalId: event.data.object.id,
+            billingProvider: BillingProviderEnum.STRIPE,
+            startDate: new Date(event.data.object.created),
+            endDate: event.data.object.cancel_at
+              ? new Date(event.data.object.cancel_at)
+              : new Date(Infinity),
+            status: event.data.object.status
+          }
+        );
         break;
       }
 
       case 'customer.subscription.updated': {
-        this.subscriptionService.baseSubscriptionService.updateSubscription({
-          id: event.data.object.id,
-          partyId:
-            typeof event.data.object.customer === 'string'
-              ? event.data.object.customer
-              : event.data.object.customer.id,
-          partyType: 'USER' as PartyEnum[keyof PartyEnum],
-          description: event.data.object.description ?? undefined,
-          active: true,
-          externalId: event.data.object.id,
-          billingProvider: BillingProviderEnum.STRIPE,
-          startDate: new Date(event.data.object.created),
-          endDate: event.data.object.cancel_at
-            ? new Date(event.data.object.cancel_at)
-            : new Date(Infinity),
-          productId: event.data.object.items.data[0].plan.id,
-          status: event.data.object.status
-        });
+        await this.subscriptionService.baseSubscriptionService.updateSubscription(
+          {
+            id: event.data.object.id,
+            partyId:
+              typeof event.data.object.customer === 'string'
+                ? event.data.object.customer
+                : event.data.object.customer.id,
+            partyType: 'USER' as PartyEnum[keyof PartyEnum],
+            description: event.data.object.description ?? undefined,
+            active: true,
+            externalId: event.data.object.id,
+            billingProvider: BillingProviderEnum.STRIPE,
+            startDate: new Date(event.data.object.created),
+            endDate: event.data.object.cancel_at
+              ? new Date(event.data.object.cancel_at)
+              : new Date(Infinity),
+            productId: event.data.object.items.data[0].plan.id,
+            status: event.data.object.status
+          }
+        );
         break;
       }
 
       case 'customer.subscription.deleted': {
-        this.subscriptionService.deleteSubscription({
+        await this.subscriptionService.deleteSubscription({
           id: event.data.object.id
         });
         break;
       }
 
       case 'customer.subscription.paused': {
-        this.subscriptionService.cancelSubscription({
+        await this.subscriptionService.cancelSubscription({
           id: event.data.object.id
         });
         break;
       }
 
       case 'customer.subscription.resumed': {
-        this.subscriptionService.resumeSubscription({
+        await this.subscriptionService.resumeSubscription({
           id: event.data.object.id
         });
         break;
