@@ -5,6 +5,7 @@ import {
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
+import { PartyEnum } from '../../../../billing-base/domain/enum/party.enum';
 import { BillingProviderEnum } from '../domain/enum/billingProvider.enum';
 import { CurrencyEnum } from '../domain/enum/currency.enum';
 import { PaymentMethodEnum } from '../domain/enum/paymentMethod.enum';
@@ -256,7 +257,7 @@ export class StripeWebhookService<
               typeof event.data.object.customer === 'string'
                 ? event.data.object.customer
                 : event.data.object.customer.id,
-            partyType: 'USER' as PartyEnum[keyof PartyEnum],
+            partyType: PartyEnum.USER as PartyEnum[keyof PartyEnum],
             description: event.data.object.description ?? undefined,
             active: true,
             productId: event.data.object.items.data[0].plan.id,
@@ -289,7 +290,7 @@ export class StripeWebhookService<
               typeof event.data.object.customer === 'string'
                 ? event.data.object.customer
                 : event.data.object.customer.id,
-            partyType: 'USER' as PartyEnum[keyof PartyEnum],
+            partyType: PartyEnum.USER as PartyEnum[keyof PartyEnum],
             description: event.data.object.description ?? undefined,
             active: true,
             externalId: event.data.object.id,
