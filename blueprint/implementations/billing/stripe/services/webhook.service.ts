@@ -240,6 +240,15 @@ export class StripeWebhookService<
       }
 
       case 'customer.subscription.created': {
+        if (
+          !event.data.object.items?.data ||
+          event.data.object.items.data.length === 0 ||
+          !event.data.object.items.data[0]?.plan?.id
+        ) {
+          throw new Error(
+            `Invalid subscription: missing items or plan ID for subscription ${event.data.object.id}`
+          );
+        }
         await this.subscriptionService.baseSubscriptionService.createSubscription(
           {
             id: event.data.object.id,
@@ -264,6 +273,15 @@ export class StripeWebhookService<
       }
 
       case 'customer.subscription.updated': {
+        if (
+          !event.data.object.items?.data ||
+          event.data.object.items.data.length === 0 ||
+          !event.data.object.items.data[0]?.plan?.id
+        ) {
+          throw new Error(
+            `Invalid subscription: missing items or plan ID for subscription ${event.data.object.id}`
+          );
+        }
         await this.subscriptionService.baseSubscriptionService.updateSubscription(
           {
             id: event.data.object.id,
