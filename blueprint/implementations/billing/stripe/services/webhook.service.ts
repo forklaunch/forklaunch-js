@@ -27,14 +27,14 @@ export class StripeWebhookService<
   StatusEnum,
   PartyEnum,
   BillingPortalEntities extends
-    StripeBillingPortalEntities = StripeBillingPortalEntities,
+  StripeBillingPortalEntities = StripeBillingPortalEntities,
   CheckoutSessionEntities extends
-    StripeCheckoutSessionEntities<StatusEnum> = StripeCheckoutSessionEntities<StatusEnum>,
+  StripeCheckoutSessionEntities<StatusEnum> = StripeCheckoutSessionEntities<StatusEnum>,
   PaymentLinkEntities extends
-    StripePaymentLinkEntities<StatusEnum> = StripePaymentLinkEntities<StatusEnum>,
+  StripePaymentLinkEntities<StatusEnum> = StripePaymentLinkEntities<StatusEnum>,
   PlanEntities extends StripePlanEntities = StripePlanEntities,
   SubscriptionEntities extends
-    StripeSubscriptionEntities<PartyEnum> = StripeSubscriptionEntities<PartyEnum>
+  StripeSubscriptionEntities<PartyEnum> = StripeSubscriptionEntities<PartyEnum>
 > {
   protected readonly stripeClient: Stripe;
   protected readonly em: EntityManager;
@@ -253,10 +253,10 @@ export class StripeWebhookService<
             productId: event.data.object.items.data[0].plan.id,
             externalId: event.data.object.id,
             billingProvider: BillingProviderEnum.STRIPE,
-            startDate: new Date(event.data.object.created),
+            startDate: new Date(event.data.object.created * 1000),
             endDate: event.data.object.cancel_at
-              ? new Date(event.data.object.cancel_at)
-              : new Date(Infinity),
+              ? new Date(event.data.object.cancel_at * 1000)
+              : undefined,
             status: event.data.object.status
           }
         );
@@ -276,10 +276,10 @@ export class StripeWebhookService<
             active: true,
             externalId: event.data.object.id,
             billingProvider: BillingProviderEnum.STRIPE,
-            startDate: new Date(event.data.object.created),
+            startDate: new Date(event.data.object.created * 1000),
             endDate: event.data.object.cancel_at
-              ? new Date(event.data.object.cancel_at)
-              : new Date(Infinity),
+              ? new Date(event.data.object.cancel_at * 1000)
+              : undefined,
             productId: event.data.object.items.data[0].plan.id,
             status: event.data.object.status
           }
