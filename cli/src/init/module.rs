@@ -234,6 +234,9 @@ impl CliCommand for ModuleCommand {
                 }
                 return false;
             }),
+
+            // Default to false for module initialization, will be set by CLI flag
+            with_mappers: false,
         };
         let manifest_data = add_project_definition_to_manifest(
             ProjectType::Service,

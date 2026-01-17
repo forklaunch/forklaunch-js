@@ -1,0 +1,320 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 1,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "DS_PROMETHEUS"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "displayMode": "gradient",
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "maxVizHeight": 300,
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "namePlacement": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "valueMode": "color"
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "editorMode": "code",
+          "expr": "(\n  sum by(api_name, http_response_status_code) (\n    http_requests_total{\n      service_name=~\"$service\",\n      api_name=~\"$api\",\n      correlation_id=~\"$correlation_id\"\n    }\n  )\n) - (\n  (\n    sum by(api_name, http_response_status_code) (\n      http_requests_total{\n        service_name=~\"$service\",\n        api_name=~\"$api\",\n        correlation_id=~\"$correlation_id\"\n      } offset $__range\n    )\n  ) or on(api_name, http_response_status_code) (\n    sum by(api_name, http_response_status_code) (\n      http_requests_total{\n        service_name=~\"$service\",\n        api_name=~\"$api\",\n        correlation_id=~\"$correlation_id\"\n      }\n    ) * 0\n  )\n)",
+          "legendFormat": "{{api_name}} - {{http_response_status_code}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Request Counts by Status Code",
+      "type": "bargauge"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "DS_LOKI"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "dedupStrategy": "none",
+        "enableInfiniteScrolling": false,
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "DS_LOKI"
+          },
+          "direction": "backward",
+          "editorMode": "builder",
+          "expr": "{service_name=~\".+\"} | scope_name =~ `$service` | api_name =~ `$api` | correlation_id =~ `$correlation_id`",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Recent Logs",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "tempo",
+        "uid": "DS_TEMPO"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 3,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": ["sum"],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Duration"
+          }
+        ]
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "tempo",
+            "uid": "DS_TEMPO"
+          },
+          "filters": [
+            {
+              "id": "service_filter",
+              "operator": "=~",
+              "scope": "span",
+              "tag": "service.name",
+              "value": "\"$service\""
+            },
+            {
+              "id": "api_filter",
+              "operator": "=~",
+              "scope": "span",
+              "tag": "api.name",
+              "value": "\"$api\""
+            },
+            {
+              "id": "correlation_filter",
+              "operator": "=~",
+              "scope": "span",
+              "tag": "correlation.id",
+              "value": "\"$correlation_id\""
+            }
+          ],
+          "limit": 50,
+          "query": "",
+          "queryType": "traceqlSearch",
+          "refId": "A",
+          "spss": 3,
+          "tableType": "traces"
+        }
+      ],
+      "title": "Traces",
+      "type": "table"
+    }
+  ],
+  "preload": false,
+  "refresh": "5s",
+  "schemaVersion": 40,
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "allValue": ".+",
+        "current": {
+          "text": "All",
+          "value": ".+"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "DS_PROMETHEUS"
+        },
+        "definition": "label_values(service_name)",
+        "includeAll": true,
+        "label": "Service",
+        "name": "service",
+        "options": [],
+        "query": "label_values(service_name)",
+        "refresh": 1,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "text": "All",
+          "value": ".+"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "DS_PROMETHEUS"
+        },
+        "definition": "label_values({service_name=~\"$service\"}, api_name)",
+        "includeAll": true,
+        "label": "API",
+        "name": "api",
+        "options": [],
+        "query": "label_values({service_name=~\"$service\"}, api_name)",
+        "refresh": 1,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "text": "All",
+          "value": ".+"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "DS_PROMETHEUS"
+        },
+        "definition": "label_values({service_name=~\"$service\", api_name=~\"$api\"}, correlation_id)",
+        "includeAll": true,
+        "label": "Correlation ID",
+        "name": "correlation_id",
+        "options": [],
+        "query": "label_values({service_name=~\"$service\", api_name=~\"$api\"}, correlation_id)",
+        "refresh": 1,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Application Overview",
+  "uid": "application-overview",
+  "version": 1,
+  "weekStart": ""
+}

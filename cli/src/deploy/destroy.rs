@@ -2,14 +2,12 @@ use std::{fs::read_to_string, io::Write};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgMatches, Command};
-use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
-use serde_json;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 use crate::{
     CliCommand,
-    constants::{ERROR_FAILED_TO_SEND_REQUEST, PLATFORM_UI_URL, get_api_url},
+    constants::{ERROR_FAILED_TO_SEND_REQUEST, PLATFORM_UI_URL, get_platform_management_api_url},
     core::{
         base_path::{RequiredLocation, find_app_root_path},
         command::command,
@@ -130,29 +128,37 @@ impl CliCommand for DestroyCommand {
         // For CLI, explicit destroy command is usually enough, but let's add a warning if not "preserve-data".
         // Actually, let's trust the user knows what they are doing if they run `destroy`.
 
-        let request_body = DestroyDeploymentRequest { mode: mode.clone() };
-
-        let url = format!(
-            "{}/applications/{}/environments/{}/regions/{}/destroy",
-            get_api_url(),
-            application_id,
-            environment,
-            region
-        );
-        let client = Client::new();
+        // Removed the old request_body and client setup
+        // let request_body = DestroyDeploymentRequest { mode: mode.clone() };
+        // let url = format!(
+        //     "{}/applications/{}/environments/{}/regions/{}/destroy",
+        //     get_platform_management_api_url(),
+        //     application_id,
+        //     environment,
+        //     region
+        // );
+        // let client = Client::new();
 
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
         write!(stdout, "[INFO] Triggering destruction...")?;
         stdout.flush()?;
         stdout.reset()?;
 
+        let request_body = DestroyDeploymentRequest { mode: mode.clone() };
+
+        let url = format!(
+            "{}/applications/{}/environments/{}/regions/{}/destroy",
+            get_platform_management_api_url(),
+            application_id,
+            environment,
+            region
+        );
+
+        use crate::core::http_client;
+
         eprintln!("[DEBUG] POST {} with body: {:?}", url, request_body);
 
-        let response = client
-            .post(&url)
-            .bearer_auth(&token)
-            .json(&request_body)
-            .send()
+        let response = http_client::post(&url, serde_json::to_value(&request_body)?)
             .with_context(|| ERROR_FAILED_TO_SEND_REQUEST)?;
 
         let status = response.status();

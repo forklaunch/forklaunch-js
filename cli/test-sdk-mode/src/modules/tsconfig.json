@@ -1,0 +1,18 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "core"
+    },
+    {
+      "path": "monitoring"
+    },
+    {
+      "path": "universal-sdk"
+    }
+  ],
+  "compilerOptions": {
+    "declaration": true,
+    "declarationMap": true
+  }
+}

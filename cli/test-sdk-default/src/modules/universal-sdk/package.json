@@ -1,0 +1,32 @@
+{
+  "name": "@test-sdk-default/universal-sdk",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Universal SDK for test-sdk-default, containing shared foundational infrastrucuture and utilities",
+  "keywords": [],
+  "license": "MIT",
+  "author": "Test",
+  "scripts": {
+    "build": "tsgo",
+    "clean": "rm -rf dist pnpm.lock.yaml tsconfig.tsbuildinfo node_modules",
+    "docs": "typedoc --out docs *",
+    "format": "biome format --write .",
+    "lint": "oxlint --config .oxlint.config.json",
+    "lint:fix": "oxlint --fix --config .oxlint.config.json",
+    "test": "pnpm vitest --passWithNoTests"
+  },
+  "dependencies": {
+    "@forklaunch/common": "~0.6.23",
+    "@forklaunch/universal-sdk": "~0.7.23"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.5",
+    "@types/qs": "^6.14.0"
+  },
+  "mikro-orm": {
+    "manifest_paths": [
+      "./mikro-orm.config.ts",
+      "./dist/mikro-orm.config.js"
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+# Node dependencies
+**/node_modules/
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/.pnpm-debug.log*
+
+# Environment files
+**/.env.local
+**/.env.*.local
+
+# Build outputs
+**/dist/
+**/build/
+**/.next/
+**/out/
+
+# Cache directories
+**/.npm
+**/.yarn
+**/.pnp.*
+**/.cache
+
+# IDE/Editor
+**/.idea/
+**/.vscode/
+**/*.swp
+**/*.swo
+
+# OS generated
+**/.DS_Store
+**/Thumbs.db
+
+bun.lock
+bun.lockb
+pnpm-lock.yaml

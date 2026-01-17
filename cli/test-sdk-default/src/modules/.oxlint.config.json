@@ -1,0 +1,27 @@
+{
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "perf": "warn",
+    "style": "off",
+    "pedantic": "off"
+  },
+  "ignorePatterns": [
+    "**/tests/**/*",
+    "**/dist/**/*",
+    "**/lib/**/*",
+    "**/node_modules/**/*"
+  ],
+  "overrides": [
+    {
+      "files": [
+        "**/*.ts",
+        "**/*.tsx"
+      ],
+      "rules": {
+        "no-async-endpoint-handlers": "off",
+        "no-await-in-loop": "off"
+      }
+    }
+  ]
+}

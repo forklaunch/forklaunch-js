@@ -36,26 +36,31 @@ impl ModeCommand {
     }
 }
 
-fn use_generated_sdk_mode(
+/// Apply generated SDK mode setup (common logic for both init and change commands)
+pub(crate) fn apply_generated_sdk_mode_setup(
     app_root_path: &PathBuf,
     manifest_data: &ApplicationManifestData,
     rendered_templates_cache: &mut RenderedTemplatesCache,
+    transform_sdk: bool,
 ) -> Result<()> {
-    let universal_sdk_path = app_root_path
-        .join(manifest_data.modules_path.clone())
-        .join("universal-sdk")
-        .join("universalSdk.ts");
-    rendered_templates_cache.insert(
-        universal_sdk_path.to_string_lossy(),
-        RenderedTemplate {
-            path: universal_sdk_path.clone(),
-            content: transform_universal_sdk_use_generated_path(
-                rendered_templates_cache,
-                &app_root_path.join(manifest_data.modules_path.clone()),
-            )?,
-            context: None,
-        },
-    );
+    // Transform universal-sdk only during mode change, not during init
+    if transform_sdk {
+        let universal_sdk_path = app_root_path
+            .join(manifest_data.modules_path.clone())
+            .join("universal-sdk")
+            .join("universalSdk.ts");
+        rendered_templates_cache.insert(
+            universal_sdk_path.to_string_lossy(),
+            RenderedTemplate {
+                path: universal_sdk_path.clone(),
+                content: transform_universal_sdk_use_generated_path(
+                    rendered_templates_cache,
+                    &app_root_path.join(manifest_data.modules_path.clone()),
+                )?,
+                context: None,
+            },
+        );
+    }
 
     if let Some(root_tsconfig) = generate_root_tsconfig(app_root_path, manifest_data)? {
         rendered_templates_cache.insert(
@@ -81,26 +86,41 @@ fn use_generated_sdk_mode(
         }
 
         let package_json_path = modules_path.join(&project.name).join("package.json");
-        if package_json_path.exists() {
-            let content = read_to_string(&package_json_path)
-                .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?;
-            let mut package_json: ProjectPackageJson =
-                json_from_str(&content).with_context(|| ERROR_FAILED_TO_PARSE_PACKAGE_JSON)?;
 
-            package_json.types = Some("index.d.ts".to_string());
+        // Try to get from cache first (for init), then from disk (for mode change)
+        let content = if let Ok(Some(template)) = rendered_templates_cache.get(&package_json_path) {
+            template.content.clone()
+        } else if package_json_path.exists() {
+            read_to_string(&package_json_path)
+                .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?
+        } else {
+            continue;
+        };
 
-            rendered_templates_cache.insert(
-                package_json_path.to_string_lossy(),
-                RenderedTemplate {
-                    path: package_json_path.clone(),
-                    content: to_string_pretty(&package_json)?,
-                    context: None,
-                },
-            );
-        }
+        let mut package_json: ProjectPackageJson =
+            json_from_str(&content).with_context(|| ERROR_FAILED_TO_PARSE_PACKAGE_JSON)?;
+
+        package_json.types = Some("index.d.ts".to_string());
+
+        rendered_templates_cache.insert(
+            package_json_path.to_string_lossy(),
+            RenderedTemplate {
+                path: package_json_path.clone(),
+                content: to_string_pretty(&package_json)?,
+                context: None,
+            },
+        );
     }
 
     Ok(())
+}
+
+pub(crate) fn use_generated_sdk_mode(
+    app_root_path: &PathBuf,
+    manifest_data: &ApplicationManifestData,
+    rendered_templates_cache: &mut RenderedTemplatesCache,
+) -> Result<()> {
+    apply_generated_sdk_mode_setup(app_root_path, manifest_data, rendered_templates_cache, true)
 }
 
 fn use_live_sdk_mode(

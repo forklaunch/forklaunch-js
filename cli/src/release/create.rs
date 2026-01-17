@@ -7,7 +7,6 @@ use std::{
 
 use anyhow::{Context, Result, bail};
 use clap::{Arg, ArgMatches, Command};
-use reqwest::blocking::Client;
 use serde::Serialize;
 use serde_json::Value;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
@@ -23,7 +22,7 @@ use super::{
 };
 use crate::{
     CliCommand,
-    constants::{ERROR_FAILED_TO_SEND_REQUEST, get_api_url},
+    constants::{ERROR_FAILED_TO_SEND_REQUEST, get_platform_management_api_url},
     core::{
         ast::infrastructure::{
             env::find_all_env_vars,
@@ -605,7 +604,7 @@ impl CliCommand for CreateCommand {
 }
 
 fn upload_release(application_id: &str, manifest: ReleaseManifest) -> Result<()> {
-    let token = get_token()?;
+    let _token = get_token()?;
 
     let request_body = CreateReleaseRequest {
         application_id: application_id.to_string(),
@@ -613,15 +612,12 @@ fn upload_release(application_id: &str, manifest: ReleaseManifest) -> Result<()>
         released_by: None, // TODO: Get from token
     };
 
-    let url = format!("{}/releases", get_api_url());
-    let client = Client::new();
+    let url = format!("{}/releases", get_platform_management_api_url());
 
-    let response = client
-        .post(&url)
-        .bearer_auth(&token)
-        .json(&request_body)
-        .send()
-        .with_context(|| ERROR_FAILED_TO_SEND_REQUEST)?;
+    use crate::core::http_client;
+
+    let response = http_client::post(&url, serde_json::to_value(&request_body)?)
+        .with_context(|| "Failed to create release")?;
 
     let status = response.status();
     let response_body = response.text().unwrap_or_else(|_| "{}".to_string());

@@ -28,6 +28,8 @@ pub(crate) const TYPESCRIPT_ESLINT_VERSION: &str = "^8.46.4";
 pub(crate) const VITEST_VERSION: &str = "^4.0.9";
 
 // Application package.json dependencies constants
+// @typescript/native-preview
+pub(crate) const TYPESCRIPT_NATIVE_PREVIEW_VERSION: &str = "^0.16.6";
 // globals
 pub(crate) const GLOBALS_VERSION: &str = "^16.5.0";
 // husky
@@ -47,8 +49,8 @@ pub(crate) const TYPESCRIPT_VERSION: &str = "^5.9.3";
 pub(crate) const APP_DEV_SCRIPT: &str = "docker compose up";
 pub(crate) const APP_DEV_BUILD_SCRIPT: &str = "docker compose build --no-cache";
 pub(crate) const APP_PREPARE_SCRIPT: &str = "husky";
-pub(crate) const TYPES_WATCH_SCRIPT: &str = "tsc -b -w";
-pub(crate) const TYPES_BUILD_SCRIPT: &str = "tsc -b --emitDeclarationOnly";
+pub(crate) const TYPES_WATCH_SCRIPT: &str = "tsgo -b -w";
+pub(crate) const TYPES_BUILD_SCRIPT: &str = "tsgo -b --emitDeclarationOnly";
 
 pub(crate) fn application_format_script(formatter: &Formatter) -> String {
     String::from(match formatter {
@@ -312,7 +314,7 @@ pub(crate) const IOREDIS_VERSION: &str = "^5.8.2";
 pub(crate) const TYPEDOC_VERSION: &str = "^0.28.14";
 
 // Project package.json scripts constants
-pub(crate) const PROJECT_BUILD_SCRIPT: &str = "tsc";
+pub(crate) const PROJECT_BUILD_SCRIPT: &str = "tsgo";
 pub(crate) const PROJECT_DOCS_SCRIPT: &str = "typedoc --out docs *";
 pub(crate) const PROJECT_SEED_SCRIPT: &str = "[ -z $DOTENV_FILE_PATH ] && export DOTENV_FILE_PATH=.env.local; NODE_OPTIONS='--import=tsx' mikro-orm seeder:run";
 

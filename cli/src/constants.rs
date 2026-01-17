@@ -2,14 +2,20 @@ use std::path::Path;
 
 use crate::{choice, core::choices::Choice};
 
-// pub(crate) const DEFAULT_API_URL: &str = "https://api.forklaunch.com";
-pub(crate) const DEFAULT_API_URL: &str = "http://localhost:8004";
+// pub(crate) const DEFAULT_PLATFORM_MANAGEMENT_API_URL: &str = "https://api.forklaunch.com";
+pub(crate) const DEFAULT_PLATFORM_MANAGEMENT_API_URL: &str = "http://localhost:8004";
+pub(crate) const DEFAULT_IAM_API_URL: &str = "http://localhost:8001";
 pub(crate) const PLATFORM_UI_URL: &str = "https://forklaunch.com";
 
 pub(crate) const RELEASE_MANIFEST_SCHEMA_VERSION: &str = "1.0.0";
 
-pub(crate) fn get_api_url() -> String {
-    std::env::var("FORKLAUNCH_API_URL").unwrap_or_else(|_| DEFAULT_API_URL.to_string())
+pub(crate) fn get_platform_management_api_url() -> String {
+    std::env::var("FORKLAUNCH_PLATFORM_MANAGEMENT_API_URL")
+        .unwrap_or_else(|_| DEFAULT_PLATFORM_MANAGEMENT_API_URL.to_string())
+}
+
+pub(crate) fn get_iam_api_url() -> String {
+    std::env::var("FORKLAUNCH_IAM_API_URL").unwrap_or_else(|_| DEFAULT_IAM_API_URL.to_string())
 }
 
 choice! {

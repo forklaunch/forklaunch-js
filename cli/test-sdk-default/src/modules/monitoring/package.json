@@ -1,0 +1,28 @@
+{
+  "name": "@test-sdk-default/monitoring",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Monitoring library for test-sdk-default, defining metrics, logs, and trace building blocks",
+  "keywords": [],
+  "license": "MIT",
+  "author": "Test",
+  "scripts": {
+    "build": "tsgo",
+    "clean": "rm -rf dist pnpm.lock.yaml tsconfig.tsbuildinfo node_modules",
+    "docs": "typedoc --out docs *",
+    "format": "biome format --write .",
+    "lint": "oxlint --config .oxlint.config.json",
+    "lint:fix": "oxlint --fix --config .oxlint.config.json",
+    "test": "pnpm vitest --passWithNoTests"
+  },
+  "dependencies": {
+    "@forklaunch/core": "~0.16.1"
+  },
+  "devDependencies": {},
+  "mikro-orm": {
+    "manifest_paths": [
+      "./mikro-orm.config.ts",
+      "./dist/mikro-orm.config.js"
+    ]
+  }
+}

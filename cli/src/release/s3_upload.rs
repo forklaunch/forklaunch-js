@@ -7,7 +7,7 @@ use reqwest::blocking::Client;
 use serde::Deserialize;
 use tar::Builder;
 
-use crate::{constants::get_api_url, core::token::get_token};
+use crate::constants::get_platform_management_api_url;
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct UploadUrlResponse {
@@ -70,25 +70,20 @@ pub(crate) fn create_app_tarball(app_root: &Path, output_path: &Path) -> Result<
     Ok(())
 }
 
-/// Get presigned upload URL from platform
 pub(crate) fn get_presigned_upload_url(
     application_id: &str,
     version: &str,
 ) -> Result<UploadUrlResponse> {
-    let token = get_token()?;
-    let url = format!("{}/releases/upload-url", get_api_url());
-    let client = Client::new();
+    use crate::core::http_client;
+
+    let url = format!("{}/releases/upload-url", get_platform_management_api_url());
 
     let request_body = serde_json::json!({
         "applicationId": application_id,
         "version": version
     });
 
-    let response = client
-        .post(&url)
-        .bearer_auth(&token)
-        .json(&request_body)
-        .send()
+    let response = http_client::post(&url, request_body)
         .with_context(|| "Failed to request upload URL from platform")?;
 
     let status = response.status();

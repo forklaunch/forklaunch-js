@@ -79,6 +79,9 @@ config_struct!(
 
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) is_iam_configured: bool,
+
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) with_mappers: bool,
     }
 );
 
@@ -175,6 +178,9 @@ impl InitializableManifestConfig for WorkerManifestData {
                 }
                 return false;
             }),
+
+            // Default to false, will be set by CLI flag
+            with_mappers: false,
             ..self.clone()
         }
     }

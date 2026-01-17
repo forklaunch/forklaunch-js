@@ -1,11 +1,10 @@
 use std::{io::Write, thread::sleep, time::Duration};
 
 use anyhow::{Context, Result, bail};
-use reqwest::blocking::Client;
 use serde::Deserialize;
 use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
 
-use crate::constants::get_api_url;
+use crate::constants::get_platform_management_api_url;
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct DeploymentStatus {
@@ -27,22 +26,22 @@ pub(crate) struct DeploymentEndpoints {
 }
 
 pub(crate) fn stream_deployment_status(
-    token: &str,
+    _token: &str, // Kept for API compatibility but unused - http_client handles auth
     deployment_id: &str,
     stdout: &mut StandardStream,
 ) -> Result<()> {
-    let client = Client::new();
-    let url = format!("{}/deployments/{}", get_api_url(), deployment_id);
+    use crate::core::http_client;
 
+    let url = format!(
+        "{}/deployments/{}",
+        crate::constants::get_platform_management_api_url(),
+        deployment_id
+    );
     let mut last_phase: Option<String> = None;
 
     loop {
         // Polling deployment status
-        let response = client
-            .get(&url)
-            .bearer_auth(token)
-            .send()
-            .with_context(|| "Failed to fetch deployment status")?;
+        let response = http_client::get(&url)?;
 
         if !response.status().is_success() {
             let response_text = response

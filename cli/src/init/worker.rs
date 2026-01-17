@@ -115,11 +115,15 @@ fn generate_basic_worker(
     } else {
         vec!["consts.ts".to_string()]
     };
-    let ignore_dirs = if !manifest_data.is_database_enabled {
+    let mut ignore_dirs = if !manifest_data.is_database_enabled {
         vec!["seeder".to_string(), "seed.data.ts".to_string()]
     } else {
         vec![]
     };
+    // Skip mappers directory if with_mappers is false
+    if !manifest_data.with_mappers {
+        ignore_dirs.push("mappers".to_string());
+    }
     let preserve_files = vec![];
 
     let mut rendered_templates = generate_with_template(
@@ -639,6 +643,12 @@ impl CliCommand for WorkerCommand {
                     .help("The description of the worker"),
             )
             .arg(
+                Arg::new("mappers")
+                    .long("mappers")
+                    .help("Generate mapper files for entity/DTO transformation")
+                    .action(ArgAction::SetTrue),
+            )
+            .arg(
                 Arg::new("dryrun")
                     .short('n')
                     .long("dryrun")
@@ -858,6 +868,9 @@ impl CliCommand for WorkerCommand {
                 }
                 return false;
             }),
+
+            // Generate mappers if --mappers flag is set
+            with_mappers: matches.get_flag("mappers"),
         };
 
         let dryrun = matches.get_flag("dryrun");

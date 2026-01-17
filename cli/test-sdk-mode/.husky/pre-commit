@@ -1,0 +1,3 @@
+cd src/modules
+pnpm sort-package-json */package.json
+pnpm lint-staged --relative

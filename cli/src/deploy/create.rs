@@ -4,19 +4,17 @@ use anyhow::{Context, Result, bail};
 use base64::{Engine as _, engine::general_purpose};
 use clap::{Arg, ArgMatches, Command};
 use dialoguer::{Input, theme::ColorfulTheme};
-use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
 use serde_json;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 use crate::{
     CliCommand,
-    constants::{ERROR_FAILED_TO_SEND_REQUEST, PLATFORM_UI_URL, get_api_url},
+    constants::{ERROR_FAILED_TO_SEND_REQUEST, PLATFORM_UI_URL, get_platform_management_api_url},
     core::{
         base_path::{RequiredLocation, find_app_root_path},
         command::command,
         manifest::application::ApplicationManifestData,
-        token::get_token,
     },
 };
 
@@ -60,6 +58,7 @@ struct DeploymentErrorDetail {
 
 #[derive(Debug, Deserialize)]
 struct MissingKey {
+    #[serde(rename = "key")]
     name: String,
     component: Option<ComponentMetadata>,
 }
@@ -231,8 +230,6 @@ impl CliCommand for CreateCommand {
             })?
             .clone();
 
-        let token = get_token()?;
-
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)).set_bold(true))?;
         writeln!(
             stdout,
@@ -255,8 +252,9 @@ impl CliCommand for CreateCommand {
             ),
         };
 
-        let url = format!("{}/deployments", get_api_url());
-        let client = Client::new();
+        let url = format!("{}/deployments", get_platform_management_api_url());
+
+        use crate::core::http_client;
 
         let mut retry_count = 0;
         const MAX_RETRIES: u32 = 3;
@@ -269,11 +267,7 @@ impl CliCommand for CreateCommand {
 
             eprintln!("[DEBUG] POST {} with body: {:?}", url, request_body);
 
-            let response = client
-                .post(&url)
-                .bearer_auth(&token)
-                .json(&request_body)
-                .send()
+            let response = http_client::post(&url, serde_json::to_value(&request_body)?)
                 .with_context(|| ERROR_FAILED_TO_SEND_REQUEST)?;
 
             let status = response.status();
@@ -295,7 +289,7 @@ impl CliCommand for CreateCommand {
                 if wait {
                     writeln!(stdout)?;
                     crate::deploy::utils::stream_deployment_status(
-                        &token,
+                        "", // Token not needed - http_client handles auth
                         &deployment.id,
                         &mut stdout,
                     )?;
@@ -457,14 +451,14 @@ impl CliCommand for CreateCommand {
                             let update_url = if detail.component_type == "worker" {
                                 format!(
                                     "{}/workers/{}/environments/{}/variables",
-                                    get_api_url(),
+                                    get_platform_management_api_url(),
                                     detail.id,
                                     environment
                                 )
                             } else {
                                 format!(
                                     "{}/services/{}/environments/{}/variables",
-                                    get_api_url(),
+                                    get_platform_management_api_url(),
                                     detail.id,
                                     environment
                                 )
@@ -480,12 +474,9 @@ impl CliCommand for CreateCommand {
                             stdout.flush()?;
                             stdout.reset()?;
 
-                            let update_response = client
-                                .put(&update_url)
-                                .bearer_auth(&token)
-                                .json(&update_body)
-                                .send()
-                                .with_context(|| "Failed to save environment variables")?;
+                            let update_response =
+                                http_client::put(&update_url, serde_json::to_value(&update_body)?)
+                                    .with_context(|| "Failed to save environment variables")?;
 
                             if !update_response.status().is_success() {
                                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;

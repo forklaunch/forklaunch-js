@@ -102,7 +102,12 @@ fn generate_basic_service(
     };
 
     let ignore_files = vec![];
-    let ignore_dirs = vec![];
+    // Skip mappers directory if with_mappers is false
+    let ignore_dirs = if !manifest_data.with_mappers {
+        vec!["mappers".to_string()]
+    } else {
+        vec![]
+    };
     let preserve_files = vec![];
 
     let mut rendered_templates = generate_with_template(
@@ -305,7 +310,13 @@ pub(crate) fn generate_service_package_json(
         keywords: Some(vec![]),
         license: Some(manifest_data.license.to_string()),
         author: Some(manifest_data.author.to_string()),
-        main: main_override,
+        main: main_override.or_else(|| {
+            if manifest_data.is_iam {
+                Some("dist/index.js".to_string())
+            } else {
+                None
+            }
+        }),
         types: types_override.unwrap_or(None),
         types_versions: None,
         scripts: Some(if let Some(scripts) = scripts_override {
@@ -581,6 +592,12 @@ impl CliCommand for ServiceCommand {
                     .help("The description of the service"),
             )
             .arg(
+                Arg::new("mappers")
+                    .long("mappers")
+                    .help("Generate mapper files for entity/DTO transformation")
+                    .action(ArgAction::SetTrue),
+            )
+            .arg(
                 Arg::new("dryrun")
                     .short('n')
                     .long("dryrun")
@@ -748,6 +765,9 @@ impl CliCommand for ServiceCommand {
                 }
                 return false;
             }),
+
+            // Generate mappers if --mappers flag is set, or always for billing/IAM variants
+            with_mappers: matches.get_flag("mappers"),
         };
 
         let dryrun = matches.get_flag("dryrun");
