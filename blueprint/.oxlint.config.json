@@ -1,14 +1,24 @@
 {
-  "deny": {
-    "lint": "recommended"
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "perf": "warn",
+    "style": "off",
+    "pedantic": "off"
   },
-  "exclude": [
+  "ignorePatterns": [
     "**/tests/**/*",
     "**/dist/**/*",
     "**/lib/**/*",
     "**/node_modules/**/*"
   ],
-  "files": {
-    "include": ["**/*.ts", "**/*.tsx"]
-  }
+  "overrides": [
+    {
+      "files": ["**/*.ts", "**/*.tsx"],
+      "rules": {
+        "no-async-endpoint-handlers": "off",
+        "no-await-in-loop": "off"
+      }
+    }
+  ]
 }
