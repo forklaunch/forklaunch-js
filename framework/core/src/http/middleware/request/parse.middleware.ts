@@ -64,6 +64,10 @@ export function parse<
       ? 'none'
       : globalOptions?.validation?.request);
 
+  // Preserve the original body before schema validation for HMAC verification
+  // This ensures HMAC is computed on the body as sent by the client, not after property reordering
+  req._rawBody = req.body;
+
   const request = {
     params: req.params,
     query: req.query,

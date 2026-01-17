@@ -156,6 +156,9 @@ export interface ForklaunchRequest<
   /** Parsed versions */
   _parsedVersions: string[] | number;
 
+  /** Raw body before schema validation (for HMAC verification) */
+  _rawBody?: unknown;
+
   /** Global options */
   _globalOptions: () => ExpressLikeRouterOptions<SV, SessionSchema> | undefined;
 }

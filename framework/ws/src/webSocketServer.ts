@@ -159,7 +159,7 @@ export class ForklaunchWebSocketServer<
       const forklaunchWs = this.enhanceWebSocket(ws);
 
       // Emit connection with the enhanced WebSocket
-      this.emit('connection', forklaunchWs, request);
+      super.emit('connection', forklaunchWs, request);
     });
   }
 

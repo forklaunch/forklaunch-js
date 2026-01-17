@@ -13,17 +13,23 @@ export function requestMapper<
   DomainSchema extends IdiomaticSchema<SV>,
   Entity,
   AdditionalArgs extends unknown[] = []
->(
-  schemaValidator: SV,
-  domainSchema: DomainSchema,
-  _entityConstructor: Constructor<Entity>,
+>({
+  schemaValidator,
+  domainSchema,
+  // eslint-disable-next-line
+  _entityConstructor,
+  mapperDefinition
+}: {
+  schemaValidator: SV;
+  domainSchema: DomainSchema;
+  _entityConstructor: Constructor<Entity>;
   mapperDefinition: {
     toEntity: (
       dto: Schema<DomainSchema, SV>,
       ...args: AdditionalArgs
     ) => Promise<Entity>;
-  }
-): {
+  };
+}): {
   schema: DomainSchema;
 } & typeof mapperDefinition {
   const sv = schemaValidator as SchemaValidator;
@@ -52,17 +58,23 @@ export function responseMapper<
   DomainSchema extends IdiomaticSchema<SV>,
   Entity,
   AdditionalArgs extends unknown[] = []
->(
-  schemaValidator: SV,
-  domainSchema: DomainSchema,
-  _entityConstructor: Constructor<Entity>,
+>({
+  schemaValidator,
+  domainSchema,
+  // eslint-disable-next-line
+  _entityConstructor,
+  mapperDefinition
+}: {
+  schemaValidator: SV;
+  domainSchema: DomainSchema;
+  _entityConstructor: Constructor<Entity>;
   mapperDefinition: {
     toDto: (
       entity: Entity,
       ...args: AdditionalArgs
     ) => Promise<Schema<DomainSchema, SV>>;
-  }
-): Prettify<
+  };
+}): Prettify<
   {
     schema: DomainSchema;
   } & typeof mapperDefinition

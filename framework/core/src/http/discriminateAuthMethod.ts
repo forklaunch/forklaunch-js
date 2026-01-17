@@ -1,3 +1,4 @@
+import { safeStringify } from '@forklaunch/common';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { JWK, JWTPayload, jwtVerify } from 'jose';
 import { ParsedQs } from 'qs';
@@ -5,6 +6,7 @@ import { createHmacToken } from './createHmacToken';
 import { isBasicAuthMethod } from './guards/isBasicAuthMethod';
 import { isHmacMethod } from './guards/isHmacMethod';
 import { isJwtAuthMethod } from './guards/isJwtAuthMethod';
+import { OpenTelemetryCollector } from './telemetry/openTelemetryCollector';
 import { VersionedRequests } from './types/apiDefinition.types';
 import {
   AuthMethods,
@@ -12,6 +14,7 @@ import {
   DecodeResource,
   ParamsDictionary
 } from './types/contractDetails.types';
+import { MetricsDefinition } from './types/openTelemetryCollector.types';
 
 const DEFAULT_TTL = process.env.JWKS_TTL
   ? parseInt(process.env.JWKS_TTL)
@@ -109,7 +112,8 @@ export async function discriminateAuthMethod<
     ReqHeaders,
     VersionedReqs,
     BaseRequest
-  >
+  >,
+  openTelemetryCollector?: OpenTelemetryCollector<MetricsDefinition>
 ): Promise<
   | {
       type: 'basic';
@@ -226,16 +230,35 @@ export async function discriminateAuthMethod<
           signature: string;
           secretKey: string;
         }) => {
-          return (
-            createHmacToken({
+          const computedSignature = createHmacToken({
+            method,
+            path,
+            body,
+            timestamp,
+            nonce,
+            secretKey
+          });
+
+          const isValid = computedSignature === signature;
+
+          if (!isValid) {
+            const errorInfo = {
               method,
               path,
-              body,
-              timestamp,
+              timestamp: timestamp.toISOString(),
               nonce,
-              secretKey
-            }) === signature
-          );
+              receivedSignature: signature,
+              computedSignature
+            };
+
+            openTelemetryCollector?.debug('[HMAC Verification Failed]', {
+              ...errorInfo,
+              bodyType: body ? typeof body : 'undefined',
+              body: body ? safeStringify(body) : 'undefined'
+            });
+          }
+
+          return isValid;
         }
       }
     };
