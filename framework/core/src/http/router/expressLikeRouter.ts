@@ -284,8 +284,7 @@ export class ForklaunchExpressLikeRouter<
   RouterSession extends SessionObject<SV>,
   FetchMap extends Record<string, unknown> = EmptyObject,
   Sdk extends Record<string, unknown> = EmptyObject
-> implements ConstrainedForklaunchRouter<SV, RouterHandler>
-{
+> implements ConstrainedForklaunchRouter<SV, RouterHandler> {
   requestHandler!: RouterHandler;
   routers: ForklaunchRouter<SV>[] = [];
   routes: ForklaunchRoute<SV>[] = [];

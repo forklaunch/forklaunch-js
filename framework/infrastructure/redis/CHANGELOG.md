@@ -1,5 +1,14 @@
 # @forklaunch/infrastructure-redis
 
+## 0.4.33
+
+### Patch Changes
+
+- Mapper instantiation syntax more readable and express port added. Also removed error schema thrash in live sdk
+- Updated dependencies
+  - @forklaunch/core@0.17.0
+  - @forklaunch/common@0.6.24
+
 ## 0.4.32
 
 ### Patch Changes

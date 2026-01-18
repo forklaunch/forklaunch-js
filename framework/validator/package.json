@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/validator",
-  "version": "0.10.23",
+  "version": "0.10.24",
   "description": "Schema validator for ForkLaunch components.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {

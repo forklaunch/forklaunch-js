@@ -1,5 +1,11 @@
 # @forklaunch/testing
 
+## 0.0.13
+
+### Patch Changes
+
+- Mapper instantiation syntax more readable and express port added. Also removed error schema thrash in live sdk
+
 ## 0.0.12
 
 ### Patch Changes

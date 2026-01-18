@@ -41,10 +41,10 @@ import {
 } from './types/websocketMiddleware.types';
 
 export class Router<
-    SV extends AnySchemaValidator,
-    BasePath extends `/${string}`,
-    RouterSession extends SessionObject<SV>
-  >
+  SV extends AnySchemaValidator,
+  BasePath extends `/${string}`,
+  RouterSession extends SessionObject<SV>
+>
   extends ForklaunchExpressLikeRouter<
     SV,
     BasePath,

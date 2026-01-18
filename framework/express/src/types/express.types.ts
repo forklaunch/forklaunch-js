@@ -50,7 +50,9 @@ export interface MiddlewareRequest<
   LocalsObj extends Record<string, unknown>,
   Versions extends string,
   SessionSchema extends Record<string, unknown>
-> extends ForklaunchRequest<
+>
+  extends
+    ForklaunchRequest<
       SV,
       P,
       ReqBody,
@@ -96,7 +98,9 @@ export interface MiddlewareResponse<
   ResHeaders extends Record<string, string>,
   LocalsObj extends Record<string, unknown> = Record<string, unknown>,
   Versions extends string = string
-> extends ForklaunchResponse<
+>
+  extends
+    ForklaunchResponse<
       ExpressResponse,
       ResBodyMap,
       ResHeaders,

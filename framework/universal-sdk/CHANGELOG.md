@@ -1,5 +1,13 @@
 # @forklaunch/universal-sdk
 
+## 0.7.24
+
+### Patch Changes
+
+- Mapper instantiation syntax more readable and express port added. Also removed error schema thrash in live sdk
+- Updated dependencies
+  - @forklaunch/common@0.6.24
+
 ## 0.7.23
 
 ### Patch Changes

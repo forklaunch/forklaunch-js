@@ -1,5 +1,18 @@
 # @forklaunch/express
 
+## 0.10.0
+
+### Minor Changes
+
+- Mapper instantiation syntax more readable and express port added. Also removed error schema thrash in live sdk
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.17.0
+  - @forklaunch/validator@0.10.24
+  - @forklaunch/common@0.6.24
+
 ## 0.9.33
 
 ### Patch Changes
