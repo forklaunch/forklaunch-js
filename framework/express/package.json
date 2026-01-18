@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/express",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "Forklaunch framework for express.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -38,7 +38,6 @@
   "dependencies": {
     "@forklaunch/common": "workspace:*",
     "@forklaunch/core": "workspace:*",
-    "@forklaunch/fastmcp-fork": "^1.0.5",
     "@forklaunch/validator": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.25.2",
     "@scalar/express-api-reference": "^0.8.34",
@@ -47,6 +46,7 @@
     "busboy": "^1.6.0",
     "cors": "^2.8.5",
     "express": "^5.2.1",
+    "fastmcp": "^3.26.9",
     "multer": "2.0.2",
     "qs": "^6.14.1",
     "range-parser": "^1.2.1",

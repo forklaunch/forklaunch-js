@@ -1,5 +1,15 @@
 # @forklaunch/ws
 
+## 0.1.4
+
+### Patch Changes
+
+- package version bump
+- Updated dependencies
+  - @forklaunch/validator@0.10.25
+  - @forklaunch/common@0.6.25
+  - @forklaunch/core@0.17.1
+
 ## 0.1.3
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.6.25
+
+### Patch Changes
+
+- package version bump
+
 ## 0.6.24
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 import { isNever, isRecord, safeStringify } from '@forklaunch/common';
-import { FastMCP } from '@forklaunch/fastmcp-fork';
 import { string, ZodSchemaValidator, ZodType } from '@forklaunch/validator/zod';
+import { FastMCP } from 'fastmcp';
 import http from 'http';
 import {
   discriminateBody,

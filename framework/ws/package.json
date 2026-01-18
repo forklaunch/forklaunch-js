@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/ws",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Typed framework for ws, by ForkLaunch.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -39,7 +39,6 @@
     "@asyncapi/parser": "^3.4.0",
     "@forklaunch/common": "workspace:*",
     "@forklaunch/core": "workspace:*",
-    "@forklaunch/fastmcp-fork": "^1.0.5",
     "@forklaunch/validator": "workspace:*",
     "@types/ws": "^8.18.1",
     "ws": "^8.19.0"
