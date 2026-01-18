@@ -1,9 +1,11 @@
 import {
+  ContractDetailsOrMiddlewareOrTypedHandler,
   extractRouteHandlers,
   HeadersObject,
   Body as HttpBody,
   Method,
   MetricsDefinition,
+  MiddlewareOrMiddlewareWithTypedHandler,
   OpenTelemetryCollector,
   ParamsObject,
   QueryObject,
@@ -152,28 +154,51 @@ export const port = <
   >,
   RouterHandler
 >(
-  params: Parameters<
-    typeof extractRouteHandlers<
-      SV,
-      Name,
-      ContractMethod,
-      Path,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      LocalsObj,
-      VersionedApi,
-      RouterSession,
-      BaseRequest,
-      BaseResponse,
-      NextFunction,
-      Auth,
-      RouterHandler
-    >
-  >
+  options: {
+    method: ContractMethod;
+    path: Path;
+    basePath: string;
+    schemaValidator: SV;
+    openTelemetryCollector?: OpenTelemetryCollector<MetricsDefinition>;
+  },
+  contractDetailsOrMiddlewareOrTypedHandler: ContractDetailsOrMiddlewareOrTypedHandler<
+    SV,
+    Name,
+    ContractMethod,
+    Path,
+    P,
+    ResBodyMap,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    ResHeaders,
+    LocalsObj,
+    VersionedApi,
+    BaseRequest,
+    BaseResponse,
+    NextFunction,
+    RouterSession,
+    Auth
+  >,
+  ...middlewareOrMiddlewareAndTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+    SV,
+    Name,
+    ContractMethod,
+    Path,
+    P,
+    ResBodyMap,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    ResHeaders,
+    LocalsObj,
+    VersionedApi,
+    BaseRequest,
+    BaseResponse,
+    NextFunction,
+    RouterSession,
+    Auth
+  >[]
 ): MiddlewareHandler[] => {
   const handlers = extractRouteHandlers<
     SV,
@@ -194,7 +219,11 @@ export const port = <
     NextFunction,
     Auth,
     RouterHandler
-  >(...params);
+  >({
+    ...options,
+    contractDetailsOrMiddlewareOrTypedHandler,
+    middlewareOrMiddlewareAndTypedHandler
+  });
 
   return [
     ...(handlers.middlewares as MiddlewareHandler[]),

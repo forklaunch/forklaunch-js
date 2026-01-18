@@ -16,27 +16,25 @@ describe('port function integration', () => {
 
   beforeAll(async () => {
     // defined handlers using port()
-    const handlers = port([
+    const handlers = port(
       {
         method: 'get',
         path: '/',
         basePath: '',
         schemaValidator: typeboxSchemaValidator,
-        openTelemetryCollector: openTelemetryCollector,
-        contractDetailsOrMiddlewareOrTypedHandler: {
-          name: 'TestPort',
-          summary: 'Test Port Function',
-          responses: {
-            200: string
-          }
-        },
-        middlewareOrMiddlewareAndTypedHandler: [
-          async (_req, res) => {
-            res.status(200).send('Hello Port');
-          }
-        ]
+        openTelemetryCollector: openTelemetryCollector
+      },
+      {
+        name: 'TestPort',
+        summary: 'Test Port Function',
+        responses: {
+          200: string
+        }
+      },
+      async (_req, res) => {
+        res.status(200).send('Hello Port');
       }
-    ]);
+    );
 
     // Mount handlers to the app
     app.get('/port-test', ...handlers);

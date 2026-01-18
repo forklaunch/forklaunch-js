@@ -1,9 +1,11 @@
 import {
+  ContractDetailsOrMiddlewareOrTypedHandler,
   extractRouteHandlers,
   HeadersObject,
   Body as HttpBody,
   Method,
   MetricsDefinition,
+  MiddlewareOrMiddlewareWithTypedHandler,
   OpenTelemetryCollector,
   ParamsObject,
   QueryObject,
@@ -14,6 +16,7 @@ import {
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { RequestHandler } from 'express';
+import { ParsedQs } from 'qs';
 import { Application } from './src/expressApplication';
 import { Router } from './src/expressRouter';
 import { checkout } from './src/handlers/checkout';
@@ -199,28 +202,51 @@ export const port = <
   >,
   RouterHandler
 >(
-  params: Parameters<
-    typeof extractRouteHandlers<
-      SV,
-      Name,
-      ContractMethod,
-      Path,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      LocalsObj,
-      VersionedApi,
-      RouterSession,
-      BaseRequest,
-      BaseResponse,
-      NextFunction,
-      Auth,
-      RouterHandler
-    >
-  >
+  options: {
+    method: ContractMethod;
+    path: Path;
+    basePath: string;
+    schemaValidator: SV;
+    openTelemetryCollector?: OpenTelemetryCollector<MetricsDefinition>;
+  },
+  contractDetailsOrMiddlewareOrTypedHandler: ContractDetailsOrMiddlewareOrTypedHandler<
+    SV,
+    Name,
+    ContractMethod,
+    Path,
+    P,
+    ResBodyMap,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    ResHeaders,
+    LocalsObj,
+    VersionedApi,
+    BaseRequest,
+    BaseResponse,
+    NextFunction,
+    RouterSession,
+    Auth
+  >,
+  ...middlewareOrMiddlewareAndTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+    SV,
+    Name,
+    ContractMethod,
+    Path,
+    P,
+    ResBodyMap,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    ResHeaders,
+    LocalsObj,
+    VersionedApi,
+    BaseRequest,
+    BaseResponse,
+    NextFunction,
+    RouterSession,
+    Auth
+  >[]
 ): RequestHandler[] => {
   const handlers = extractRouteHandlers<
     SV,
@@ -241,10 +267,17 @@ export const port = <
     NextFunction,
     Auth,
     RouterHandler
-  >(...params);
+  >({
+    ...options,
+    contractDetailsOrMiddlewareOrTypedHandler,
+    middlewareOrMiddlewareAndTypedHandler
+  });
 
   return [
     ...(handlers.middlewares as RequestHandler[]),
     handlers.controllerHandler as unknown as RequestHandler
   ];
 };
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type _Shim = ParsedQs;

@@ -137,7 +137,7 @@ export class Application<
         this.schemaValidator,
         [],
         [],
-        this,
+        this as ForklaunchRouter<SV>,
         this.openapiConfiguration
       );
       fs.writeFileSync(
@@ -233,7 +233,7 @@ export class Application<
         this.schemaValidator,
         openApiServerUrls,
         openApiServerDescriptions,
-        this,
+        this as ForklaunchRouter<SV>,
         this.openapiConfiguration
       );
 
