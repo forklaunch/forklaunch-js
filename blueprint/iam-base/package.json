@@ -40,7 +40,7 @@
     "seed": "DOTENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' mikro-orm seeder:run",
     "start": "node --import=tsx dist/server.js",
     "start:bun": "bun run migrate:up && bun dist/server.js",
-    "test": "vitest --passWithNoTests"
+    "test": "NODE_OPTIONS='--import=tsx' vitest --passWithNoTests"
   },
   "dependencies": {
     "@forklaunch/blueprint-core": "workspace:*",
@@ -75,7 +75,8 @@
     "depcheck": "^1.4.7",
     "prettier": "^3.8.0",
     "testcontainers": "^11.11.0",
-    "typedoc": "^0.28.16"
+    "typedoc": "^0.28.16",
+    "vitest": "^4.0.9"
   },
   "mikro-orm": {
     "configPaths": [

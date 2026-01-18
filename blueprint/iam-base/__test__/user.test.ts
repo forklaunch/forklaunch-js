@@ -120,11 +120,77 @@ describe('User Routes E2E Tests with PostgreSQL Container', () => {
             '123e4567-e89b-12d3-a456-426614174000',
             '456e7890-e89b-12d3-a456-426614174001'
           ]
+        },
+        headers: {
+          authorization: TEST_TOKENS.AUTH
         }
       });
 
       expect(response.code).toBe(200);
       expect(Array.isArray(response.response)).toBe(true);
+    });
+
+    it('should filter users by organization at service level', async () => {
+      if (!orm) throw new Error('ORM not initialized');
+      const em = orm.em.fork();
+
+      const org1Id = '111e1111-e11b-11d1-a111-111111111111';
+      const org2Id = '222e2222-e22b-22d2-a222-222222222222';
+      const user1Id = 'aaa11111-e11b-11d1-a111-111111111111';
+      const user2Id = 'bbb22222-e22b-22d2-a222-222222222222';
+
+      const org1 = em.create('Organization', {
+        id: org1Id,
+        name: 'Organization 1',
+        domain: 'org1.example.com',
+        subscription: 'sub-org1-test',
+        status: 'ACTIVE'
+      });
+
+      const org2 = em.create('Organization', {
+        id: org2Id,
+        name: 'Organization 2',
+        domain: 'org2.example.com',
+        subscription: 'sub-org2-test',
+        status: 'ACTIVE'
+      });
+
+      const user1 = em.create('User', {
+        id: user1Id,
+        email: 'user1@org1.com',
+        firstName: 'User',
+        lastName: 'One',
+        phoneNumber: '+1234567890',
+        subscription: 'sub-user1-test',
+        organization: org1
+      });
+
+      const user2 = em.create('User', {
+        id: user2Id,
+        email: 'user2@org2.com',
+        firstName: 'User',
+        lastName: 'Two',
+        phoneNumber: '+0987654321',
+        subscription: 'sub-user2-test',
+        organization: org2
+      });
+
+      await em.persistAndFlush([org1, org2, user1, user2]);
+
+      const { ci, tokens } = await import('../bootstrapper');
+      const UserService = ci.resolve(tokens.UserService);
+
+      const result = await UserService.getBatchUsers(
+        {
+          ids: [user1Id, user2Id],
+          organization: { id: org1Id }
+        } as Parameters<typeof UserService.getBatchUsers>[0],
+        em
+      );
+
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe(user1Id);
+      expect(result[0].email).toBe('user1@org1.com');
     });
   });
 
@@ -132,7 +198,10 @@ describe('User Routes E2E Tests with PostgreSQL Container', () => {
     it('should update a user successfully', async () => {
       const { updateUserRoute } = await import('../api/routes/user.routes');
       const response = await updateUserRoute.sdk.updateUser({
-        body: mockUpdateUserData
+        body: mockUpdateUserData,
+        headers: {
+          authorization: TEST_TOKENS.HMAC
+        }
       });
 
       expect(response.code).toBe(200);
@@ -148,7 +217,10 @@ describe('User Routes E2E Tests with PostgreSQL Container', () => {
       const batchUpdateData = [mockUpdateUserData];
 
       const response = await updateBatchUsersRoute.sdk.updateBatchUsers({
-        body: batchUpdateData
+        body: batchUpdateData,
+        headers: {
+          authorization: TEST_TOKENS.HMAC
+        }
       });
 
       expect(response.code).toBe(200);
@@ -160,7 +232,10 @@ describe('User Routes E2E Tests with PostgreSQL Container', () => {
     it('should delete a user successfully', async () => {
       const { deleteUserRoute } = await import('../api/routes/user.routes');
       const response = await deleteUserRoute.sdk.deleteUser({
-        params: { id: '123e4567-e89b-12d3-a456-426614174000' }
+        params: { id: '123e4567-e89b-12d3-a456-426614174000' },
+        headers: {
+          authorization: TEST_TOKENS.HMAC
+        }
       });
 
       expect(response.code).toBe(200);
@@ -179,6 +254,9 @@ describe('User Routes E2E Tests with PostgreSQL Container', () => {
             '123e4567-e89b-12d3-a456-426614174000',
             '456e7890-e89b-12d3-a456-426614174001'
           ]
+        },
+        headers: {
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -221,4 +299,3 @@ describe('User Routes E2E Tests with PostgreSQL Container', () => {
     });
   });
 });
-// Test unsymlink

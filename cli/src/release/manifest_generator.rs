@@ -499,7 +499,15 @@ pub(crate) fn generate_release_manifest(
                 name: format!("{}-worker", project.name),
                 status: None,
                 config: ServiceConfigEnum::Worker(worker_config),
-                build_context: Some(manifest.modules_path.clone()),
+                build_context: if Path::new(&manifest.modules_path)
+                    .join(&project.name)
+                    .join("Dockerfile")
+                    .exists()
+                {
+                    Some(format!("{}/{}", manifest.modules_path, project.name))
+                } else {
+                    Some(manifest.modules_path.clone())
+                },
                 dockerfile: manifest
                     .dockerfile
                     .clone()
@@ -529,7 +537,7 @@ pub(crate) fn generate_release_manifest(
     }
 
     let infrastructure = InfrastructureConfig {
-        regions: vec![], // Default region
+        regions: vec![],
         resources: if resources.is_empty() {
             None
         } else {

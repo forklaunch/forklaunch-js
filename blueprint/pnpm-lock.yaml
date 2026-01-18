@@ -460,8 +460,16 @@ importers:
         specifier: ^11.11.0
         version: 11.11.0
       typedoc:
+<<<<<<< HEAD
         specifier: ^0.28.16
         version: 0.28.16(typescript@5.9.3)
+=======
+        specifier: ^0.28.14
+        version: 0.28.14(typescript@5.9.3)
+      vitest:
+        specifier: ^4.0.9
+        version: 4.0.9(@types/node@24.10.1)(tsx@4.20.6)(yaml@2.8.1)
+>>>>>>> main
 
   iam-better-auth:
     dependencies:
@@ -563,8 +571,16 @@ importers:
         specifier: ^11.11.0
         version: 11.11.0
       typedoc:
+<<<<<<< HEAD
         specifier: ^0.28.16
         version: 0.28.16(typescript@5.9.3)
+=======
+        specifier: ^0.28.14
+        version: 0.28.14(typescript@5.9.3)
+      vitest:
+        specifier: ^4.0.9
+        version: 4.0.9(@types/node@24.10.1)(tsx@4.20.6)(yaml@2.8.1)
+>>>>>>> main
 
   implementations/billing/base:
     dependencies:
