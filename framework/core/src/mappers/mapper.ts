@@ -15,14 +15,14 @@ export function requestMapper<
   AdditionalArgs extends unknown[] = []
 >({
   schemaValidator,
-  domainSchema,
+  schema,
   // eslint-disable-next-line
-  _entityConstructor,
+  entity,
   mapperDefinition
 }: {
   schemaValidator: SV;
-  domainSchema: DomainSchema;
-  _entityConstructor: Constructor<Entity>;
+  schema: DomainSchema;
+  entity: Constructor<Entity>;
   mapperDefinition: {
     toEntity: (
       dto: Schema<DomainSchema, SV>,
@@ -35,13 +35,13 @@ export function requestMapper<
   const sv = schemaValidator as SchemaValidator;
   return {
     ...mapperDefinition,
-    schema: domainSchema,
+    schema,
 
     toEntity: async (
       dto: Schema<DomainSchema, SV>,
       ...args: AdditionalArgs
     ) => {
-      const parsedSchema = sv.parse(sv.schemify(domainSchema), dto);
+      const parsedSchema = sv.parse(sv.schemify(schema), dto);
       if (!parsedSchema.ok) {
         throw new Error(prettyPrintParseErrors(parsedSchema.errors, 'DTO'));
       }
@@ -60,14 +60,14 @@ export function responseMapper<
   AdditionalArgs extends unknown[] = []
 >({
   schemaValidator,
-  domainSchema,
+  schema,
   // eslint-disable-next-line
-  _entityConstructor,
+  entity,
   mapperDefinition
 }: {
   schemaValidator: SV;
-  domainSchema: DomainSchema;
-  _entityConstructor: Constructor<Entity>;
+  schema: DomainSchema;
+  entity: Constructor<Entity>;
   mapperDefinition: {
     toDto: (
       entity: Entity,
@@ -82,11 +82,11 @@ export function responseMapper<
   const sv = schemaValidator as SchemaValidator;
   return {
     ...mapperDefinition,
-    schema: domainSchema,
+    schema,
 
     toDto: async (entity: Entity, ...args: AdditionalArgs) => {
       const domain = await mapperDefinition.toDto(entity, ...args);
-      const parsedSchema = sv.parse(sv.schemify(domainSchema), domain);
+      const parsedSchema = sv.parse(sv.schemify(schema), domain);
       if (!parsedSchema.ok) {
         throw new Error(prettyPrintParseErrors(parsedSchema.errors, 'DTO'));
       }

@@ -1221,7 +1221,7 @@ type SdkResponse<
   ResBodyMap extends Record<number, unknown>,
   ResHeaders extends Record<string, unknown> | unknown
 > = ({
-  [K in keyof ForklaunchResErrors]: {
+  [K in keyof Omit<ForklaunchResErrors, keyof ResBodyMap>]: {
     code: K;
     contentType: 'text/plain';
     response: ForklaunchResErrors[K];
@@ -1232,7 +1232,7 @@ type SdkResponse<
     contentType: ExtractContentType<SV, ResBodyMap[K]>;
     response: ExtractResponseBody<SV, ResBodyMap[K]>;
   } & (unknown extends ResHeaders ? unknown : { headers: ResHeaders });
-})[keyof (ForklaunchResErrors & ResBodyMap)];
+})[keyof (Omit<ForklaunchResErrors, keyof ResBodyMap> & ResBodyMap)];
 
 /**
  * Represents the default error types for responses.
