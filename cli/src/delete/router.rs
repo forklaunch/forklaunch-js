@@ -188,6 +188,7 @@ impl CliCommand for RouterCommand {
                 .join("seeders")
                 .join(format!("{}Record.seeder.ts", camel_case_name)),
             router_base_path
+                .join("domain")
                 .join("services")
                 .join(format!("{}.service.ts", camel_case_name)),
             router_base_path
@@ -267,7 +268,7 @@ impl CliCommand for RouterCommand {
         let _ = delete_import_statement(
             &allocator,
             &mut registrations_program,
-            &format!("./services/{}.service", camel_case_name),
+            &format!("./domain/services/{}.service", camel_case_name),
         )?;
         let new_registrations_content = delete_from_registrations_ts_config_injector(
             &allocator,

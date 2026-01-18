@@ -16,7 +16,7 @@ import { WorkerProcessFunction, WorkerFailureHandler } from '@forklaunch/interfa
 import { EntityManager, ForkOptions, MikroORM } from "@mikro-orm/core";
 import mikroOrmOptionsConfig from './mikro-orm.config';{{/is_database_enabled}}{{#is_worker}}
 import { {{pascal_case_name}}EventRecord } from "./persistence/entities/{{camel_case_name}}EventRecord.entity";{{/is_worker}}
-import { Base{{pascal_case_name}}Service } from "./services/{{camel_case_name}}.service";
+import { Base{{pascal_case_name}}Service } from "./domain/services/{{camel_case_name}}.service";
 
 //! instantiates the config injector
 const configInjector = createConfigInjector(SchemaValidator(), {
