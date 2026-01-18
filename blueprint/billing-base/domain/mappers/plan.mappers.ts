@@ -7,15 +7,15 @@ import { CurrencyEnum } from '../enum/currency.enum';
 import { PlanCadenceEnum } from '../enum/planCadence.enum';
 import { PlanSchemas } from '../schemas';
 
-export const CreatePlanMapper = requestMapper(
+export const CreatePlanMapper = requestMapper({
   schemaValidator,
-  PlanSchemas.CreatePlanSchema(
+  schema: PlanSchemas.CreatePlanSchema(
     PlanCadenceEnum,
     CurrencyEnum,
     BillingProviderEnum
   ),
-  Plan,
-  {
+  entity: Plan,
+  mapperDefinition: {
     toEntity: async (dto, em: EntityManager) => {
       return Plan.create(
         {
@@ -27,30 +27,34 @@ export const CreatePlanMapper = requestMapper(
       );
     }
   }
-);
+});
 
-export const UpdatePlanMapper = requestMapper(
+export const UpdatePlanMapper = requestMapper({
   schemaValidator,
-  PlanSchemas.UpdatePlanSchema(
+  schema: PlanSchemas.UpdatePlanSchema(
     PlanCadenceEnum,
     CurrencyEnum,
     BillingProviderEnum
   ),
-  Plan,
-  {
+  entity: Plan,
+  mapperDefinition: {
     toEntity: async (dto, em: EntityManager) => {
       return Plan.update(dto, em);
     }
   }
-);
+});
 
-export const PlanMapper = responseMapper(
+export const PlanMapper = responseMapper({
   schemaValidator,
-  PlanSchemas.PlanSchema(PlanCadenceEnum, CurrencyEnum, BillingProviderEnum),
-  Plan,
-  {
+  schema: PlanSchemas.PlanSchema(
+    PlanCadenceEnum,
+    CurrencyEnum,
+    BillingProviderEnum
+  ),
+  entity: Plan,
+  mapperDefinition: {
     toDto: async (entity: Plan) => {
       return await entity.read();
     }
   }
-);
+});

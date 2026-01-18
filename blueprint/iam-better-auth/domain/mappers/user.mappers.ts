@@ -7,15 +7,15 @@ import { User } from '../../persistence/entities/user.entity';
 import { UserSchemas } from '../schemas';
 import { RoleMapper } from './role.mappers';
 
-export const CreateUserMapper = requestMapper(
+export const CreateUserMapper = requestMapper({
   schemaValidator,
-  {
+  schema: {
     ...UserSchemas.CreateUserSchema,
     name: string,
     emailVerified: boolean
   },
-  User,
-  {
+  entity: User,
+  mapperDefinition: {
     toEntity: async (dto, em: EntityManager) => {
       return User.create(
         {
@@ -33,24 +33,24 @@ export const CreateUserMapper = requestMapper(
       );
     }
   }
-);
+});
 
-export const UpdateUserMapper = requestMapper(
+export const UpdateUserMapper = requestMapper({
   schemaValidator,
-  UserSchemas.UpdateUserSchema,
-  User,
-  {
+  schema: UserSchemas.UpdateUserSchema,
+  entity: User,
+  mapperDefinition: {
     toEntity: async (dto, em: EntityManager) => {
       return User.update(dto, em);
     }
   }
-);
+});
 
-export const UserMapper = responseMapper(
+export const UserMapper = responseMapper({
   schemaValidator,
-  UserSchemas.UserSchema,
-  User,
-  {
+  schema: UserSchemas.UserSchema,
+  entity: User,
+  mapperDefinition: {
     toDto: async (entity: User) => {
       return {
         ...(await entity.read()),
@@ -65,4 +65,4 @@ export const UserMapper = responseMapper(
       };
     }
   }
-);
+});

@@ -1,5 +1,13 @@
 # @forklaunch/implementation-billing-base
 
+## 0.9.2
+
+### Patch Changes
+
+- Mapper syntax fixed and package bump
+- Updated dependencies
+  - @forklaunch/interfaces-worker@0.7.8
+
 ## 0.9.1
 
 ### Patch Changes

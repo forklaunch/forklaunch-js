@@ -1,5 +1,13 @@
 # @forklaunch/implementation-iam-base
 
+## 0.8.8
+
+### Patch Changes
+
+- Mapper syntax fixed and package bump
+- Updated dependencies
+  - @forklaunch/interfaces-iam@0.8.8
+
 ## 0.8.7
 
 ### Patch Changes

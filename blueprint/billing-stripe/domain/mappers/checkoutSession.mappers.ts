@@ -6,11 +6,11 @@ import { CheckoutSession } from '../../persistence/entities/checkoutSession.enti
 import { StatusEnum } from '../enum/status.enum';
 import { CheckoutSessionSchemas } from '../schemas';
 
-export const CreateCheckoutSessionMapper = requestMapper(
+export const CreateCheckoutSessionMapper = requestMapper({
   schemaValidator,
-  CheckoutSessionSchemas.CreateCheckoutSessionSchema(StatusEnum),
-  CheckoutSession,
-  {
+  schema: CheckoutSessionSchemas.CreateCheckoutSessionSchema(StatusEnum),
+  entity: CheckoutSession,
+  mapperDefinition: {
     toEntity: async (
       dto,
       em: EntityManager,
@@ -27,13 +27,13 @@ export const CreateCheckoutSessionMapper = requestMapper(
       );
     }
   }
-);
+});
 
-export const UpdateCheckoutSessionMapper = requestMapper(
+export const UpdateCheckoutSessionMapper = requestMapper({
   schemaValidator,
-  CheckoutSessionSchemas.UpdateCheckoutSessionSchema(StatusEnum),
-  CheckoutSession,
-  {
+  schema: CheckoutSessionSchemas.UpdateCheckoutSessionSchema(StatusEnum),
+  entity: CheckoutSession,
+  mapperDefinition: {
     toEntity: async (
       dto,
       em: EntityManager,
@@ -48,13 +48,13 @@ export const UpdateCheckoutSessionMapper = requestMapper(
       );
     }
   }
-);
+});
 
-export const CheckoutSessionMapper = responseMapper(
+export const CheckoutSessionMapper = responseMapper({
   schemaValidator,
-  CheckoutSessionSchemas.CheckoutSessionSchema(StatusEnum),
-  CheckoutSession,
-  {
+  schema: CheckoutSessionSchemas.CheckoutSessionSchema(StatusEnum),
+  entity: CheckoutSession,
+  mapperDefinition: {
     toDto: async (entity: CheckoutSession) => {
       return {
         ...(await entity.read()),
@@ -62,4 +62,4 @@ export const CheckoutSessionMapper = responseMapper(
       };
     }
   }
-);
+});

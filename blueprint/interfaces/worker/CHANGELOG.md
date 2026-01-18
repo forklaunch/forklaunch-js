@@ -1,5 +1,11 @@
 # @forklaunch/interfaces-billing
 
+## 0.7.8
+
+### Patch Changes
+
+- Mapper syntax fixed and package bump
+
 ## 0.7.7
 
 ### Patch Changes

@@ -5,11 +5,11 @@ import Stripe from 'stripe';
 import { BillingPortal } from '../../persistence/entities/billingPortal.entity';
 import { BillingPortalSchemas } from '../schemas';
 
-export const CreateBillingPortalMapper = requestMapper(
+export const CreateBillingPortalMapper = requestMapper({
   schemaValidator,
-  BillingPortalSchemas.CreateBillingPortalSchema,
-  BillingPortal,
-  {
+  schema: BillingPortalSchemas.CreateBillingPortalSchema,
+  entity: BillingPortal,
+  mapperDefinition: {
     toEntity: async (
       dto,
       em: EntityManager,
@@ -26,13 +26,13 @@ export const CreateBillingPortalMapper = requestMapper(
       );
     }
   }
-);
+});
 
-export const UpdateBillingPortalMapper = requestMapper(
+export const UpdateBillingPortalMapper = requestMapper({
   schemaValidator,
-  BillingPortalSchemas.UpdateBillingPortalSchema,
-  BillingPortal,
-  {
+  schema: BillingPortalSchemas.UpdateBillingPortalSchema,
+  entity: BillingPortal,
+  mapperDefinition: {
     toEntity: async (
       dto,
       em: EntityManager,
@@ -47,13 +47,13 @@ export const UpdateBillingPortalMapper = requestMapper(
       );
     }
   }
-);
+});
 
-export const BillingPortalMapper = responseMapper(
+export const BillingPortalMapper = responseMapper({
   schemaValidator,
-  BillingPortalSchemas.BillingPortalSchema,
-  BillingPortal,
-  {
+  schema: BillingPortalSchemas.BillingPortalSchema,
+  entity: BillingPortal,
+  mapperDefinition: {
     toDto: async (entity: BillingPortal) => {
       return {
         ...(await entity.read()),
@@ -61,4 +61,4 @@ export const BillingPortalMapper = responseMapper(
       };
     }
   }
-);
+});

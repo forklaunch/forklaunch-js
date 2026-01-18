@@ -10,11 +10,11 @@ import { SampleWorkerEventRecord } from '../../persistence/entities/sampleWorker
 import { SampleWorkerSchema } from '../schemas/sampleWorker.schema';
 
 // RequestMapper function that maps the request schema to the entity
-export const SampleWorkerRequestMapper = requestMapper(
+export const SampleWorkerRequestMapper = requestMapper({
   schemaValidator,
-  SampleWorkerSchema,
-  SampleWorkerEventRecord,
-  {
+  schema: SampleWorkerSchema,
+  entity: SampleWorkerEventRecord,
+  mapperDefinition: {
     toEntity: async (dto) => {
       return SampleWorkerEventRecord.create({
         ...dto,
@@ -25,18 +25,18 @@ export const SampleWorkerRequestMapper = requestMapper(
       });
     }
   }
-);
+});
 
 // ResponseMapper function that maps the response schema to the entity
-export const SampleWorkerResponseMapper = responseMapper(
+export const SampleWorkerResponseMapper = responseMapper({
   schemaValidator,
-  {
+  schema: {
     message: string,
     processed: boolean,
     retryCount: number
   },
-  SampleWorkerEventRecord,
-  {
+  entity: SampleWorkerEventRecord,
+  mapperDefinition: {
     toDto: async (entity: SampleWorkerEventRecord) => {
       if (!entity.isInitialized()) {
         throw new Error('SampleWorkerEventRecord is not initialized');
@@ -44,7 +44,7 @@ export const SampleWorkerResponseMapper = responseMapper(
       return wrap(entity).toPOJO();
     }
   }
-);
+});
 
 // Exported types for backward compatibility
 export type SampleWorkerRequestDto = Parameters<
