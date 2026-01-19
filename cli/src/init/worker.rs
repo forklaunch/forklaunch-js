@@ -56,7 +56,7 @@ use crate::{
                 TSX_VERSION, TYPEBOX_VERSION, TYPEDOC_VERSION,
                 TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_JEST_VERSION,
                 TYPES_QS_VERSION, TYPES_UUID_VERSION, TYPESCRIPT_ESLINT_VERSION, UUID_VERSION,
-                PINO_VERSION,
+                PINO_VERSION, IOREDIS_VERSION,
                 VALIDATOR_VERSION, WORKER_BULLMQ_VERSION, WORKER_DATABASE_VERSION,
                 WORKER_INTERFACES_VERSION, WORKER_KAFKA_VERSION, WORKER_REDIS_VERSION, ZOD_VERSION,
                 project_clean_script, project_dev_local_worker_script, project_dev_server_script,
@@ -539,6 +539,12 @@ pub(crate) fn generate_worker_package_json(
                 } else {
                     None
                 },
+                pino: Some(PINO_VERSION.to_string()),
+                ioredis: if manifest_data.is_cache_enabled {
+                    Some(IOREDIS_VERSION.to_string())
+                } else {
+                    None
+                },
                 additional_deps: HashMap::new(),
             }
         }),
@@ -593,7 +599,7 @@ pub(crate) fn generate_worker_package_json(
                 },
                 types_pino: None,
                 types_ioredis: None,
-                pino: Some(PINO_VERSION.to_string()),
+                pino: None,
                 ioredis: None,
                 additional_deps: HashMap::new(),
             }

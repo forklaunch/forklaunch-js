@@ -479,6 +479,12 @@ pub(crate) fn generate_service_package_json(
                 } else {
                     None
                 },
+                pino: Some(PINO_VERSION.to_string()),
+                ioredis: if manifest_data.is_billing || manifest_data.is_cache_enabled {
+                    Some(IOREDIS_VERSION.to_string())
+                } else {
+                    None
+                },
                 additional_deps: HashMap::new(),
             }
         }),
@@ -525,12 +531,8 @@ pub(crate) fn generate_service_package_json(
                 types_uuid: Some(TYPES_UUID_VERSION.to_string()),
                 types_pino: None,
                 types_ioredis: None,
-                pino: Some(PINO_VERSION.to_string()),
-                ioredis: if manifest_data.is_billing || manifest_data.is_cache_enabled {
-                    Some(IOREDIS_VERSION.to_string())
-                } else {
-                    None
-                },
+                pino: None,
+                ioredis: None,
                 additional_deps: HashMap::new(),
             }
         }),

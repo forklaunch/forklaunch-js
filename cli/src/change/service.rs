@@ -366,7 +366,7 @@ fn change_infrastructure(
                     Some(INFRASTRUCTURE_REDIS_VERSION.to_string());
 
                 project_package_json
-                    .dev_dependencies
+                    .dependencies
                     .as_mut()
                     .unwrap()
                     .ioredis = Some(IOREDIS_VERSION.to_string());
@@ -558,7 +558,7 @@ fn change_infrastructure(
                     .forklaunch_infrastructure_redis = None;
 
                 project_package_json
-                    .dev_dependencies
+                    .dependencies
                     .as_mut()
                     .unwrap()
                     .ioredis = None;

@@ -190,6 +190,8 @@ pub(crate) struct ProjectDependencies {
     pub(crate) stripe: Option<String>,
     pub(crate) uuid: Option<String>,
     pub(crate) zod: Option<String>,
+    pub(crate) pino: Option<String>,
+    pub(crate) ioredis: Option<String>,
 
     pub(crate) additional_deps: HashMap<String, String>,
 }
@@ -329,6 +331,12 @@ impl Serialize for ProjectDependencies {
         }
         if let Some(ref v) = self.zod {
             map.serialize_entry("zod", v)?;
+        }
+        if let Some(ref v) = self.pino {
+            map.serialize_entry("pino", v)?;
+        }
+        if let Some(ref v) = self.ioredis {
+            map.serialize_entry("ioredis", v)?;
         }
 
         for (key, value) in &self.additional_deps {
@@ -511,6 +519,8 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
                         "stripe" => deps.stripe = Some(value),
                         "uuid" => deps.uuid = Some(value),
                         "zod" => deps.zod = Some(value),
+                        "pino" => deps.pino = Some(value),
+                        "ioredis" => deps.ioredis = Some(value),
                         _ => {
                             deps.additional_deps.insert(key, value);
                         }

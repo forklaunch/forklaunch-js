@@ -205,7 +205,7 @@ fn change_type(
             dependencies.forklaunch_infrastructure_redis =
                 Some(INFRASTRUCTURE_REDIS_VERSION.to_string());
             project_package_json
-                .dev_dependencies
+                .dependencies
                 .as_mut()
                 .unwrap()
                 .ioredis = Some(IOREDIS_VERSION.to_string());
@@ -330,7 +330,7 @@ fn change_type(
             dependencies.forklaunch_infrastructure_redis =
                 Some(INFRASTRUCTURE_REDIS_VERSION.to_string());
             project_package_json
-                .dev_dependencies
+                .dependencies
                 .as_mut()
                 .unwrap()
                 .ioredis = Some(IOREDIS_VERSION.to_string());
