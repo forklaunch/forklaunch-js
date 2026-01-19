@@ -64,8 +64,7 @@ use crate::{
                 PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT, SORT_PACKAGE_JSON_VERSION,
                 SQLITE3_VERSION, TS_JEST_VERSION, TS_NODE_VERSION, TSX_VERSION, TYPEBOX_VERSION,
                 TYPES_BUILD_SCRIPT, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION,
-                TYPES_IOREDIS_VERSION, TYPES_PINO_VERSION, TYPES_QS_VERSION, TYPES_UUID_VERSION,
-                TYPES_WATCH_SCRIPT,
+                TYPES_QS_VERSION, TYPES_UUID_VERSION, TYPES_WATCH_SCRIPT, PINO_VERSION,
                 TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_NATIVE_PREVIEW_VERSION, TYPESCRIPT_VERSION, UNIVERSAL_SDK_VERSION, UUID_VERSION,
                 VALIDATOR_VERSION, VITEST_VERSION, ZOD_VERSION, application_build_script,
                 application_clean_purge_script, application_clean_script, application_docs_script,
@@ -1088,11 +1087,11 @@ impl CliCommand for ApplicationCommand {
                             TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION.to_string(),
                         ),
                         types_qs: Some(TYPES_QS_VERSION.to_string()),
-                        types_pino: Some(TYPES_PINO_VERSION.to_string()),
+                        pino: Some(PINO_VERSION.to_string()),
                         ..Default::default()
                     }),
                     "monitoring" => Some(ProjectDevDependencies {
-                        types_pino: Some(TYPES_PINO_VERSION.to_string()),
+                        pino: Some(PINO_VERSION.to_string()),
                         ..Default::default()
                     }),
                     "universal-sdk" => Some(ProjectDevDependencies {
@@ -1103,7 +1102,7 @@ impl CliCommand for ApplicationCommand {
                         ),
                         types_express: Some(TYPES_EXPRESS_VERSION.to_string()),
                         types_qs: Some(TYPES_QS_VERSION.to_string()),
-                        types_pino: Some(TYPES_PINO_VERSION.to_string()),
+                        pino: Some(PINO_VERSION.to_string()),
                         ..Default::default()
                     }),
                     _ => None,

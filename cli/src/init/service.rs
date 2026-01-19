@@ -58,9 +58,9 @@ use crate::{
                 OXLINT_VERSION, PRETTIER_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT,
                 PROJECT_SEED_SCRIPT, SQLITE3_VERSION, STRIPE_VERSION, TESTING_VERSION, TSX_VERSION,
                 TYPEBOX_VERSION, TYPEDOC_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION,
-                TYPES_EXPRESS_VERSION, TYPES_IOREDIS_VERSION, TYPES_JEST_VERSION, TYPES_PINO_VERSION,
-                TYPES_QS_VERSION, TYPES_UUID_VERSION, TYPESCRIPT_ESLINT_VERSION, UUID_VERSION,
-                VALIDATOR_VERSION, ZOD_VERSION,
+                TYPES_EXPRESS_VERSION, TYPES_JEST_VERSION, TYPES_QS_VERSION, TYPES_UUID_VERSION,
+                TYPESCRIPT_ESLINT_VERSION, UUID_VERSION, VALIDATOR_VERSION, ZOD_VERSION,
+                PINO_VERSION,
                 project_clean_script, project_dev_local_script, project_dev_server_script,
                 project_format_script, project_lint_fix_script, project_lint_script,
                 project_migrate_script, project_start_server_script, project_test_script,
@@ -523,13 +523,10 @@ pub(crate) fn generate_service_package_json(
                 types_jest: Some(TYPES_JEST_VERSION.to_string()),
                 types_qs: Some(TYPES_QS_VERSION.to_string()),
                 types_uuid: Some(TYPES_UUID_VERSION.to_string()),
-                types_pino: Some(TYPES_PINO_VERSION.to_string()),
-                types_ioredis: if manifest_data.is_billing || manifest_data.is_cache_enabled {
-                    Some(TYPES_IOREDIS_VERSION.to_string())
-                } else {
-                    None
-                },
-                ioredis: if manifest_data.is_billing {
+                types_pino: None,
+                types_ioredis: None,
+                pino: Some(PINO_VERSION.to_string()),
+                ioredis: if manifest_data.is_billing || manifest_data.is_cache_enabled {
                     Some(IOREDIS_VERSION.to_string())
                 } else {
                     None

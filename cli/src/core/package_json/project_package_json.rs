@@ -564,6 +564,8 @@ pub(crate) struct ProjectDevDependencies {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) tsx: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) pino: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) ioredis: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) typedoc: Option<String>,
@@ -608,6 +610,7 @@ impl<'de> Deserialize<'de> for ProjectDevDependencies {
                     oxlint: None,
                     prettier: None,
                     tsx: None,
+                    pino: None,
                     ioredis: None,
                     typedoc: None,
                     typescript_eslint: None,
@@ -633,6 +636,8 @@ impl<'de> Deserialize<'de> for ProjectDevDependencies {
                         "oxlint" => deps.oxlint = Some(value),
                         "prettier" => deps.prettier = Some(value),
                         "tsx" => deps.tsx = Some(value),
+                        "pino" => deps.pino = Some(value),
+                        "ioredis" => deps.ioredis = Some(value),
                         "typedoc" => deps.typedoc = Some(value),
                         "typescript-eslint" => deps.typescript_eslint = Some(value),
                         _ => {
