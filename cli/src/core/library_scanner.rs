@@ -218,3 +218,131 @@ impl ImportScanner {
         None
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_scan_worker_controller_topology() {
+        // Test with actual sample-worker controller
+        let controller_path = Path::new("../blueprint/sample-worker/api/controllers/sampleWorker.controller.ts");
+        let modules_root = Path::new("../blueprint/sample-worker");
+        let package_json = Path::new("../blueprint/sample-worker/package.json");
+
+        // Skip test if files don't exist (e.g., in CI without blueprint)
+        if !controller_path.exists() {
+            eprintln!("Skipping test - controller not found at: {:?}", controller_path);
+            return;
+        }
+
+        let result = scan_route_topology(controller_path, modules_root, package_json);
+
+        assert!(result.is_ok(), "Topology scan should succeed");
+
+        let topology = result.unwrap();
+
+        // Serialize to JSON first (to avoid ownership issues)
+        let json = serde_json::to_string_pretty(&topology);
+        assert!(json.is_ok(), "Should serialize to JSON");
+
+        // Verify root node
+        assert_eq!(topology.name, "sampleWorker.controller");
+        assert_eq!(topology.node_type, "local");
+        assert!(topology.path.is_some());
+
+        // Verify it found dependencies
+        assert!(topology.children.is_some(), "Should have dependencies");
+        let children = topology.children.as_ref().unwrap();
+        assert!(!children.is_empty(), "Should have at least one dependency");
+
+        // Print topology for debugging
+        println!("=== TOPOLOGY SCAN RESULTS ===");
+        println!("Root: {} (type: {})", topology.name, topology.node_type);
+        println!("Dependencies found: {}", children.len());
+
+        for child in children {
+            println!("  - {} (type: {}, version: {:?})",
+                child.name,
+                child.node_type,
+                child.version
+            );
+        }
+
+        // Verify we found both npm and local dependencies
+        let has_npm = children.iter().any(|c| c.node_type == "npm");
+        let has_local = children.iter().any(|c| c.node_type == "local");
+
+        assert!(has_npm, "Should find npm dependencies");
+        assert!(has_local, "Should find local dependencies");
+
+        println!("\n=== JSON OUTPUT ===");
+        println!("{}", json.unwrap());
+    }
+
+    #[test]
+    fn test_scan_service_controller_topology() {
+        // Test with actual billing-stripe service controller
+        let controller_path = Path::new("../blueprint/billing-stripe/api/controllers/plan.controller.ts");
+        let modules_root = Path::new("../blueprint/billing-stripe");
+        let package_json = Path::new("../blueprint/billing-stripe/package.json");
+
+        // Skip test if files don't exist
+        if !controller_path.exists() {
+            eprintln!("Skipping test - controller not found at: {:?}", controller_path);
+            return;
+        }
+
+        let result = scan_route_topology(controller_path, modules_root, package_json);
+
+        assert!(result.is_ok(), "Topology scan should succeed for service");
+
+        let topology = result.unwrap();
+
+        // Verify root node
+        assert_eq!(topology.name, "plan.controller");
+        assert_eq!(topology.node_type, "local");
+        assert!(topology.path.is_some());
+
+        // Verify it found dependencies
+        assert!(topology.children.is_some(), "Service should have dependencies");
+        let children = topology.children.as_ref().unwrap();
+        assert!(!children.is_empty(), "Service should have at least one dependency");
+
+        println!("=== SERVICE TOPOLOGY SCAN ===");
+        println!("Root: {} (type: {})", topology.name, topology.node_type);
+        println!("Dependencies found: {}", children.len());
+
+        for child in children {
+            println!("  - {} (type: {}, version: {:?})",
+                child.name,
+                child.node_type,
+                child.version
+            );
+        }
+
+        // Services should have npm dependencies like @forklaunch packages
+        let has_forklaunch = children.iter().any(|c|
+            c.name.starts_with("@forklaunch")
+        );
+        assert!(has_forklaunch, "Service should use @forklaunch packages");
+    }
+
+    #[test]
+    fn test_extract_imports() {
+        let scanner = ImportScanner::new(Path::new("."), Path::new("package.json"));
+
+        let code = r#"
+            import { handlers } from '@forklaunch/blueprint-core';
+            import { ci, tokens } from '../../bootstrapper';
+            import type { SomeType } from './types';
+        "#;
+
+        let imports = scanner.extract_imports(code);
+
+        assert_eq!(imports.len(), 3);
+        assert!(imports.contains(&"@forklaunch/blueprint-core".to_string()));
+        assert!(imports.contains(&"../../bootstrapper".to_string()));
+        assert!(imports.contains(&"./types".to_string()));
+    }
+}

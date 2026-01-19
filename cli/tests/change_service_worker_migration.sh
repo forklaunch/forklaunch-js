@@ -41,9 +41,6 @@ if [ ! -f "src/modules/my-service/worker.ts" ]; then
   exit 1
 fi
 
-echo "Debug: Manifest content:"
-cat .forklaunch/manifest.toml
-
 echo "Migrating Worker to Service..."
 RUST_BACKTRACE=1 cargo run --release -- change worker \
   --path src/modules/my-service \
@@ -65,16 +62,26 @@ echo "Verifying Build..."
 # I'll include it.
 
 cd src/modules/my-service
+
+# Detect sed syntax (macOS vs Linux)
+if sed --version >/dev/null 2>&1; then
+  # GNU sed (Linux)
+  SED_INPLACE="sed -i"
+else
+  # BSD sed (macOS)
+  SED_INPLACE="sed -i ''"
+fi
+
 # Fix syntax error in server.ts (init service bug?)
 if [ -f "server.ts" ]; then
-  sed -i '' 's/openTelemetryCollector})/openTelemetryCollector)/' server.ts
+  $SED_INPLACE 's/openTelemetryCollector})/openTelemetryCollector)/' server.ts
 fi
 
 # Remove broken imports in registrations.ts (artifacts of migration)
 if [ -f "registrations.ts" ]; then
-  sed -i '' '/@forklaunch\/implementation-worker/d' registrations.ts
-  sed -i '' '/@forklaunch\/interfaces-worker/d' registrations.ts
-  sed -i '' '/@forklaunch\/infrastructure-redis/d' registrations.ts
+  $SED_INPLACE '/@forklaunch\/implementation-worker/d' registrations.ts
+  $SED_INPLACE '/@forklaunch\/interfaces-worker/d' registrations.ts
+  $SED_INPLACE '/@forklaunch\/infrastructure-redis/d' registrations.ts
 fi
 
 # Fix test-utils.ts missing imports (if any)
@@ -82,7 +89,7 @@ if [ -f "__test__/test-utils.ts" ]; then
   # Re-add MikroORM import if missing and used
   if grep -q "orm?: MikroORM" "__test__/test-utils.ts"; then
      if ! grep -q "import .*MikroORM" "__test__/test-utils.ts"; then
-       sed -i '' "1s/^/import { MikroORM } from '@mikro-orm\/core';\n/" "__test__/test-utils.ts"
+       $SED_INPLACE "1s/^/import { MikroORM } from '@mikro-orm\/core';\n/" "__test__/test-utils.ts"
      fi
   fi
 fi

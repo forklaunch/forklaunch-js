@@ -342,13 +342,48 @@ pub(crate) fn generate_release_manifest(
                     .collect()
             });
 
+            // Scan for controllers and their dependencies
+            let service_path = Path::new(&manifest.modules_path).join(&project.name);
+            let controllers = if service_path.join("api").join("routes").exists() {
+                if let Ok(routers) = detect_routers_from_service(&service_path) {
+                    if !routers.is_empty() {
+                        Some(
+                            routers
+                                .into_iter()
+                                .map(|router_name| ControllerDefinition {
+                                    id: router_name.clone(),
+                                    name: router_name.clone(),
+                                    path: format!("/{}", router_name),
+                                    routes: vec![],
+                                    topology: scan_route_topology(
+                                        &service_path.join("api").join("controllers").join(format!(
+                                            "{}.controller.ts",
+                                            router_name.to_case(Case::Camel)
+                                        )),
+                                        Path::new(&manifest.modules_path),
+                                        Path::new("package.json"),
+                                    )
+                                    .ok(),
+                                })
+                                .collect(),
+                        )
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            } else {
+                None
+            };
+
             services.push(ServiceDefinition {
                 id: project.name.clone(),
                 name: project.name.clone(),
                 status: None,
                 config: ServiceConfigEnum::Service(ServiceConfig {
                     service_type: ConfigType::Service,
-                    controllers: None,
+                    controllers,
                     integrations,
                     open_api_spec,
                     dependencies: deps,
@@ -652,5 +687,52 @@ fn add_resources_from_inventory(
             config: Some(config),
             service_name: Some(service_name.to_string()),
         });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_controller_definition_has_topology_field() {
+        // This test verifies that ControllerDefinition has the topology field
+        // and that it can be serialized with CodeNode
+
+        let controller = ControllerDefinition {
+            id: "test".to_string(),
+            name: "test".to_string(),
+            path: "/test".to_string(),
+            routes: vec![],
+            topology: Some(CodeNode {
+                name: "test-controller".to_string(),
+                node_type: "local".to_string(),
+                version: None,
+                children: Some(vec![
+                    CodeNode {
+                        name: "@forklaunch/core".to_string(),
+                        node_type: "npm".to_string(),
+                        version: Some("1.0.0".to_string()),
+                        children: None,
+                        path: None,
+                    }
+                ]),
+                path: Some("api/controllers/test.controller.ts".to_string()),
+            }),
+        };
+
+        // Verify it serializes correctly
+        let json = serde_json::to_string_pretty(&controller);
+        assert!(json.is_ok(), "Controller with topology should serialize");
+
+        let json_str = json.unwrap();
+        println!("=== CONTROLLER WITH TOPOLOGY JSON ===");
+        println!("{}", json_str);
+
+        // Verify topology field is in JSON
+        assert!(json_str.contains("\"topology\""), "JSON should contain topology field");
+        assert!(json_str.contains("\"@forklaunch/core\""), "JSON should contain npm dependency");
+        assert!(json_str.contains("\"type\": \"npm\""), "JSON should have npm type");
+        assert!(json_str.contains("\"children\""), "JSON should have children array");
     }
 }

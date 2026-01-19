@@ -191,7 +191,7 @@ fn update_service_and_interface_files(
     router_base_path: &Path,
     pascal_case_name: &str,
     camel_case_name: &str,
-    app_name: &str,
+    _app_name: &str,
     rendered_templates_cache: &mut RenderedTemplatesCache,
     stdout: &mut StandardStream,
 ) -> Result<()> {
