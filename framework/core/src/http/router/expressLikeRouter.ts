@@ -522,8 +522,11 @@ export class ForklaunchExpressLikeRouter<
    * @returns
    */
   #localParamRequest<Middleware, Route extends string>(
-    handlers: Middleware[],
+    middlewares: Middleware[],
     controllerHandler: Middleware,
+    contractDetails: PathParamHttpContractDetails<SV>,
+    requestSchema: unknown,
+    responseSchemas: unknown,
     version?: string
   ) {
     return async (
@@ -533,12 +536,16 @@ export class ForklaunchExpressLikeRouter<
         query?: Record<string, unknown>;
         headers?: Record<string, unknown>;
         body?: Record<string, unknown>;
+        executeMiddlewares?: boolean;
       }
     ) => {
-      let statusCode;
-      let responseMessage;
+      let statusCode: number | undefined;
+      let responseMessage: unknown;
       const responseHeaders: Record<string, unknown> = {};
+      const resEventHandlers: Record<string, ((...args: unknown[]) => void)[]> =
+        {};
 
+      // Create mock request with all properties needed for middleware chain
       const req = {
         params: request?.params ?? {},
         query: request?.query ?? {},
@@ -546,61 +553,101 @@ export class ForklaunchExpressLikeRouter<
         body:
           discriminateBody(this.schemaValidator, request?.body)?.schema ?? {},
         path: route,
-        version
+        originalPath: route,
+        method: 'GET',
+        version,
+        // Properties needed by middlewares
+        schemaValidator: this.schemaValidator,
+        contractDetails,
+        requestSchema,
+        openTelemetryCollector: this.openTelemetryCollector,
+        _globalOptions: () => this.routerOptions,
+        context: {
+          correlationId: 'local-fetch-' + Date.now(),
+          span: undefined
+        },
+        _rawBody: undefined as unknown,
+        _parsedVersions: undefined as unknown
       };
 
+      // Create mock response with all properties needed for middleware chain
       const res = {
+        statusCode: 200,
         status: (code: number) => {
           statusCode = code;
+          res.statusCode = code;
           return res;
         },
         send: (message: string) => {
           responseMessage = message;
+          resEventHandlers['finish']?.forEach((handler) => handler());
         },
         json: (body: Record<string, unknown>) => {
           responseMessage = body;
+          resEventHandlers['finish']?.forEach((handler) => handler());
         },
         jsonp: (body: Record<string, unknown>) => {
           responseMessage = body;
+          resEventHandlers['finish']?.forEach((handler) => handler());
         },
         setHeader: (key: string, value: string) => {
           responseHeaders[key] = value;
+          return res;
+        },
+        getHeader: (key: string) => responseHeaders[key],
+        type: (contentType: string) => {
+          responseHeaders['content-type'] = contentType;
+          return res;
         },
         sseEmitter: (
           generator: () => AsyncGenerator<Record<string, unknown>>
         ) => {
           responseMessage = generator();
         },
+        on: (event: string, handler: (...args: unknown[]) => void) => {
+          if (!resEventHandlers[event]) {
+            resEventHandlers[event] = [];
+          }
+          resEventHandlers[event].push(handler);
+          return res;
+        },
+        responseSchemas,
         version
       };
 
-      let cursor = handlers.shift() as unknown as (
-        req_: typeof req,
-        resp_: typeof res,
-        next: (err?: Error) => Promise<void> | void
-      ) => Promise<void> | void;
+      const executeMiddlewares = request?.executeMiddlewares ?? false;
 
-      if (cursor) {
-        for (const fn of handlers) {
-          await cursor(req, res, (err?: Error) => {
+      if (executeMiddlewares && middlewares.length > 0) {
+        // Execute middleware chain
+        const allHandlers = [...middlewares];
+        let cursor = allHandlers.shift() as unknown as (
+          req_: typeof req,
+          resp_: typeof res,
+          next: (err?: Error) => Promise<void> | void
+        ) => Promise<void> | void;
+
+        if (cursor) {
+          for (const fn of allHandlers) {
+            await cursor(req, res, (err?: Error) => {
+              if (err) {
+                throw err;
+              }
+              cursor = fn as unknown as (
+                req_: typeof req,
+                resp_: typeof res,
+                next: (err?: Error) => Promise<void> | void
+              ) => Promise<void> | void;
+            });
+          }
+          await cursor(req, res, async (err?: Error) => {
             if (err) {
               throw err;
             }
-
-            cursor = fn as unknown as (
-              req_: typeof req,
-              resp_: typeof res,
-              next: (err?: Error) => Promise<void> | void
-            ) => Promise<void> | void;
           });
         }
-        await cursor(req, res, async (err?: Error) => {
-          if (err) {
-            throw err;
-          }
-        });
       }
 
+      // Execute controller handler
       const cHandler = controllerHandler as unknown as (
         req_: typeof req,
         resp_: typeof res,
@@ -838,13 +885,19 @@ export class ForklaunchExpressLikeRouter<
               this.#localParamRequest(
                 middlewares as RouterHandler[],
                 controllerHandler as RouterHandler,
+                contractDetails as PathParamHttpContractDetails<SV>,
+                requestSchema,
+                responseSchemas,
                 version
               )
             ])
           )
         : this.#localParamRequest(
             middlewares as RouterHandler[],
-            controllerHandler as RouterHandler
+            controllerHandler as RouterHandler,
+            contractDetails as PathParamHttpContractDetails<SV>,
+            requestSchema,
+            responseSchemas
           )
     };
 
@@ -864,6 +917,9 @@ export class ForklaunchExpressLikeRouter<
                   this.#localParamRequest(
                     middlewares as RouterHandler[],
                     controllerHandler as RouterHandler,
+                    contractDetails as PathParamHttpContractDetails<SV>,
+                    requestSchema,
+                    responseSchemas,
                     version
                   )(`${this.basePath}${path}`, req)
               ])
@@ -876,7 +932,10 @@ export class ForklaunchExpressLikeRouter<
             }) =>
               this.#localParamRequest(
                 middlewares as RouterHandler[],
-                controllerHandler as RouterHandler
+                controllerHandler as RouterHandler,
+                contractDetails as PathParamHttpContractDetails<SV>,
+                requestSchema,
+                responseSchemas
               )(`${this.basePath}${path}`, req);
     }
     return this as this & {
