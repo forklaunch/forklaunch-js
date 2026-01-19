@@ -532,7 +532,7 @@ pub(crate) fn generate_service_package_json(
                 types_pino: None,
                 types_ioredis: None,
                 pino: None,
-                ioredis: None,
+                ioredis: Some(IOREDIS_VERSION.to_string()),
                 additional_deps: HashMap::new(),
             }
         }),
