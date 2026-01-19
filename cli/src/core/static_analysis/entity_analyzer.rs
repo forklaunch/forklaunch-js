@@ -117,14 +117,18 @@ impl EntityAnalyzer {
             _ => return None,
         };
 
-        // Skip if it's a method or doesn't have a type annotation
-        let type_annotation = prop_def.type_annotation.as_ref()?;
-
         // Analyze decorators to determine if this is a relation
         let (relation_type, is_nullable) = Self::analyze_decorators(&prop_def.decorators);
 
-        // Extract type information
-        let (type_name, is_collection) = Self::extract_type_info(&type_annotation.type_annotation);
+        // Extract type information from type annotation or initializer
+        let (type_name, is_collection) = if let Some(type_annotation) = &prop_def.type_annotation {
+            Self::extract_type_info(&type_annotation.type_annotation)
+        } else if let Some(value) = &prop_def.value {
+            // Try to infer from initializer (e.g., new Collection<Role>(this))
+            Self::extract_type_from_initializer(value)
+        } else {
+            return None;
+        };
 
         Some(EntityProperty {
             name,
@@ -220,6 +224,28 @@ impl EntityAnalyzer {
             _ => ("unknown".to_string(), false),
         }
     }
+
+    fn extract_type_from_initializer(value: &Expression) -> (String, bool) {
+        // Handle new Collection<Role>(this) expressions
+        if let Expression::NewExpression(new_expr) = value {
+            if let Expression::Identifier(id) = &new_expr.callee {
+                if id.name.as_str() == "Collection" {
+                    // Extract the type argument (Role from Collection<Role>)
+                    if let Some(type_args) = &new_expr.type_arguments {
+                        if let Some(first_arg) = type_args.params.first() {
+                            if let TSType::TSTypeReference(type_ref) = first_arg {
+                                if let TSTypeName::IdentifierReference(id) = &type_ref.type_name {
+                                    let type_name = format!("Collection<{}>", id.name.as_str());
+                                    return (type_name, true);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ("unknown".to_string(), false)
+    }
 }
 
 #[cfg(test)]
@@ -268,6 +294,11 @@ export class User extends SqlBaseEntity {
         let user_entity = &entities[0];
         assert_eq!(user_entity.name, "User");
         assert_eq!(user_entity.extends, Some("SqlBaseEntity".to_string()));
+
+        eprintln!("Found {} properties:", user_entity.properties.len());
+        for prop in &user_entity.properties {
+            eprintln!("  - {} : {} (relation: {:?})", prop.name, prop.type_name, prop.relation_type);
+        }
 
         // Check name property
         let name_prop = user_entity.properties.iter().find(|p| p.name == "name").unwrap();

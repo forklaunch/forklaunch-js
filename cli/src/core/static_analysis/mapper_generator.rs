@@ -223,7 +223,14 @@ export const {}ResponseMapper = responseMapper({{
                 &schema_prop.name
             };
 
+            // Try singular match first
             if let Some(entity_prop) = self.entity.properties.iter().find(|ep| ep.name == singular_name) {
+                return Some(entity_prop);
+            }
+
+            // Try plural form (e.g., roleIds -> roles)
+            let plural_name = format!("{}s", singular_name);
+            if let Some(entity_prop) = self.entity.properties.iter().find(|ep| ep.name == plural_name) {
                 return Some(entity_prop);
             }
         }
@@ -367,6 +374,7 @@ mod tests {
         let generator = MapperGenerator::new(schema, entity, "my-app".to_string(), false);
         let result = generator.generate_to_entity_body();
 
+        eprintln!("Generated body:\n{}", result);
         assert!(result.contains("organization: await em.findOne(Organization"));
         assert!(result.contains("roles: await em.findAll(Role"));
     }

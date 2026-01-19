@@ -104,39 +104,8 @@ impl<'a> Visit<'a> for WorkerConfigVisitor {
         if let PropertyKey::StaticIdentifier(ident) = &prop.key {
             let prop_name = ident.name.to_string();
 
-            // Check if this is WorkerOptions or a variant (BullMqWorkerOptions, KafkaWorkerOptions, etc.)
-            if prop_name == "WorkerOptions"
-                || prop_name.ends_with("WorkerOptions")
-            {
-                self.in_worker_options = true;
-                self.depth = 0;
-
-                // Visit the value to find factory or value
-                self.visit_expression(&prop.value);
-
-                self.in_worker_options = false;
-                self.depth = 0;
-            } else if self.in_worker_options {
-                // We're inside WorkerOptions, look for factory or value
-                if prop_name == "factory" {
-                    self.in_factory = true;
-                    self.depth = 0;
-
-                    self.visit_expression(&prop.value);
-
-                    self.in_factory = false;
-                    self.depth = 0;
-                } else if prop_name == "value" {
-                    // Direct value object
-                    self.in_factory = true; // Reuse the flag for value objects
-                    self.depth = 0;
-
-                    self.visit_expression(&prop.value);
-
-                    self.in_factory = false;
-                    self.depth = 0;
-                }
-            } else if self.in_factory && self.depth == 1 {
+            // First priority: extract config if we're in the right context
+            if self.in_factory && self.depth == 1 {
                 // We're at the top level of the factory return value or value object
                 // Extract configuration properties
                 let mut config = self.config.take().unwrap_or_else(|| WorkerConfig {
@@ -201,6 +170,40 @@ impl<'a> Visit<'a> for WorkerConfigVisitor {
                 }
 
                 self.config = Some(config);
+            } else if self.in_worker_options {
+                // We're inside WorkerOptions, look for factory or value
+                if prop_name == "factory" {
+                    self.in_factory = true;
+                    self.depth = 0;
+
+                    self.visit_expression(&prop.value);
+
+                    self.in_factory = false;
+                    self.depth = 0;
+                } else if prop_name == "value" {
+                    // Direct value object
+                    self.in_factory = true; // Reuse the flag for value objects
+                    self.depth = 0;
+
+                    self.visit_expression(&prop.value);
+
+                    self.in_factory = false;
+                    self.depth = 0;
+                }
+            } else {
+                // Check if this is WorkerOptions or a variant (BullMqWorkerOptions, KafkaWorkerOptions, etc.)
+                if prop_name == "WorkerOptions"
+                    || prop_name.ends_with("WorkerOptions")
+                {
+                    self.in_worker_options = true;
+                    self.depth = 0;
+
+                    // Visit the value to find factory or value
+                    self.visit_expression(&prop.value);
+
+                    self.in_worker_options = false;
+                    self.depth = 0;
+                }
             }
         }
 
