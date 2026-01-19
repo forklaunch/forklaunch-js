@@ -5,10 +5,6 @@ use std::{
 };
 
 use anyhow::{Context, Result};
-use fs_extra::{
-    dir::{self},
-    file::{self},
-};
 use termcolor::StandardStream;
 
 #[derive(Debug)]
@@ -29,13 +25,6 @@ pub(crate) fn move_template_files(
     dryrun: bool,
     stdout: &mut StandardStream,
 ) -> Result<()> {
-    let mut file_copy_options = file::CopyOptions::new();
-    file_copy_options.overwrite = false;
-    let mut dir_copy_options = dir::CopyOptions::new();
-    dir_copy_options.overwrite = false;
-    dir_copy_options.copy_inside = true;
-    dir_copy_options.content_only = false;
-
     for move_template in move_templates {
         if !dryrun {
             if exists(&move_template.path)? {

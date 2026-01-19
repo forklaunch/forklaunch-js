@@ -82,8 +82,8 @@ import {{ {}RequestSchema, {}ResponseSchema }} from '../schemas/{}.schema';"#,
             r#"// RequestMapper const that maps a request schema to an entity
 export const {}RequestMapper = requestMapper({{
   schemaValidator,
-  domainSchema: {}RequestSchema,
-  _entityConstructor: {}{},
+  schema: {}RequestSchema,
+  entity: {}{},
   mapperDefinition: {{
     toEntity: async (dto{}) => {{
       return {}{}.create({{
@@ -111,8 +111,8 @@ export const {}RequestMapper = requestMapper({{
             r#"// ResponseMapper const that maps an entity to a response schema
 export const {}ResponseMapper = responseMapper({{
   schemaValidator,
-  domainSchema: {}ResponseSchema,
-  _entityConstructor: {}{},
+  schema: {}ResponseSchema,
+  entity: {}{},
   mapperDefinition: {{
     toDto: async (entity: {}{}) => {{
       return await entity.read();
@@ -147,11 +147,12 @@ export const {}ResponseMapper = responseMapper({{
             lines.push("        retryCount: 0,".to_string());
         }
 
-        // Add auto-populated timestamp fields if they exist in entity
-        if self.has_entity_property("createdAt") {
+        // Add auto-populated timestamp fields if entity extends a base class or has these fields
+        // All entities that extend SqlBaseEntity, NoSqlBaseEntity, etc. have these fields
+        if self.entity.extends.is_some() || self.has_entity_property("createdAt") {
             lines.push("        createdAt: new Date(),".to_string());
         }
-        if self.has_entity_property("updatedAt") {
+        if self.entity.extends.is_some() || self.has_entity_property("updatedAt") {
             lines.push("        updatedAt: new Date()".to_string());
         } else {
             // Remove trailing comma from last line

@@ -149,14 +149,22 @@ fn add_mappers_to_router(
 
     // Create mappers directory
     let mappers_dir = router_base_path.join("domain").join("mappers");
+    let mapper_file = mappers_dir.join(format!("{}.mappers.ts", camel_case_name));
+
+    // Check if mapper file already exists
+    if mapper_file.exists() {
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+        writeln!(stdout, "⚠ Mapper file already exists: {}", mapper_file.display())?;
+        writeln!(stdout, "⚠ Skipping mapper generation to preserve custom logic")?;
+        stdout.reset()?;
+        bail!("Mapper file already exists. Remove it manually if you want to regenerate.");
+    }
 
     if !dryrun {
         fs::create_dir_all(&mappers_dir)?;
     }
 
     // Write mapper file
-    let mapper_file = mappers_dir.join(format!("{}.mappers.ts", camel_case_name));
-
     rendered_templates_cache.insert(
         mapper_file.to_string_lossy(),
         RenderedTemplate {
@@ -172,6 +180,172 @@ fn add_mappers_to_router(
 
     // Update controller to import mappers instead of schemas
     update_controller_imports(router_base_path, &pascal_case_name, &camel_case_name, rendered_templates_cache, stdout)?;
+
+    // Update service and interface files to use DTOs
+    update_service_and_interface_files(router_base_path, &pascal_case_name, &camel_case_name, &manifest_data.app_name, rendered_templates_cache, stdout)?;
+
+    Ok(())
+}
+
+fn update_service_and_interface_files(
+    router_base_path: &Path,
+    pascal_case_name: &str,
+    camel_case_name: &str,
+    app_name: &str,
+    rendered_templates_cache: &mut RenderedTemplatesCache,
+    stdout: &mut StandardStream,
+) -> Result<()> {
+    // Update interface file
+    let interface_file = router_base_path
+        .join("domain")
+        .join("interfaces")
+        .join(format!("{}.interface.ts", camel_case_name));
+
+    if interface_file.exists() {
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
+        writeln!(stdout, "Updating interface file: {}", interface_file.display())?;
+        stdout.reset()?;
+
+        let content = match rendered_templates_cache.get(&interface_file)? {
+            Some(template) => template.content.clone(),
+            None => fs::read_to_string(&interface_file)
+                .with_context(|| format!("Failed to read interface file: {}", interface_file.display()))?,
+        };
+
+        // Add a comment about mappers instead of modifying the interface
+        let mut updated_content = content;
+
+        // Check if this was generated without mappers by looking for Schema import
+        if updated_content.contains("import { Schema } from '@forklaunch/validator';") {
+            // Find the interface comment and add mapper info before it
+            let lines: Vec<&str> = updated_content.lines().collect();
+            let mut new_lines = Vec::new();
+            let mut added_mapper_comment = false;
+
+            for line in lines {
+                // Detect the interface definition comment
+                if !added_mapper_comment && line.starts_with("// Interface that defines") {
+                    // Add comment block about mappers
+                    new_lines.push("// ============================================================================".to_string());
+                    new_lines.push("// MAPPERS GENERATED!".to_string());
+                    new_lines.push("// ============================================================================".to_string());
+                    new_lines.push(format!("// Mapper files have been generated in domain/mappers/{}.mappers.ts", camel_case_name));
+                    new_lines.push("//".to_string());
+                    new_lines.push("// To use mappers with type safety, update this interface to use DTO types:".to_string());
+                    new_lines.push("//".to_string());
+                    new_lines.push(format!("//   import {{ {}RequestDto, {}ResponseDto }} from '../types/{}.types';", pascal_case_name, pascal_case_name, camel_case_name));
+                    new_lines.push("//".to_string());
+                    new_lines.push("//   Then update the method signature to:".to_string());
+                    new_lines.push(format!("//     {}Post: (dto: {}RequestDto) => Promise<{}ResponseDto>;", camel_case_name, pascal_case_name, pascal_case_name));
+                    new_lines.push("//".to_string());
+                    new_lines.push("// The current schema-based interface is preserved to avoid breaking changes.".to_string());
+                    new_lines.push("// ============================================================================".to_string());
+                    new_lines.push(String::new());
+                    added_mapper_comment = true;
+                }
+
+                new_lines.push(line.to_string());
+            }
+
+            updated_content = new_lines.join("\n");
+        }
+
+        rendered_templates_cache.insert(
+            interface_file.to_string_lossy(),
+            RenderedTemplate {
+                path: interface_file.clone(),
+                content: updated_content,
+                context: None,
+            },
+        );
+
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+        writeln!(stdout, "✓ Updated interface file")?;
+        stdout.reset()?;
+    }
+
+    // Update service file
+    let service_file = router_base_path
+        .join("domain")
+        .join("services")
+        .join(format!("{}.service.ts", camel_case_name));
+
+    if service_file.exists() {
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
+        writeln!(stdout, "Updating service file: {}", service_file.display())?;
+        stdout.reset()?;
+
+        let content = match rendered_templates_cache.get(&service_file)? {
+            Some(template) => template.content.clone(),
+            None => fs::read_to_string(&service_file)
+                .with_context(|| format!("Failed to read service file: {}", service_file.display()))?,
+        };
+
+        let mut updated_content = content;
+
+        // Check if this service was generated without mappers
+        if updated_content.contains("import { Schema } from '@forklaunch/validator';") {
+            // Replace the inline mapping logic header with mapper usage instructions
+            let lines: Vec<&str> = updated_content.lines().collect();
+            let mut new_lines = Vec::new();
+            let mut in_old_comment_block = false;
+            let mut added_mapper_comment = false;
+
+            for line in lines {
+                // Skip the old inline mapping header comment block (lines 60-72 in the example)
+                if line.trim() == "// ============================================================================" && !added_mapper_comment {
+                    in_old_comment_block = true;
+
+                    // Replace with new comment
+                    new_lines.push("    // ============================================================================".to_string());
+                    new_lines.push("    // MAPPERS GENERATED!".to_string());
+                    new_lines.push("    // ============================================================================".to_string());
+                    new_lines.push(format!("    // Mapper files have been generated in domain/mappers/{}.mappers.ts", camel_case_name));
+                    new_lines.push("    //".to_string());
+                    new_lines.push("    // To use the mappers, replace the inline mapping code below with:".to_string());
+                    new_lines.push("    //".to_string());
+                    new_lines.push(format!("    //   const entity = await {}RequestMapper.toEntity(data, this.entityManager);", pascal_case_name));
+                    new_lines.push("    //   await this.entityManager.persistAndFlush(entity);".to_string());
+                    new_lines.push(format!("    //   return {}ResponseMapper.toDto(entity);", pascal_case_name));
+                    new_lines.push("    //".to_string());
+                    new_lines.push("    // You'll also need to:".to_string());
+                    new_lines.push("    //   1. Update imports to use DTO types from '../types/*.types'".to_string());
+                    new_lines.push(format!("    //   2. Import mappers from '../mappers/{}.mappers'", camel_case_name));
+                    new_lines.push("    //   3. Change method signature to use DTOs instead of schema types".to_string());
+                    new_lines.push("    //".to_string());
+                    new_lines.push("    // The inline code below is preserved to avoid breaking your custom logic.".to_string());
+                    added_mapper_comment = true;
+                    continue;
+                }
+
+                // Skip lines in the old comment block
+                if in_old_comment_block {
+                    if line.trim().starts_with("// Map from request data") {
+                        in_old_comment_block = false;
+                        new_lines.push(line.to_string());
+                    }
+                    continue;
+                }
+
+                new_lines.push(line.to_string());
+            }
+
+            updated_content = new_lines.join("\n");
+        }
+
+        rendered_templates_cache.insert(
+            service_file.to_string_lossy(),
+            RenderedTemplate {
+                path: service_file.clone(),
+                content: updated_content,
+                context: None,
+            },
+        );
+
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+        writeln!(stdout, "✓ Updated service file")?;
+        stdout.reset()?;
+    }
 
     Ok(())
 }
