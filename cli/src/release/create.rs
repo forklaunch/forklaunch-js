@@ -22,7 +22,7 @@ use super::{
 };
 use crate::{
     CliCommand,
-    constants::{ERROR_FAILED_TO_SEND_REQUEST, get_platform_management_api_url},
+    constants::get_platform_management_api_url,
     core::{
         ast::infrastructure::{
             env::find_all_env_vars,

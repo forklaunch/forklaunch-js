@@ -64,7 +64,7 @@ use crate::{
         name::validate_name,
         package_json::{
             application_package_json::ApplicationPackageJson,
-            package_json_constants::{INFRASTRUCTURE_REDIS_VERSION, INFRASTRUCTURE_S3_VERSION},
+            package_json_constants::{INFRASTRUCTURE_REDIS_VERSION, INFRASTRUCTURE_S3_VERSION, TYPES_IOREDIS_VERSION},
             project_package_json::ProjectPackageJson,
         },
         removal_template::{RemovalTemplate, remove_template_files},
@@ -365,6 +365,12 @@ fn change_infrastructure(
                     .forklaunch_infrastructure_redis =
                     Some(INFRASTRUCTURE_REDIS_VERSION.to_string());
 
+                project_package_json
+                    .dev_dependencies
+                    .as_mut()
+                    .unwrap()
+                    .types_ioredis = Some(TYPES_IOREDIS_VERSION.to_string());
+
                 manifest_data.projects.iter_mut().for_each(|project| {
                     if project.name == manifest_data.service_name {
                         project.resources.as_mut().unwrap().cache =
@@ -550,6 +556,12 @@ fn change_infrastructure(
                     .as_mut()
                     .unwrap()
                     .forklaunch_infrastructure_redis = None;
+
+                project_package_json
+                    .dev_dependencies
+                    .as_mut()
+                    .unwrap()
+                    .types_ioredis = None;
 
                 manifest_data.projects.iter_mut().for_each(|project| {
                     if project.name == manifest_data.service_name {

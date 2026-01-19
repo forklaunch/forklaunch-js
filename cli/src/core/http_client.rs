@@ -125,11 +125,13 @@ pub fn put(url: &str, body: Value) -> Result<Response> {
 }
 
 /// Helper to make a DELETE request with authentication
+#[allow(dead_code)]
 pub fn delete(url: &str) -> Result<Response> {
     make_authenticated_request(Method::DELETE, url, None)
 }
 
 /// Helper to make a PATCH request with authentication
+#[allow(dead_code)]
 pub fn patch(url: &str, body: Value) -> Result<Response> {
     make_authenticated_request(Method::PATCH, url, Some(body))
 }

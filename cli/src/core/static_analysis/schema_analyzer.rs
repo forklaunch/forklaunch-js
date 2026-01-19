@@ -1,14 +1,17 @@
+use std::{fs::read_to_string, path::Path};
+
 use anyhow::{Context, Result};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::*;
 use oxc_parser::{Parser, ParserReturn};
 use oxc_span::SourceType;
-use std::{fs::read_to_string, path::Path};
 
 #[derive(Debug, Clone)]
 pub struct SchemaProperty {
     pub name: String,
+    #[allow(dead_code)]
     pub type_name: String,
+    #[allow(dead_code)]
     pub is_optional: bool,
     pub is_array: bool,
 }
@@ -31,9 +34,7 @@ impl SchemaAnalyzer {
         let source_type = SourceType::from_path(path).unwrap_or_default();
 
         let ParserReturn {
-            program,
-            errors,
-            ..
+            program, errors, ..
         } = Parser::new(&allocator, &source, source_type).parse();
 
         if !errors.is_empty() {
@@ -47,7 +48,9 @@ impl SchemaAnalyzer {
             if let Statement::ExportNamedDeclaration(export_decl) = stmt {
                 if let Some(Declaration::VariableDeclaration(var_decl)) = &export_decl.declaration {
                     for declarator in &var_decl.declarations {
-                        if let Some(schema) = Self::extract_schema_from_declarator(declarator, &source) {
+                        if let Some(schema) =
+                            Self::extract_schema_from_declarator(declarator, &source)
+                        {
                             schemas.push(schema);
                         }
                     }
@@ -83,17 +86,16 @@ impl SchemaAnalyzer {
         Some(SchemaDefinition { name, properties })
     }
 
-    fn extract_properties_from_expression(
-        expr: &Expression,
-        source: &str,
-    ) -> Vec<SchemaProperty> {
+    fn extract_properties_from_expression(expr: &Expression, source: &str) -> Vec<SchemaProperty> {
         match expr {
             Expression::ObjectExpression(obj_expr) => {
                 let mut properties = Vec::new();
 
                 for prop in &obj_expr.properties {
                     if let ObjectPropertyKind::ObjectProperty(obj_prop) = prop {
-                        if let Some(schema_prop) = Self::extract_property_from_object_property(obj_prop, source) {
+                        if let Some(schema_prop) =
+                            Self::extract_property_from_object_property(obj_prop, source)
+                        {
                             properties.push(schema_prop);
                         }
                     }
@@ -122,7 +124,9 @@ impl SchemaAnalyzer {
 
         for prop in &obj_expr.properties {
             if let ObjectPropertyKind::ObjectProperty(obj_prop) = prop {
-                if let Some(schema_prop) = Self::extract_property_from_object_property(obj_prop, source) {
+                if let Some(schema_prop) =
+                    Self::extract_property_from_object_property(obj_prop, source)
+                {
                     properties.push(schema_prop);
                 }
             }
@@ -143,7 +147,8 @@ impl SchemaAnalyzer {
         };
 
         // Analyze the property value to determine type
-        let (type_name, is_optional, is_array) = Self::analyze_property_value(&obj_prop.value, source);
+        let (type_name, is_optional, is_array) =
+            Self::analyze_property_value(&obj_prop.value, source);
 
         Some(SchemaProperty {
             name,
@@ -183,8 +188,14 @@ impl SchemaAnalyzer {
                                         // array(optional(string))
                                         if let Expression::Identifier(callee) = &call.callee {
                                             if callee.name.as_str() == "optional" {
-                                                if let Some(Argument::Identifier(inner)) = call.arguments.first() {
-                                                    return (inner.name.as_str().to_string(), true, true);
+                                                if let Some(Argument::Identifier(inner)) =
+                                                    call.arguments.first()
+                                                {
+                                                    return (
+                                                        inner.name.as_str().to_string(),
+                                                        true,
+                                                        true,
+                                                    );
                                                 }
                                             }
                                         }
@@ -214,16 +225,20 @@ impl SchemaAnalyzer {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::fs::write;
+
     use tempfile::tempdir;
+
+    use super::*;
 
     #[test]
     fn test_parse_simple_schema() {
         let dir = tempdir().unwrap();
         let schema_path = dir.path().join("user.schema.ts");
 
-        write(&schema_path, r#"
+        write(
+            &schema_path,
+            r#"
 import { string, number, optional, array } from '@forklaunch/validator';
 
 export const UserRequestSchema = {
@@ -239,25 +254,42 @@ export const UserResponseSchema = {
   email: string,
   createdAt: date
 };
-"#).unwrap();
+"#,
+        )
+        .unwrap();
 
         let schemas = SchemaAnalyzer::parse_schema_file(&schema_path).unwrap();
 
         assert_eq!(schemas.len(), 2);
 
-        let request_schema = schemas.iter().find(|s| s.name == "UserRequestSchema").unwrap();
+        let request_schema = schemas
+            .iter()
+            .find(|s| s.name == "UserRequestSchema")
+            .unwrap();
         assert_eq!(request_schema.properties.len(), 4);
 
-        let name_prop = request_schema.properties.iter().find(|p| p.name == "name").unwrap();
+        let name_prop = request_schema
+            .properties
+            .iter()
+            .find(|p| p.name == "name")
+            .unwrap();
         assert_eq!(name_prop.type_name, "string");
         assert!(!name_prop.is_optional);
         assert!(!name_prop.is_array);
 
-        let age_prop = request_schema.properties.iter().find(|p| p.name == "age").unwrap();
+        let age_prop = request_schema
+            .properties
+            .iter()
+            .find(|p| p.name == "age")
+            .unwrap();
         assert_eq!(age_prop.type_name, "number");
         assert!(age_prop.is_optional);
 
-        let roles_prop = request_schema.properties.iter().find(|p| p.name == "roles").unwrap();
+        let roles_prop = request_schema
+            .properties
+            .iter()
+            .find(|p| p.name == "roles")
+            .unwrap();
         assert_eq!(roles_prop.type_name, "string");
         assert!(roles_prop.is_array);
     }

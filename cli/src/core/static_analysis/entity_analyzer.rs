@@ -1,9 +1,10 @@
+use std::{fs::read_to_string, path::Path};
+
 use anyhow::{Context, Result};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::*;
 use oxc_parser::{Parser, ParserReturn};
 use oxc_span::SourceType;
-use std::{fs::read_to_string, path::Path};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum RelationType {
@@ -17,7 +18,9 @@ pub enum RelationType {
 pub struct EntityProperty {
     pub name: String,
     pub type_name: String,
+    #[allow(dead_code)]
     pub is_nullable: bool,
+    #[allow(dead_code)]
     pub is_collection: bool,
     pub relation_type: Option<RelationType>,
 }
@@ -25,6 +28,7 @@ pub struct EntityProperty {
 #[derive(Debug, Clone)]
 pub struct EntityDefinition {
     pub name: String,
+    #[allow(dead_code)]
     pub extends: Option<String>,
     pub properties: Vec<EntityProperty>,
 }
@@ -38,12 +42,12 @@ impl EntityAnalyzer {
             .with_context(|| format!("Failed to read entity file: {}", path.display()))?;
 
         let allocator = Allocator::default();
-        let source_type = SourceType::from_path(path).unwrap_or_default().with_typescript(true);
+        let source_type = SourceType::from_path(path)
+            .unwrap_or_default()
+            .with_typescript(true);
 
         let ParserReturn {
-            program,
-            errors,
-            ..
+            program, errors, ..
         } = Parser::new(&allocator, &source, source_type).parse();
 
         if !errors.is_empty() {
@@ -94,7 +98,8 @@ impl EntityAnalyzer {
 
         for element in &class_decl.body.body {
             if let ClassElement::PropertyDefinition(prop_def) = element {
-                if let Some(entity_prop) = Self::extract_property_from_definition(prop_def, source) {
+                if let Some(entity_prop) = Self::extract_property_from_definition(prop_def, source)
+                {
                     properties.push(entity_prop);
                 }
             }
@@ -164,7 +169,8 @@ impl EntityAnalyzer {
                                 if let ObjectPropertyKind::ObjectProperty(obj_prop) = prop {
                                     if let PropertyKey::StaticIdentifier(key) = &obj_prop.key {
                                         if key.name.as_str() == "nullable" {
-                                            if let Expression::BooleanLiteral(lit) = &obj_prop.value {
+                                            if let Expression::BooleanLiteral(lit) = &obj_prop.value
+                                            {
                                                 is_nullable = lit.value;
                                             }
                                         }
@@ -191,8 +197,13 @@ impl EntityAnalyzer {
                         if let Some(type_params) = &type_ref.type_arguments {
                             if let Some(first_param) = type_params.params.first() {
                                 if let TSType::TSTypeReference(inner_ref) = first_param {
-                                    if let TSTypeName::IdentifierReference(inner_id) = &inner_ref.type_name {
-                                        return (format!("Collection<{}>", inner_id.name.as_str()), true);
+                                    if let TSTypeName::IdentifierReference(inner_id) =
+                                        &inner_ref.type_name
+                                    {
+                                        return (
+                                            format!("Collection<{}>", inner_id.name.as_str()),
+                                            true,
+                                        );
                                     }
                                 }
                             }
@@ -209,7 +220,10 @@ impl EntityAnalyzer {
             TSType::TSBooleanKeyword(_) => ("boolean".to_string(), false),
             TSType::TSUnionType(union) => {
                 // Handle optional types like string | undefined
-                let has_undefined = union.types.iter().any(|t| matches!(t, TSType::TSUndefinedKeyword(_)));
+                let has_undefined = union
+                    .types
+                    .iter()
+                    .any(|t| matches!(t, TSType::TSUndefinedKeyword(_)));
                 if has_undefined && union.types.len() == 2 {
                     // Extract the non-undefined type
                     for t in &union.types {
@@ -250,16 +264,20 @@ impl EntityAnalyzer {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::fs::write;
+
     use tempfile::tempdir;
+
+    use super::*;
 
     #[test]
     fn test_parse_entity_with_relations() {
         let dir = tempdir().unwrap();
         let entity_path = dir.path().join("user.entity.ts");
 
-        write(&entity_path, r#"
+        write(
+            &entity_path,
+            r#"
 import { Entity, Property, ManyToOne, ManyToMany, Collection } from '@mikro-orm/core';
 import { SqlBaseEntity } from './base.entity';
 import { Organization } from './organization.entity';
@@ -285,7 +303,9 @@ export class User extends SqlBaseEntity {
   @Property()
   createdAt!: Date;
 }
-"#).unwrap();
+"#,
+        )
+        .unwrap();
 
         let entities = EntityAnalyzer::parse_entity_file(&entity_path).unwrap();
 
@@ -297,27 +317,46 @@ export class User extends SqlBaseEntity {
 
         eprintln!("Found {} properties:", user_entity.properties.len());
         for prop in &user_entity.properties {
-            eprintln!("  - {} : {} (relation: {:?})", prop.name, prop.type_name, prop.relation_type);
+            eprintln!(
+                "  - {} : {} (relation: {:?})",
+                prop.name, prop.type_name, prop.relation_type
+            );
         }
 
         // Check name property
-        let name_prop = user_entity.properties.iter().find(|p| p.name == "name").unwrap();
+        let name_prop = user_entity
+            .properties
+            .iter()
+            .find(|p| p.name == "name")
+            .unwrap();
         assert_eq!(name_prop.type_name, "string");
         assert!(!name_prop.is_nullable);
         assert!(name_prop.relation_type.is_none());
 
         // Check age property (nullable)
-        let age_prop = user_entity.properties.iter().find(|p| p.name == "age").unwrap();
+        let age_prop = user_entity
+            .properties
+            .iter()
+            .find(|p| p.name == "age")
+            .unwrap();
         assert_eq!(age_prop.type_name, "number");
         assert!(age_prop.is_nullable);
 
         // Check organization (ManyToOne relation)
-        let org_prop = user_entity.properties.iter().find(|p| p.name == "organization").unwrap();
+        let org_prop = user_entity
+            .properties
+            .iter()
+            .find(|p| p.name == "organization")
+            .unwrap();
         assert_eq!(org_prop.type_name, "Organization");
         assert_eq!(org_prop.relation_type, Some(RelationType::ManyToOne));
 
         // Check roles (ManyToMany relation with Collection)
-        let roles_prop = user_entity.properties.iter().find(|p| p.name == "roles").unwrap();
+        let roles_prop = user_entity
+            .properties
+            .iter()
+            .find(|p| p.name == "roles")
+            .unwrap();
         assert!(roles_prop.type_name.contains("Collection"));
         assert!(roles_prop.is_collection);
         assert_eq!(roles_prop.relation_type, Some(RelationType::ManyToMany));

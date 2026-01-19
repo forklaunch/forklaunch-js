@@ -3,16 +3,16 @@ import { WorkerProducer } from '@forklaunch/interfaces-worker/interfaces';{{/is_
 import { EntityManager } from '@mikro-orm/core';{{/is_worker}}
 import { SchemaValidator } from '@{{app_name}}/core';
 import { Metrics } from '@{{app_name}}/monitoring';
-import { {{pascal_case_name}}Service } from '../domain/interfaces/{{camel_case_name}}.interface';
-import { 
-  {{pascal_case_name}}RequestDto, 
-  {{pascal_case_name}}ResponseDto 
-} from '../domain/types/{{camel_case_name}}.types';
+import { {{pascal_case_name}}Service } from '../interfaces/{{camel_case_name}}.interface';
+import {
+  {{pascal_case_name}}RequestDto,
+  {{pascal_case_name}}ResponseDto
+} from '../types/{{camel_case_name}}.types';
 import {
   {{pascal_case_name}}RequestMapper,
   {{pascal_case_name}}ResponseMapper
-} from '../domain/mappers/{{camel_case_name}}.mappers';{{#is_worker}}
-import { {{pascal_case_name}}EventRecord } from '../persistence/entities';{{/is_worker}}
+} from '../mappers/{{camel_case_name}}.mappers';{{#is_worker}}
+import { {{pascal_case_name}}EventRecord } from '../../persistence/entities';{{/is_worker}}
 
 // Base{{pascal_case_name}}Service class that implements the {{pascal_case_name}}Service interface
 export class Base{{pascal_case_name}}Service implements {{pascal_case_name}}Service { {{^is_worker}}

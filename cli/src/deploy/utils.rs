@@ -4,8 +4,6 @@ use anyhow::{Context, Result, bail};
 use serde::Deserialize;
 use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
 
-use crate::constants::get_platform_management_api_url;
-
 #[derive(Debug, Deserialize)]
 pub(crate) struct DeploymentStatus {
     #[allow(dead_code)]

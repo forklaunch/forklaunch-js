@@ -551,6 +551,10 @@ pub(crate) struct ProjectDevDependencies {
     pub(crate) types_qs: Option<String>,
     #[serde(rename = "@types/uuid", skip_serializing_if = "Option::is_none")]
     pub(crate) types_uuid: Option<String>,
+    #[serde(rename = "@types/pino", skip_serializing_if = "Option::is_none")]
+    pub(crate) types_pino: Option<String>,
+    #[serde(rename = "@types/ioredis", skip_serializing_if = "Option::is_none")]
+    pub(crate) types_ioredis: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) eslint: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -598,6 +602,8 @@ impl<'de> Deserialize<'de> for ProjectDevDependencies {
                     types_jest: None,
                     types_qs: None,
                     types_uuid: None,
+                    types_pino: None,
+                    types_ioredis: None,
                     eslint: None,
                     oxlint: None,
                     prettier: None,
@@ -621,6 +627,8 @@ impl<'de> Deserialize<'de> for ProjectDevDependencies {
                         "@types/jest" => deps.types_jest = Some(value),
                         "@types/qs" => deps.types_qs = Some(value),
                         "@types/uuid" => deps.types_uuid = Some(value),
+                        "@types/pino" => deps.types_pino = Some(value),
+                        "@types/ioredis" => deps.types_ioredis = Some(value),
                         "eslint" => deps.eslint = Some(value),
                         "oxlint" => deps.oxlint = Some(value),
                         "prettier" => deps.prettier = Some(value),
