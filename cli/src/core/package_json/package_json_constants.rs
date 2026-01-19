@@ -308,10 +308,6 @@ pub(crate) const TYPES_JEST_VERSION: &str = "^30.0.0";
 pub(crate) const TYPES_UUID_VERSION: &str = "^11.0.0";
 // @types/qs
 pub(crate) const TYPES_QS_VERSION: &str = "^6.14.0";
-// @types/pino
-pub(crate) const TYPES_PINO_VERSION: &str = "^9.0.0";
-// @types/ioredis
-pub(crate) const TYPES_IOREDIS_VERSION: &str = "^5.0.0";
 // pino
 pub(crate) const PINO_VERSION: &str = "^10.2.0";
 // ioredis
