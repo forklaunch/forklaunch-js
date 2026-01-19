@@ -480,11 +480,7 @@ pub(crate) fn generate_service_package_json(
                     None
                 },
                 pino: Some(PINO_VERSION.to_string()),
-                ioredis: if manifest_data.is_billing || manifest_data.is_cache_enabled {
-                    Some(IOREDIS_VERSION.to_string())
-                } else {
-                    None
-                },
+                ioredis: Some(IOREDIS_VERSION.to_string()),
                 additional_deps: HashMap::new(),
             }
         }),
