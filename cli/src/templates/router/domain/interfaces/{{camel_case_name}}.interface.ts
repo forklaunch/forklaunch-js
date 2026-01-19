@@ -1,7 +1,8 @@
 {{#with_mappers}}import {
   {{pascal_case_name}}RequestDto,
   {{pascal_case_name}}ResponseDto
-} from '../types/{{camel_case_name}}.types';{{/with_mappers}}{{^with_mappers}}import { SchemaValidator, Schema } from '@{{app_name}}/core';
+} from '../types/{{camel_case_name}}.types';{{/with_mappers}}{{^with_mappers}}import { Schema } from '@forklaunch/validator';
+import { SchemaValidator } from '@{{app_name}}/core';
 import {
   {{pascal_case_name}}RequestSchema,
   {{pascal_case_name}}ResponseSchema
