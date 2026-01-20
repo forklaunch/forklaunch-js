@@ -11,7 +11,7 @@ use crate::{
         ast::{
             deletions::{
                 delete_from_registrations_ts::delete_from_registrations_ts_worker_type,
-                delete_import_statement::delete_import_statement,
+                delete_import_statement::delete_import_statements_with_prefix,
             },
             infrastructure::redis::delete_redis_import,
             parse_ast_program::parse_ast_program,
@@ -39,8 +39,8 @@ pub(crate) fn transform_registrations_ts_worker_to_service(
     // Delete worker-specific registrations (WorkerOptions, WorkerConsumer, WorkerProducer)
     delete_from_registrations_ts_worker_type(&allocator, &mut program);
 
-    // Delete worker-specific imports
-    let worker_imports = [
+    // Delete worker-specific imports (including sub-paths like /types, /schemas, etc.)
+    let worker_import_prefixes = [
         "@forklaunch/implementation-worker-bullmq",
         "@forklaunch/implementation-worker-database",
         "@forklaunch/implementation-worker-redis",
@@ -48,8 +48,8 @@ pub(crate) fn transform_registrations_ts_worker_to_service(
         "@forklaunch/interfaces-worker",
     ];
 
-    for import in worker_imports {
-        let _ = delete_import_statement(&allocator, &mut program, import);
+    for import_prefix in worker_import_prefixes {
+        let _ = delete_import_statements_with_prefix(&allocator, &mut program, import_prefix);
     }
 
     // Delete Redis import (often added by worker implementations like BullMQ)
