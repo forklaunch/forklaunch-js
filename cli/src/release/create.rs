@@ -793,25 +793,15 @@ fn build_env_var_component_map(
                                         }
                                         Entry::Occupied(mut entry) => {
                                             let current = entry.get();
-                                            if current.4.is_some() && final_passthrough.is_none() {
-                                                entry.insert((
-                                                    component_type,
-                                                    property,
-                                                    target,
-                                                    path,
-                                                    final_passthrough,
-                                                ));
-                                            } else if final_passthrough.is_some()
-                                                && current.4.is_none()
-                                            {
-                                                entry.insert((
-                                                    component_type,
-                                                    property,
-                                                    target,
-                                                    path,
-                                                    final_passthrough,
-                                                ));
-                                            }
+                                            // Preserve existing passthrough unless we have a new one
+                                            let passthrough = final_passthrough.clone().or_else(|| current.4.clone());
+                                            entry.insert((
+                                                component_type,
+                                                property,
+                                                target,
+                                                path,
+                                                passthrough,
+                                            ));
                                         }
                                     }
                                 } else if passthrough.is_some() {

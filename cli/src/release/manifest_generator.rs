@@ -344,7 +344,7 @@ pub(crate) fn generate_release_manifest(
             });
 
             // Scan for controllers and their dependencies
-            let service_path = Path::new(&manifest.modules_path).join(&project.name);
+            let service_path = app_root.join(&manifest.modules_path).join(&project.name);
             let controllers = if service_path.join("api").join("routes").exists() {
                 if let Ok(routers) = detect_routers_from_service(&service_path) {
                     if !routers.is_empty() {
@@ -361,7 +361,7 @@ pub(crate) fn generate_release_manifest(
                                             "{}.controller.ts",
                                             router_name.to_case(Case::Camel)
                                         )),
-                                        Path::new(&manifest.modules_path),
+                                        &app_root.join(&manifest.modules_path),
                                         &app_root.join("package.json"),
                                     )
                                     .ok(),
@@ -393,14 +393,26 @@ pub(crate) fn generate_release_manifest(
                     health_check: None,
                     is_worker_service: None,
                 }),
-                build_context: if Path::new(&manifest.modules_path)
+                build_context: if app_root
+                    .join(&manifest.modules_path)
                     .join(&project.name)
                     .join("Dockerfile")
                     .exists()
                 {
-                    Some(format!("{}/{}", manifest.modules_path, project.name))
+                    Some(
+                        app_root
+                            .join(&manifest.modules_path)
+                            .join(&project.name)
+                            .to_string_lossy()
+                            .into_owned(),
+                    )
                 } else {
-                    Some(manifest.modules_path.clone())
+                    Some(
+                        app_root
+                            .join(&manifest.modules_path)
+                            .to_string_lossy()
+                            .into_owned(),
+                    )
                 },
                 dockerfile: manifest
                     .dockerfile
@@ -423,7 +435,7 @@ pub(crate) fn generate_release_manifest(
             });
             let open_api_spec = openapi_specs.get(&project.name).cloned();
 
-            let worker_path = Path::new(&manifest.modules_path).join(&project.name);
+            let worker_path = app_root.join(&manifest.modules_path).join(&project.name);
             let controllers = if worker_path.join("api").join("routes").exists() {
                 if let Ok(routers) = detect_routers_from_service(&worker_path) {
                     if !routers.is_empty() {
@@ -442,7 +454,7 @@ pub(crate) fn generate_release_manifest(
                                             "{}.controller.ts",
                                             router_name.to_case(Case::Camel)
                                         )),
-                                        Path::new(&manifest.modules_path),
+                                        &app_root.join(&manifest.modules_path),
                                         &app_root.join("package.json"),
                                     )
                                     .ok(),
@@ -486,14 +498,26 @@ pub(crate) fn generate_release_manifest(
                     health_check: None,
                     is_worker_service: Some(true),
                 }),
-                build_context: if Path::new(&manifest.modules_path)
+                build_context: if app_root
+                    .join(&manifest.modules_path)
                     .join(&project.name)
                     .join("Dockerfile")
                     .exists()
                 {
-                    Some(format!("{}/{}", manifest.modules_path, project.name))
+                    Some(
+                        app_root
+                            .join(&manifest.modules_path)
+                            .join(&project.name)
+                            .to_string_lossy()
+                            .into_owned(),
+                    )
                 } else {
-                    Some(manifest.modules_path.clone())
+                    Some(
+                        app_root
+                            .join(&manifest.modules_path)
+                            .to_string_lossy()
+                            .into_owned(),
+                    )
                 },
                 dockerfile: manifest
                     .dockerfile
@@ -535,14 +559,26 @@ pub(crate) fn generate_release_manifest(
                 name: format!("{}-worker", project.name),
                 status: None,
                 config: ServiceConfigEnum::Worker(worker_config),
-                build_context: if Path::new(&manifest.modules_path)
+                build_context: if app_root
+                    .join(&manifest.modules_path)
                     .join(&project.name)
                     .join("Dockerfile")
                     .exists()
                 {
-                    Some(format!("{}/{}", manifest.modules_path, project.name))
+                    Some(
+                        app_root
+                            .join(&manifest.modules_path)
+                            .join(&project.name)
+                            .to_string_lossy()
+                            .into_owned(),
+                    )
                 } else {
-                    Some(manifest.modules_path.clone())
+                    Some(
+                        app_root
+                            .join(&manifest.modules_path)
+                            .to_string_lossy()
+                            .into_owned(),
+                    )
                 },
                 dockerfile: manifest
                     .dockerfile
@@ -582,11 +618,17 @@ pub(crate) fn generate_release_manifest(
         cloud_provider: Some("aws".to_string()),
         vpc_id: None,
         default_instance_size: None,
-        build_context: if Path::new(&manifest.modules_path)
+        build_context: if app_root
+            .join(&manifest.modules_path)
             .join("Dockerfile")
             .exists()
         {
-            Some(manifest.modules_path.clone())
+            Some(
+                app_root
+                    .join(&manifest.modules_path)
+                    .to_string_lossy()
+                    .into_owned(),
+            )
         } else {
             None
         },
