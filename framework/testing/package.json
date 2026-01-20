@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/testing",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "description": "Testing utilities for forklaunch-js blueprints including testcontainer management",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -46,13 +46,13 @@
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "@types/node": "^25.0.9",
-    "@typescript/native-preview": "7.0.0-dev.20260118.1",
+    "@typescript/native-preview": "7.0.0-dev.20260120.1",
     "globals": "^17.0.0",
     "prettier": "^3.8.0",
     "ts-node": "^10.9.2",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.53.0",
+    "typescript-eslint": "^8.53.1",
     "vitest": "^4.0.17"
   },
   "peerDependencies": {

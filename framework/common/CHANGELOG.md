@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.6.26
+
+### Patch Changes
+
+- Package deps version bump
+
 ## 0.6.25
 
 ### Patch Changes

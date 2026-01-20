@@ -265,13 +265,10 @@ impl CliCommand for CreateCommand {
             stdout.flush()?;
             stdout.reset()?;
 
-            eprintln!("[DEBUG] POST {} with body: {:?}", url, request_body);
-
             let response = http_client::post(&url, serde_json::to_value(&request_body)?)
                 .with_context(|| ERROR_FAILED_TO_SEND_REQUEST)?;
 
             let status = response.status();
-            eprintln!("[DEBUG] Response status: {}", status);
 
             if status.is_success() {
                 // Success case
@@ -308,7 +305,6 @@ impl CliCommand for CreateCommand {
             } else if status.as_u16() == 400 {
                 // Handle 400 Bad Request - check for missing env vars
                 let error_text = response.text().unwrap_or_default();
-                eprintln!("[DEBUG] Error body: {}", error_text);
 
                 // Try to parse as DeploymentBlockedError
                 if let Ok(blocked_error) =

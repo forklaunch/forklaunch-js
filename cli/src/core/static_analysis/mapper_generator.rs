@@ -172,10 +172,10 @@ export const {}ResponseMapper = responseMapper({{
         match &entity_prop.relation_type {
             Some(RelationType::ManyToMany) => {
                 // array of IDs to Collection
-                // roles: await em.findAll(Role, { where: { id: { $in: dto.roles } } })
+                // roles: await em.find(Role, { id: { $in: dto.roles } })
                 let relation_entity = self.extract_relation_entity(&entity_prop.type_name);
                 format!(
-                    "{}: await em.findAll({}, {{ where: {{ id: {{ $in: dto.{} }} }} }}),",
+                    "{}: await em.find({}, {{ id: {{ $in: dto.{} }} }}),",
                     entity_prop.name, relation_entity, schema_prop.name
                 )
             }
@@ -377,6 +377,6 @@ mod tests {
 
         eprintln!("Generated body:\n{}", result);
         assert!(result.contains("organization: await em.findOne(Organization"));
-        assert!(result.contains("roles: await em.findAll(Role"));
+        assert!(result.contains("roles: await em.find(Role"));
     }
 }

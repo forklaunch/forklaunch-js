@@ -156,13 +156,10 @@ impl CliCommand for DestroyCommand {
 
         use crate::core::http_client;
 
-        eprintln!("[DEBUG] POST {} with body: {:?}", url, request_body);
-
         let response = http_client::post(&url, serde_json::to_value(&request_body)?)
             .with_context(|| ERROR_FAILED_TO_SEND_REQUEST)?;
 
         let status = response.status();
-        eprintln!("[DEBUG] Response status: {}", status);
 
         if status.is_success() {
             let response_text = response.text().with_context(|| "Failed to read response")?;

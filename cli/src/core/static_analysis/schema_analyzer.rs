@@ -174,8 +174,32 @@ impl SchemaAnalyzer {
                     match function_name {
                         "optional" => {
                             // optional(string) -> (string, true, false)
-                            if let Some(Argument::Identifier(arg)) = call_expr.arguments.first() {
-                                return (arg.name.as_str().to_string(), true, false);
+                            // optional(array(string)) -> (string, true, true)
+                            if let Some(arg) = call_expr.arguments.first() {
+                                let (inner_type, _, is_array) = match arg {
+                                    Argument::Identifier(id) => {
+                                        (id.name.as_str().to_string(), false, false)
+                                    }
+                                    Argument::CallExpression(call) => {
+                                        // optional(array(string))
+                                        if let Expression::Identifier(callee) = &call.callee {
+                                            if callee.name.as_str() == "array" {
+                                                if let Some(inner_arg) = call.arguments.first() {
+                                                    let inner_type = match inner_arg {
+                                                        Argument::Identifier(inner_id) => {
+                                                            inner_id.name.as_str().to_string()
+                                                        }
+                                                        _ => "unknown".to_string(),
+                                                    };
+                                                    return (inner_type, true, true);
+                                                }
+                                            }
+                                        }
+                                        ("unknown".to_string(), false, false)
+                                    }
+                                    _ => ("unknown".to_string(), false, false),
+                                };
+                                return (inner_type, true, is_array);
                             }
                             ("unknown".to_string(), true, false)
                         }
@@ -292,5 +316,50 @@ export const UserResponseSchema = {
             .unwrap();
         assert_eq!(roles_prop.type_name, "string");
         assert!(roles_prop.is_array);
+    }
+
+    #[test]
+    fn test_parse_optional_array_schema() {
+        let dir = tempdir().unwrap();
+        let schema_path = dir.path().join("test.schema.ts");
+
+        write(
+            &schema_path,
+            r#"
+import { string, optional, array } from '@forklaunch/validator';
+
+export const TestSchema = {
+  tags: optional(array(string)),
+  categories: optional(array(string))
+};
+"#,
+        )
+        .unwrap();
+
+        let schemas = SchemaAnalyzer::parse_schema_file(&schema_path).unwrap();
+
+        assert_eq!(schemas.len(), 1);
+
+        let test_schema = schemas.first().unwrap();
+        assert_eq!(test_schema.name, "TestSchema");
+        assert_eq!(test_schema.properties.len(), 2);
+
+        let tags_prop = test_schema
+            .properties
+            .iter()
+            .find(|p| p.name == "tags")
+            .unwrap();
+        assert_eq!(tags_prop.type_name, "string");
+        assert!(tags_prop.is_optional);
+        assert!(tags_prop.is_array);
+
+        let categories_prop = test_schema
+            .properties
+            .iter()
+            .find(|p| p.name == "categories")
+            .unwrap();
+        assert_eq!(categories_prop.type_name, "string");
+        assert!(categories_prop.is_optional);
+        assert!(categories_prop.is_array);
     }
 }

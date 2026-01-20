@@ -303,6 +303,7 @@ pub(crate) struct EnvironmentVariable {
 }
 
 pub(crate) fn generate_release_manifest(
+    app_root: &Path,
     application_id: String,
     version: String,
     git_commit: String,
@@ -361,7 +362,7 @@ pub(crate) fn generate_release_manifest(
                                             router_name.to_case(Case::Camel)
                                         )),
                                         Path::new(&manifest.modules_path),
-                                        Path::new("package.json"),
+                                        &app_root.join("package.json"),
                                     )
                                     .ok(),
                                 })
@@ -442,7 +443,7 @@ pub(crate) fn generate_release_manifest(
                                             router_name.to_case(Case::Camel)
                                         )),
                                         Path::new(&manifest.modules_path),
-                                        Path::new("package.json"),
+                                        &app_root.join("package.json"),
                                     )
                                     .ok(),
                                 })
@@ -616,7 +617,7 @@ pub(crate) fn generate_release_manifest(
         } else {
             Some(required_env_vars)
         },
-        libraries: scan_project_libraries(Path::new("package.json")).ok(),
+        libraries: scan_project_libraries(&app_root.join("package.json")).ok(),
     })
 }
 

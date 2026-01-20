@@ -1,7 +1,7 @@
 {
   "name": "@forklaunch/implementation-iam-base",
-  "version": "0.8.8",
-  "description": "Billing basic implementation for forklaunch",
+  "version": "0.8.9",
+  "description": "IAM basic implementation for forklaunch",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
     "url": "https://github.com/forklaunch/forklaunch-js/issues"
@@ -48,18 +48,18 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.6.24",
-    "@forklaunch/core": "^0.17.0",
+    "@forklaunch/common": "^0.6.26",
+    "@forklaunch/core": "^0.17.2",
     "@forklaunch/interfaces-iam": "workspace:*",
-    "@forklaunch/internal": "^0.3.24",
-    "@forklaunch/validator": "^0.10.24",
+    "@forklaunch/internal": "^0.3.26",
+    "@forklaunch/validator": "^0.10.26",
     "@mikro-orm/core": "^6.6.4",
     "@sinclair/typebox": "^0.34.47",
     "ajv": "^8.17.1",
     "zod": "^4.3.5"
   },
   "devDependencies": {
-    "@typescript/native-preview": "7.0.0-dev.20260118.1",
+    "@typescript/native-preview": "7.0.0-dev.20260120.1",
     "depcheck": "^1.4.7",
     "prettier": "^3.8.0",
     "typedoc": "^0.28.16"

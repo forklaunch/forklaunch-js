@@ -678,6 +678,7 @@ fn change_infrastructure(
 fn service_to_worker(
     base_path: &Path,
     worker_type: &WorkerType,
+    runtime: &crate::constants::Runtime,
     manifest_data: &mut ServiceManifestData,
     project_package_json: &mut ProjectPackageJson,
     docker_compose: &mut DockerCompose,
@@ -798,10 +799,18 @@ export class {pascal_case_name}EventRecord extends {mongo_prefix}SqlBaseEntity {
 
     // 5. Update package.json scripts to add worker scripts
     let scripts = project_package_json.scripts.as_mut().unwrap();
-    scripts.dev_worker = Some(format!(
-        "tsx watch --clear-screen=false ./worker.ts | pino-pretty",
-    ));
-    scripts.start_worker = Some("node ./dist/worker.js".to_string());
+    scripts.dev_worker = Some(match runtime {
+        crate::constants::Runtime::Node => {
+            "tsx watch --clear-screen=false ./worker.ts | pino-pretty".to_string()
+        }
+        crate::constants::Runtime::Bun => {
+            "bun --watch ./worker.ts | pino-pretty".to_string()
+        }
+    });
+    scripts.start_worker = Some(match runtime {
+        crate::constants::Runtime::Node => "node ./dist/worker.js".to_string(),
+        crate::constants::Runtime::Bun => "bun run ./dist/worker.js".to_string(),
+    });
 
     // 6. Add worker implementation dependency
     use crate::core::package_json::package_json_constants::{
@@ -861,7 +870,11 @@ export class {pascal_case_name}EventRecord extends {mongo_prefix}SqlBaseEntity {
     let docker_service_name = format!("{}-worker", project_name);
     if let Some(server_service) = docker_compose.services.get(&project_name).cloned() {
         let mut worker_service = server_service.clone();
-        worker_service.command = Some(DockerCommand::Simple("bun run start:worker".to_string()));
+        let worker_command = match runtime {
+            crate::constants::Runtime::Node => "npm run start:worker",
+            crate::constants::Runtime::Bun => "bun run start:worker",
+        };
+        worker_service.command = Some(DockerCommand::Simple(worker_command.to_string()));
         docker_compose
             .services
             .insert(docker_service_name, worker_service);
@@ -1101,6 +1114,7 @@ impl CliCommand for ServiceCommand {
                 service_to_worker(
                     &service_base_path,
                     &worker_type,
+                    &runtime,
                     &mut manifest_data,
                     &mut project_package_json_to_write,
                     &mut docker_compose_data,

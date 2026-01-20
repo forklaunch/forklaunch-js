@@ -60,6 +60,7 @@ pub(crate) fn change_name(
 
 fn add_mappers_to_router(
     router_base_path: &Path,
+    project_name: &str,
     manifest_data: &RouterManifestData,
     rendered_templates_cache: &mut RenderedTemplatesCache,
     dryrun: bool,
@@ -94,7 +95,13 @@ fn add_mappers_to_router(
     }
 
     // Find the entity file (look for {name}Record.entity.ts or {name}EventRecord.entity.ts)
-    let is_worker = manifest_data.projects.iter().any(|p| matches!(p.r#type, crate::core::manifest::ProjectType::Worker));
+    // Look up the specific project by name to determine if it's a worker
+    let is_worker = manifest_data
+        .projects
+        .iter()
+        .find(|p| p.name == project_name)
+        .map(|p| matches!(p.r#type, crate::core::manifest::ProjectType::Worker))
+        .unwrap_or(false);
     let entity_suffix = if is_worker { "EventRecord" } else { "Record" };
     let entity_file = entity_dir.join(format!("{}{}.entity.ts", camel_case_name, entity_suffix));
 
@@ -474,8 +481,11 @@ impl CliCommand for RouterCommand {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
         let mut rendered_templates_cache = RenderedTemplatesCache::new();
 
-        let (app_root_path, project_name) = find_app_root_path(matches, RequiredLocation::Project)?;
+        let (app_root_path, project_name_opt) = find_app_root_path(matches, RequiredLocation::Project)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
+
+        // RequiredLocation::Project guarantees project_name is present
+        let project_name = project_name_opt.expect("Project name should be present when RequiredLocation::Project is used");
 
         let existing_name = matches.get_one::<String>("existing-name");
         let new_name = matches.get_one::<String>("new-name");
@@ -495,7 +505,7 @@ impl CliCommand for RouterCommand {
         let router_base_path = prompt_base_path(
             &app_root_path,
             &ManifestData::Router(&existing_manifest_data),
-            &project_name,
+            &Some(project_name.clone()),
             &mut line_editor,
             &mut stdout,
             matches,
@@ -511,14 +521,14 @@ impl CliCommand for RouterCommand {
 
         let mut manifest_data = existing_manifest_data.initialize(
             InitializableManifestConfigMetadata::Router(RouterInitializationMetadata {
-                project_name: router_name_str.clone(),
+                project_name: project_name.clone(),
                 router_name: existing_name.cloned().or(Some(router_name_str)),
             }),
         );
 
         // Handle --add-mappers flag
         if add_mappers {
-            add_mappers_to_router(&router_base_path, &manifest_data, &mut rendered_templates_cache, dryrun, &mut stdout)?;
+            add_mappers_to_router(&router_base_path, &project_name, &manifest_data, &mut rendered_templates_cache, dryrun, &mut stdout)?;
 
             // Write the generated files to disk
             let rendered_templates: Vec<RenderedTemplate> = rendered_templates_cache
@@ -584,7 +594,7 @@ impl CliCommand for RouterCommand {
                 &mut manifest_data
                     .projects
                     .iter_mut()
-                    .find(|project| project.name == project_name.clone().unwrap())
+                    .find(|project| project.name == project_name)
                     .unwrap(),
                 &mut rendered_templates_cache,
                 &mut stdout,

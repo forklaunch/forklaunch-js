@@ -30,7 +30,3 @@
 # OS generated
 **/.DS_Store
 **/Thumbs.db
-
-bun.lock
-bun.lockb
-pnpm-lock.yaml

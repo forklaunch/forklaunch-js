@@ -12,7 +12,7 @@ const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
  * Creates an instance of forklaunchExpress
  */
 
-const app = forklaunchExpress(SchemaValidator(), openTelemetryCollector, {{#is_iam_configured}}{
+const app = forklaunchExpress(SchemaValidator(), openTelemetryCollector{{#is_iam_configured}}, {
   auth: {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     surfacePermissions: async (_payload, _req) => {

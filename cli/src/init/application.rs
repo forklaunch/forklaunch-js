@@ -1241,7 +1241,7 @@ impl CliCommand for ApplicationCommand {
 
         // Set up generated SDK mode by default
         use_generated_sdk_mode_for_init(
-            &Path::new(&application_path),
+            &origin_path,
             &data,
             &mut rendered_templates,
         )?;

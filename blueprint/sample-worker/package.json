@@ -1,6 +1,7 @@
 {
   "name": "@forklaunch/blueprint-sample-worker",
   "version": "0.1.0",
+  "description": "Sample worker implementation for forklaunch",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
     "url": "https://github.com/forklaunch/forklaunch-js/issues"
@@ -49,15 +50,15 @@
     "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
     "@forklaunch/blueprint-universal-sdk": "workspace:*",
-    "@forklaunch/core": "^0.17.0",
+    "@forklaunch/core": "^0.17.2",
     "@forklaunch/implementation-worker-bullmq": "workspace:*",
     "@forklaunch/implementation-worker-database": "workspace:*",
     "@forklaunch/implementation-worker-kafka": "workspace:*",
     "@forklaunch/implementation-worker-redis": "workspace:*",
-    "@forklaunch/infrastructure-redis": "^0.4.33",
-    "@forklaunch/infrastructure-s3": "^0.4.33",
+    "@forklaunch/infrastructure-redis": "^0.4.35",
+    "@forklaunch/infrastructure-s3": "^0.4.35",
     "@forklaunch/interfaces-worker": "workspace:*",
-    "@forklaunch/universal-sdk": "^0.7.24",
+    "@forklaunch/universal-sdk": "^0.7.26",
     "@mikro-orm/better-sqlite": "^6.6.4",
     "@mikro-orm/core": "^6.6.4",
     "@mikro-orm/libsql": "^6.6.4",
@@ -81,7 +82,7 @@
     "zod": "^4.3.5"
   },
   "devDependencies": {
-    "@forklaunch/testing": "^0.0.13",
+    "@forklaunch/testing": "^0.0.15",
     "@mikro-orm/cli": "^6.6.4",
     "@types/express": "^5.0.6",
     "@types/express-serve-static-core": "^5.1.1",
@@ -93,7 +94,7 @@
     "testcontainers": "^11.11.0",
     "tsx": "^4.21.0",
     "typedoc": "^0.28.16",
-    "typescript-eslint": "^8.53.0"
+    "typescript-eslint": "^8.53.1"
   },
   "mikro-orm": {
     "config_paths": [

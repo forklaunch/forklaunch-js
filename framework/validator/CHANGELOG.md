@@ -1,5 +1,13 @@
 # @forklaunch/validator
 
+## 0.10.26
+
+### Patch Changes
+
+- Package deps version bump
+- Updated dependencies
+  - @forklaunch/common@0.6.26
+
 ## 0.10.25
 
 ### Patch Changes

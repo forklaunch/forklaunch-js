@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/implementation-billing-stripe",
-  "version": "0.5.8",
+  "version": "0.5.9",
   "description": "Stripe implementation for forklaunch billing",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -54,12 +54,12 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.6.24",
-    "@forklaunch/core": "^0.17.0",
+    "@forklaunch/common": "^0.6.26",
+    "@forklaunch/core": "^0.17.2",
     "@forklaunch/implementation-billing-base": "workspace:*",
     "@forklaunch/interfaces-billing": "workspace:*",
-    "@forklaunch/internal": "^0.3.24",
-    "@forklaunch/validator": "^0.10.24",
+    "@forklaunch/internal": "^0.3.26",
+    "@forklaunch/validator": "^0.10.26",
     "@mikro-orm/core": "^6.6.4",
     "@sinclair/typebox": "^0.34.47",
     "ajv": "^8.17.1",
@@ -67,7 +67,7 @@
     "zod": "^4.3.5"
   },
   "devDependencies": {
-    "@typescript/native-preview": "7.0.0-dev.20260118.1",
+    "@typescript/native-preview": "7.0.0-dev.20260120.1",
     "depcheck": "^1.4.7",
     "prettier": "^3.8.0",
     "typedoc": "^0.28.16"

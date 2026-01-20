@@ -23,13 +23,13 @@ pub(crate) const TS_JEST_VERSION: &str = "^29.4.6";
 // ts-nodef
 pub(crate) const TS_NODE_VERSION: &str = "^10.9.2";
 // typescript-eslint
-pub(crate) const TYPESCRIPT_ESLINT_VERSION: &str = "^8.53.0";
+pub(crate) const TYPESCRIPT_ESLINT_VERSION: &str = "^8.53.1";
 // vitest
 pub(crate) const VITEST_VERSION: &str = "^4.0.17";
 
 // Application package.json dependencies constants
 // @typescript/native-preview
-pub(crate) const TYPESCRIPT_NATIVE_PREVIEW_VERSION: &str = "^7.0.0-dev.20260118.1";
+pub(crate) const TYPESCRIPT_NATIVE_PREVIEW_VERSION: &str = "^7.0.0-dev.20260120.1";
 // globals
 pub(crate) const GLOBALS_VERSION: &str = "^17.0.0";
 // husky
@@ -221,45 +221,45 @@ pub(crate) const APP_UNIVERSAL_SDK_VERSION: &str = "workspace:*";
 // @forklaunch/bunrun
 pub(crate) const BUNRUN_VERSION: &str = "~0.0.2";
 // @forklaunch/common
-pub(crate) const COMMON_VERSION: &str = "~0.6.25";
+pub(crate) const COMMON_VERSION: &str = "~0.6.26";
 // @forklaunch/core
-pub(crate) const CORE_VERSION: &str = "~0.17.1";
+pub(crate) const CORE_VERSION: &str = "~0.17.2";
 // @forklaunch/express
-pub(crate) const EXPRESS_VERSION: &str = "~0.10.1";
+pub(crate) const EXPRESS_VERSION: &str = "~0.10.2";
 // @forklaunch/hyper-express
-pub(crate) const HYPER_EXPRESS_VERSION: &str = "~0.11.1";
+pub(crate) const HYPER_EXPRESS_VERSION: &str = "~0.11.2";
 // @forklaunch/implementation-billing-base
-pub(crate) const BILLING_BASE_VERSION: &str = "~0.8.8";
+pub(crate) const BILLING_BASE_VERSION: &str = "~0.8.9";
 // @forklaunch/implementation-billing-stripe
-pub(crate) const BILLING_STRIPE_VERSION: &str = "~0.5.8";
+pub(crate) const BILLING_STRIPE_VERSION: &str = "~0.5.9";
 // @forklaunch/implementation-iam-base
-pub(crate) const IAM_BASE_VERSION: &str = "~0.8.8";
+pub(crate) const IAM_BASE_VERSION: &str = "~0.8.9";
 // @forklaunch/implementation-worker-bullmq
-pub(crate) const WORKER_BULLMQ_VERSION: &str = "~0.8.8";
+pub(crate) const WORKER_BULLMQ_VERSION: &str = "~0.8.9";
 // @forklaunch/implementation-worker-redis
-pub(crate) const WORKER_REDIS_VERSION: &str = "~0.8.8";
+pub(crate) const WORKER_REDIS_VERSION: &str = "~0.8.9";
 // @forklaunch/implementation-worker-database
-pub(crate) const WORKER_DATABASE_VERSION: &str = "~0.8.8";
+pub(crate) const WORKER_DATABASE_VERSION: &str = "~0.8.9";
 // @forklaunch/implementation-worker-kafka
-pub(crate) const WORKER_KAFKA_VERSION: &str = "~0.9.2";
+pub(crate) const WORKER_KAFKA_VERSION: &str = "~0.9.3";
 // @forklaunch/infrastructure-redis
-pub(crate) const INFRASTRUCTURE_REDIS_VERSION: &str = "~0.4.34";
+pub(crate) const INFRASTRUCTURE_REDIS_VERSION: &str = "~0.4.35";
 // @forklaunch/infrastructure-s3
-pub(crate) const INFRASTRUCTURE_S3_VERSION: &str = "~0.4.34";
+pub(crate) const INFRASTRUCTURE_S3_VERSION: &str = "~0.4.35";
 // @forklaunch/interfaces-billing
-pub(crate) const BILLING_INTERFACES_VERSION: &str = "~0.8.8";
+pub(crate) const BILLING_INTERFACES_VERSION: &str = "~0.8.9";
 // @forklaunch/interfaces-iam
-pub(crate) const IAM_INTERFACES_VERSION: &str = "~0.8.8";
+pub(crate) const IAM_INTERFACES_VERSION: &str = "~0.8.9";
 // @forklaunch/interfaces-worker
-pub(crate) const WORKER_INTERFACES_VERSION: &str = "~0.7.8";
+pub(crate) const WORKER_INTERFACES_VERSION: &str = "~0.7.9";
 // @forklaunch/internal
-pub(crate) const INTERNAL_VERSION: &str = "~0.3.25";
+pub(crate) const INTERNAL_VERSION: &str = "~0.3.26";
 // @forklaunch/testing
-pub(crate) const TESTING_VERSION: &str = "~0.0.14";
+pub(crate) const TESTING_VERSION: &str = "~0.0.15";
 // @forklaunch/universal-sdk
-pub(crate) const UNIVERSAL_SDK_VERSION: &str = "~0.7.25";
+pub(crate) const UNIVERSAL_SDK_VERSION: &str = "~0.7.26";
 // @forklaunch/validator
-pub(crate) const VALIDATOR_VERSION: &str = "~0.10.25";
+pub(crate) const VALIDATOR_VERSION: &str = "~0.10.26";
 // @mikro-orm/core
 pub(crate) const MIKRO_ORM_CORE_VERSION: &str = "^6.6.4";
 // @mikro-orm/migrations
@@ -277,7 +277,7 @@ pub(crate) const TYPEBOX_VERSION: &str = "^0.34.47";
 // ajv
 pub(crate) const AJV_VERSION: &str = "^8.17.1";
 // better-auth
-pub(crate) const BETTER_AUTH_VERSION: &str = "^1.4.15";
+pub(crate) const BETTER_AUTH_VERSION: &str = "^1.4.16";
 // bullmq
 pub(crate) const BULLMQ_VERSION: &str = "^5.66.5";
 // better-sqlite3
@@ -309,7 +309,7 @@ pub(crate) const TYPES_UUID_VERSION: &str = "^11.0.0";
 // @types/qs
 pub(crate) const TYPES_QS_VERSION: &str = "^6.14.0";
 // pino
-pub(crate) const PINO_VERSION: &str = "^10.2.0";
+pub(crate) const PINO_VERSION: &str = "^10.2.1";
 // ioredis
 pub(crate) const IOREDIS_VERSION: &str = "^5.9.2";
 // typedoc
@@ -345,8 +345,8 @@ pub(crate) fn project_lint_fix_script(linter: &Linter) -> String {
 
 pub(crate) fn project_clean_script(runtime: &Runtime) -> String {
     String::from(match runtime {
-        Runtime::Bun => "rm -rf dist bun.lockb bun.lock tsconfig.tsbuildinfo node_modules",
-        Runtime::Node => "rm -rf dist pnpm.lock.yaml tsconfig.tsbuildinfo node_modules",
+        Runtime::Bun => "rm -rf dist lib bun.lockb bun.lock tsconfig.tsbuildinfo node_modules",
+        Runtime::Node => "rm -rf dist lib pnpm.lock.yaml tsconfig.tsbuildinfo node_modules",
     })
 }
 

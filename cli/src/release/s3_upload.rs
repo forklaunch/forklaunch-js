@@ -3,7 +3,7 @@ use std::{fs::File, path::Path};
 use anyhow::{Context, Result, bail};
 use flate2::{Compression, write::GzEncoder};
 use ignore::WalkBuilder;
-use reqwest::blocking::Client;
+use reqwest::{blocking::Client, header};
 use serde::Deserialize;
 use tar::Builder;
 
@@ -106,15 +106,22 @@ pub(crate) fn get_presigned_upload_url(
 /// Upload tarball to S3 using presigned URL
 pub(crate) fn upload_to_s3(file_path: &Path, presigned_url: &str) -> Result<()> {
     let client = Client::new();
-    let file_content = std::fs::read(file_path)
-        .with_context(|| format!("Failed to read tarball file {:?}", file_path))?;
 
-    let file_size = file_content.len();
+    // Open the file for streaming instead of loading into memory
+    let file = File::open(file_path)
+        .with_context(|| format!("Failed to open tarball file {:?}", file_path))?;
+
+    // Get file size for Content-Length header
+    let file_size = file
+        .metadata()
+        .with_context(|| format!("Failed to get metadata for file {:?}", file_path))?
+        .len();
 
     let response = client
         .put(presigned_url)
-        .body(file_content)
-        .header("Content-Type", "application/gzip")
+        .body(file)
+        .header(header::CONTENT_TYPE, "application/gzip")
+        .header(header::CONTENT_LENGTH, file_size)
         .send()
         .with_context(|| "Failed to upload tarball to S3")?;
 

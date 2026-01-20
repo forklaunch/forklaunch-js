@@ -9,7 +9,11 @@ use crate::{
     constants::error_failed_to_read_file,
     core::{
         ast::{
-            deletions::delete_from_registrations_ts::delete_from_registrations_ts_worker_type,
+            deletions::{
+                delete_from_registrations_ts::delete_from_registrations_ts_worker_type,
+                delete_import_statement::delete_import_statement,
+            },
+            infrastructure::redis::delete_redis_import,
             parse_ast_program::parse_ast_program,
         },
         rendered_template::RenderedTemplatesCache,
@@ -35,8 +39,21 @@ pub(crate) fn transform_registrations_ts_worker_to_service(
     // Delete worker-specific registrations (WorkerOptions, WorkerConsumer, WorkerProducer)
     delete_from_registrations_ts_worker_type(&allocator, &mut program);
 
-    // Note: We intentionally keep the imports and QUEUE_NAME env var in place
-    // The user will need to manually clean these up as indicated by the generated README
+    // Delete worker-specific imports
+    let worker_imports = [
+        "@forklaunch/implementation-worker-bullmq",
+        "@forklaunch/implementation-worker-database",
+        "@forklaunch/implementation-worker-redis",
+        "@forklaunch/implementation-worker-kafka",
+        "@forklaunch/interfaces-worker",
+    ];
+
+    for import in worker_imports {
+        let _ = delete_import_statement(&allocator, &mut program, import);
+    }
+
+    // Delete Redis import (often added by worker implementations like BullMQ)
+    delete_redis_import(&allocator, &mut program);
 
     Ok(Codegen::new()
         .with_options(CodegenOptions::default())

@@ -1,5 +1,13 @@
 # @forklaunch/universal-sdk
 
+## 0.7.26
+
+### Patch Changes
+
+- Package deps version bump
+- Updated dependencies
+  - @forklaunch/common@0.6.26
+
 ## 0.7.25
 
 ### Patch Changes

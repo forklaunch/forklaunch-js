@@ -579,7 +579,8 @@ impl CliCommand for WorkerCommand {
             .arg(
                 Arg::new("to")
                     .long("to")
-                    .help("Change worker to another type"),
+                    .help("Convert worker to another type (service)")
+                    .value_parser(["service"]),
             )
             .arg(
                 Arg::new("database")

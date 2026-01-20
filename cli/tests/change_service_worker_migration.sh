@@ -53,47 +53,7 @@ if ! grep -q "^// " "src/modules/my-service/worker.ts"; then
 fi
 
 echo "Verifying Build..."
-# We need to compile to verify code validity
-# But bun install might fail if internet is restricted or slow.
-# Assuming environment allows bun install.
-# If not, we can skip build or rely on file checks.
-# User asked for "short test", so maybe skip full build if it takes too long?
-# But checking validity is good.
-# I'll include it.
-
 cd src/modules/my-service
-
-# Detect sed syntax (macOS vs Linux)
-if sed --version >/dev/null 2>&1; then
-  # GNU sed (Linux)
-  SED_INPLACE="sed -i"
-else
-  # BSD sed (macOS)
-  SED_INPLACE="sed -i ''"
-fi
-
-# Fix syntax error in server.ts (init service bug?)
-if [ -f "server.ts" ]; then
-  $SED_INPLACE 's/openTelemetryCollector})/openTelemetryCollector)/' server.ts
-fi
-
-# Remove broken imports in registrations.ts (artifacts of migration)
-if [ -f "registrations.ts" ]; then
-  $SED_INPLACE '/@forklaunch\/implementation-worker/d' registrations.ts
-  $SED_INPLACE '/@forklaunch\/interfaces-worker/d' registrations.ts
-  $SED_INPLACE '/@forklaunch\/infrastructure-redis/d' registrations.ts
-fi
-
-# Fix test-utils.ts missing imports (if any)
-if [ -f "__test__/test-utils.ts" ]; then
-  # Re-add MikroORM import if missing and used
-  if grep -q "orm?: MikroORM" "__test__/test-utils.ts"; then
-     if ! grep -q "import .*MikroORM" "__test__/test-utils.ts"; then
-       $SED_INPLACE "1s/^/import { MikroORM } from '@mikro-orm\/core';\n/" "__test__/test-utils.ts"
-     fi
-  fi
-fi
-
 bun install
 bun run build
 

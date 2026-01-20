@@ -526,6 +526,7 @@ impl CliCommand for CreateCommand {
         };
 
         let release_manifest = generate_release_manifest(
+            &app_root,
             application_id.clone(),
             version.clone(),
             git_commit.clone(),

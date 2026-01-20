@@ -1,5 +1,11 @@
 # @forklaunch/bunrun
 
+## 0.0.20
+
+### Patch Changes
+
+- Package deps version bump
+
 ## 0.0.19
 
 ### Patch Changes

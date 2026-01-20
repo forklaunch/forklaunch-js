@@ -1,5 +1,0 @@
-{
-  "**/*.{ts,tsx}": ["pnpm lint:fix"],
-  "**/*.{ts,tsx,json}": ["pnpm format"],
-  "!**/package.json": []
-}

@@ -14,23 +14,23 @@ importers:
   .:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.6.24
-        version: 0.6.24
+        specifier: ^0.6.26
+        version: 0.6.26
       '@forklaunch/core':
-        specifier: ^0.17.0
-        version: 0.17.0(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
+        specifier: ^0.17.2
+        version: 0.17.2(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
       '@forklaunch/express':
-        specifier: ^0.10.0
-        version: 0.10.0(encoding@0.1.13)(hono@4.11.4)(zod@3.25.76)
+        specifier: ^0.10.2
+        version: 0.10.2(encoding@0.1.13)(hono@4.11.4)(jose@6.1.3)(socks@2.8.7)(zod@4.3.5)
       '@forklaunch/hyper-express':
-        specifier: ^0.11.0
-        version: 0.11.0(encoding@0.1.13)(express@5.2.1)(hono@4.11.4)(socks@2.8.7)
+        specifier: ^0.11.2
+        version: 0.11.2(encoding@0.1.13)(express@5.2.1)(hono@4.11.4)(socks@2.8.7)
       '@forklaunch/universal-sdk':
-        specifier: ^0.7.24
-        version: 0.7.24
+        specifier: ^0.7.26
+        version: 0.7.26
       '@forklaunch/validator':
-        specifier: ^0.10.24
-        version: 0.10.24
+        specifier: ^0.10.26
+        version: 0.10.26
     devDependencies:
       '@biomejs/biome':
         specifier: 2.3.11
@@ -57,8 +57,8 @@ importers:
         specifier: ^16.2.7
         version: 16.2.7
       oxlint:
-        specifier: ^1.39.0
-        version: 1.39.0
+        specifier: ^1.41.0
+        version: 1.41.0
       prettier:
         specifier: ^3.8.0
         version: 3.8.0
@@ -78,8 +78,8 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
       typescript-eslint:
-        specifier: ^8.53.0
-        version: 8.53.0(eslint@9.39.2)(typescript@5.9.3)
+        specifier: ^8.53.1
+        version: 8.53.1(eslint@9.39.2)(typescript@5.9.3)
       vitest:
         specifier: ^4.0.17
         version: 4.0.17(@opentelemetry/api@1.9.0)(@types/node@25.0.9)(tsx@4.21.0)(yaml@2.8.2)
@@ -93,29 +93,29 @@ importers:
         specifier: workspace:*
         version: link:../monitoring
       '@forklaunch/common':
-        specifier: ^0.6.24
-        version: 0.6.24
+        specifier: ^0.6.26
+        version: 0.6.26
       '@forklaunch/core':
-        specifier: ^0.17.0
-        version: 0.17.0(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
+        specifier: ^0.17.2
+        version: 0.17.2(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
       '@forklaunch/express':
-        specifier: ^0.10.0
-        version: 0.10.0(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)(zod@4.3.5)
+        specifier: ^0.10.2
+        version: 0.10.2(encoding@0.1.13)(hono@4.11.4)(jose@6.1.3)(socks@2.8.7)(zod@4.3.5)
       '@forklaunch/hyper-express':
-        specifier: ^0.11.0
-        version: 0.11.0(encoding@0.1.13)(express@5.2.1)(hono@4.11.4)(socks@2.8.7)
+        specifier: ^0.11.2
+        version: 0.11.2(encoding@0.1.13)(express@5.2.1)(hono@4.11.4)(socks@2.8.7)
       '@forklaunch/implementation-billing-base':
         specifier: workspace:*
         version: link:../implementations/billing/base
       '@forklaunch/infrastructure-redis':
-        specifier: ^0.4.33
-        version: 0.4.33(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
+        specifier: ^0.4.35
+        version: 0.4.35(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
       '@forklaunch/interfaces-billing':
         specifier: workspace:*
         version: link:../interfaces/billing
       '@forklaunch/validator':
-        specifier: ^0.10.24
-        version: 0.10.24
+        specifier: ^0.10.26
+        version: 0.10.26
       '@mikro-orm/core':
         specifier: ^6.6.4
         version: 6.6.4
@@ -160,8 +160,8 @@ importers:
         specifier: workspace:*
         version: link:../universal-sdk
       '@forklaunch/testing':
-        specifier: ^0.0.13
-        version: 0.0.13(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@25.0.9)(tsx@4.21.0)(yaml@2.8.2))
+        specifier: ^0.0.15
+        version: 0.0.15(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@25.0.9)(tsx@4.21.0)(yaml@2.8.2))
       '@mikro-orm/cli':
         specifier: ^6.6.4
         version: 6.6.4(better-sqlite3@12.6.2)(libsql@0.5.22)(mariadb@3.4.5)(mysql2@3.16.0)(pg@8.16.3)
@@ -178,8 +178,8 @@ importers:
         specifier: ^11.0.0
         version: 11.0.0
       '@typescript/native-preview':
-        specifier: 7.0.0-dev.20260118.1
-        version: 7.0.0-dev.20260118.1
+        specifier: 7.0.0-dev.20260120.1
+        version: 7.0.0-dev.20260120.1
       depcheck:
         specifier: ^1.4.7
         version: 1.4.7
@@ -214,29 +214,29 @@ importers:
         specifier: workspace:*
         version: link:../universal-sdk
       '@forklaunch/common':
-        specifier: ^0.6.24
-        version: 0.6.24
+        specifier: ^0.6.26
+        version: 0.6.26
       '@forklaunch/core':
-        specifier: ^0.17.0
-        version: 0.17.0(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
+        specifier: ^0.17.2
+        version: 0.17.2(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
       '@forklaunch/express':
-        specifier: ^0.10.0
-        version: 0.10.0(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)(zod@4.3.5)
+        specifier: ^0.10.2
+        version: 0.10.2(encoding@0.1.13)(hono@4.11.4)(jose@6.1.3)(socks@2.8.7)(zod@4.3.5)
       '@forklaunch/hyper-express':
-        specifier: ^0.11.0
-        version: 0.11.0(encoding@0.1.13)(express@5.2.1)(hono@4.11.4)(socks@2.8.7)
+        specifier: ^0.11.2
+        version: 0.11.2(encoding@0.1.13)(express@5.2.1)(hono@4.11.4)(socks@2.8.7)
       '@forklaunch/implementation-billing-stripe':
         specifier: workspace:*
         version: link:../implementations/billing/stripe
       '@forklaunch/infrastructure-redis':
-        specifier: ^0.4.33
-        version: 0.4.33(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
+        specifier: ^0.4.35
+        version: 0.4.35(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
       '@forklaunch/interfaces-billing':
         specifier: workspace:*
         version: link:../interfaces/billing
       '@forklaunch/validator':
-        specifier: ^0.10.24
-        version: 0.10.24
+        specifier: ^0.10.26
+        version: 0.10.26
       '@mikro-orm/core':
         specifier: ^6.6.4
         version: 6.6.4
@@ -281,8 +281,8 @@ importers:
         version: 4.3.5
     devDependencies:
       '@forklaunch/testing':
-        specifier: ^0.0.13
-        version: 0.0.13(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@25.0.9)(tsx@4.21.0)(yaml@2.8.2))
+        specifier: ^0.0.15
+        version: 0.0.15(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@25.0.9)(tsx@4.21.0)(yaml@2.8.2))
       '@mikro-orm/cli':
         specifier: ^6.6.4
         version: 6.6.4(better-sqlite3@12.6.2)(libsql@0.5.22)(mariadb@3.4.5)(mysql2@3.16.0)(pg@8.16.3)
@@ -299,8 +299,8 @@ importers:
         specifier: ^11.0.0
         version: 11.0.0
       '@typescript/native-preview':
-        specifier: 7.0.0-dev.20260118.1
-        version: 7.0.0-dev.20260118.1
+        specifier: 7.0.0-dev.20260120.1
+        version: 7.0.0-dev.20260120.1
       depcheck:
         specifier: ^1.4.7
         version: 1.4.7
@@ -326,20 +326,20 @@ importers:
   core:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.6.24
-        version: 0.6.24
+        specifier: ^0.6.26
+        version: 0.6.26
       '@forklaunch/core':
-        specifier: ^0.17.0
-        version: 0.17.0(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
+        specifier: ^0.17.2
+        version: 0.17.2(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
       '@forklaunch/express':
-        specifier: ^0.10.0
-        version: 0.10.0(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)(zod@4.3.5)
+        specifier: ^0.10.2
+        version: 0.10.2(encoding@0.1.13)(hono@4.11.4)(jose@6.1.3)(socks@2.8.7)(zod@4.3.5)
       '@forklaunch/hyper-express':
-        specifier: ^0.11.0
-        version: 0.11.0(encoding@0.1.13)(express@5.2.1)(hono@4.11.4)(socks@2.8.7)
+        specifier: ^0.11.2
+        version: 0.11.2(encoding@0.1.13)(express@5.2.1)(hono@4.11.4)(socks@2.8.7)
       '@forklaunch/validator':
-        specifier: ^0.10.24
-        version: 0.10.24
+        specifier: ^0.10.26
+        version: 0.10.26
       '@mikro-orm/core':
         specifier: ^6.6.4
         version: 6.6.4
@@ -378,8 +378,8 @@ importers:
         specifier: workspace:*
         version: link:../universal-sdk
       '@forklaunch/core':
-        specifier: ^0.17.0
-        version: 0.17.0(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
+        specifier: ^0.17.2
+        version: 0.17.2(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
       '@forklaunch/hyper-express-fork':
         specifier: ^6.17.35
         version: 6.17.35
@@ -390,8 +390,8 @@ importers:
         specifier: workspace:*
         version: link:../interfaces/iam
       '@forklaunch/validator':
-        specifier: ^0.10.24
-        version: 0.10.24
+        specifier: ^0.10.26
+        version: 0.10.26
       '@mikro-orm/core':
         specifier: ^6.6.4
         version: 6.6.4
@@ -436,8 +436,8 @@ importers:
         version: 4.3.5
     devDependencies:
       '@forklaunch/testing':
-        specifier: ^0.0.13
-        version: 0.0.13(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@25.0.9)(tsx@4.21.0)(yaml@2.8.2))
+        specifier: ^0.0.15
+        version: 0.0.15(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@25.0.9)(tsx@4.21.0)(yaml@2.8.2))
       '@mikro-orm/cli':
         specifier: ^6.6.4
         version: 6.6.4(better-sqlite3@12.6.2)(libsql@0.5.22)(mariadb@3.4.5)(mysql2@3.16.0)(pg@8.16.3)
@@ -460,22 +460,17 @@ importers:
         specifier: ^11.11.0
         version: 11.11.0
       typedoc:
-<<<<<<< HEAD
         specifier: ^0.28.16
         version: 0.28.16(typescript@5.9.3)
-=======
-        specifier: ^0.28.14
-        version: 0.28.14(typescript@5.9.3)
       vitest:
-        specifier: ^4.0.9
-        version: 4.0.9(@types/node@24.10.1)(tsx@4.20.6)(yaml@2.8.1)
->>>>>>> main
+        specifier: ^4.0.17
+        version: 4.0.17(@opentelemetry/api@1.9.0)(@types/node@25.0.9)(tsx@4.21.0)(yaml@2.8.2)
 
   iam-better-auth:
     dependencies:
       '@forklaunch/better-auth-mikro-orm-fork':
         specifier: ^0.4.106
-        version: 0.4.106(@mikro-orm/core@6.6.4)(better-auth@1.4.15(better-sqlite3@12.6.2)(mongodb@6.20.0(socks@2.8.7))(mysql2@3.16.0)(pg@8.16.3)(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@25.0.9)(tsx@4.21.0)(yaml@2.8.2)))
+        version: 0.4.106(@mikro-orm/core@6.6.4)(better-auth@1.4.16(better-sqlite3@12.6.2)(mongodb@6.20.0(socks@2.8.7))(mysql2@3.16.0)(pg@8.16.3)(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@25.0.9)(tsx@4.21.0)(yaml@2.8.2)))
       '@forklaunch/blueprint-core':
         specifier: workspace:*
         version: link:../core
@@ -486,8 +481,8 @@ importers:
         specifier: workspace:*
         version: link:../universal-sdk
       '@forklaunch/core':
-        specifier: ^0.17.0
-        version: 0.17.0(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
+        specifier: ^0.17.2
+        version: 0.17.2(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
       '@forklaunch/implementation-iam-base':
         specifier: workspace:*
         version: link:../implementations/iam/base
@@ -495,8 +490,8 @@ importers:
         specifier: workspace:*
         version: link:../interfaces/iam
       '@forklaunch/testing':
-        specifier: ^0.0.13
-        version: 0.0.13(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@25.0.9)(tsx@4.21.0)(yaml@2.8.2))
+        specifier: ^0.0.15
+        version: 0.0.15(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@25.0.9)(tsx@4.21.0)(yaml@2.8.2))
       '@mikro-orm/core':
         specifier: ^6.6.4
         version: 6.6.4
@@ -528,8 +523,8 @@ importers:
         specifier: ^0.34.47
         version: 0.34.47
       better-auth:
-        specifier: ^1.4.15
-        version: 1.4.15(better-sqlite3@12.6.2)(mongodb@6.20.0(socks@2.8.7))(mysql2@3.16.0)(pg@8.16.3)(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@25.0.9)(tsx@4.21.0)(yaml@2.8.2))
+        specifier: ^1.4.16
+        version: 1.4.16(better-sqlite3@12.6.2)(mongodb@6.20.0(socks@2.8.7))(mysql2@3.16.0)(pg@8.16.3)(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@25.0.9)(tsx@4.21.0)(yaml@2.8.2))
       dotenv:
         specifier: ^17.2.3
         version: 17.2.3
@@ -537,8 +532,8 @@ importers:
         specifier: ^6.1.3
         version: 6.1.3
       pino:
-        specifier: ^10.2.0
-        version: 10.2.0
+        specifier: ^10.2.1
+        version: 10.2.1
       uuid:
         specifier: ^13.0.0
         version: 13.0.0
@@ -571,34 +566,29 @@ importers:
         specifier: ^11.11.0
         version: 11.11.0
       typedoc:
-<<<<<<< HEAD
         specifier: ^0.28.16
         version: 0.28.16(typescript@5.9.3)
-=======
-        specifier: ^0.28.14
-        version: 0.28.14(typescript@5.9.3)
       vitest:
-        specifier: ^4.0.9
-        version: 4.0.9(@types/node@24.10.1)(tsx@4.20.6)(yaml@2.8.1)
->>>>>>> main
+        specifier: ^4.0.17
+        version: 4.0.17(@opentelemetry/api@1.9.0)(@types/node@25.0.9)(tsx@4.21.0)(yaml@2.8.2)
 
   implementations/billing/base:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.6.24
-        version: 0.6.24
+        specifier: ^0.6.26
+        version: 0.6.26
       '@forklaunch/core':
-        specifier: ^0.17.0
-        version: 0.17.0(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
+        specifier: ^0.17.2
+        version: 0.17.2(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
       '@forklaunch/interfaces-billing':
         specifier: workspace:*
         version: link:../../../interfaces/billing
       '@forklaunch/internal':
-        specifier: ^0.3.24
-        version: 0.3.24
+        specifier: ^0.3.26
+        version: 0.3.26
       '@forklaunch/validator':
-        specifier: ^0.10.24
-        version: 0.10.24
+        specifier: ^0.10.26
+        version: 0.10.26
       '@mikro-orm/core':
         specifier: ^6.6.4
         version: 6.6.4
@@ -613,8 +603,8 @@ importers:
         version: 4.3.5
     devDependencies:
       '@typescript/native-preview':
-        specifier: 7.0.0-dev.20260118.1
-        version: 7.0.0-dev.20260118.1
+        specifier: 7.0.0-dev.20260120.1
+        version: 7.0.0-dev.20260120.1
       depcheck:
         specifier: ^1.4.7
         version: 1.4.7
@@ -628,11 +618,11 @@ importers:
   implementations/billing/stripe:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.6.24
-        version: 0.6.24
+        specifier: ^0.6.26
+        version: 0.6.26
       '@forklaunch/core':
-        specifier: ^0.17.0
-        version: 0.17.0(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
+        specifier: ^0.17.2
+        version: 0.17.2(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
       '@forklaunch/implementation-billing-base':
         specifier: workspace:*
         version: link:../base
@@ -640,11 +630,11 @@ importers:
         specifier: workspace:*
         version: link:../../../interfaces/billing
       '@forklaunch/internal':
-        specifier: ^0.3.24
-        version: 0.3.24
+        specifier: ^0.3.26
+        version: 0.3.26
       '@forklaunch/validator':
-        specifier: ^0.10.24
-        version: 0.10.24
+        specifier: ^0.10.26
+        version: 0.10.26
       '@mikro-orm/core':
         specifier: ^6.6.4
         version: 6.6.4
@@ -662,8 +652,8 @@ importers:
         version: 4.3.5
     devDependencies:
       '@typescript/native-preview':
-        specifier: 7.0.0-dev.20260118.1
-        version: 7.0.0-dev.20260118.1
+        specifier: 7.0.0-dev.20260120.1
+        version: 7.0.0-dev.20260120.1
       depcheck:
         specifier: ^1.4.7
         version: 1.4.7
@@ -677,20 +667,20 @@ importers:
   implementations/iam/base:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.6.24
-        version: 0.6.24
+        specifier: ^0.6.26
+        version: 0.6.26
       '@forklaunch/core':
-        specifier: ^0.17.0
-        version: 0.17.0(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
+        specifier: ^0.17.2
+        version: 0.17.2(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
       '@forklaunch/interfaces-iam':
         specifier: workspace:*
         version: link:../../../interfaces/iam
       '@forklaunch/internal':
-        specifier: ^0.3.24
-        version: 0.3.24
+        specifier: ^0.3.26
+        version: 0.3.26
       '@forklaunch/validator':
-        specifier: ^0.10.24
-        version: 0.10.24
+        specifier: ^0.10.26
+        version: 0.10.26
       '@mikro-orm/core':
         specifier: ^6.6.4
         version: 6.6.4
@@ -705,8 +695,8 @@ importers:
         version: 4.3.5
     devDependencies:
       '@typescript/native-preview':
-        specifier: 7.0.0-dev.20260118.1
-        version: 7.0.0-dev.20260118.1
+        specifier: 7.0.0-dev.20260120.1
+        version: 7.0.0-dev.20260120.1
       depcheck:
         specifier: ^1.4.7
         version: 1.4.7
@@ -720,14 +710,14 @@ importers:
   implementations/worker/bullmq:
     dependencies:
       '@forklaunch/core':
-        specifier: ^0.17.0
-        version: 0.17.0(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
+        specifier: ^0.17.2
+        version: 0.17.2(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
       '@forklaunch/interfaces-worker':
         specifier: workspace:*
         version: link:../../../interfaces/worker
       '@forklaunch/internal':
-        specifier: ^0.3.24
-        version: 0.3.24
+        specifier: ^0.3.26
+        version: 0.3.26
       '@sinclair/typebox':
         specifier: ^0.34.47
         version: 0.34.47
@@ -739,8 +729,8 @@ importers:
         version: 4.3.5
     devDependencies:
       '@typescript/native-preview':
-        specifier: 7.0.0-dev.20260118.1
-        version: 7.0.0-dev.20260118.1
+        specifier: 7.0.0-dev.20260120.1
+        version: 7.0.0-dev.20260120.1
       depcheck:
         specifier: ^1.4.7
         version: 1.4.7
@@ -754,20 +744,20 @@ importers:
         specifier: ^0.28.16
         version: 0.28.16(typescript@5.9.3)
       typescript-eslint:
-        specifier: ^8.53.0
-        version: 8.53.0(eslint@9.39.2)(typescript@5.9.3)
+        specifier: ^8.53.1
+        version: 8.53.1(eslint@9.39.2)(typescript@5.9.3)
 
   implementations/worker/database:
     dependencies:
       '@forklaunch/core':
-        specifier: ^0.17.0
-        version: 0.17.0(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
+        specifier: ^0.17.2
+        version: 0.17.2(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
       '@forklaunch/interfaces-worker':
         specifier: workspace:*
         version: link:../../../interfaces/worker
       '@forklaunch/internal':
-        specifier: ^0.3.24
-        version: 0.3.24
+        specifier: ^0.3.26
+        version: 0.3.26
       '@mikro-orm/core':
         specifier: ^6.6.4
         version: 6.6.4
@@ -779,8 +769,8 @@ importers:
         version: 4.3.5
     devDependencies:
       '@typescript/native-preview':
-        specifier: 7.0.0-dev.20260118.1
-        version: 7.0.0-dev.20260118.1
+        specifier: 7.0.0-dev.20260120.1
+        version: 7.0.0-dev.20260120.1
       depcheck:
         specifier: ^1.4.7
         version: 1.4.7
@@ -794,20 +784,20 @@ importers:
         specifier: ^0.28.16
         version: 0.28.16(typescript@5.9.3)
       typescript-eslint:
-        specifier: ^8.53.0
-        version: 8.53.0(eslint@9.39.2)(typescript@5.9.3)
+        specifier: ^8.53.1
+        version: 8.53.1(eslint@9.39.2)(typescript@5.9.3)
 
   implementations/worker/kafka:
     dependencies:
       '@forklaunch/core':
-        specifier: ^0.17.0
-        version: 0.17.0(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
+        specifier: ^0.17.2
+        version: 0.17.2(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
       '@forklaunch/interfaces-worker':
         specifier: workspace:*
         version: link:../../../interfaces/worker
       '@forklaunch/internal':
-        specifier: ^0.3.24
-        version: 0.3.24
+        specifier: ^0.3.26
+        version: 0.3.26
       '@sinclair/typebox':
         specifier: ^0.34.47
         version: 0.34.47
@@ -819,8 +809,8 @@ importers:
         version: 4.3.5
     devDependencies:
       '@typescript/native-preview':
-        specifier: 7.0.0-dev.20260118.1
-        version: 7.0.0-dev.20260118.1
+        specifier: 7.0.0-dev.20260120.1
+        version: 7.0.0-dev.20260120.1
       depcheck:
         specifier: ^1.4.7
         version: 1.4.7
@@ -834,20 +824,20 @@ importers:
         specifier: ^0.28.16
         version: 0.28.16(typescript@5.9.3)
       typescript-eslint:
-        specifier: ^8.53.0
-        version: 8.53.0(eslint@9.39.2)(typescript@5.9.3)
+        specifier: ^8.53.1
+        version: 8.53.1(eslint@9.39.2)(typescript@5.9.3)
 
   implementations/worker/redis:
     dependencies:
       '@forklaunch/core':
-        specifier: ^0.17.0
-        version: 0.17.0(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
+        specifier: ^0.17.2
+        version: 0.17.2(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
       '@forklaunch/interfaces-worker':
         specifier: workspace:*
         version: link:../../../interfaces/worker
       '@forklaunch/internal':
-        specifier: ^0.3.24
-        version: 0.3.24
+        specifier: ^0.3.26
+        version: 0.3.26
       '@sinclair/typebox':
         specifier: ^0.34.47
         version: 0.34.47
@@ -856,8 +846,8 @@ importers:
         version: 4.3.5
     devDependencies:
       '@typescript/native-preview':
-        specifier: 7.0.0-dev.20260118.1
-        version: 7.0.0-dev.20260118.1
+        specifier: 7.0.0-dev.20260120.1
+        version: 7.0.0-dev.20260120.1
       depcheck:
         specifier: ^1.4.7
         version: 1.4.7
@@ -871,21 +861,21 @@ importers:
         specifier: ^0.28.16
         version: 0.28.16(typescript@5.9.3)
       typescript-eslint:
-        specifier: ^8.53.0
-        version: 8.53.0(eslint@9.39.2)(typescript@5.9.3)
+        specifier: ^8.53.1
+        version: 8.53.1(eslint@9.39.2)(typescript@5.9.3)
 
   interfaces/billing:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.6.24
-        version: 0.6.24
+        specifier: ^0.6.26
+        version: 0.6.26
       '@mikro-orm/core':
         specifier: ^6.6.4
         version: 6.6.4
     devDependencies:
       '@typescript/native-preview':
-        specifier: 7.0.0-dev.20260118.1
-        version: 7.0.0-dev.20260118.1
+        specifier: 7.0.0-dev.20260120.1
+        version: 7.0.0-dev.20260120.1
       depcheck:
         specifier: ^1.4.7
         version: 1.4.7
@@ -899,15 +889,15 @@ importers:
   interfaces/iam:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.6.24
-        version: 0.6.24
+        specifier: ^0.6.26
+        version: 0.6.26
       '@mikro-orm/core':
         specifier: ^6.6.4
         version: 6.6.4
     devDependencies:
       '@typescript/native-preview':
-        specifier: 7.0.0-dev.20260118.1
-        version: 7.0.0-dev.20260118.1
+        specifier: 7.0.0-dev.20260120.1
+        version: 7.0.0-dev.20260120.1
       depcheck:
         specifier: ^1.4.7
         version: 1.4.7
@@ -921,8 +911,8 @@ importers:
   interfaces/worker:
     devDependencies:
       '@typescript/native-preview':
-        specifier: 7.0.0-dev.20260118.1
-        version: 7.0.0-dev.20260118.1
+        specifier: 7.0.0-dev.20260120.1
+        version: 7.0.0-dev.20260120.1
       depcheck:
         specifier: ^1.4.7
         version: 1.4.7
@@ -936,14 +926,14 @@ importers:
         specifier: ^0.28.16
         version: 0.28.16(typescript@5.9.3)
       typescript-eslint:
-        specifier: ^8.53.0
-        version: 8.53.0(eslint@9.39.2)(typescript@5.9.3)
+        specifier: ^8.53.1
+        version: 8.53.1(eslint@9.39.2)(typescript@5.9.3)
 
   monitoring:
     dependencies:
       '@forklaunch/core':
-        specifier: ^0.17.0
-        version: 0.17.0(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
+        specifier: ^0.17.2
+        version: 0.17.2(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
 
   sample-worker:
     dependencies:
@@ -957,8 +947,8 @@ importers:
         specifier: workspace:*
         version: link:../universal-sdk
       '@forklaunch/core':
-        specifier: ^0.17.0
-        version: 0.17.0(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
+        specifier: ^0.17.2
+        version: 0.17.2(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
       '@forklaunch/implementation-worker-bullmq':
         specifier: workspace:*
         version: link:../implementations/worker/bullmq
@@ -972,17 +962,17 @@ importers:
         specifier: workspace:*
         version: link:../implementations/worker/redis
       '@forklaunch/infrastructure-redis':
-        specifier: ^0.4.33
-        version: 0.4.33(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
+        specifier: ^0.4.35
+        version: 0.4.35(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
       '@forklaunch/infrastructure-s3':
-        specifier: ^0.4.33
-        version: 0.4.33(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
+        specifier: ^0.4.35
+        version: 0.4.35(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
       '@forklaunch/interfaces-worker':
         specifier: workspace:*
         version: link:../interfaces/worker
       '@forklaunch/universal-sdk':
-        specifier: ^0.7.24
-        version: 0.7.24
+        specifier: ^0.7.26
+        version: 0.7.26
       '@mikro-orm/better-sqlite':
         specifier: ^6.6.4
         version: 6.6.4(@mikro-orm/core@6.6.4)(libsql@0.5.22)(mariadb@3.4.5)(sqlite3@5.1.7)
@@ -1048,8 +1038,8 @@ importers:
         version: 4.3.5
     devDependencies:
       '@forklaunch/testing':
-        specifier: ^0.0.13
-        version: 0.0.13(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@25.0.9)(tsx@4.21.0)(yaml@2.8.2))
+        specifier: ^0.0.15
+        version: 0.0.15(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@25.0.9)(tsx@4.21.0)(yaml@2.8.2))
       '@mikro-orm/cli':
         specifier: ^6.6.4
         version: 6.6.4(better-sqlite3@12.6.2)(libsql@0.5.22)(mariadb@3.4.5)(sqlite3@5.1.7)
@@ -1084,20 +1074,20 @@ importers:
         specifier: ^0.28.16
         version: 0.28.16(typescript@5.9.3)
       typescript-eslint:
-        specifier: ^8.53.0
-        version: 8.53.0(eslint@9.39.2)(typescript@5.9.3)
+        specifier: ^8.53.1
+        version: 8.53.1(eslint@9.39.2)(typescript@5.9.3)
 
   universal-sdk:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.6.24
-        version: 0.6.24
+        specifier: ^0.6.26
+        version: 0.6.26
       '@forklaunch/universal-sdk':
-        specifier: ^0.7.24
-        version: 0.7.24
+        specifier: ^0.7.26
+        version: 0.7.26
       better-auth:
-        specifier: ^1.4.15
-        version: 1.4.15(better-sqlite3@12.6.2)(mongodb@6.20.0(socks@2.8.7))(mysql2@3.16.0)(pg@8.16.3)(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@25.0.9)(tsx@4.21.0)(yaml@2.8.2))
+        specifier: ^1.4.16
+        version: 1.4.16(better-sqlite3@12.6.2)(mongodb@6.20.0(socks@2.8.7))(mysql2@3.16.0)(pg@8.16.3)(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@25.0.9)(tsx@4.21.0)(yaml@2.8.2))
     devDependencies:
       '@forklaunch/blueprint-billing-base':
         specifier: workspace:*
@@ -1118,8 +1108,8 @@ importers:
         specifier: workspace:*
         version: link:../sample-worker
       '@forklaunch/core':
-        specifier: ^0.17.0
-        version: 0.17.0(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
+        specifier: ^0.17.2
+        version: 0.17.2(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
 
 packages:
 
@@ -1532,8 +1522,8 @@ packages:
   '@bcoe/v8-coverage@0.2.3':
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
 
-  '@better-auth/core@1.4.15':
-    resolution: {integrity: sha512-uAvq8YA7SaS7v+TrvH/Kwt7LAJihzUqB3FX8VweDsqu3gn5t51M+Bve+V1vVWR9qBAtC6cN68V6b+scxZxDY4A==}
+  '@better-auth/core@1.4.16':
+    resolution: {integrity: sha512-bQFdWMwxpbttIVDTbggD23nWHc3Qq3Xjgys0NR0ZDrcxdoYWAe/J4MESwDwAoepFHGvUIGrxu5B8JfEguLAciA==}
     peerDependencies:
       '@better-auth/utils': 0.3.0
       '@better-fetch/fetch': 1.1.21
@@ -1542,10 +1532,10 @@ packages:
       kysely: ^0.28.5
       nanostores: ^1.0.1
 
-  '@better-auth/telemetry@1.4.15':
-    resolution: {integrity: sha512-7NW/2PS4RN85rv+ozpAezP/kSLPZeWkxqcA6RA/CFXqWp2YR2e5q5E6Hym1qBgVBkoAQa3lWFdX3b+jEs+vvrQ==}
+  '@better-auth/telemetry@1.4.16':
+    resolution: {integrity: sha512-sEly0SWac8dOLP0XyJULj4tC8coiONIFTylnNUa86+u5FAtHRt+jo0bgBUHku8JveLbVOETOB7YVoHyTecutug==}
     peerDependencies:
-      '@better-auth/core': 1.4.15
+      '@better-auth/core': 1.4.16
 
   '@better-auth/utils@0.3.0':
     resolution: {integrity: sha512-W+Adw6ZA6mgvnSnhOki270rwJ42t4XzSK6YWGF//BbVXL6SwCLWfyzBc1lN2m/4RM28KubdBKQ4X5VMoLRNPQw==}
@@ -1878,33 +1868,29 @@ packages:
       '@mikro-orm/core': ^6.0.0
       better-auth: ^1.0.0
 
-  '@forklaunch/common@0.6.24':
-    resolution: {integrity: sha512-fRz5fS2PTMpz3neocJgZ+I7vbTPY2+3mrT0v6P+n5rSc1Nb90fgpsriHUPIE7Tm7GNoHg/y7AgRlGAVLF01/TA==}
+  '@forklaunch/common@0.6.26':
+    resolution: {integrity: sha512-h90jz6K6dT/b1M/kR8WU8EPwcEd7QekudfkyikNU6NcMehdG5KcFQBL4fVOSh+OzZU+rGpUYqGOGIfmcg+PMfA==}
 
-  '@forklaunch/core@0.17.0':
-    resolution: {integrity: sha512-h6MYUI+V3TE5WomgwlDoo+GsHu04WOCF1EJxUhvxZD2XTWuwLumyDCY79E2R1c58hn+/7Jr23V7Qz1YsL9gpjQ==}
+  '@forklaunch/core@0.17.2':
+    resolution: {integrity: sha512-IwZwnIAghsodzdm29dlIr92QG8TmeAV46uQxmSuDs+CxwOk2OrPN8mhmTXT4VZHKE8nNA8jh5bWBF+u8pEKuCA==}
 
-  '@forklaunch/express@0.10.0':
-    resolution: {integrity: sha512-Uiv0XfSgj2HBbtR/vgC5vjNBtVnipsbMTruuQjWScYGulV+ahMPWoR3t2ks/H5kI5W/nHSsItLGSNIE3BJ3Z8A==}
-
-  '@forklaunch/fastmcp-fork@1.0.5':
-    resolution: {integrity: sha512-rpQsfVdEWqBX9D1YysO/yBYQqstk1DrRip2xNTr3R8G/fbKV33jjL9oYF3D5fxjg7t2WcxzYOVtVJyTIOvXNKA==}
-    hasBin: true
+  '@forklaunch/express@0.10.2':
+    resolution: {integrity: sha512-4Nr2eeiPyXVzylQNwCjjYe5bIEhnoCN/SNqSZmeKbX3LVMmFlsWqcngnQB3AZeeZycjbXrUvumh55jot/wPjuw==}
 
   '@forklaunch/hyper-express-fork@6.17.35':
     resolution: {integrity: sha512-FXez51tbt+3bB8J6B6qcL1Jqp0Bd6/Aq2iFVaQq3PDeeWAAXhktnN9+WkQ+UdqvxgV07oHbZgOY6ec56K0IxTg==}
 
-  '@forklaunch/hyper-express@0.11.0':
-    resolution: {integrity: sha512-cWYpI81N33Gmb8qL1cArOreUz1IhboH3a4kg8Dqeumk62aO9+XCsexGjq80H1sYDsQ2dffNS3u4/v/HaseBtWA==}
+  '@forklaunch/hyper-express@0.11.2':
+    resolution: {integrity: sha512-3L/qL6UOCuc/AexT6iJjjZLzBUVaRAEIsHeC8pvyQq8KIIQUZCV4hD2TyVSdjmy1B3TPrKiEa6pxYz7d2Fv+jQ==}
 
-  '@forklaunch/infrastructure-redis@0.4.33':
-    resolution: {integrity: sha512-4cwH17abBZDUTsH/eqY48uQZyHehhz+SRPiOcDx18F1GGxKMVkhNs72vBqLbHqCUlWUSPKYhygQDJah0x2n3Iw==}
+  '@forklaunch/infrastructure-redis@0.4.35':
+    resolution: {integrity: sha512-24VPQLRBWhRUhz76l86gxlnPfkA8/xOIyOonHP7fsL1y5BbB95Z5ZEkyBn58hBuSfWEer7HQMlzr2kLb5TcLEA==}
 
-  '@forklaunch/infrastructure-s3@0.4.33':
-    resolution: {integrity: sha512-lBcix26n8PIsQsUAordQ8u5FfJCbf1Xv29j6g4oIZNC2L+5IIuwqmdj4ZC3f8MWxKH5AOxhnLpGaO+mjIW22SA==}
+  '@forklaunch/infrastructure-s3@0.4.35':
+    resolution: {integrity: sha512-8U80oUDqqxpaUhXBcj8HcGyNb6gAh/q9VRkIt77HMnkbAprxA2ZvSfI678hvlPvbnj4aTmpBwGrSKrk0c4A3Dg==}
 
-  '@forklaunch/internal@0.3.24':
-    resolution: {integrity: sha512-SaNnrDea6jl3MXeYg3ZQWx7lIwj1HZtnPokSpHOgJpDsWMpg6DdHbIymlQGryBk8a/aQnlQugqr3i2rIl9pgrQ==}
+  '@forklaunch/internal@0.3.26':
+    resolution: {integrity: sha512-s/F6KniRnzMSp5kFUwiTiglmQMf9vcaDxP465K7dmjbwEHspQQX9+amTFbaEMUDX0wE6GLZ1+M9rpfSVme7QCw==}
 
   '@forklaunch/opentelemetry-instrumentation-hyper-express@0.0.5':
     resolution: {integrity: sha512-AwkA0ywzdZRz5p+kRMGWH0v0MH2aqxhlIBLV8SQDETKTbpN6G1BtptxPegC9QFFfCJSywDguXDNvVdmxX+VV0A==}
@@ -1912,19 +1898,19 @@ packages:
     peerDependencies:
       '@opentelemetry/api': ^1.3.0
 
-  '@forklaunch/testing@0.0.13':
-    resolution: {integrity: sha512-Iz6ViQJQoHXkBjtWv+98B5BAZViDOl6LMp02c8UWJDS7AwfYDY19aTP5akhUY+vY0IrOaSQS7e24nDeFeHINyg==}
+  '@forklaunch/testing@0.0.15':
+    resolution: {integrity: sha512-CW6k8RXQ4hnCyKtc1raubO5r6BMOVbCGItZArJYTv2uTWLN6QU5HikeQdpamh1YMljZu2NqJ304bQdhf2CbxIA==}
     peerDependencies:
       vitest: ^3.0.0
 
-  '@forklaunch/universal-sdk@0.7.24':
-    resolution: {integrity: sha512-rak7dGcc5H4M12mqPnyk/Lc5h6Duqcz25T0RT7AacfqFHvBLOWuXH8yLZprc6ahK5E2ge+3qxNNIbKM4x/9MbQ==}
+  '@forklaunch/universal-sdk@0.7.26':
+    resolution: {integrity: sha512-IJDfTxx25O1N22cxs4MjOMfNZVNOpZDbHz4is5iYyruuNhpK74WH6EkhCTpzSz4fn/0RJzt4LA1oMaOTIj9C0A==}
 
-  '@forklaunch/validator@0.10.24':
-    resolution: {integrity: sha512-anc1W6O/xfmbfX0yyVz8Acec7ZqnA5/pzN2sUzfOEVI9hEc1mblCaHr9gbbvvfoEDMNNTzQYOoeG3rjqgMJ7ZQ==}
+  '@forklaunch/validator@0.10.26':
+    resolution: {integrity: sha512-TtvkthMKyE5BSrOUC6TwQTnIkiLwoMGCly6Y3RHKwT/Eb/0gImLg+sbGjO+705Bqhq2MeFUF3J3pt7MUYivY4w==}
 
-  '@forklaunch/ws@0.1.3':
-    resolution: {integrity: sha512-QchnCmfLAKIMXLQBTq84NFRNSwqrwprwTY75pfN8D+E4QsknlCJkSg6fN7la62Hs1EDoZ/bmejnLnNmWTte5sQ==}
+  '@forklaunch/ws@0.1.5':
+    resolution: {integrity: sha512-rGCREWEYloVdFnZLBf0aUev+EuxgZYYaarAkh2149h4wDEoJoJGH51L2vAJSFmkdX5zZe8Imge4j8CQCdWuHFw==}
 
   '@gar/promisify@1.1.3':
     resolution: {integrity: sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==}
@@ -2274,8 +2260,8 @@ packages:
     peerDependencies:
       '@mikro-orm/core': ^6.0.0
 
-  '@modelcontextprotocol/sdk@1.25.2':
-    resolution: {integrity: sha512-LZFeo4F9M5qOhC/Uc1aQSrBHxMrvxett+9KLHt7OhcExtoiRN9DKgbZffMP/nxjutWDQpfMDfP3nkHI4X9ijww==}
+  '@modelcontextprotocol/sdk@1.25.3':
+    resolution: {integrity: sha512-vsAMBMERybvYgKbg/l4L1rhS7VXV1c0CtyJg72vwxONVX0l4ZfKVAnZEWTQixJGTzKnELjQ59e4NbdFDALRiAQ==}
     engines: {node: '>=18'}
     peerDependencies:
       '@cfworker/json-schema': ^4.1.1
@@ -2284,8 +2270,8 @@ packages:
       '@cfworker/json-schema':
         optional: true
 
-  '@mongodb-js/saslprep@1.4.4':
-    resolution: {integrity: sha512-p7X/ytJDIdwUfFL/CLOhKgdfJe1Fa8uw9seJYvdOmnP9JBWGWHW69HkOixXS6Wy9yvGf1MbhcS6lVmrhy4jm2g==}
+  '@mongodb-js/saslprep@1.4.5':
+    resolution: {integrity: sha512-k64Lbyb7ycCSXHSLzxVdb2xsKGPMvYZfCICXvDsI8Z65CeWQzTEKS4YmGbnqw+U9RBvLPTsB6UCmwkgsDTGWIw==}
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3':
     resolution: {integrity: sha512-QZHtlVgbAdy2zAqNA9Gu1UpIuI8Xvsd1v8ic6B2pZmeFnFcMWiPLfWXh7TVw4eGEZ/C9TH281KwhVoeQUKbyjw==}
@@ -2562,43 +2548,43 @@ packages:
     resolution: {integrity: sha512-R5R9tb2AXs2IRLNKLBJDynhkfmx7mX0vi8NkhZb3gUkPWHn6HXk5J8iQ/dql0U3ApfWym4kXXmBDRGO+oeOfjg==}
     engines: {node: '>=14'}
 
-  '@oxlint/darwin-arm64@1.39.0':
-    resolution: {integrity: sha512-lT3hNhIa02xCujI6YGgjmYGg3Ht/X9ag5ipUVETaMpx5Rd4BbTNWUPif1WN1YZHxt3KLCIqaAe7zVhatv83HOQ==}
+  '@oxlint/darwin-arm64@1.41.0':
+    resolution: {integrity: sha512-K0Bs0cNW11oWdSrKmrollKF44HMM2HKr4QidZQHMlhJcSX8pozxv0V5FLdqB4sddzCY0J9Wuuw+oRAfR8sdRwA==}
     cpu: [arm64]
     os: [darwin]
 
-  '@oxlint/darwin-x64@1.39.0':
-    resolution: {integrity: sha512-UT+rfTWd+Yr7iJeSLd/7nF8X4gTYssKh+n77hxl6Oilp3NnG1CKRHxZDy3o3lIBnwgzJkdyUAiYWO1bTMXQ1lA==}
+  '@oxlint/darwin-x64@1.41.0':
+    resolution: {integrity: sha512-1LCCXCe9nN8LbrJ1QOGari2HqnxrZrveYKysWDIg8gFsQglIg00XF/8lRbA0kWHMdLgt4X0wfNYhhFz+c3XXLQ==}
     cpu: [x64]
     os: [darwin]
 
-  '@oxlint/linux-arm64-gnu@1.39.0':
-    resolution: {integrity: sha512-qocBkvS2V6rH0t9AT3DfQunMnj3xkM7srs5/Ycj2j5ZqMoaWd/FxHNVJDFP++35roKSvsRJoS0mtA8/77jqm6Q==}
+  '@oxlint/linux-arm64-gnu@1.41.0':
+    resolution: {integrity: sha512-Fow7H84Bs8XxuaK1yfSEWBC8HI7rfEQB9eR2A0J61un1WgCas7jNrt1HbT6+p6KmUH2bhR+r/RDu/6JFAvvj4g==}
     cpu: [arm64]
     os: [linux]
 
-  '@oxlint/linux-arm64-musl@1.39.0':
-    resolution: {integrity: sha512-arZzAc1PPcz9epvGBBCMHICeyQloKtHX3eoOe62B3Dskn7gf6Q14wnDHr1r9Vp4vtcBATNq6HlKV14smdlC/qA==}
+  '@oxlint/linux-arm64-musl@1.41.0':
+    resolution: {integrity: sha512-WoRRDNwgP5W3rjRh42Zdx8ferYnqpKoYCv2QQLenmdrLjRGYwAd52uywfkcS45mKEWHeY1RPwPkYCSROXiGb2w==}
     cpu: [arm64]
     os: [linux]
 
-  '@oxlint/linux-x64-gnu@1.39.0':
-    resolution: {integrity: sha512-ZVt5qsECpuNprdWxAPpDBwoixr1VTcZ4qAEQA2l/wmFyVPDYFD3oBY/SWACNnWBddMrswjTg9O8ALxYWoEpmXw==}
+  '@oxlint/linux-x64-gnu@1.41.0':
+    resolution: {integrity: sha512-75k3CKj3fOc/a/2aSgO81s3HsTZOFROthPJ+UI2Oatic1LhvH6eKjKfx3jDDyVpzeDS2qekPlc/y3N33iZz5Og==}
     cpu: [x64]
     os: [linux]
 
-  '@oxlint/linux-x64-musl@1.39.0':
-    resolution: {integrity: sha512-pB0hlGyKPbxr9NMIV783lD6cWL3MpaqnZRM9MWni4yBdHPTKyFNYdg5hGD0Bwg+UP4S2rOevq/+OO9x9Bi7E6g==}
+  '@oxlint/linux-x64-musl@1.41.0':
+    resolution: {integrity: sha512-8r82eBwGPoAPn67ZvdxTlX/Z3gVb+ZtN6nbkyFzwwHWAh8yGutX+VBcVkyrePSl6XgBP4QAaddPnHmkvJjqY0g==}
     cpu: [x64]
     os: [linux]
 
-  '@oxlint/win32-arm64@1.39.0':
-    resolution: {integrity: sha512-Gg2SFaJohI9+tIQVKXlPw3FsPQFi/eCSWiCgwPtPn5uzQxHRTeQEZKuluz1fuzR5U70TXubb2liZi4Dgl8LJQA==}
+  '@oxlint/win32-arm64@1.41.0':
+    resolution: {integrity: sha512-aK+DAcckQsNCOXKruatyYuY/ROjNiRejQB1PeJtkZwM21+8rV9ODYbvKNvt0pW+YCws7svftBSFMCpl3ke2unw==}
     cpu: [arm64]
     os: [win32]
 
-  '@oxlint/win32-x64@1.39.0':
-    resolution: {integrity: sha512-sbi25lfj74hH+6qQtb7s1wEvd1j8OQbTaH8v3xTcDjrwm579Cyh0HBv1YSZ2+gsnVwfVDiCTL1D0JsNqYXszVA==}
+  '@oxlint/win32-x64@1.41.0':
+    resolution: {integrity: sha512-dVBXkZ6MGLd3owV7jvuqJsZwiF3qw7kEkDVsYVpS/O96eEvlHcxVbaPjJjrTBgikXqyC22vg3dxBU7MW0utGfw==}
     cpu: [x64]
     os: [win32]
 
@@ -2671,128 +2657,128 @@ packages:
     peerDependencies:
       '@redis/client': ^5.10.0
 
-  '@rollup/rollup-android-arm-eabi@4.55.1':
-    resolution: {integrity: sha512-9R0DM/ykwfGIlNu6+2U09ga0WXeZ9MRC2Ter8jnz8415VbuIykVuc6bhdrbORFZANDmTDvq26mJrEVTl8TdnDg==}
+  '@rollup/rollup-android-arm-eabi@4.55.2':
+    resolution: {integrity: sha512-21J6xzayjy3O6NdnlO6aXi/urvSRjm6nCI6+nF6ra2YofKruGixN9kfT+dt55HVNwfDmpDHJcaS3JuP/boNnlA==}
     cpu: [arm]
     os: [android]
 
-  '@rollup/rollup-android-arm64@4.55.1':
-    resolution: {integrity: sha512-eFZCb1YUqhTysgW3sj/55du5cG57S7UTNtdMjCW7LwVcj3dTTcowCsC8p7uBdzKsZYa8J7IDE8lhMI+HX1vQvg==}
+  '@rollup/rollup-android-arm64@4.55.2':
+    resolution: {integrity: sha512-eXBg7ibkNUZ+sTwbFiDKou0BAckeV6kIigK7y5Ko4mB/5A1KLhuzEKovsmfvsL8mQorkoincMFGnQuIT92SKqA==}
     cpu: [arm64]
     os: [android]
 
-  '@rollup/rollup-darwin-arm64@4.55.1':
-    resolution: {integrity: sha512-p3grE2PHcQm2e8PSGZdzIhCKbMCw/xi9XvMPErPhwO17vxtvCN5FEA2mSLgmKlCjHGMQTP6phuQTYWUnKewwGg==}
+  '@rollup/rollup-darwin-arm64@4.55.2':
+    resolution: {integrity: sha512-UCbaTklREjrc5U47ypLulAgg4njaqfOVLU18VrCrI+6E5MQjuG0lSWaqLlAJwsD7NpFV249XgB0Bi37Zh5Sz4g==}
     cpu: [arm64]
     os: [darwin]
 
-  '@rollup/rollup-darwin-x64@4.55.1':
-    resolution: {integrity: sha512-rDUjG25C9qoTm+e02Esi+aqTKSBYwVTaoS1wxcN47/Luqef57Vgp96xNANwt5npq9GDxsH7kXxNkJVEsWEOEaQ==}
+  '@rollup/rollup-darwin-x64@4.55.2':
+    resolution: {integrity: sha512-dP67MA0cCMHFT2g5XyjtpVOtp7y4UyUxN3dhLdt11at5cPKnSm4lY+EhwNvDXIMzAMIo2KU+mc9wxaAQJTn7sQ==}
     cpu: [x64]
     os: [darwin]
 
-  '@rollup/rollup-freebsd-arm64@4.55.1':
-    resolution: {integrity: sha512-+JiU7Jbp5cdxekIgdte0jfcu5oqw4GCKr6i3PJTlXTCU5H5Fvtkpbs4XJHRmWNXF+hKmn4v7ogI5OQPaupJgOg==}
+  '@rollup/rollup-freebsd-arm64@4.55.2':
+    resolution: {integrity: sha512-WDUPLUwfYV9G1yxNRJdXcvISW15mpvod1Wv3ok+Ws93w1HjIVmCIFxsG2DquO+3usMNCpJQ0wqO+3GhFdl6Fow==}
     cpu: [arm64]
     os: [freebsd]
 
-  '@rollup/rollup-freebsd-x64@4.55.1':
-    resolution: {integrity: sha512-V5xC1tOVWtLLmr3YUk2f6EJK4qksksOYiz/TCsFHu/R+woubcLWdC9nZQmwjOAbmExBIVKsm1/wKmEy4z4u4Bw==}
+  '@rollup/rollup-freebsd-x64@4.55.2':
+    resolution: {integrity: sha512-Ng95wtHVEulRwn7R0tMrlUuiLVL/HXA8Lt/MYVpy88+s5ikpntzZba1qEulTuPnPIZuOPcW9wNEiqvZxZmgmqQ==}
     cpu: [x64]
     os: [freebsd]
 
-  '@rollup/rollup-linux-arm-gnueabihf@4.55.1':
-    resolution: {integrity: sha512-Rn3n+FUk2J5VWx+ywrG/HGPTD9jXNbicRtTM11e/uorplArnXZYsVifnPPqNNP5BsO3roI4n8332ukpY/zN7rQ==}
+  '@rollup/rollup-linux-arm-gnueabihf@4.55.2':
+    resolution: {integrity: sha512-AEXMESUDWWGqD6LwO/HkqCZgUE1VCJ1OhbvYGsfqX2Y6w5quSXuyoy/Fg3nRqiwro+cJYFxiw5v4kB2ZDLhxrw==}
     cpu: [arm]
     os: [linux]
 
-  '@rollup/rollup-linux-arm-musleabihf@4.55.1':
-    resolution: {integrity: sha512-grPNWydeKtc1aEdrJDWk4opD7nFtQbMmV7769hiAaYyUKCT1faPRm2av8CX1YJsZ4TLAZcg9gTR1KvEzoLjXkg==}
+  '@rollup/rollup-linux-arm-musleabihf@4.55.2':
+    resolution: {integrity: sha512-ZV7EljjBDwBBBSv570VWj0hiNTdHt9uGznDtznBB4Caj3ch5rgD4I2K1GQrtbvJ/QiB+663lLgOdcADMNVC29Q==}
     cpu: [arm]
     os: [linux]
 
-  '@rollup/rollup-linux-arm64-gnu@4.55.1':
-    resolution: {integrity: sha512-a59mwd1k6x8tXKcUxSyISiquLwB5pX+fJW9TkWU46lCqD/GRDe9uDN31jrMmVP3feI3mhAdvcCClhV8V5MhJFQ==}
+  '@rollup/rollup-linux-arm64-gnu@4.55.2':
+    resolution: {integrity: sha512-uvjwc8NtQVPAJtq4Tt7Q49FOodjfbf6NpqXyW/rjXoV+iZ3EJAHLNAnKT5UJBc6ffQVgmXTUL2ifYiLABlGFqA==}
     cpu: [arm64]
     os: [linux]
 
-  '@rollup/rollup-linux-arm64-musl@4.55.1':
-    resolution: {integrity: sha512-puS1MEgWX5GsHSoiAsF0TYrpomdvkaXm0CofIMG5uVkP6IBV+ZO9xhC5YEN49nsgYo1DuuMquF9+7EDBVYu4uA==}
+  '@rollup/rollup-linux-arm64-musl@4.55.2':
+    resolution: {integrity: sha512-s3KoWVNnye9mm/2WpOZ3JeUiediUVw6AvY/H7jNA6qgKA2V2aM25lMkVarTDfiicn/DLq3O0a81jncXszoyCFA==}
     cpu: [arm64]
     os: [linux]
 
-  '@rollup/rollup-linux-loong64-gnu@4.55.1':
-    resolution: {integrity: sha512-r3Wv40in+lTsULSb6nnoudVbARdOwb2u5fpeoOAZjFLznp6tDU8kd+GTHmJoqZ9lt6/Sys33KdIHUaQihFcu7g==}
+  '@rollup/rollup-linux-loong64-gnu@4.55.2':
+    resolution: {integrity: sha512-gi21faacK+J8aVSyAUptML9VQN26JRxe484IbF+h3hpG+sNVoMXPduhREz2CcYr5my0NE3MjVvQ5bMKX71pfVA==}
     cpu: [loong64]
     os: [linux]
 
-  '@rollup/rollup-linux-loong64-musl@4.55.1':
-    resolution: {integrity: sha512-MR8c0+UxAlB22Fq4R+aQSPBayvYa3+9DrwG/i1TKQXFYEaoW3B5b/rkSRIypcZDdWjWnpcvxbNaAJDcSbJU3Lw==}
+  '@rollup/rollup-linux-loong64-musl@4.55.2':
+    resolution: {integrity: sha512-qSlWiXnVaS/ceqXNfnoFZh4IiCA0EwvCivivTGbEu1qv2o+WTHpn1zNmCTAoOG5QaVr2/yhCoLScQtc/7RxshA==}
     cpu: [loong64]
     os: [linux]
 
-  '@rollup/rollup-linux-ppc64-gnu@4.55.1':
-    resolution: {integrity: sha512-3KhoECe1BRlSYpMTeVrD4sh2Pw2xgt4jzNSZIIPLFEsnQn9gAnZagW9+VqDqAHgm1Xc77LzJOo2LdigS5qZ+gw==}
+  '@rollup/rollup-linux-ppc64-gnu@4.55.2':
+    resolution: {integrity: sha512-rPyuLFNoF1B0+wolH277E780NUKf+KoEDb3OyoLbAO18BbeKi++YN6gC/zuJoPPDlQRL3fIxHxCxVEWiem2yXw==}
     cpu: [ppc64]
     os: [linux]
 
-  '@rollup/rollup-linux-ppc64-musl@4.55.1':
-    resolution: {integrity: sha512-ziR1OuZx0vdYZZ30vueNZTg73alF59DicYrPViG0NEgDVN8/Jl87zkAPu4u6VjZST2llgEUjaiNl9JM6HH1Vdw==}
+  '@rollup/rollup-linux-ppc64-musl@4.55.2':
+    resolution: {integrity: sha512-g+0ZLMook31iWV4PvqKU0i9E78gaZgYpSrYPed/4Bu+nGTgfOPtfs1h11tSSRPXSjC5EzLTjV/1A7L2Vr8pJoQ==}
     cpu: [ppc64]
     os: [linux]
 
-  '@rollup/rollup-linux-riscv64-gnu@4.55.1':
-    resolution: {integrity: sha512-uW0Y12ih2XJRERZ4jAfKamTyIHVMPQnTZcQjme2HMVDAHY4amf5u414OqNYC+x+LzRdRcnIG1YodLrrtA8xsxw==}
+  '@rollup/rollup-linux-riscv64-gnu@4.55.2':
+    resolution: {integrity: sha512-i+sGeRGsjKZcQRh3BRfpLsM3LX3bi4AoEVqmGDyc50L6KfYsN45wVCSz70iQMwPWr3E5opSiLOwsC9WB4/1pqg==}
     cpu: [riscv64]
     os: [linux]
 
-  '@rollup/rollup-linux-riscv64-musl@4.55.1':
-    resolution: {integrity: sha512-u9yZ0jUkOED1BFrqu3BwMQoixvGHGZ+JhJNkNKY/hyoEgOwlqKb62qu+7UjbPSHYjiVy8kKJHvXKv5coH4wDeg==}
+  '@rollup/rollup-linux-riscv64-musl@4.55.2':
+    resolution: {integrity: sha512-C1vLcKc4MfFV6I0aWsC7B2Y9QcsiEcvKkfxprwkPfLaN8hQf0/fKHwSF2lcYzA9g4imqnhic729VB9Fo70HO3Q==}
     cpu: [riscv64]
     os: [linux]
 
-  '@rollup/rollup-linux-s390x-gnu@4.55.1':
-    resolution: {integrity: sha512-/0PenBCmqM4ZUd0190j7J0UsQ/1nsi735iPRakO8iPciE7BQ495Y6msPzaOmvx0/pn+eJVVlZrNrSh4WSYLxNg==}
+  '@rollup/rollup-linux-s390x-gnu@4.55.2':
+    resolution: {integrity: sha512-68gHUK/howpQjh7g7hlD9DvTTt4sNLp1Bb+Yzw2Ki0xvscm2cOdCLZNJNhd2jW8lsTPrHAHuF751BygifW4bkQ==}
     cpu: [s390x]
     os: [linux]
 
-  '@rollup/rollup-linux-x64-gnu@4.55.1':
-    resolution: {integrity: sha512-a8G4wiQxQG2BAvo+gU6XrReRRqj+pLS2NGXKm8io19goR+K8lw269eTrPkSdDTALwMmJp4th2Uh0D8J9bEV1vg==}
+  '@rollup/rollup-linux-x64-gnu@4.55.2':
+    resolution: {integrity: sha512-1e30XAuaBP1MAizaOBApsgeGZge2/Byd6wV4a8oa6jPdHELbRHBiw7wvo4dp7Ie2PE8TZT4pj9RLGZv9N4qwlw==}
     cpu: [x64]
     os: [linux]
 
-  '@rollup/rollup-linux-x64-musl@4.55.1':
-    resolution: {integrity: sha512-bD+zjpFrMpP/hqkfEcnjXWHMw5BIghGisOKPj+2NaNDuVT+8Ds4mPf3XcPHuat1tz89WRL+1wbcxKY3WSbiT7w==}
+  '@rollup/rollup-linux-x64-musl@4.55.2':
+    resolution: {integrity: sha512-4BJucJBGbuGnH6q7kpPqGJGzZnYrpAzRd60HQSt3OpX/6/YVgSsJnNzR8Ot74io50SeVT4CtCWe/RYIAymFPwA==}
     cpu: [x64]
     os: [linux]
 
-  '@rollup/rollup-openbsd-x64@4.55.1':
-    resolution: {integrity: sha512-eLXw0dOiqE4QmvikfQ6yjgkg/xDM+MdU9YJuP4ySTibXU0oAvnEWXt7UDJmD4UkYialMfOGFPJnIHSe/kdzPxg==}
+  '@rollup/rollup-openbsd-x64@4.55.2':
+    resolution: {integrity: sha512-cT2MmXySMo58ENv8p6/O6wI/h/gLnD3D6JoajwXFZH6X9jz4hARqUhWpGuQhOgLNXscfZYRQMJvZDtWNzMAIDw==}
     cpu: [x64]
     os: [openbsd]
 
-  '@rollup/rollup-openharmony-arm64@4.55.1':
-    resolution: {integrity: sha512-xzm44KgEP11te3S2HCSyYf5zIzWmx3n8HDCc7EE59+lTcswEWNpvMLfd9uJvVX8LCg9QWG67Xt75AuHn4vgsXw==}
+  '@rollup/rollup-openharmony-arm64@4.55.2':
+    resolution: {integrity: sha512-sZnyUgGkuzIXaK3jNMPmUIyJrxu/PjmATQrocpGA1WbCPX8H5tfGgRSuYtqBYAvLuIGp8SPRb1O4d1Fkb5fXaQ==}
     cpu: [arm64]
     os: [openharmony]
 
-  '@rollup/rollup-win32-arm64-msvc@4.55.1':
-    resolution: {integrity: sha512-yR6Bl3tMC/gBok5cz/Qi0xYnVbIxGx5Fcf/ca0eB6/6JwOY+SRUcJfI0OpeTpPls7f194as62thCt/2BjxYN8g==}
+  '@rollup/rollup-win32-arm64-msvc@4.55.2':
+    resolution: {integrity: sha512-sDpFbenhmWjNcEbBcoTV0PWvW5rPJFvu+P7XoTY0YLGRupgLbFY0XPfwIbJOObzO7QgkRDANh65RjhPmgSaAjQ==}
     cpu: [arm64]
     os: [win32]
 
-  '@rollup/rollup-win32-ia32-msvc@4.55.1':
-    resolution: {integrity: sha512-3fZBidchE0eY0oFZBnekYCfg+5wAB0mbpCBuofh5mZuzIU/4jIVkbESmd2dOsFNS78b53CYv3OAtwqkZZmU5nA==}
+  '@rollup/rollup-win32-ia32-msvc@4.55.2':
+    resolution: {integrity: sha512-GvJ03TqqaweWCigtKQVBErw2bEhu1tyfNQbarwr94wCGnczA9HF8wqEe3U/Lfu6EdeNP0p6R+APeHVwEqVxpUQ==}
     cpu: [ia32]
     os: [win32]
 
-  '@rollup/rollup-win32-x64-gnu@4.55.1':
-    resolution: {integrity: sha512-xGGY5pXj69IxKb4yv/POoocPy/qmEGhimy/FoTpTSVju3FYXUQQMFCaZZXJVidsmGxRioZAwpThl/4zX41gRKg==}
+  '@rollup/rollup-win32-x64-gnu@4.55.2':
+    resolution: {integrity: sha512-KvXsBvp13oZz9JGe5NYS7FNizLe99Ny+W8ETsuCyjXiKdiGrcz2/J/N8qxZ/RSwivqjQguug07NLHqrIHrqfYw==}
     cpu: [x64]
     os: [win32]
 
-  '@rollup/rollup-win32-x64-msvc@4.55.1':
-    resolution: {integrity: sha512-SPEpaL6DX4rmcXtnhdrQYgzQ5W2uW3SCJch88lB2zImhJRhIIK44fkUrgIV/Q8yUNfw5oyZ5vkeQsZLhCb06lw==}
+  '@rollup/rollup-win32-x64-msvc@4.55.2':
+    resolution: {integrity: sha512-xNO+fksQhsAckRtDSPWaMeT1uIM+JrDRXlerpnWNXhn1TdB3YZ6uKBMBTKP0eX9XtYEP978hHk1f8332i2AW8Q==}
     cpu: [x64]
     os: [win32]
 
@@ -3330,102 +3316,102 @@ packages:
   '@types/yargs@17.0.35':
     resolution: {integrity: sha512-qUHkeCyQFxMXg79wQfTtfndEC+N9ZZg76HJftDJp+qH2tV7Gj4OJi7l+PiWwJ+pWtW8GwSmqsDj/oymhrTWXjg==}
 
-  '@typescript-eslint/eslint-plugin@8.53.0':
-    resolution: {integrity: sha512-eEXsVvLPu8Z4PkFibtuFJLJOTAV/nPdgtSjkGoPpddpFk3/ym2oy97jynY6ic2m6+nc5M8SE1e9v/mHKsulcJg==}
+  '@typescript-eslint/eslint-plugin@8.53.1':
+    resolution: {integrity: sha512-cFYYFZ+oQFi6hUnBTbLRXfTJiaQtYE3t4O692agbBl+2Zy+eqSKWtPjhPXJu1G7j4RLjKgeJPDdq3EqOwmX5Ag==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
-      '@typescript-eslint/parser': ^8.53.0
+      '@typescript-eslint/parser': ^8.53.1
       eslint: ^8.57.0 || ^9.0.0
       typescript: '>=4.8.4 <6.0.0'
 
-  '@typescript-eslint/parser@8.53.0':
-    resolution: {integrity: sha512-npiaib8XzbjtzS2N4HlqPvlpxpmZ14FjSJrteZpPxGUaYPlvhzlzUZ4mZyABo0EFrOWnvyd0Xxroq//hKhtAWg==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-    peerDependencies:
-      eslint: ^8.57.0 || ^9.0.0
-      typescript: '>=4.8.4 <6.0.0'
-
-  '@typescript-eslint/project-service@8.53.0':
-    resolution: {integrity: sha512-Bl6Gdr7NqkqIP5yP9z1JU///Nmes4Eose6L1HwpuVHwScgDPPuEWbUVhvlZmb8hy0vX9syLk5EGNL700WcBlbg==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-    peerDependencies:
-      typescript: '>=4.8.4 <6.0.0'
-
-  '@typescript-eslint/scope-manager@8.53.0':
-    resolution: {integrity: sha512-kWNj3l01eOGSdVBnfAF2K1BTh06WS0Yet6JUgb9Cmkqaz3Jlu0fdVUjj9UI8gPidBWSMqDIglmEXifSgDT/D0g==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-
-  '@typescript-eslint/tsconfig-utils@8.53.0':
-    resolution: {integrity: sha512-K6Sc0R5GIG6dNoPdOooQ+KtvT5KCKAvTcY8h2rIuul19vxH5OTQk7ArKkd4yTzkw66WnNY0kPPzzcmWA+XRmiA==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-    peerDependencies:
-      typescript: '>=4.8.4 <6.0.0'
-
-  '@typescript-eslint/type-utils@8.53.0':
-    resolution: {integrity: sha512-BBAUhlx7g4SmcLhn8cnbxoxtmS7hcq39xKCgiutL3oNx1TaIp+cny51s8ewnKMpVUKQUGb41RAUWZ9kxYdovuw==}
+  '@typescript-eslint/parser@8.53.1':
+    resolution: {integrity: sha512-nm3cvFN9SqZGXjmw5bZ6cGmvJSyJPn0wU9gHAZZHDnZl2wF9PhHv78Xf06E0MaNk4zLVHL8hb2/c32XvyJOLQg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       eslint: ^8.57.0 || ^9.0.0
       typescript: '>=4.8.4 <6.0.0'
 
-  '@typescript-eslint/types@8.53.0':
-    resolution: {integrity: sha512-Bmh9KX31Vlxa13+PqPvt4RzKRN1XORYSLlAE+sO1i28NkisGbTtSLFVB3l7PWdHtR3E0mVMuC7JilWJ99m2HxQ==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-
-  '@typescript-eslint/typescript-estree@8.53.0':
-    resolution: {integrity: sha512-pw0c0Gdo7Z4xOG987u3nJ8akL9093yEEKv8QTJ+Bhkghj1xyj8cgPaavlr9rq8h7+s6plUJ4QJYw2gCZodqmGw==}
+  '@typescript-eslint/project-service@8.53.1':
+    resolution: {integrity: sha512-WYC4FB5Ra0xidsmlPb+1SsnaSKPmS3gsjIARwbEkHkoWloQmuzcfypljaJcR78uyLA1h8sHdWWPHSLDI+MtNog==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       typescript: '>=4.8.4 <6.0.0'
 
-  '@typescript-eslint/utils@8.53.0':
-    resolution: {integrity: sha512-XDY4mXTez3Z1iRDI5mbRhH4DFSt46oaIFsLg+Zn97+sYrXACziXSQcSelMybnVZ5pa1P6xYkPr5cMJyunM1ZDA==}
+  '@typescript-eslint/scope-manager@8.53.1':
+    resolution: {integrity: sha512-Lu23yw1uJMFY8cUeq7JlrizAgeQvWugNQzJp8C3x8Eo5Jw5Q2ykMdiiTB9vBVOOUBysMzmRRmUfwFrZuI2C4SQ==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@typescript-eslint/tsconfig-utils@8.53.1':
+    resolution: {integrity: sha512-qfvLXS6F6b1y43pnf0pPbXJ+YoXIC7HKg0UGZ27uMIemKMKA6XH2DTxsEDdpdN29D+vHV07x/pnlPNVLhdhWiA==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    peerDependencies:
+      typescript: '>=4.8.4 <6.0.0'
+
+  '@typescript-eslint/type-utils@8.53.1':
+    resolution: {integrity: sha512-MOrdtNvyhy0rHyv0ENzub1d4wQYKb2NmIqG7qEqPWFW7Mpy2jzFC3pQ2yKDvirZB7jypm5uGjF2Qqs6OIqu47w==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       eslint: ^8.57.0 || ^9.0.0
       typescript: '>=4.8.4 <6.0.0'
 
-  '@typescript-eslint/visitor-keys@8.53.0':
-    resolution: {integrity: sha512-LZ2NqIHFhvFwxG0qZeLL9DvdNAHPGCY5dIRwBhyYeU+LfLhcStE1ImjsuTG/WaVh3XysGaeLW8Rqq7cGkPCFvw==}
+  '@typescript-eslint/types@8.53.1':
+    resolution: {integrity: sha512-jr/swrr2aRmUAUjW5/zQHbMaui//vQlsZcJKijZf3M26bnmLj8LyZUpj8/Rd6uzaek06OWsqdofN/Thenm5O8A==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20260118.1':
-    resolution: {integrity: sha512-Rr9xUWiT3g104hFgMoVbVSmqK1rQd7VhxwHgNNiPLkznGSc3zewIZ5uBCA93VV2BwC1/ksodwmA1ZYW7Ae2IIg==}
+  '@typescript-eslint/typescript-estree@8.53.1':
+    resolution: {integrity: sha512-RGlVipGhQAG4GxV1s34O91cxQ/vWiHJTDHbXRr0li2q/BGg3RR/7NM8QDWgkEgrwQYCvmJV9ichIwyoKCQ+DTg==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    peerDependencies:
+      typescript: '>=4.8.4 <6.0.0'
+
+  '@typescript-eslint/utils@8.53.1':
+    resolution: {integrity: sha512-c4bMvGVWW4hv6JmDUEG7fSYlWOl3II2I4ylt0NM+seinYQlZMQIaKaXIIVJWt9Ofh6whrpM+EdDQXKXjNovvrg==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    peerDependencies:
+      eslint: ^8.57.0 || ^9.0.0
+      typescript: '>=4.8.4 <6.0.0'
+
+  '@typescript-eslint/visitor-keys@8.53.1':
+    resolution: {integrity: sha512-oy+wV7xDKFPRyNggmXuZQSBzvoLnpmJs+GhzRhPjrxl2b/jIlyjVokzm47CZCDUdXKr2zd7ZLodPfOBpOPyPlg==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20260120.1':
+    resolution: {integrity: sha512-r3pWFuR2H7mn6ScwpH5jJljKQqKto0npVuJSk6pRwFwexpTyxOGmJTZJ1V0AWiisaNxU2+CNAqWFJSJYIE/QTg==}
     cpu: [arm64]
     os: [darwin]
 
-  '@typescript/native-preview-darwin-x64@7.0.0-dev.20260118.1':
-    resolution: {integrity: sha512-vtpp39vH6wbp/ONJigF6KM7v3TTu8BAZo7ntXPgpV0YQ5cpXlnh6gQaQyXDjzlZRl/jdr+DS/76easoXeRpsFA==}
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20260120.1':
+    resolution: {integrity: sha512-cuC1+wLbUP+Ip2UT94G134fqRdp5w3b3dhcCO6/FQ4yXxvRNyv/WK+upHBUFDaeSOeHgDTyO9/QFYUWwC4If1A==}
     cpu: [x64]
     os: [darwin]
 
-  '@typescript/native-preview-linux-arm64@7.0.0-dev.20260118.1':
-    resolution: {integrity: sha512-w32ohkkaBbotPHQttMwzn2l3CO139aTSmIAbDJ1GdbzacDfu1eRHyDaqJ9FpXXF9rkmQxWPIxz8OjpFGoHejQw==}
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20260120.1':
+    resolution: {integrity: sha512-zZGvEGY7wcHYefMZ87KNmvjN3NLIhsCMHEpHZiGCS3khKf+8z6ZsanrzCjOTodvL01VPyBzHxV1EtkSxAcLiQg==}
     cpu: [arm64]
     os: [linux]
 
-  '@typescript/native-preview-linux-arm@7.0.0-dev.20260118.1':
-    resolution: {integrity: sha512-JpYWxan5wwdZsiZJLWvDr/8gbIThnR1orOZ9Wb8Oc6cHFpYolwnXxAoCPLVnEcAfjnC6cY7WZvY5Dn0gSQ2Asw==}
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20260120.1':
+    resolution: {integrity: sha512-vN6OYVySol/kQZjJGmAzd6L30SyVlCgmCXS8WjUYtE5clN0YrzQHop16RK29fYZHMxpkOniVBtRPxUYQANZBlQ==}
     cpu: [arm]
     os: [linux]
 
-  '@typescript/native-preview-linux-x64@7.0.0-dev.20260118.1':
-    resolution: {integrity: sha512-tJuaHEFnKB+V8dkMp9quOjcYs4sbNqwocFyStUN6D6khyYyYDKoKNI68APO4WM0WJ84zMWTyvBDms5uZojftEw==}
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20260120.1':
+    resolution: {integrity: sha512-JBfNhWd/asd5MDeS3VgRvE24pGKBkmvLub6tsux6ypr+Yhy+o0WaAEzVpmlRYZUqss2ai5tvOu4dzPBXzZAtFw==}
     cpu: [x64]
     os: [linux]
 
-  '@typescript/native-preview-win32-arm64@7.0.0-dev.20260118.1':
-    resolution: {integrity: sha512-MhLmNq0OYDRIcWui1g1XaY6tcN4GTzD2rABxwMIpdB+sOtl6YBicoSFk0fToZ+2OOUjjeGwlFzW/LDq540n3HQ==}
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20260120.1':
+    resolution: {integrity: sha512-tTndRtYCq2xwgE0VkTi9ACNiJaV43+PqvBqCxk8ceYi3X36Ve+CCnwlZfZJ4k9NxZthtrAwF/kUmpC9iIYbq1w==}
     cpu: [arm64]
     os: [win32]
 
-  '@typescript/native-preview-win32-x64@7.0.0-dev.20260118.1':
-    resolution: {integrity: sha512-NkXwyQHr/DKbp3BP8CzS4zhOIAY4CmUTYtadr5yyNsTJvuavBH9A4BKjqE/83ZRYB7O5O+n/2z1C5yl7IJp/qQ==}
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20260120.1':
+    resolution: {integrity: sha512-oZia7hFL6k9pVepfonuPI86Jmyz6WlJKR57tWCDwRNmpA7odxuTq1PbvcYgy1z4+wHF1nnKKJY0PMAiq6ac18w==}
     cpu: [x64]
     os: [win32]
 
-  '@typescript/native-preview@7.0.0-dev.20260118.1':
-    resolution: {integrity: sha512-A+anwzt5RsbCWglYUCAgrolHO9iWLFl2NtRIwDU2IaIxTt0GsFcvaDe+IjswJGHknE0nJ7TS6DeAwjkDD/14og==}
+  '@typescript/native-preview@7.0.0-dev.20260120.1':
+    resolution: {integrity: sha512-nnEf37C9ue7OBRnF2zmV/OCBmV5Y7T/K4mCHa+nxgiXcF/1w8sA0cgdFl+gHQ0mysqUJ+Bu5btAMeWgpLyjrgg==}
     hasBin: true
 
   '@typespec/ts-http-runtime@0.3.2':
@@ -3559,20 +3545,20 @@ packages:
   '@vitest/utils@4.0.17':
     resolution: {integrity: sha512-RG6iy+IzQpa9SB8HAFHJ9Y+pTzI+h8553MrciN9eC6TFBErqrQaTas4vG+MVj8S4uKk8uTT2p0vgZPnTdxd96w==}
 
-  '@vue/compiler-core@3.5.26':
-    resolution: {integrity: sha512-vXyI5GMfuoBCnv5ucIT7jhHKl55Y477yxP6fc4eUswjP8FG3FFVFd41eNDArR+Uk3QKn2Z85NavjaxLxOC19/w==}
+  '@vue/compiler-core@3.5.27':
+    resolution: {integrity: sha512-gnSBQjZA+//qDZen+6a2EdHqJ68Z7uybrMf3SPjEGgG4dicklwDVmMC1AeIHxtLVPT7sn6sH1KOO+tS6gwOUeQ==}
 
-  '@vue/compiler-dom@3.5.26':
-    resolution: {integrity: sha512-y1Tcd3eXs834QjswshSilCBnKGeQjQXB6PqFn/1nxcQw4pmG42G8lwz+FZPAZAby6gZeHSt/8LMPfZ4Rb+Bd/A==}
+  '@vue/compiler-dom@3.5.27':
+    resolution: {integrity: sha512-oAFea8dZgCtVVVTEC7fv3T5CbZW9BxpFzGGxC79xakTr6ooeEqmRuvQydIiDAkglZEAd09LgVf1RoDnL54fu5w==}
 
-  '@vue/compiler-sfc@3.5.26':
-    resolution: {integrity: sha512-egp69qDTSEZcf4bGOSsprUr4xI73wfrY5oRs6GSgXFTiHrWj4Y3X5Ydtip9QMqiCMCPVwLglB9GBxXtTadJ3mA==}
+  '@vue/compiler-sfc@3.5.27':
+    resolution: {integrity: sha512-sHZu9QyDPeDmN/MRoshhggVOWE5WlGFStKFwu8G52swATgSny27hJRWteKDSUUzUH+wp+bmeNbhJnEAel/auUQ==}
 
-  '@vue/compiler-ssr@3.5.26':
-    resolution: {integrity: sha512-lZT9/Y0nSIRUPVvapFJEVDbEXruZh2IYHMk2zTtEgJSlP5gVOqeWXH54xDKAaFS4rTnDeDBQUYDtxKyoW9FwDw==}
+  '@vue/compiler-ssr@3.5.27':
+    resolution: {integrity: sha512-Sj7h+JHt512fV1cTxKlYhg7qxBvack+BGncSpH+8vnN+KN95iPIcqB5rsbblX40XorP+ilO7VIKlkuu3Xq2vjw==}
 
-  '@vue/shared@3.5.26':
-    resolution: {integrity: sha512-7Z6/y3uFI5PRoKeorTOSXKcDj0MSasfNNltcslbFrPpcw6aXRUALq4IfJlaTRspiWIUOEZbrpM+iQGmCOiWe4A==}
+  '@vue/shared@3.5.27':
+    resolution: {integrity: sha512-dXr/3CgqXsJkZ0n9F3I4elY8wM9jMJpP3pvRG52r6m0tu/MsAFIe6JpXVGeNMd/D9F4hQynWT8Rfuj0bdm9kFQ==}
 
   abbrev@1.1.1:
     resolution: {integrity: sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==}
@@ -3863,15 +3849,15 @@ packages:
   base64-js@1.5.1:
     resolution: {integrity: sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==}
 
-  baseline-browser-mapping@2.9.15:
-    resolution: {integrity: sha512-kX8h7K2srmDyYnXRIppo4AH/wYgzWVCs+eKr3RusRSQ5PvRYoEFmR/I0PbdTjKFAoKqp5+kbxnNTFO9jOfSVJg==}
+  baseline-browser-mapping@2.9.16:
+    resolution: {integrity: sha512-KeUZdBuxngy825i8xvzaK1Ncnkx0tBmb3k8DkEuqjKRkmtvNTjey2ZsNeh8Dw4lfKvbCOu9oeNx2TKm2vHqcRw==}
     hasBin: true
 
   bcrypt-pbkdf@1.0.2:
     resolution: {integrity: sha512-qeFIXtP4MSoi6NLqO12WfqARWWuCKi2Rn/9hJLEmtB5yTNr9DqFWkJRCf2qShWzPeAMRnOgCrq0sg/KLv5ES9w==}
 
-  better-auth@1.4.15:
-    resolution: {integrity: sha512-XZr4GnFPbjvf8wip8AAjTrpGNn3Sba600zT+DgsR3NNCMWCt9aD8+nuRah6BHwHWnVP1nfnby07tPmti72SRBw==}
+  better-auth@1.4.16:
+    resolution: {integrity: sha512-TQVLN5bZjTBuItXr0tWjmKPmPBqVDCQhMZ14BsWFd6MuXZtAc95U+G1no0vFB/v40OtiLLAnMLDezmeBv27Wkw==}
     peerDependencies:
       '@lynx-js/react': '*'
       '@prisma/client': ^5.0.0 || ^6.0.0 || ^7.0.0
@@ -4410,8 +4396,8 @@ packages:
     resolution: {integrity: sha512-qE3Veg1YXzGHQhlA6jzebZN2qVf6NX+A7m7qlhCGG30dJixrAQhYOsJjsnBjJkCSmuOPpCk30145fr8FV0bzog==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
-  diff@4.0.2:
-    resolution: {integrity: sha512-58lmxKSA4BNyLz+HHMUzlOEpg09FV+ev6ZMe3vJihgdxzgcwZ8VoEEPmALCZG9LmqfVoNMMKpttIYTVG6uDY7A==}
+  diff@4.0.4:
+    resolution: {integrity: sha512-X07nttJQkwkfKfvTPG/KSnE2OMdcUCao6+eXF3wmnIQRn2aPAHH3VxDbDOdegkd6JbPsXqShpvEOHfAT+nCNwQ==}
     engines: {node: '>=0.3.1'}
 
   dir-glob@3.0.1:
@@ -4619,8 +4605,8 @@ packages:
     resolution: {integrity: sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==}
     engines: {node: '>=6'}
 
-  eventemitter3@5.0.1:
-    resolution: {integrity: sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA==}
+  eventemitter3@5.0.4:
+    resolution: {integrity: sha512-mlsTRyGaPBjPedk6Bvw+aqbsXDtoAyAzm5MO7JgU+yVRyMQ5O8bD4Kcci7BS85f93veegeCPkL8R4GLClnjLFw==}
 
   events-universal@1.0.1:
     resolution: {integrity: sha512-LUd5euvbMLpwOF8m6ivPCbhQeSiYVNb8Vs0fQ8QjXo0JTkEHpz8pxdQf0gStltaPpw0Cca8b39KxvK9cfKRiAw==}
@@ -4712,6 +4698,15 @@ packages:
   fast-xml-parser@5.2.5:
     resolution: {integrity: sha512-pfX9uG9Ki0yekDHx2SiuRIyFdyAr1kMIMitPvb0YBo8SUfKvia7w7FIyd/l6av85pFYRhZscS75MwMnbvY+hcQ==}
     hasBin: true
+
+  fastmcp@3.27.0:
+    resolution: {integrity: sha512-jbGc5eFuqWjl4OMNdEmdGBeUddZjXwF7nyxZxWZ7X9xAahHC/PavqAy9opJm4vjEKteuao282WVfmbr54uUW+Q==}
+    hasBin: true
+    peerDependencies:
+      jose: ^5.0.0
+    peerDependenciesMeta:
+      jose:
+        optional: true
 
   fastq@1.20.1:
     resolution: {integrity: sha512-GGToxJ/w1x32s/D2EKND7kTil4n8OVk/9mycTc4VDza13lOvpUZTGX3mFSCtV9ksdGBVzvsyAVLM6mHFThxXxw==}
@@ -6013,8 +6008,8 @@ packages:
     resolution: {integrity: sha512-1ZOI8J+1PKKGceo/5CT5GfQOG6H8I2BencSK06YarZ2wXwH37BSSUWldqJmMJYA5JfqDqffxDXynt6f11AyKcA==}
     engines: {node: ^12.20 || >=14.13}
 
-  node-abi@3.86.0:
-    resolution: {integrity: sha512-sn9Et4N3ynsetj3spsZR729DVlGH6iBG4RiDMV7HEp3guyOW6W3S0unGpLDxT50mXortGUMax/ykUNQXdqc/Xg==}
+  node-abi@3.87.0:
+    resolution: {integrity: sha512-+CGM1L1CgmtheLcBuleyYOn7NWPVu0s0EJH2C4puxgEZb9h8QpR9G2dBfZJOAUhi7VQxuBPMd0hiISWcTyiYyQ==}
     engines: {node: '>=10'}
 
   node-abort-controller@3.1.1:
@@ -6144,12 +6139,12 @@ packages:
     resolution: {integrity: sha512-qFOyK5PjiWZd+QQIh+1jhdb9LpxTF0qs7Pm8o5QHYZ0M3vKqSqzsZaEB6oWlxZ+q2sJBMI/Ktgd2N5ZwQoRHfg==}
     engines: {node: '>= 0.4'}
 
-  oxlint@1.39.0:
-    resolution: {integrity: sha512-wSiLr0wjG+KTU6c1LpVoQk7JZ7l8HCKlAkVDVTJKWmCGazsNxexxnOXl7dsar92mQcRnzko5g077ggP3RINSjA==}
+  oxlint@1.41.0:
+    resolution: {integrity: sha512-Dyaoup82uhgAgp5xLNt4dPdvl5eSJTIzqzL7DcKbkooUE4PDViWURIPlSUF8hu5a+sCnNIp/LlQMDsKoyaLTBA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
-      oxlint-tsgolint: '>=0.10.0'
+      oxlint-tsgolint: '>=0.11.1'
     peerDependenciesMeta:
       oxlint-tsgolint:
         optional: true
@@ -6330,8 +6325,8 @@ packages:
   pino-std-serializers@7.1.0:
     resolution: {integrity: sha512-BndPH67/JxGExRgiX1dX0w1FvZck5Wa4aal9198SrRhZjH3GxKQUKIBnYJTdj2HDN3UQAS06HlfcSbQj2OHmaw==}
 
-  pino@10.2.0:
-    resolution: {integrity: sha512-NFnZqUliT+OHkRXVSf8vdOr13N1wv31hRryVjqbreVh/SDCNaI6mnRDDq89HVRCbem1SAl7yj04OANeqP0nT6A==}
+  pino@10.2.1:
+    resolution: {integrity: sha512-Tjyv76gdUe2460dEhtcnA4fU/+HhGq2Kr7OWlo2R/Xxbmn/ZNKWavNWTD2k97IE+s755iVU7WcaOEIl+H3cq8w==}
     hasBin: true
 
   pirates@4.0.7:
@@ -6648,8 +6643,8 @@ packages:
     deprecated: Rimraf versions prior to v4 are no longer supported
     hasBin: true
 
-  rollup@4.55.1:
-    resolution: {integrity: sha512-wDv/Ht1BNHB4upNbK74s9usvl7hObDnvVzknxqY/E/O3X6rW1U1rV1aENEfJ54eFZDTNo7zv1f5N4edCluH7+A==}
+  rollup@4.55.2:
+    resolution: {integrity: sha512-PggGy4dhwx5qaW+CKBilA/98Ql9keyfnb7lh4SR6shQ91QQQi1ORJ1v4UinkdP2i87OBs9AQFooQylcrrRfIcg==}
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
@@ -7069,8 +7064,8 @@ packages:
     engines: {node: '>=10'}
     deprecated: Old versions of tar are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exhorbitant rates) by contacting i@izs.me
 
-  tar@7.5.3:
-    resolution: {integrity: sha512-ENg5JUHUm2rDD7IvKNFGzyElLXNjachNLp6RaGf4+JOgxXHkqA+gq81ZAMCUmtMtqBsoU62lcp6S27g1LCYGGQ==}
+  tar@7.5.4:
+    resolution: {integrity: sha512-AN04xbWGrSTDmVwlI4/GTlIIwMFk/XEv7uL8aa57zuvRy6s4hdBed+lVq2fAZ89XDa7Us3ANXcE3Tvqvja1kTA==}
     engines: {node: '>=18'}
 
   tarn@3.0.2:
@@ -7316,8 +7311,8 @@ packages:
     peerDependencies:
       typescript: 5.0.x || 5.1.x || 5.2.x || 5.3.x || 5.4.x || 5.5.x || 5.6.x || 5.7.x || 5.8.x || 5.9.x
 
-  typescript-eslint@8.53.0:
-    resolution: {integrity: sha512-xHURCQNxZ1dsWn0sdOaOfCSQG0HKeqSj9OexIxrz6ypU6wHYOdX2I3D2b8s8wFSsSOYJb+6q283cLiLlkEsBYw==}
+  typescript-eslint@8.53.1:
+    resolution: {integrity: sha512-gB+EVQfP5RDElh9ittfXlhZJdjSU4jUSTyE2+ia8CYyNvet4ElfaLlAIqDvQV9JPknKx0jQH1racTYe/4LaLSg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       eslint: ^8.57.0 || ^9.0.0
@@ -7618,8 +7613,8 @@ packages:
     resolution: {integrity: sha512-h3Fbisa2nKGPxCpm89Hk33lBLsnaGBvctQopaBSOW/uIs6FTe1ATyAnKFJrzVs9vpGdsTe73WF3V4lIsk4Gacw==}
     engines: {node: '>=18'}
 
-  xsschema@0.3.5:
-    resolution: {integrity: sha512-f+dcy11dTv7aBEEfTbXWnrm/1b/Ds2k4taN0TpN6KCtPAD58kyE/R1znUdrHdBnhIFexj9k+pS1fm6FgtSISrQ==}
+  xsschema@0.4.0-beta.5:
+    resolution: {integrity: sha512-73pYwf1hMy++7SnOkghJdgdPaGi+Y5I0SaO6rIlxb1ouV6tEyDbEcXP82kyr32KQVTlUbFj6qewi9eUVEiXm+g==}
     peerDependencies:
       '@valibot/to-json-schema': ^1.0.0
       arktype: ^2.1.20
@@ -7712,9 +7707,6 @@ packages:
     resolution: {integrity: sha512-pM/SU9d3YAggzi6MtR4h7ruuQlqKtad8e9S0fmxcMi+ueAK5Korys/aWcV9LIIHTVbj01NdzxcnXSN+O74ZIVA==}
     peerDependencies:
       zod: ^3.25 || ^4
-
-  zod@3.25.76:
-    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
   zod@4.3.5:
     resolution: {integrity: sha512-k7Nwx6vuWx1IJ9Bjuf4Zt1PEllcwe7cls3VNzm4CQ1/hgtFUK2bRNG3rvnpPUhFjmqJKAKtjV576KnUkHocg/g==}
@@ -8572,7 +8564,7 @@ snapshots:
 
   '@bcoe/v8-coverage@0.2.3': {}
 
-  '@better-auth/core@1.4.15(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.3.5))(jose@6.1.3)(kysely@0.28.10)(nanostores@1.1.0)':
+  '@better-auth/core@1.4.16(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.3.5))(jose@6.1.3)(kysely@0.28.10)(nanostores@1.1.0)':
     dependencies:
       '@better-auth/utils': 0.3.0
       '@better-fetch/fetch': 1.1.21
@@ -8583,9 +8575,9 @@ snapshots:
       nanostores: 1.1.0
       zod: 4.3.5
 
-  '@better-auth/telemetry@1.4.15(@better-auth/core@1.4.15(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.3.5))(jose@6.1.3)(kysely@0.28.10)(nanostores@1.1.0))':
+  '@better-auth/telemetry@1.4.16(@better-auth/core@1.4.16(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.3.5))(jose@6.1.3)(kysely@0.28.10)(nanostores@1.1.0))':
     dependencies:
-      '@better-auth/core': 1.4.15(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.3.5))(jose@6.1.3)(kysely@0.28.10)(nanostores@1.1.0)
+      '@better-auth/core': 1.4.16(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.3.5))(jose@6.1.3)(kysely@0.28.10)(nanostores@1.1.0)
       '@better-auth/utils': 0.3.0
       '@better-fetch/fetch': 1.1.21
 
@@ -8918,21 +8910,20 @@ snapshots:
       '@eslint/core': 0.17.0
       levn: 0.4.1
 
-  '@forklaunch/better-auth-mikro-orm-fork@0.4.106(@mikro-orm/core@6.6.4)(better-auth@1.4.15(better-sqlite3@12.6.2)(mongodb@6.20.0(socks@2.8.7))(mysql2@3.16.0)(pg@8.16.3)(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@25.0.9)(tsx@4.21.0)(yaml@2.8.2)))':
+  '@forklaunch/better-auth-mikro-orm-fork@0.4.106(@mikro-orm/core@6.6.4)(better-auth@1.4.16(better-sqlite3@12.6.2)(mongodb@6.20.0(socks@2.8.7))(mysql2@3.16.0)(pg@8.16.3)(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@25.0.9)(tsx@4.21.0)(yaml@2.8.2)))':
     dependencies:
       '@mikro-orm/core': 6.6.4
-      better-auth: 1.4.15(better-sqlite3@12.6.2)(mongodb@6.20.0(socks@2.8.7))(mysql2@3.16.0)(pg@8.16.3)(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@25.0.9)(tsx@4.21.0)(yaml@2.8.2))
+      better-auth: 1.4.16(better-sqlite3@12.6.2)(mongodb@6.20.0(socks@2.8.7))(mysql2@3.16.0)(pg@8.16.3)(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@25.0.9)(tsx@4.21.0)(yaml@2.8.2))
       dset: 3.1.4
 
-  '@forklaunch/common@0.6.24': {}
+  '@forklaunch/common@0.6.26': {}
 
-  '@forklaunch/core@0.17.0(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)':
+  '@forklaunch/core@0.17.2(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)':
     dependencies:
       '@asyncapi/parser': 3.4.0(encoding@0.1.13)
-      '@forklaunch/common': 0.6.24
-      '@forklaunch/fastmcp-fork': 1.0.5(hono@4.11.4)
+      '@forklaunch/common': 0.6.26
       '@forklaunch/opentelemetry-instrumentation-hyper-express': 0.0.5(@opentelemetry/api@1.9.0)
-      '@forklaunch/validator': 0.10.24
+      '@forklaunch/validator': 0.10.26
       '@mikro-orm/core': 6.6.4
       '@mikro-orm/mongodb': 6.6.4(@mikro-orm/core@6.6.4)(socks@2.8.7)
       '@opentelemetry/api': 1.9.0
@@ -8951,9 +8942,10 @@ snapshots:
       '@opentelemetry/semantic-conventions': 1.39.0
       cors: 2.8.5
       dotenv: 17.2.3
+      fastmcp: 3.27.0(hono@4.11.4)(jose@6.1.3)
       jose: 6.1.3
       openapi3-ts: 4.5.0
-      pino: 10.2.0
+      pino: 10.2.1
       pino-http: 11.0.0
       pino-pretty: 13.1.3
       redis: 5.10.0
@@ -8976,19 +8968,19 @@ snapshots:
       - supports-color
       - sury
 
-  '@forklaunch/express@0.10.0(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)(zod@4.3.5)':
+  '@forklaunch/express@0.10.2(encoding@0.1.13)(hono@4.11.4)(jose@6.1.3)(socks@2.8.7)(zod@4.3.5)':
     dependencies:
-      '@forklaunch/common': 0.6.24
-      '@forklaunch/core': 0.17.0(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
-      '@forklaunch/fastmcp-fork': 1.0.5(hono@4.11.4)
-      '@forklaunch/validator': 0.10.24
-      '@modelcontextprotocol/sdk': 1.25.2(hono@4.11.4)(zod@4.3.5)
+      '@forklaunch/common': 0.6.26
+      '@forklaunch/core': 0.17.2(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
+      '@forklaunch/validator': 0.10.26
+      '@modelcontextprotocol/sdk': 1.25.3(hono@4.11.4)(zod@4.3.5)
       '@scalar/express-api-reference': 0.8.34
       '@types/multer': 2.0.0
       body-parser: 2.2.2
       busboy: 1.6.0
       cors: 2.8.5
       express: 5.2.1
+      fastmcp: 3.27.0(hono@4.11.4)(jose@6.1.3)
       multer: 2.0.2
       qs: 6.14.1
       range-parser: 1.2.1
@@ -9003,6 +8995,7 @@ snapshots:
       - encoding
       - gcp-metadata
       - hono
+      - jose
       - kerberos
       - mongodb-client-encryption
       - snappy
@@ -9010,65 +9003,6 @@ snapshots:
       - supports-color
       - sury
       - zod
-
-  '@forklaunch/express@0.10.0(encoding@0.1.13)(hono@4.11.4)(zod@3.25.76)':
-    dependencies:
-      '@forklaunch/common': 0.6.24
-      '@forklaunch/core': 0.17.0(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
-      '@forklaunch/fastmcp-fork': 1.0.5(hono@4.11.4)
-      '@forklaunch/validator': 0.10.24
-      '@modelcontextprotocol/sdk': 1.25.2(hono@4.11.4)(zod@3.25.76)
-      '@scalar/express-api-reference': 0.8.34
-      '@types/multer': 2.0.0
-      body-parser: 2.2.2
-      busboy: 1.6.0
-      cors: 2.8.5
-      express: 5.2.1
-      multer: 2.0.2
-      qs: 6.14.1
-      range-parser: 1.2.1
-      swagger-ui-express: 5.0.1(express@5.2.1)
-    transitivePeerDependencies:
-      - '@aws-sdk/credential-providers'
-      - '@cfworker/json-schema'
-      - '@mongodb-js/zstd'
-      - '@valibot/to-json-schema'
-      - arktype
-      - effect
-      - encoding
-      - gcp-metadata
-      - hono
-      - kerberos
-      - mongodb-client-encryption
-      - snappy
-      - socks
-      - supports-color
-      - sury
-      - zod
-
-  '@forklaunch/fastmcp-fork@1.0.5(hono@4.11.4)':
-    dependencies:
-      '@modelcontextprotocol/sdk': 1.25.2(hono@4.11.4)(zod@3.25.76)
-      '@standard-schema/spec': 1.1.0
-      execa: 9.6.1
-      file-type: 21.3.0
-      fuse.js: 7.1.0
-      mcp-proxy: 5.12.5
-      strict-event-emitter-types: 2.0.0
-      undici: 7.18.2
-      uri-templates: 0.2.0
-      xsschema: 0.3.5(zod-to-json-schema@3.25.1(zod@3.25.76))(zod@3.25.76)
-      yargs: 18.0.0
-      zod: 3.25.76
-      zod-to-json-schema: 3.25.1(zod@3.25.76)
-    transitivePeerDependencies:
-      - '@cfworker/json-schema'
-      - '@valibot/to-json-schema'
-      - arktype
-      - effect
-      - hono
-      - supports-color
-      - sury
 
   '@forklaunch/hyper-express-fork@6.17.35':
     dependencies:
@@ -9083,13 +9017,13 @@ snapshots:
       typed-emitter: 2.1.0
       uWebSockets.js: https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/cfc9a40d8132a34881813cec3d5f8e3a185b3ce3
 
-  '@forklaunch/hyper-express@0.11.0(encoding@0.1.13)(express@5.2.1)(hono@4.11.4)(socks@2.8.7)':
+  '@forklaunch/hyper-express@0.11.2(encoding@0.1.13)(express@5.2.1)(hono@4.11.4)(socks@2.8.7)':
     dependencies:
-      '@forklaunch/common': 0.6.24
-      '@forklaunch/core': 0.17.0(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
+      '@forklaunch/common': 0.6.26
+      '@forklaunch/core': 0.17.2(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
       '@forklaunch/hyper-express-fork': 6.17.35
-      '@forklaunch/validator': 0.10.24
-      '@forklaunch/ws': 0.1.3(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
+      '@forklaunch/validator': 0.10.26
+      '@forklaunch/ws': 0.1.5(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
       '@scalar/express-api-reference': 0.8.34
       cors: 2.8.5
       live-directory: 3.0.3
@@ -9118,10 +9052,10 @@ snapshots:
       - sury
       - utf-8-validate
 
-  '@forklaunch/infrastructure-redis@0.4.33(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)':
+  '@forklaunch/infrastructure-redis@0.4.35(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)':
     dependencies:
-      '@forklaunch/common': 0.6.24
-      '@forklaunch/core': 0.17.0(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
+      '@forklaunch/common': 0.6.26
+      '@forklaunch/core': 0.17.2(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
       redis: 5.10.0
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
@@ -9140,11 +9074,11 @@ snapshots:
       - supports-color
       - sury
 
-  '@forklaunch/infrastructure-s3@0.4.33(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)':
+  '@forklaunch/infrastructure-s3@0.4.35(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)':
     dependencies:
       '@aws-sdk/client-s3': 3.971.0
-      '@forklaunch/common': 0.6.24
-      '@forklaunch/core': 0.17.0(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
+      '@forklaunch/common': 0.6.26
+      '@forklaunch/core': 0.17.2(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
       - '@cfworker/json-schema'
@@ -9163,10 +9097,10 @@ snapshots:
       - supports-color
       - sury
 
-  '@forklaunch/internal@0.3.24':
+  '@forklaunch/internal@0.3.26':
     dependencies:
-      '@forklaunch/common': 0.6.24
-      '@forklaunch/validator': 0.10.24
+      '@forklaunch/common': 0.6.26
+      '@forklaunch/validator': 0.10.26
       '@mikro-orm/core': 6.6.4
 
   '@forklaunch/opentelemetry-instrumentation-hyper-express@0.0.5(@opentelemetry/api@1.9.0)':
@@ -9179,7 +9113,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@forklaunch/testing@0.0.13(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@25.0.9)(tsx@4.21.0)(yaml@2.8.2))':
+  '@forklaunch/testing@0.0.15(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@25.0.9)(tsx@4.21.0)(yaml@2.8.2))':
     dependencies:
       '@mikro-orm/core': 6.6.4
       ioredis: 5.9.2
@@ -9191,26 +9125,25 @@ snapshots:
       - react-native-b4a
       - supports-color
 
-  '@forklaunch/universal-sdk@0.7.24':
+  '@forklaunch/universal-sdk@0.7.26':
     dependencies:
-      '@forklaunch/common': 0.6.24
+      '@forklaunch/common': 0.6.26
       ajv: 8.17.1
       ajv-formats: 3.0.1(ajv@8.17.1)
 
-  '@forklaunch/validator@0.10.24':
+  '@forklaunch/validator@0.10.26':
     dependencies:
-      '@forklaunch/common': 0.6.24
+      '@forklaunch/common': 0.6.26
       '@sinclair/typebox': 0.34.47
       ts-deepmerge: 7.0.3
       zod: 4.3.5
 
-  '@forklaunch/ws@0.1.3(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)':
+  '@forklaunch/ws@0.1.5(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)':
     dependencies:
       '@asyncapi/parser': 3.4.0(encoding@0.1.13)
-      '@forklaunch/common': 0.6.24
-      '@forklaunch/core': 0.17.0(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
-      '@forklaunch/fastmcp-fork': 1.0.5(hono@4.11.4)
-      '@forklaunch/validator': 0.10.24
+      '@forklaunch/common': 0.6.26
+      '@forklaunch/core': 0.17.2(encoding@0.1.13)(hono@4.11.4)(socks@2.8.7)
+      '@forklaunch/validator': 0.10.26
       '@types/ws': 8.18.1
       ws: 8.19.0
     transitivePeerDependencies:
@@ -9912,29 +9845,7 @@ snapshots:
       - supports-color
       - tedious
 
-  '@modelcontextprotocol/sdk@1.25.2(hono@4.11.4)(zod@3.25.76)':
-    dependencies:
-      '@hono/node-server': 1.19.9(hono@4.11.4)
-      ajv: 8.17.1
-      ajv-formats: 3.0.1(ajv@8.17.1)
-      content-type: 1.0.5
-      cors: 2.8.5
-      cross-spawn: 7.0.6
-      eventsource: 3.0.7
-      eventsource-parser: 3.0.6
-      express: 5.2.1
-      express-rate-limit: 7.5.1(express@5.2.1)
-      jose: 6.1.3
-      json-schema-typed: 8.0.2
-      pkce-challenge: 5.0.1
-      raw-body: 3.0.2
-      zod: 3.25.76
-      zod-to-json-schema: 3.25.1(zod@3.25.76)
-    transitivePeerDependencies:
-      - hono
-      - supports-color
-
-  '@modelcontextprotocol/sdk@1.25.2(hono@4.11.4)(zod@4.3.5)':
+  '@modelcontextprotocol/sdk@1.25.3(hono@4.11.4)(zod@4.3.5)':
     dependencies:
       '@hono/node-server': 1.19.9(hono@4.11.4)
       ajv: 8.17.1
@@ -9956,7 +9867,7 @@ snapshots:
       - hono
       - supports-color
 
-  '@mongodb-js/saslprep@1.4.4':
+  '@mongodb-js/saslprep@1.4.5':
     dependencies:
       sparse-bitfield: 3.0.3
 
@@ -10310,28 +10221,28 @@ snapshots:
 
   '@opentelemetry/semantic-conventions@1.39.0': {}
 
-  '@oxlint/darwin-arm64@1.39.0':
+  '@oxlint/darwin-arm64@1.41.0':
     optional: true
 
-  '@oxlint/darwin-x64@1.39.0':
+  '@oxlint/darwin-x64@1.41.0':
     optional: true
 
-  '@oxlint/linux-arm64-gnu@1.39.0':
+  '@oxlint/linux-arm64-gnu@1.41.0':
     optional: true
 
-  '@oxlint/linux-arm64-musl@1.39.0':
+  '@oxlint/linux-arm64-musl@1.41.0':
     optional: true
 
-  '@oxlint/linux-x64-gnu@1.39.0':
+  '@oxlint/linux-x64-gnu@1.41.0':
     optional: true
 
-  '@oxlint/linux-x64-musl@1.39.0':
+  '@oxlint/linux-x64-musl@1.41.0':
     optional: true
 
-  '@oxlint/win32-arm64@1.39.0':
+  '@oxlint/win32-arm64@1.41.0':
     optional: true
 
-  '@oxlint/win32-x64@1.39.0':
+  '@oxlint/win32-x64@1.41.0':
     optional: true
 
   '@pinojs/redact@0.4.0': {}
@@ -10384,79 +10295,79 @@ snapshots:
     dependencies:
       '@redis/client': 5.10.0
 
-  '@rollup/rollup-android-arm-eabi@4.55.1':
+  '@rollup/rollup-android-arm-eabi@4.55.2':
     optional: true
 
-  '@rollup/rollup-android-arm64@4.55.1':
+  '@rollup/rollup-android-arm64@4.55.2':
     optional: true
 
-  '@rollup/rollup-darwin-arm64@4.55.1':
+  '@rollup/rollup-darwin-arm64@4.55.2':
     optional: true
 
-  '@rollup/rollup-darwin-x64@4.55.1':
+  '@rollup/rollup-darwin-x64@4.55.2':
     optional: true
 
-  '@rollup/rollup-freebsd-arm64@4.55.1':
+  '@rollup/rollup-freebsd-arm64@4.55.2':
     optional: true
 
-  '@rollup/rollup-freebsd-x64@4.55.1':
+  '@rollup/rollup-freebsd-x64@4.55.2':
     optional: true
 
-  '@rollup/rollup-linux-arm-gnueabihf@4.55.1':
+  '@rollup/rollup-linux-arm-gnueabihf@4.55.2':
     optional: true
 
-  '@rollup/rollup-linux-arm-musleabihf@4.55.1':
+  '@rollup/rollup-linux-arm-musleabihf@4.55.2':
     optional: true
 
-  '@rollup/rollup-linux-arm64-gnu@4.55.1':
+  '@rollup/rollup-linux-arm64-gnu@4.55.2':
     optional: true
 
-  '@rollup/rollup-linux-arm64-musl@4.55.1':
+  '@rollup/rollup-linux-arm64-musl@4.55.2':
     optional: true
 
-  '@rollup/rollup-linux-loong64-gnu@4.55.1':
+  '@rollup/rollup-linux-loong64-gnu@4.55.2':
     optional: true
 
-  '@rollup/rollup-linux-loong64-musl@4.55.1':
+  '@rollup/rollup-linux-loong64-musl@4.55.2':
     optional: true
 
-  '@rollup/rollup-linux-ppc64-gnu@4.55.1':
+  '@rollup/rollup-linux-ppc64-gnu@4.55.2':
     optional: true
 
-  '@rollup/rollup-linux-ppc64-musl@4.55.1':
+  '@rollup/rollup-linux-ppc64-musl@4.55.2':
     optional: true
 
-  '@rollup/rollup-linux-riscv64-gnu@4.55.1':
+  '@rollup/rollup-linux-riscv64-gnu@4.55.2':
     optional: true
 
-  '@rollup/rollup-linux-riscv64-musl@4.55.1':
+  '@rollup/rollup-linux-riscv64-musl@4.55.2':
     optional: true
 
-  '@rollup/rollup-linux-s390x-gnu@4.55.1':
+  '@rollup/rollup-linux-s390x-gnu@4.55.2':
     optional: true
 
-  '@rollup/rollup-linux-x64-gnu@4.55.1':
+  '@rollup/rollup-linux-x64-gnu@4.55.2':
     optional: true
 
-  '@rollup/rollup-linux-x64-musl@4.55.1':
+  '@rollup/rollup-linux-x64-musl@4.55.2':
     optional: true
 
-  '@rollup/rollup-openbsd-x64@4.55.1':
+  '@rollup/rollup-openbsd-x64@4.55.2':
     optional: true
 
-  '@rollup/rollup-openharmony-arm64@4.55.1':
+  '@rollup/rollup-openharmony-arm64@4.55.2':
     optional: true
 
-  '@rollup/rollup-win32-arm64-msvc@4.55.1':
+  '@rollup/rollup-win32-arm64-msvc@4.55.2':
     optional: true
 
-  '@rollup/rollup-win32-ia32-msvc@4.55.1':
+  '@rollup/rollup-win32-ia32-msvc@4.55.2':
     optional: true
 
-  '@rollup/rollup-win32-x64-gnu@4.55.1':
+  '@rollup/rollup-win32-x64-gnu@4.55.2':
     optional: true
 
-  '@rollup/rollup-win32-x64-msvc@4.55.1':
+  '@rollup/rollup-win32-x64-msvc@4.55.2':
     optional: true
 
   '@rushstack/node-core-library@5.13.0(@types/node@25.0.9)':
@@ -11233,14 +11144,14 @@ snapshots:
     dependencies:
       '@types/yargs-parser': 21.0.3
 
-  '@typescript-eslint/eslint-plugin@8.53.0(@typescript-eslint/parser@8.53.0(eslint@9.39.2)(typescript@5.9.3))(eslint@9.39.2)(typescript@5.9.3)':
+  '@typescript-eslint/eslint-plugin@8.53.1(@typescript-eslint/parser@8.53.1(eslint@9.39.2)(typescript@5.9.3))(eslint@9.39.2)(typescript@5.9.3)':
     dependencies:
       '@eslint-community/regexpp': 4.12.2
-      '@typescript-eslint/parser': 8.53.0(eslint@9.39.2)(typescript@5.9.3)
-      '@typescript-eslint/scope-manager': 8.53.0
-      '@typescript-eslint/type-utils': 8.53.0(eslint@9.39.2)(typescript@5.9.3)
-      '@typescript-eslint/utils': 8.53.0(eslint@9.39.2)(typescript@5.9.3)
-      '@typescript-eslint/visitor-keys': 8.53.0
+      '@typescript-eslint/parser': 8.53.1(eslint@9.39.2)(typescript@5.9.3)
+      '@typescript-eslint/scope-manager': 8.53.1
+      '@typescript-eslint/type-utils': 8.53.1(eslint@9.39.2)(typescript@5.9.3)
+      '@typescript-eslint/utils': 8.53.1(eslint@9.39.2)(typescript@5.9.3)
+      '@typescript-eslint/visitor-keys': 8.53.1
       eslint: 9.39.2
       ignore: 7.0.5
       natural-compare: 1.4.0
@@ -11249,41 +11160,41 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/parser@8.53.0(eslint@9.39.2)(typescript@5.9.3)':
+  '@typescript-eslint/parser@8.53.1(eslint@9.39.2)(typescript@5.9.3)':
     dependencies:
-      '@typescript-eslint/scope-manager': 8.53.0
-      '@typescript-eslint/types': 8.53.0
-      '@typescript-eslint/typescript-estree': 8.53.0(typescript@5.9.3)
-      '@typescript-eslint/visitor-keys': 8.53.0
+      '@typescript-eslint/scope-manager': 8.53.1
+      '@typescript-eslint/types': 8.53.1
+      '@typescript-eslint/typescript-estree': 8.53.1(typescript@5.9.3)
+      '@typescript-eslint/visitor-keys': 8.53.1
       debug: 4.4.3
       eslint: 9.39.2
       typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/project-service@8.53.0(typescript@5.9.3)':
+  '@typescript-eslint/project-service@8.53.1(typescript@5.9.3)':
     dependencies:
-      '@typescript-eslint/tsconfig-utils': 8.53.0(typescript@5.9.3)
-      '@typescript-eslint/types': 8.53.0
+      '@typescript-eslint/tsconfig-utils': 8.53.1(typescript@5.9.3)
+      '@typescript-eslint/types': 8.53.1
       debug: 4.4.3
       typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/scope-manager@8.53.0':
+  '@typescript-eslint/scope-manager@8.53.1':
     dependencies:
-      '@typescript-eslint/types': 8.53.0
-      '@typescript-eslint/visitor-keys': 8.53.0
+      '@typescript-eslint/types': 8.53.1
+      '@typescript-eslint/visitor-keys': 8.53.1
 
-  '@typescript-eslint/tsconfig-utils@8.53.0(typescript@5.9.3)':
+  '@typescript-eslint/tsconfig-utils@8.53.1(typescript@5.9.3)':
     dependencies:
       typescript: 5.9.3
 
-  '@typescript-eslint/type-utils@8.53.0(eslint@9.39.2)(typescript@5.9.3)':
+  '@typescript-eslint/type-utils@8.53.1(eslint@9.39.2)(typescript@5.9.3)':
     dependencies:
-      '@typescript-eslint/types': 8.53.0
-      '@typescript-eslint/typescript-estree': 8.53.0(typescript@5.9.3)
-      '@typescript-eslint/utils': 8.53.0(eslint@9.39.2)(typescript@5.9.3)
+      '@typescript-eslint/types': 8.53.1
+      '@typescript-eslint/typescript-estree': 8.53.1(typescript@5.9.3)
+      '@typescript-eslint/utils': 8.53.1(eslint@9.39.2)(typescript@5.9.3)
       debug: 4.4.3
       eslint: 9.39.2
       ts-api-utils: 2.4.0(typescript@5.9.3)
@@ -11291,14 +11202,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/types@8.53.0': {}
+  '@typescript-eslint/types@8.53.1': {}
 
-  '@typescript-eslint/typescript-estree@8.53.0(typescript@5.9.3)':
+  '@typescript-eslint/typescript-estree@8.53.1(typescript@5.9.3)':
     dependencies:
-      '@typescript-eslint/project-service': 8.53.0(typescript@5.9.3)
-      '@typescript-eslint/tsconfig-utils': 8.53.0(typescript@5.9.3)
-      '@typescript-eslint/types': 8.53.0
-      '@typescript-eslint/visitor-keys': 8.53.0
+      '@typescript-eslint/project-service': 8.53.1(typescript@5.9.3)
+      '@typescript-eslint/tsconfig-utils': 8.53.1(typescript@5.9.3)
+      '@typescript-eslint/types': 8.53.1
+      '@typescript-eslint/visitor-keys': 8.53.1
       debug: 4.4.3
       minimatch: 9.0.5
       semver: 7.7.3
@@ -11308,52 +11219,52 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/utils@8.53.0(eslint@9.39.2)(typescript@5.9.3)':
+  '@typescript-eslint/utils@8.53.1(eslint@9.39.2)(typescript@5.9.3)':
     dependencies:
       '@eslint-community/eslint-utils': 4.9.1(eslint@9.39.2)
-      '@typescript-eslint/scope-manager': 8.53.0
-      '@typescript-eslint/types': 8.53.0
-      '@typescript-eslint/typescript-estree': 8.53.0(typescript@5.9.3)
+      '@typescript-eslint/scope-manager': 8.53.1
+      '@typescript-eslint/types': 8.53.1
+      '@typescript-eslint/typescript-estree': 8.53.1(typescript@5.9.3)
       eslint: 9.39.2
       typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/visitor-keys@8.53.0':
+  '@typescript-eslint/visitor-keys@8.53.1':
     dependencies:
-      '@typescript-eslint/types': 8.53.0
+      '@typescript-eslint/types': 8.53.1
       eslint-visitor-keys: 4.2.1
 
-  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20260118.1':
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20260120.1':
     optional: true
 
-  '@typescript/native-preview-darwin-x64@7.0.0-dev.20260118.1':
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20260120.1':
     optional: true
 
-  '@typescript/native-preview-linux-arm64@7.0.0-dev.20260118.1':
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20260120.1':
     optional: true
 
-  '@typescript/native-preview-linux-arm@7.0.0-dev.20260118.1':
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20260120.1':
     optional: true
 
-  '@typescript/native-preview-linux-x64@7.0.0-dev.20260118.1':
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20260120.1':
     optional: true
 
-  '@typescript/native-preview-win32-arm64@7.0.0-dev.20260118.1':
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20260120.1':
     optional: true
 
-  '@typescript/native-preview-win32-x64@7.0.0-dev.20260118.1':
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20260120.1':
     optional: true
 
-  '@typescript/native-preview@7.0.0-dev.20260118.1':
+  '@typescript/native-preview@7.0.0-dev.20260120.1':
     optionalDependencies:
-      '@typescript/native-preview-darwin-arm64': 7.0.0-dev.20260118.1
-      '@typescript/native-preview-darwin-x64': 7.0.0-dev.20260118.1
-      '@typescript/native-preview-linux-arm': 7.0.0-dev.20260118.1
-      '@typescript/native-preview-linux-arm64': 7.0.0-dev.20260118.1
-      '@typescript/native-preview-linux-x64': 7.0.0-dev.20260118.1
-      '@typescript/native-preview-win32-arm64': 7.0.0-dev.20260118.1
-      '@typescript/native-preview-win32-x64': 7.0.0-dev.20260118.1
+      '@typescript/native-preview-darwin-arm64': 7.0.0-dev.20260120.1
+      '@typescript/native-preview-darwin-x64': 7.0.0-dev.20260120.1
+      '@typescript/native-preview-linux-arm': 7.0.0-dev.20260120.1
+      '@typescript/native-preview-linux-arm64': 7.0.0-dev.20260120.1
+      '@typescript/native-preview-linux-x64': 7.0.0-dev.20260120.1
+      '@typescript/native-preview-win32-arm64': 7.0.0-dev.20260120.1
+      '@typescript/native-preview-win32-x64': 7.0.0-dev.20260120.1
 
   '@typespec/ts-http-runtime@0.3.2':
     dependencies:
@@ -11463,37 +11374,37 @@ snapshots:
       '@vitest/pretty-format': 4.0.17
       tinyrainbow: 3.0.3
 
-  '@vue/compiler-core@3.5.26':
+  '@vue/compiler-core@3.5.27':
     dependencies:
       '@babel/parser': 7.28.6
-      '@vue/shared': 3.5.26
+      '@vue/shared': 3.5.27
       entities: 7.0.0
       estree-walker: 2.0.2
       source-map-js: 1.2.1
 
-  '@vue/compiler-dom@3.5.26':
+  '@vue/compiler-dom@3.5.27':
     dependencies:
-      '@vue/compiler-core': 3.5.26
-      '@vue/shared': 3.5.26
+      '@vue/compiler-core': 3.5.27
+      '@vue/shared': 3.5.27
 
-  '@vue/compiler-sfc@3.5.26':
+  '@vue/compiler-sfc@3.5.27':
     dependencies:
       '@babel/parser': 7.28.6
-      '@vue/compiler-core': 3.5.26
-      '@vue/compiler-dom': 3.5.26
-      '@vue/compiler-ssr': 3.5.26
-      '@vue/shared': 3.5.26
+      '@vue/compiler-core': 3.5.27
+      '@vue/compiler-dom': 3.5.27
+      '@vue/compiler-ssr': 3.5.27
+      '@vue/shared': 3.5.27
       estree-walker: 2.0.2
       magic-string: 0.30.21
       postcss: 8.5.6
       source-map-js: 1.2.1
 
-  '@vue/compiler-ssr@3.5.26':
+  '@vue/compiler-ssr@3.5.27':
     dependencies:
-      '@vue/compiler-dom': 3.5.26
-      '@vue/shared': 3.5.26
+      '@vue/compiler-dom': 3.5.27
+      '@vue/shared': 3.5.27
 
-  '@vue/shared@3.5.26': {}
+  '@vue/shared@3.5.27': {}
 
   abbrev@1.1.1:
     optional: true
@@ -11799,16 +11710,16 @@ snapshots:
 
   base64-js@1.5.1: {}
 
-  baseline-browser-mapping@2.9.15: {}
+  baseline-browser-mapping@2.9.16: {}
 
   bcrypt-pbkdf@1.0.2:
     dependencies:
       tweetnacl: 0.14.5
 
-  better-auth@1.4.15(better-sqlite3@12.6.2)(mongodb@6.20.0(socks@2.8.7))(mysql2@3.16.0)(pg@8.16.3)(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@25.0.9)(tsx@4.21.0)(yaml@2.8.2)):
+  better-auth@1.4.16(better-sqlite3@12.6.2)(mongodb@6.20.0(socks@2.8.7))(mysql2@3.16.0)(pg@8.16.3)(vitest@4.0.17(@opentelemetry/api@1.9.0)(@types/node@25.0.9)(tsx@4.21.0)(yaml@2.8.2)):
     dependencies:
-      '@better-auth/core': 1.4.15(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.3.5))(jose@6.1.3)(kysely@0.28.10)(nanostores@1.1.0)
-      '@better-auth/telemetry': 1.4.15(@better-auth/core@1.4.15(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.3.5))(jose@6.1.3)(kysely@0.28.10)(nanostores@1.1.0))
+      '@better-auth/core': 1.4.16(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.3.5))(jose@6.1.3)(kysely@0.28.10)(nanostores@1.1.0)
+      '@better-auth/telemetry': 1.4.16(@better-auth/core@1.4.16(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.3.5))(jose@6.1.3)(kysely@0.28.10)(nanostores@1.1.0))
       '@better-auth/utils': 0.3.0
       '@better-fetch/fetch': 1.1.21
       '@noble/ciphers': 2.1.1
@@ -11899,7 +11810,7 @@ snapshots:
 
   browserslist@4.28.1:
     dependencies:
-      baseline-browser-mapping: 2.9.15
+      baseline-browser-mapping: 2.9.16
       caniuse-lite: 1.0.30001765
       electron-to-chromium: 1.5.267
       node-releases: 2.0.27
@@ -12278,7 +12189,7 @@ snapshots:
     dependencies:
       '@babel/parser': 7.28.6
       '@babel/traverse': 7.28.6
-      '@vue/compiler-sfc': 3.5.26
+      '@vue/compiler-sfc': 3.5.27
       callsite: 1.0.0
       camelcase: 6.3.0
       cosmiconfig: 7.1.0
@@ -12322,7 +12233,7 @@ snapshots:
 
   detect-newline@4.0.1: {}
 
-  diff@4.0.2: {}
+  diff@4.0.4: {}
 
   dir-glob@3.0.1:
     dependencies:
@@ -12619,7 +12530,7 @@ snapshots:
 
   event-target-shim@5.0.1: {}
 
-  eventemitter3@5.0.1: {}
+  eventemitter3@5.0.4: {}
 
   events-universal@1.0.1:
     dependencies:
@@ -12750,6 +12661,32 @@ snapshots:
     dependencies:
       strnum: 2.1.2
 
+  fastmcp@3.27.0(hono@4.11.4)(jose@6.1.3):
+    dependencies:
+      '@modelcontextprotocol/sdk': 1.25.3(hono@4.11.4)(zod@4.3.5)
+      '@standard-schema/spec': 1.1.0
+      execa: 9.6.1
+      file-type: 21.3.0
+      fuse.js: 7.1.0
+      mcp-proxy: 5.12.5
+      strict-event-emitter-types: 2.0.0
+      undici: 7.18.2
+      uri-templates: 0.2.0
+      xsschema: 0.4.0-beta.5(zod-to-json-schema@3.25.1(zod@4.3.5))(zod@4.3.5)
+      yargs: 18.0.0
+      zod: 4.3.5
+      zod-to-json-schema: 3.25.1(zod@4.3.5)
+    optionalDependencies:
+      jose: 6.1.3
+    transitivePeerDependencies:
+      - '@cfworker/json-schema'
+      - '@valibot/to-json-schema'
+      - arktype
+      - effect
+      - hono
+      - supports-color
+      - sury
+
   fastq@1.20.1:
     dependencies:
       reusify: 1.1.0
@@ -12821,7 +12758,7 @@ snapshots:
     dependencies:
       magic-string: 0.30.21
       mlly: 1.8.0
-      rollup: 4.55.1
+      rollup: 4.55.2
 
   flat-cache@4.0.1:
     dependencies:
@@ -13941,7 +13878,7 @@ snapshots:
     dependencies:
       cli-truncate: 5.1.1
       colorette: 2.0.20
-      eventemitter3: 5.0.1
+      eventemitter3: 5.0.4
       log-update: 6.1.0
       rfdc: 1.4.1
       wrap-ansi: 9.0.2
@@ -14232,7 +14169,7 @@ snapshots:
 
   mongodb@6.20.0(socks@2.8.7):
     dependencies:
-      '@mongodb-js/saslprep': 1.4.4
+      '@mongodb-js/saslprep': 1.4.5
       bson: 6.10.4
       mongodb-connection-string-url: 3.0.2
     optionalDependencies:
@@ -14336,7 +14273,7 @@ snapshots:
       jsonpath-plus: 10.3.0
       lodash.topath: 4.5.2
 
-  node-abi@3.86.0:
+  node-abi@3.87.0:
     dependencies:
       semver: 7.7.3
 
@@ -14370,7 +14307,7 @@ snapshots:
       nopt: 9.0.0
       proc-log: 6.1.0
       semver: 7.7.3
-      tar: 7.5.3
+      tar: 7.5.4
       tinyglobby: 0.2.15
       which: 6.0.0
     transitivePeerDependencies:
@@ -14488,16 +14425,16 @@ snapshots:
       object-keys: 1.1.1
       safe-push-apply: 1.0.0
 
-  oxlint@1.39.0:
+  oxlint@1.41.0:
     optionalDependencies:
-      '@oxlint/darwin-arm64': 1.39.0
-      '@oxlint/darwin-x64': 1.39.0
-      '@oxlint/linux-arm64-gnu': 1.39.0
-      '@oxlint/linux-arm64-musl': 1.39.0
-      '@oxlint/linux-x64-gnu': 1.39.0
-      '@oxlint/linux-x64-musl': 1.39.0
-      '@oxlint/win32-arm64': 1.39.0
-      '@oxlint/win32-x64': 1.39.0
+      '@oxlint/darwin-arm64': 1.41.0
+      '@oxlint/darwin-x64': 1.41.0
+      '@oxlint/linux-arm64-gnu': 1.41.0
+      '@oxlint/linux-arm64-musl': 1.41.0
+      '@oxlint/linux-x64-gnu': 1.41.0
+      '@oxlint/linux-x64-musl': 1.41.0
+      '@oxlint/win32-arm64': 1.41.0
+      '@oxlint/win32-x64': 1.41.0
 
   p-filter@2.1.0:
     dependencies:
@@ -14637,7 +14574,7 @@ snapshots:
   pino-http@11.0.0:
     dependencies:
       get-caller-file: 2.0.5
-      pino: 10.2.0
+      pino: 10.2.1
       pino-std-serializers: 7.1.0
       process-warning: 5.0.0
 
@@ -14659,7 +14596,7 @@ snapshots:
 
   pino-std-serializers@7.1.0: {}
 
-  pino@10.2.0:
+  pino@10.2.1:
     dependencies:
       '@pinojs/redact': 0.4.0
       atomic-sleep: 1.0.0
@@ -14735,7 +14672,7 @@ snapshots:
       minimist: 1.2.8
       mkdirp-classic: 0.5.3
       napi-build-utils: 2.0.0
-      node-abi: 3.86.0
+      node-abi: 3.87.0
       pump: 3.0.3
       rc: 1.2.8
       simple-get: 4.0.1
@@ -14999,35 +14936,35 @@ snapshots:
       glob: 7.2.3
     optional: true
 
-  rollup@4.55.1:
+  rollup@4.55.2:
     dependencies:
       '@types/estree': 1.0.8
     optionalDependencies:
-      '@rollup/rollup-android-arm-eabi': 4.55.1
-      '@rollup/rollup-android-arm64': 4.55.1
-      '@rollup/rollup-darwin-arm64': 4.55.1
-      '@rollup/rollup-darwin-x64': 4.55.1
-      '@rollup/rollup-freebsd-arm64': 4.55.1
-      '@rollup/rollup-freebsd-x64': 4.55.1
-      '@rollup/rollup-linux-arm-gnueabihf': 4.55.1
-      '@rollup/rollup-linux-arm-musleabihf': 4.55.1
-      '@rollup/rollup-linux-arm64-gnu': 4.55.1
-      '@rollup/rollup-linux-arm64-musl': 4.55.1
-      '@rollup/rollup-linux-loong64-gnu': 4.55.1
-      '@rollup/rollup-linux-loong64-musl': 4.55.1
-      '@rollup/rollup-linux-ppc64-gnu': 4.55.1
-      '@rollup/rollup-linux-ppc64-musl': 4.55.1
-      '@rollup/rollup-linux-riscv64-gnu': 4.55.1
-      '@rollup/rollup-linux-riscv64-musl': 4.55.1
-      '@rollup/rollup-linux-s390x-gnu': 4.55.1
-      '@rollup/rollup-linux-x64-gnu': 4.55.1
-      '@rollup/rollup-linux-x64-musl': 4.55.1
-      '@rollup/rollup-openbsd-x64': 4.55.1
-      '@rollup/rollup-openharmony-arm64': 4.55.1
-      '@rollup/rollup-win32-arm64-msvc': 4.55.1
-      '@rollup/rollup-win32-ia32-msvc': 4.55.1
-      '@rollup/rollup-win32-x64-gnu': 4.55.1
-      '@rollup/rollup-win32-x64-msvc': 4.55.1
+      '@rollup/rollup-android-arm-eabi': 4.55.2
+      '@rollup/rollup-android-arm64': 4.55.2
+      '@rollup/rollup-darwin-arm64': 4.55.2
+      '@rollup/rollup-darwin-x64': 4.55.2
+      '@rollup/rollup-freebsd-arm64': 4.55.2
+      '@rollup/rollup-freebsd-x64': 4.55.2
+      '@rollup/rollup-linux-arm-gnueabihf': 4.55.2
+      '@rollup/rollup-linux-arm-musleabihf': 4.55.2
+      '@rollup/rollup-linux-arm64-gnu': 4.55.2
+      '@rollup/rollup-linux-arm64-musl': 4.55.2
+      '@rollup/rollup-linux-loong64-gnu': 4.55.2
+      '@rollup/rollup-linux-loong64-musl': 4.55.2
+      '@rollup/rollup-linux-ppc64-gnu': 4.55.2
+      '@rollup/rollup-linux-ppc64-musl': 4.55.2
+      '@rollup/rollup-linux-riscv64-gnu': 4.55.2
+      '@rollup/rollup-linux-riscv64-musl': 4.55.2
+      '@rollup/rollup-linux-s390x-gnu': 4.55.2
+      '@rollup/rollup-linux-x64-gnu': 4.55.2
+      '@rollup/rollup-linux-x64-musl': 4.55.2
+      '@rollup/rollup-openbsd-x64': 4.55.2
+      '@rollup/rollup-openharmony-arm64': 4.55.2
+      '@rollup/rollup-win32-arm64-msvc': 4.55.2
+      '@rollup/rollup-win32-ia32-msvc': 4.55.2
+      '@rollup/rollup-win32-x64-gnu': 4.55.2
+      '@rollup/rollup-win32-x64-msvc': 4.55.2
       fsevents: 2.3.3
 
   rou3@0.7.12: {}
@@ -15522,7 +15459,7 @@ snapshots:
       mkdirp: 1.0.4
       yallist: 4.0.0
 
-  tar@7.5.3:
+  tar@7.5.4:
     dependencies:
       '@isaacs/fs-minipass': 4.0.1
       chownr: 3.0.0
@@ -15681,7 +15618,7 @@ snapshots:
       acorn-walk: 8.3.4
       arg: 4.1.3
       create-require: 1.1.1
-      diff: 4.0.2
+      diff: 4.0.4
       make-error: 1.3.6
       typescript: 5.9.3
       v8-compile-cache-lib: 3.0.1
@@ -15712,7 +15649,7 @@ snapshots:
       picocolors: 1.1.1
       postcss-load-config: 6.0.1(postcss@8.5.6)(tsx@4.21.0)(yaml@2.8.2)
       resolve-from: 5.0.0
-      rollup: 4.55.1
+      rollup: 4.55.2
       source-map: 0.7.6
       sucrase: 3.35.1
       tinyexec: 0.3.2
@@ -15813,12 +15750,12 @@ snapshots:
       typescript: 5.9.3
       yaml: 2.8.2
 
-  typescript-eslint@8.53.0(eslint@9.39.2)(typescript@5.9.3):
+  typescript-eslint@8.53.1(eslint@9.39.2)(typescript@5.9.3):
     dependencies:
-      '@typescript-eslint/eslint-plugin': 8.53.0(@typescript-eslint/parser@8.53.0(eslint@9.39.2)(typescript@5.9.3))(eslint@9.39.2)(typescript@5.9.3)
-      '@typescript-eslint/parser': 8.53.0(eslint@9.39.2)(typescript@5.9.3)
-      '@typescript-eslint/typescript-estree': 8.53.0(typescript@5.9.3)
-      '@typescript-eslint/utils': 8.53.0(eslint@9.39.2)(typescript@5.9.3)
+      '@typescript-eslint/eslint-plugin': 8.53.1(@typescript-eslint/parser@8.53.1(eslint@9.39.2)(typescript@5.9.3))(eslint@9.39.2)(typescript@5.9.3)
+      '@typescript-eslint/parser': 8.53.1(eslint@9.39.2)(typescript@5.9.3)
+      '@typescript-eslint/typescript-estree': 8.53.1(typescript@5.9.3)
+      '@typescript-eslint/utils': 8.53.1(eslint@9.39.2)(typescript@5.9.3)
       eslint: 9.39.2
       typescript: 5.9.3
     transitivePeerDependencies:
@@ -15952,7 +15889,7 @@ snapshots:
       fdir: 6.5.0(picomatch@4.0.3)
       picomatch: 4.0.3
       postcss: 8.5.6
-      rollup: 4.55.1
+      rollup: 4.55.2
       tinyglobby: 0.2.15
     optionalDependencies:
       '@types/node': 25.0.9
@@ -16114,10 +16051,10 @@ snapshots:
     dependencies:
       is-wsl: 3.1.0
 
-  xsschema@0.3.5(zod-to-json-schema@3.25.1(zod@3.25.76))(zod@3.25.76):
+  xsschema@0.4.0-beta.5(zod-to-json-schema@3.25.1(zod@4.3.5))(zod@4.3.5):
     optionalDependencies:
-      zod: 3.25.76
-      zod-to-json-schema: 3.25.1(zod@3.25.76)
+      zod: 4.3.5
+      zod-to-json-schema: 3.25.1(zod@4.3.5)
 
   xtend@4.0.2: {}
 
@@ -16180,14 +16117,8 @@ snapshots:
       compress-commons: 6.0.2
       readable-stream: 4.7.0
 
-  zod-to-json-schema@3.25.1(zod@3.25.76):
-    dependencies:
-      zod: 3.25.76
-
   zod-to-json-schema@3.25.1(zod@4.3.5):
     dependencies:
       zod: 4.3.5
-
-  zod@3.25.76: {}
 
   zod@4.3.5: {}
