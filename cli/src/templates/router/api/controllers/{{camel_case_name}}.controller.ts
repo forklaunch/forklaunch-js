@@ -1,5 +1,10 @@
 import { handlers, {{#is_iam_configured}}ROLES, {{/is_iam_configured}}schemaValidator } from '@{{app_name}}/core';
+{{#with_mappers}}
 import { {{pascal_case_name}}RequestMapper, {{pascal_case_name}}ResponseMapper } from '../../domain/mappers/{{camel_case_name}}.mappers';
+{{/with_mappers}}
+{{^with_mappers}}
+import { {{pascal_case_name}}RequestSchema, {{pascal_case_name}}ResponseSchema } from '../../domain/schemas/{{camel_case_name}}.schema';
+{{/with_mappers}}
 import { ci, tokens } from '../../bootstrapper';
 
 //! resolve the dependencies
@@ -26,8 +31,13 @@ export const {{camel_case_name}}Get = handlers.get(
       allowedRoles: new Set([ROLES.ADMIN])
     },{{/is_iam_configured}}
     responses: {
+      {{#with_mappers}}
       // specifies the success response schema using Mapper constructs
       200: {{pascal_case_name}}ResponseMapper.schema
+      {{/with_mappers}}
+      {{^with_mappers}}
+      200: {{pascal_case_name}}ResponseSchema
+      {{/with_mappers}}
     }
   },
   async (req, res) => {
@@ -53,11 +63,21 @@ export const {{camel_case_name}}Post = handlers.post(
       },
       allowedRoles: new Set([ROLES.ADMIN])
     },{{/is_iam_configured}}
+    {{#with_mappers}}
     // specifies the request body schema using Mapper constructs
     body: {{pascal_case_name}}RequestMapper.schema,
+    {{/with_mappers}}
+    {{^with_mappers}}
+    body: {{pascal_case_name}}RequestSchema,
+    {{/with_mappers}}
     responses: {
+      {{#with_mappers}}
       // specifies the success response schema using Mapper constructs
       200: {{pascal_case_name}}ResponseMapper.schema
+      {{/with_mappers}}
+      {{^with_mappers}}
+      200: {{pascal_case_name}}ResponseSchema
+      {{/with_mappers}}
     }
   },
   async (req, res) => {

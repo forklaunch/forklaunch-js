@@ -1,5 +1,23 @@
 # @forklaunch/bunrun
 
+## 0.0.20
+
+### Patch Changes
+
+- Package deps version bump
+
+## 0.0.19
+
+### Patch Changes
+
+- package version bump
+
+## 0.0.18
+
+### Patch Changes
+
+- Mapper instantiation syntax more readable and express port added. Also removed error schema thrash in live sdk
+
 ## 0.0.17
 
 ### Patch Changes

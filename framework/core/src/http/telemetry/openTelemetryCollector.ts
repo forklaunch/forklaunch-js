@@ -34,7 +34,11 @@ import {
   MetricsDefinition,
   MetricType
 } from '../types/openTelemetryCollector.types';
-import { ATTR_API_NAME, ATTR_CORRELATION_ID } from './constants';
+import {
+  ATTR_API_NAME,
+  ATTR_APPLICATION_ID,
+  ATTR_CORRELATION_ID
+} from './constants';
 import { logger, PinoLogger } from './pinoLogger';
 
 export class OpenTelemetryCollector<
@@ -163,6 +167,24 @@ export class OpenTelemetryCollector<
 
 dotenv.config({ path: getEnvVar('DOTENV_FILE_PATH') });
 
+// Parse OTEL_EXPORTER_OTLP_HEADERS into headers object
+// Format: key1=value1,key2=value2
+function parseOtelHeaders(): Record<string, string> | undefined {
+  const headersEnv = getEnvVar('OTEL_EXPORTER_OTLP_HEADERS');
+  if (!headersEnv) return undefined;
+
+  const headers: Record<string, string> = {};
+  for (const pair of headersEnv.split(',')) {
+    const [key, ...valueParts] = pair.split('=');
+    if (key && valueParts.length > 0) {
+      headers[key.trim()] = valueParts.join('=').trim();
+    }
+  }
+  return Object.keys(headers).length > 0 ? headers : undefined;
+}
+
+const otelHeaders = parseOtelHeaders();
+
 new NodeSDK({
   resource: resourceFromAttributes({
     [ATTR_SERVICE_NAME]: getEnvVar('OTEL_SERVICE_NAME')
@@ -170,13 +192,15 @@ new NodeSDK({
   traceExporter: new OTLPTraceExporter({
     url: `${
       getEnvVar('OTEL_EXPORTER_OTLP_ENDPOINT') ?? 'http://localhost:4318'
-    }/v1/traces`
+    }/v1/traces`,
+    headers: otelHeaders
   }),
   metricReader: new PeriodicExportingMetricReader({
     exporter: new OTLPMetricExporter({
       url: `${
         getEnvVar('OTEL_EXPORTER_OTLP_ENDPOINT') ?? 'http://localhost:4318'
-      }/v1/metrics`
+      }/v1/metrics`,
+      headers: otelHeaders
     }),
     exportIntervalMillis: 5000
   }),
@@ -185,7 +209,8 @@ new NodeSDK({
       new OTLPLogExporter({
         url: `${
           getEnvVar('OTEL_EXPORTER_OTLP_ENDPOINT') ?? 'http://localhost:4318'
-        }/v1/logs`
+        }/v1/logs`,
+        headers: otelHeaders
       })
     )
   ],
@@ -212,6 +237,7 @@ export const httpRequestsTotalCounter = metrics
   .getMeter(getEnvVar('OTEL_SERVICE_NAME') || 'unknown')
   .createCounter<{
     [ATTR_SERVICE_NAME]: string;
+    [ATTR_APPLICATION_ID]?: string;
     [ATTR_API_NAME]: string;
     [ATTR_HTTP_REQUEST_METHOD]: string;
     [ATTR_HTTP_ROUTE]: string;
@@ -224,6 +250,7 @@ export const httpServerDurationHistogram = metrics
   .getMeter(getEnvVar('OTEL_SERVICE_NAME') || 'unknown')
   .createHistogram<{
     [ATTR_SERVICE_NAME]: string;
+    [ATTR_APPLICATION_ID]?: string;
     [ATTR_API_NAME]: string;
     [ATTR_HTTP_REQUEST_METHOD]: string;
     [ATTR_HTTP_ROUTE]: string;

@@ -1,5 +1,23 @@
 # @forklaunch/common
 
+## 0.6.26
+
+### Patch Changes
+
+- Package deps version bump
+
+## 0.6.25
+
+### Patch Changes
+
+- package version bump
+
+## 0.6.24
+
+### Patch Changes
+
+- Mapper instantiation syntax more readable and express port added. Also removed error schema thrash in live sdk
+
 ## 0.6.23
 
 ### Patch Changes

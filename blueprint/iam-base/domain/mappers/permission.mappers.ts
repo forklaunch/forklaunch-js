@@ -4,11 +4,11 @@ import { EntityManager } from '@mikro-orm/core';
 import { Permission } from '../../persistence/entities/permission.entity';
 import { PermissionSchemas } from '../schemas';
 
-export const CreatePermissionMapper = requestMapper(
+export const CreatePermissionMapper = requestMapper({
   schemaValidator,
-  PermissionSchemas.CreatePermissionSchema,
-  Permission,
-  {
+  schema: PermissionSchemas.CreatePermissionSchema,
+  entity: Permission,
+  mapperDefinition: {
     toEntity: async (dto, em: EntityManager) => {
       return Permission.create(
         {
@@ -20,24 +20,24 @@ export const CreatePermissionMapper = requestMapper(
       );
     }
   }
-);
+});
 
-export const UpdatePermissionMapper = requestMapper(
+export const UpdatePermissionMapper = requestMapper({
   schemaValidator,
-  PermissionSchemas.UpdatePermissionSchema,
-  Permission,
-  {
+  schema: PermissionSchemas.UpdatePermissionSchema,
+  entity: Permission,
+  mapperDefinition: {
     toEntity: async (dto, em: EntityManager) => {
       return Permission.update(dto, em);
     }
   }
-);
+});
 
-export const PermissionMapper = responseMapper(
+export const PermissionMapper = responseMapper({
   schemaValidator,
-  PermissionSchemas.PermissionSchema,
-  Permission,
-  {
+  schema: PermissionSchemas.PermissionSchema,
+  entity: Permission,
+  mapperDefinition: {
     toDto: async (entity: Permission) => {
       if (!entity.isInitialized()) {
         await entity.init();
@@ -46,4 +46,4 @@ export const PermissionMapper = responseMapper(
       return await entity.read();
     }
   }
-);
+});

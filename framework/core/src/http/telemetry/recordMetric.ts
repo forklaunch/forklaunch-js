@@ -13,7 +13,7 @@ import {
   ParamsDictionary,
   VersionedRequests
 } from '..';
-import { ATTR_API_NAME } from './constants';
+import { ATTR_API_NAME, ATTR_APPLICATION_ID } from './constants';
 import { httpRequestsTotalCounter } from './openTelemetryCollector';
 
 export function recordMetric<
@@ -51,6 +51,7 @@ export function recordMetric<
 
   httpRequestsTotalCounter.add(1, {
     [ATTR_SERVICE_NAME]: getEnvVar('OTEL_SERVICE_NAME'),
+    [ATTR_APPLICATION_ID]: getEnvVar('OTEL_APPLICATION_ID'),
     [ATTR_API_NAME]: req.contractDetails?.name,
     [ATTR_HTTP_REQUEST_METHOD]: req.method,
     [ATTR_HTTP_ROUTE]: req.originalPath,

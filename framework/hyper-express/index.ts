@@ -1,8 +1,20 @@
 import {
+  ContractDetailsOrMiddlewareOrTypedHandler,
+  extractRouteHandlers,
+  HeadersObject,
+  Body as HttpBody,
+  Method,
   MetricsDefinition,
+  MiddlewareOrMiddlewareWithTypedHandler,
   OpenTelemetryCollector,
-  SessionObject
+  ParamsObject,
+  QueryObject,
+  ResponsesObject,
+  SchemaAuthMethods,
+  SessionObject,
+  VersionSchema
 } from '@forklaunch/core/http';
+import { MiddlewareHandler } from '@forklaunch/hyper-express-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { any } from './src/handlers/any';
 import { delete_ } from './src/handlers/delete';
@@ -112,4 +124,109 @@ export const handlers: {
   post,
   put,
   trace
+};
+
+export const port = <
+  SV extends AnySchemaValidator,
+  Name extends string,
+  ContractMethod extends Method,
+  Path extends `/${string}`,
+  P extends ParamsObject<SV>,
+  ResBodyMap extends ResponsesObject<SV>,
+  ReqBody extends HttpBody<SV>,
+  ReqQuery extends QueryObject<SV>,
+  ReqHeaders extends HeadersObject<SV>,
+  ResHeaders extends HeadersObject<SV>,
+  LocalsObj extends Record<string, unknown>,
+  VersionedApi extends VersionSchema<SV, ContractMethod>,
+  RouterSession extends SessionObject<SV>,
+  BaseRequest,
+  BaseResponse,
+  NextFunction,
+  Auth extends SchemaAuthMethods<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    VersionedApi,
+    BaseRequest
+  >,
+  RouterHandler
+>(
+  options: {
+    method: ContractMethod;
+    path: Path;
+    basePath: string;
+    schemaValidator: SV;
+    openTelemetryCollector?: OpenTelemetryCollector<MetricsDefinition>;
+  },
+  contractDetailsOrMiddlewareOrTypedHandler: ContractDetailsOrMiddlewareOrTypedHandler<
+    SV,
+    Name,
+    ContractMethod,
+    Path,
+    P,
+    ResBodyMap,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    ResHeaders,
+    LocalsObj,
+    VersionedApi,
+    BaseRequest,
+    BaseResponse,
+    NextFunction,
+    RouterSession,
+    Auth
+  >,
+  ...middlewareOrMiddlewareAndTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+    SV,
+    Name,
+    ContractMethod,
+    Path,
+    P,
+    ResBodyMap,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    ResHeaders,
+    LocalsObj,
+    VersionedApi,
+    BaseRequest,
+    BaseResponse,
+    NextFunction,
+    RouterSession,
+    Auth
+  >[]
+): MiddlewareHandler[] => {
+  const handlers = extractRouteHandlers<
+    SV,
+    Name,
+    ContractMethod,
+    Path,
+    P,
+    ResBodyMap,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    ResHeaders,
+    LocalsObj,
+    VersionedApi,
+    RouterSession,
+    BaseRequest,
+    BaseResponse,
+    NextFunction,
+    Auth,
+    RouterHandler
+  >({
+    ...options,
+    contractDetailsOrMiddlewareOrTypedHandler,
+    middlewareOrMiddlewareAndTypedHandler
+  });
+
+  return [
+    ...(handlers.middlewares as MiddlewareHandler[]),
+    handlers.controllerHandler as unknown as MiddlewareHandler
+  ];
 };

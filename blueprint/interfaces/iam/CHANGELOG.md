@@ -1,5 +1,17 @@
 # @forklaunch/interfaces-iam
 
+## 0.8.9
+
+### Patch Changes
+
+- dependency upgrade and minor metadata fixes
+
+## 0.8.8
+
+### Patch Changes
+
+- Mapper syntax fixed and package bump
+
 ## 0.8.7
 
 ### Patch Changes

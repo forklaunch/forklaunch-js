@@ -92,49 +92,46 @@ SetErrorFunction((params) => {
  * Class representing a TypeBox schema definition.
  * @implements {SchemaValidator}
  */
-export class TypeboxSchemaValidator
-  implements
-    SV<
-      <T>() => TTransform<TAny, T>,
-      <T extends SafeTObject<TProperties>>(schema: T) => TypeCheck<T>,
-      <T extends TIdiomaticSchema>(schema: T) => TResolve<T>,
-      <T extends TIdiomaticSchema>(schema: T) => TOptional<TResolve<T>>,
-      <T extends TIdiomaticSchema>(schema: T) => TArray<TResolve<T>>,
-      <T extends TUnionTupleContainer>(
-        schemas: [...T]
-      ) => TUnion<UnionTupleTResolve<T>>,
-      <T extends LiteralSchema>(value: T) => TLiteral<T>,
-      <T extends Record<string, LiteralSchema>>(
-        schemaEnum: T
-      ) => TUnion<
-        [
-          {
-            [K in keyof T]: TLiteral<T[K]>;
-          }[keyof T]
-        ]
-      >,
-      <Args extends TUnionTupleContainer, ReturnType extends TIdiomaticSchema>(
-        args: [...Args],
-        returnType: ReturnType
-      ) => TFunction<UnionTupleTResolve<Args>, TResolve<ReturnType>>,
-      <Key extends TIdiomaticSchema, Value extends TIdiomaticSchema>(
-        key: Key,
-        value: Value
-      ) => TRecord<TResolve<Key>, TResolve<Value>>,
-      <T extends TIdiomaticSchema>(schema: T) => TPromise<TResolve<T>>,
-      (value: unknown) => value is TSchema,
-      <T extends TCatchall>(value: object, type: T) => value is T,
-      <T extends TIdiomaticSchema | TCatchall>(
-        schema: T,
-        value: unknown
-      ) => boolean,
-      <T extends TIdiomaticSchema | TCatchall>(
-        schema: T,
-        value: unknown
-      ) => ParseResult<TSchemaTranslate<TResolve<T>>>,
-      <T extends TIdiomaticSchema | TCatchall>(schema: T) => SchemaObject
-    >
-{
+export class TypeboxSchemaValidator implements SV<
+  <T>() => TTransform<TAny, T>,
+  <T extends SafeTObject<TProperties>>(schema: T) => TypeCheck<T>,
+  <T extends TIdiomaticSchema>(schema: T) => TResolve<T>,
+  <T extends TIdiomaticSchema>(schema: T) => TOptional<TResolve<T>>,
+  <T extends TIdiomaticSchema>(schema: T) => TArray<TResolve<T>>,
+  <T extends TUnionTupleContainer>(
+    schemas: [...T]
+  ) => TUnion<UnionTupleTResolve<T>>,
+  <T extends LiteralSchema>(value: T) => TLiteral<T>,
+  <T extends Record<string, LiteralSchema>>(
+    schemaEnum: T
+  ) => TUnion<
+    [
+      {
+        [K in keyof T]: TLiteral<T[K]>;
+      }[keyof T]
+    ]
+  >,
+  <Args extends TUnionTupleContainer, ReturnType extends TIdiomaticSchema>(
+    args: [...Args],
+    returnType: ReturnType
+  ) => TFunction<UnionTupleTResolve<Args>, TResolve<ReturnType>>,
+  <Key extends TIdiomaticSchema, Value extends TIdiomaticSchema>(
+    key: Key,
+    value: Value
+  ) => TRecord<TResolve<Key>, TResolve<Value>>,
+  <T extends TIdiomaticSchema>(schema: T) => TPromise<TResolve<T>>,
+  (value: unknown) => value is TSchema,
+  <T extends TCatchall>(value: object, type: T) => value is T,
+  <T extends TIdiomaticSchema | TCatchall>(
+    schema: T,
+    value: unknown
+  ) => boolean,
+  <T extends TIdiomaticSchema | TCatchall>(
+    schema: T,
+    value: unknown
+  ) => ParseResult<TSchemaTranslate<TResolve<T>>>,
+  <T extends TIdiomaticSchema | TCatchall>(schema: T) => SchemaObject
+> {
   _Type = 'TypeBox' as const;
   _SchemaCatchall!: TCatchall;
   _ValidSchemaObject!:

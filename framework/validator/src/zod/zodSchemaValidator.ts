@@ -46,50 +46,47 @@ extendZodWithOpenApi(z);
  * Class representing a Zod schema definition.
  * @implements {StaticSchemaValidator}
  */
-export class ZodSchemaValidator
-  implements
-    SV<
-      <T>() => ZodType<T>,
-      <T extends ZodObject<ZodRawShape>>(schema: T) => ZodResolve<T>,
-      <T extends ZodIdiomaticSchema>(schema: T) => ZodResolve<T>,
-      <T extends ZodIdiomaticSchema>(schema: T) => ZodOptional<ZodResolve<T>>,
-      <T extends ZodIdiomaticSchema>(schema: T) => ZodArray<ZodResolve<T>>,
-      <T extends ZodUnionContainer>(schemas: T) => ZodUnion<UnionZodResolve<T>>,
-      <T extends LiteralSchema>(value: T) => ZodLiteral<T>,
-      <T extends Record<string, LiteralSchema>>(
-        schemaEnum: T
-      ) => ZodUnion<
-        [
-          {
-            [K in keyof T]: ZodLiteral<T[K]>;
-          }[keyof T]
-        ]
-      >,
-      <Args extends ZodTupleContainer, ReturnType extends ZodIdiomaticSchema>(
-        args: Args,
-        returnType: ReturnType
-      ) => ZodFunction<
-        ZodTuple<TupleZodResolve<Args>, null>,
-        ZodResolve<ReturnType>
-      >,
-      <Key extends ZodIdiomaticSchema, Value extends ZodIdiomaticSchema>(
-        key: Key,
-        value: Value
-      ) => ZodRecord<ZodRecordKey<Key>, ZodResolve<Value>>,
-      <T extends ZodIdiomaticSchema>(schema: T) => ZodPromise<ZodResolve<T>>,
-      (value: unknown) => value is ZodType,
-      <T extends ZodType>(value: object, type: T) => value is T,
-      <T extends ZodIdiomaticSchema | ZodCatchall>(
-        schema: T,
-        value: unknown
-      ) => boolean,
-      <T extends ZodIdiomaticSchema | ZodCatchall>(
-        schema: T,
-        value: unknown
-      ) => ParseResult<ZodSchemaTranslate<ZodResolve<T>>>,
-      <T extends ZodIdiomaticSchema | ZodCatchall>(schema: T) => SchemaObject
-    >
-{
+export class ZodSchemaValidator implements SV<
+  <T>() => ZodType<T>,
+  <T extends ZodObject<ZodRawShape>>(schema: T) => ZodResolve<T>,
+  <T extends ZodIdiomaticSchema>(schema: T) => ZodResolve<T>,
+  <T extends ZodIdiomaticSchema>(schema: T) => ZodOptional<ZodResolve<T>>,
+  <T extends ZodIdiomaticSchema>(schema: T) => ZodArray<ZodResolve<T>>,
+  <T extends ZodUnionContainer>(schemas: T) => ZodUnion<UnionZodResolve<T>>,
+  <T extends LiteralSchema>(value: T) => ZodLiteral<T>,
+  <T extends Record<string, LiteralSchema>>(
+    schemaEnum: T
+  ) => ZodUnion<
+    [
+      {
+        [K in keyof T]: ZodLiteral<T[K]>;
+      }[keyof T]
+    ]
+  >,
+  <Args extends ZodTupleContainer, ReturnType extends ZodIdiomaticSchema>(
+    args: Args,
+    returnType: ReturnType
+  ) => ZodFunction<
+    ZodTuple<TupleZodResolve<Args>, null>,
+    ZodResolve<ReturnType>
+  >,
+  <Key extends ZodIdiomaticSchema, Value extends ZodIdiomaticSchema>(
+    key: Key,
+    value: Value
+  ) => ZodRecord<ZodRecordKey<Key>, ZodResolve<Value>>,
+  <T extends ZodIdiomaticSchema>(schema: T) => ZodPromise<ZodResolve<T>>,
+  (value: unknown) => value is ZodType,
+  <T extends ZodType>(value: object, type: T) => value is T,
+  <T extends ZodIdiomaticSchema | ZodCatchall>(
+    schema: T,
+    value: unknown
+  ) => boolean,
+  <T extends ZodIdiomaticSchema | ZodCatchall>(
+    schema: T,
+    value: unknown
+  ) => ParseResult<ZodSchemaTranslate<ZodResolve<T>>>,
+  <T extends ZodIdiomaticSchema | ZodCatchall>(schema: T) => SchemaObject
+> {
   _Type = 'Zod' as const;
   _SchemaCatchall!: ZodType;
   _ValidSchemaObject!:

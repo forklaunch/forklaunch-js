@@ -173,6 +173,11 @@ pub(crate) struct ApplicationDevDependencies {
     pub(crate) tsx: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) typescript: Option<String>,
+    #[serde(
+        rename = "@typescript/native-preview",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub(crate) typescript_native_preview: Option<String>,
     #[serde(rename = "typescript-eslint", skip_serializing_if = "Option::is_none")]
     pub(crate) typescript_eslint: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -222,6 +227,7 @@ impl<'de> Deserialize<'de> for ApplicationDevDependencies {
                     ts_node: None,
                     tsx: None,
                     typescript: None,
+                    typescript_native_preview: None,
                     typescript_eslint: None,
                     vitest: None,
                     additional_deps: HashMap::new(),

@@ -1,13 +1,14 @@
-use std::{fs::write, path::Path};
+use std::fs::write;
 
-use anyhow::{Context, Result, bail};
+use anyhow::{Context, Result};
 use clap::{Arg, ArgMatches, Command};
-use reqwest::{StatusCode, blocking::Client};
 
 use super::{CliCommand, unwrap_id};
 use crate::{
-    constants::{ERROR_FAILED_TO_SEND_REQUEST, error_failed_to_write_file, get_api_url},
-    core::{command::command, token::get_token},
+    constants::{
+        ERROR_FAILED_TO_SEND_REQUEST, error_failed_to_write_file, get_platform_management_api_url,
+    },
+    core::command::command,
 };
 
 #[derive(Debug)]
@@ -40,28 +41,26 @@ impl CliCommand for PullCommand {
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
-        // TODO: remove and pass token from parent
-        let token = get_token()?;
+        use crate::core::http_client;
 
         let id = unwrap_id(matches)?;
 
         let output = format!("{}.env", id);
         let output = matches.get_one::<String>("output").unwrap_or(&output);
 
-        let url = format!("{}/config/{}", get_api_url(), id);
-        let client = Client::new();
-        let request = client.get(url).bearer_auth(token);
-        let response = request
-            .send()
-            .with_context(|| ERROR_FAILED_TO_SEND_REQUEST)?;
+        let url = format!("{}/config/{}", get_platform_management_api_url(), id);
+
+        let response = http_client::get(&url).with_context(|| ERROR_FAILED_TO_SEND_REQUEST)?;
 
         match response.status() {
-            StatusCode::OK => println!("Config received, saving to {}", output),
-            _ => bail!("Failed to pull config: {}", response.text()?),
+            reqwest::StatusCode::OK => {
+                let content = response.text()?;
+                write(output, content)
+                    .with_context(|| error_failed_to_write_file(std::path::Path::new(output)))?;
+                println!("Config pulled to {}", output);
+            }
+            _ => anyhow::bail!("Failed to pull config: {}", response.text()?),
         }
-
-        let bytes = response.bytes()?;
-        write(output, bytes).with_context(|| error_failed_to_write_file(&Path::new(output)))?;
 
         Ok(())
     }

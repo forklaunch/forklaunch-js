@@ -168,10 +168,24 @@ pub(crate) fn export_all_services(
     let rendered_templates_cache = RenderedTemplatesCache::new();
     let all_env_vars = find_all_env_vars(&modules_path, &rendered_templates_cache)?;
 
+    // Include both services and workers (workers have a server component)
+    // Exclude observability services as they are not user application components
+    const OBSERVABILITY_SERVICES: &[&str] = &[
+        "prometheus",
+        "loki",
+        "tempo",
+        "grafana",
+        "otel",
+        "otel-collector",
+    ];
+
     let services: Vec<_> = manifest
         .projects
         .iter()
-        .filter(|p| p.r#type == ProjectType::Service)
+        .filter(|p| {
+            (p.r#type == ProjectType::Service || p.r#type == ProjectType::Worker)
+                && !OBSERVABILITY_SERVICES.contains(&p.name.as_str())
+        })
         .collect();
 
     // Find IAM service to get its port

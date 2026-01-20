@@ -6,11 +6,11 @@ import { OrganizationStatus } from '../enum/organizationStatus.enum';
 import { OrganizationSchemas } from '../schemas';
 import { UserMapper } from './user.mappers';
 
-export const CreateOrganizationMapper = requestMapper(
+export const CreateOrganizationMapper = requestMapper({
   schemaValidator,
-  OrganizationSchemas.CreateOrganizationSchema,
-  Organization,
-  {
+  schema: OrganizationSchemas.CreateOrganizationSchema,
+  entity: Organization,
+  mapperDefinition: {
     toEntity: async (dto, em: EntityManager) => {
       return Organization.create(
         {
@@ -24,24 +24,24 @@ export const CreateOrganizationMapper = requestMapper(
       );
     }
   }
-);
+});
 
-export const UpdateOrganizationMapper = requestMapper(
+export const UpdateOrganizationMapper = requestMapper({
   schemaValidator,
-  OrganizationSchemas.UpdateOrganizationSchema,
-  Organization,
-  {
+  schema: OrganizationSchemas.UpdateOrganizationSchema,
+  entity: Organization,
+  mapperDefinition: {
     toEntity: async (dto, em: EntityManager) => {
       return Organization.update(dto, em);
     }
   }
-);
+});
 
-export const OrganizationMapper = responseMapper(
+export const OrganizationMapper = responseMapper({
   schemaValidator,
-  OrganizationSchemas.OrganizationSchema(OrganizationStatus),
-  Organization,
-  {
+  schema: OrganizationSchemas.OrganizationSchema(OrganizationStatus),
+  entity: Organization,
+  mapperDefinition: {
     toDto: async (entity: Organization) => {
       const entityData = await entity.read();
 
@@ -62,4 +62,4 @@ export const OrganizationMapper = responseMapper(
       };
     }
   }
-);
+});

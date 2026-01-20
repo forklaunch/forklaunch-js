@@ -64,7 +64,7 @@ pub(crate) fn transform_registrations_ts_add_router(
     );
 
     let forklaunch_routes_import_text = format!(
-        "import {{ Base{router_name_pascal_case}Service }} from './services/{router_name_camel_case}.service';",
+        "import {{ Base{router_name_pascal_case}Service }} from './domain/services/{router_name_camel_case}.service';",
     );
     let mut forklaunch_routes_import_injection = parse_ast_program(
         &allocator,
@@ -75,7 +75,7 @@ pub(crate) fn transform_registrations_ts_add_router(
     inject_into_import_statement(
         &mut registrations_program,
         &mut forklaunch_routes_import_injection,
-        format!("./services/{router_name_camel_case}.service").as_str(),
+        format!("./domain/services/{router_name_camel_case}.service").as_str(),
         &registrations_source_text,
     )?;
 

@@ -7,15 +7,15 @@ import { PaymentMethodEnum } from '../enum/paymentMethod.enum';
 import { StatusEnum } from '../enum/status.enum';
 import { PaymentLinkSchemas } from '../schemas';
 
-export const CreatePaymentLinkMapper = requestMapper(
+export const CreatePaymentLinkMapper = requestMapper({
   schemaValidator,
-  PaymentLinkSchemas.CreatePaymentLinkSchema(
+  schema: PaymentLinkSchemas.CreatePaymentLinkSchema(
     PaymentMethodEnum,
     CurrencyEnum,
     StatusEnum
   ),
-  PaymentLink,
-  {
+  entity: PaymentLink,
+  mapperDefinition: {
     toEntity: async (dto, em: EntityManager) => {
       return PaymentLink.create(
         {
@@ -27,34 +27,34 @@ export const CreatePaymentLinkMapper = requestMapper(
       );
     }
   }
-);
+});
 
-export const UpdatePaymentLinkMapper = requestMapper(
+export const UpdatePaymentLinkMapper = requestMapper({
   schemaValidator,
-  PaymentLinkSchemas.UpdatePaymentLinkSchema(
+  schema: PaymentLinkSchemas.UpdatePaymentLinkSchema(
     PaymentMethodEnum,
     CurrencyEnum,
     StatusEnum
   ),
-  PaymentLink,
-  {
+  entity: PaymentLink,
+  mapperDefinition: {
     toEntity: async (dto, em: EntityManager) => {
       return PaymentLink.update(dto, em);
     }
   }
-);
+});
 
-export const PaymentLinkMapper = responseMapper(
+export const PaymentLinkMapper = responseMapper({
   schemaValidator,
-  PaymentLinkSchemas.PaymentLinkSchema(
+  schema: PaymentLinkSchemas.PaymentLinkSchema(
     PaymentMethodEnum,
     CurrencyEnum,
     StatusEnum
   ),
-  PaymentLink,
-  {
+  entity: PaymentLink,
+  mapperDefinition: {
     toDto: async (entity: PaymentLink) => {
       return await entity.read();
     }
   }
-);
+});

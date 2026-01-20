@@ -73,7 +73,12 @@ jobs:
         run: mkdir -p ~/.forklaunch
 
       - name: Create token file
-        run: touch ~/.forklaunch/token
+        run: |
+          cat > ~/.forklaunch/token << 'EOF'
+          access_token = "mock_access_token_for_e2e_tests"
+          refresh_token = "mock_refresh_token_for_e2e_tests"
+          expires_at = 9999999999
+          EOF
 
       - name: Run ${{ matrix.name }}
         working-directory: ./cli/tests

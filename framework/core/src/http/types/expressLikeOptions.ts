@@ -1,6 +1,6 @@
-import { FastMCP } from '@forklaunch/fastmcp-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { CorsOptions } from 'cors';
+import { FastMCP } from 'fastmcp';
 import http from 'http';
 import { JWTPayload } from 'jose';
 import { ForklaunchRequest, MapSessionSchema } from './apiDefinition.types';

@@ -1,5 +1,29 @@
 # @forklaunch/validator
 
+## 0.10.26
+
+### Patch Changes
+
+- Package deps version bump
+- Updated dependencies
+  - @forklaunch/common@0.6.26
+
+## 0.10.25
+
+### Patch Changes
+
+- package version bump
+- Updated dependencies
+  - @forklaunch/common@0.6.25
+
+## 0.10.24
+
+### Patch Changes
+
+- Mapper instantiation syntax more readable and express port added. Also removed error schema thrash in live sdk
+- Updated dependencies
+  - @forklaunch/common@0.6.24
+
 ## 0.10.23
 
 ### Patch Changes

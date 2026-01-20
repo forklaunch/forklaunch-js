@@ -2,6 +2,7 @@ import { getEnvVar } from '@forklaunch/common';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import {
   ATTR_API_NAME,
+  ATTR_APPLICATION_ID,
   ATTR_HTTP_REQUEST_METHOD,
   ATTR_HTTP_RESPONSE_STATUS_CODE,
   ATTR_HTTP_ROUTE,
@@ -60,8 +61,8 @@ export function enrichDetails<
   responseSchemas:
     | ResponseCompiledSchema
     | Record<string, ResponseCompiledSchema>,
-  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-  globalOptions: () => ExpressLikeRouterOptions<SV, SessionSchema> | undefined
+  openTelemetryCollector?: OpenTelemetryCollector<MetricsDefinition>,
+  globalOptions?: () => ExpressLikeRouterOptions<SV, SessionSchema> | undefined
 ): ExpressLikeSchemaHandler<
   SV,
   P,
@@ -83,7 +84,7 @@ export function enrichDetails<
     req.requestSchema = requestSchema;
     res.responseSchemas = responseSchemas;
     req.openTelemetryCollector = openTelemetryCollector;
-    req._globalOptions = globalOptions;
+    req._globalOptions = globalOptions ?? (() => undefined);
 
     req.context?.span?.setAttribute(ATTR_API_NAME, req.contractDetails?.name);
     const startTime = process.hrtime();
@@ -94,6 +95,7 @@ export function enrichDetails<
 
       httpServerDurationHistogram.record(durationMs, {
         [ATTR_SERVICE_NAME]: getEnvVar('OTEL_SERVICE_NAME') || 'unknown',
+        [ATTR_APPLICATION_ID]: getEnvVar('OTEL_APPLICATION_ID'),
         [ATTR_API_NAME]: req.contractDetails?.name || 'unknown',
         [ATTR_HTTP_REQUEST_METHOD]: req.method,
         [ATTR_HTTP_ROUTE]: req.originalPath || 'unknown',

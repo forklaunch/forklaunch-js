@@ -9,7 +9,7 @@ use crate::{
 // @biomejs/biome
 pub(crate) const BIOME_VERSION: &str = "1.9.4";
 // @eslint/js
-pub(crate) const ESLINT_VERSION: &str = "^9.39.1";
+pub(crate) const ESLINT_VERSION: &str = "^9.39.2";
 // @types/jest
 pub(crate) const JEST_TYPES_VERSION: &str = "^30.0.0";
 // jest
@@ -17,19 +17,21 @@ pub(crate) const JEST_VERSION: &str = "^30.2.0";
 // oxlint
 pub(crate) const OXLINT_VERSION: &str = "^0.16.6";
 // prettier
-pub(crate) const PRETTIER_VERSION: &str = "^3.6.2";
+pub(crate) const PRETTIER_VERSION: &str = "^3.8.0";
 // ts-jest
-pub(crate) const TS_JEST_VERSION: &str = "^29.4.5";
+pub(crate) const TS_JEST_VERSION: &str = "^29.4.6";
 // ts-nodef
 pub(crate) const TS_NODE_VERSION: &str = "^10.9.2";
 // typescript-eslint
-pub(crate) const TYPESCRIPT_ESLINT_VERSION: &str = "^8.46.4";
+pub(crate) const TYPESCRIPT_ESLINT_VERSION: &str = "^8.53.1";
 // vitest
-pub(crate) const VITEST_VERSION: &str = "^4.0.9";
+pub(crate) const VITEST_VERSION: &str = "^4.0.17";
 
 // Application package.json dependencies constants
+// @typescript/native-preview
+pub(crate) const TYPESCRIPT_NATIVE_PREVIEW_VERSION: &str = "^7.0.0-dev.20260120.1";
 // globals
-pub(crate) const GLOBALS_VERSION: &str = "^16.5.0";
+pub(crate) const GLOBALS_VERSION: &str = "^17.0.0";
 // husky
 pub(crate) const HUSKY_VERSION: &str = "^9.1.7";
 // lint-staged
@@ -39,7 +41,7 @@ pub(crate) const NODE_GYP_VERSION: &str = "^12.1.0";
 // sort-package-json
 pub(crate) const SORT_PACKAGE_JSON_VERSION: &str = "^3.0.0";
 // tsx
-pub(crate) const TSX_VERSION: &str = "^4.20.6";
+pub(crate) const TSX_VERSION: &str = "^4.21.0";
 // typescript
 pub(crate) const TYPESCRIPT_VERSION: &str = "^5.9.3";
 
@@ -47,8 +49,8 @@ pub(crate) const TYPESCRIPT_VERSION: &str = "^5.9.3";
 pub(crate) const APP_DEV_SCRIPT: &str = "docker compose up";
 pub(crate) const APP_DEV_BUILD_SCRIPT: &str = "docker compose build --no-cache";
 pub(crate) const APP_PREPARE_SCRIPT: &str = "husky";
-pub(crate) const TYPES_WATCH_SCRIPT: &str = "tsc -b -w";
-pub(crate) const TYPES_BUILD_SCRIPT: &str = "tsc -b --emitDeclarationOnly";
+pub(crate) const TYPES_WATCH_SCRIPT: &str = "tsgo -b -w";
+pub(crate) const TYPES_BUILD_SCRIPT: &str = "tsgo -b --emitDeclarationOnly";
 
 pub(crate) fn application_format_script(formatter: &Formatter) -> String {
     String::from(match formatter {
@@ -130,7 +132,7 @@ pub(crate) fn application_migrate_script<'a>(
     let db_init = get_db_init(databases);
 
     let sleep = if migration_suffix == "init" {
-        "sleep 15 && "
+        "sleep 5 && "
     } else {
         ""
     };
@@ -219,100 +221,102 @@ pub(crate) const APP_UNIVERSAL_SDK_VERSION: &str = "workspace:*";
 // @forklaunch/bunrun
 pub(crate) const BUNRUN_VERSION: &str = "~0.0.2";
 // @forklaunch/common
-pub(crate) const COMMON_VERSION: &str = "~0.6.23";
+pub(crate) const COMMON_VERSION: &str = "~0.6.26";
 // @forklaunch/core
-pub(crate) const CORE_VERSION: &str = "~0.16.1";
+pub(crate) const CORE_VERSION: &str = "~0.17.2";
 // @forklaunch/express
-pub(crate) const EXPRESS_VERSION: &str = "~0.9.33";
+pub(crate) const EXPRESS_VERSION: &str = "~0.10.2";
 // @forklaunch/hyper-express
-pub(crate) const HYPER_EXPRESS_VERSION: &str = "~0.10.2";
+pub(crate) const HYPER_EXPRESS_VERSION: &str = "~0.11.2";
 // @forklaunch/implementation-billing-base
-pub(crate) const BILLING_BASE_VERSION: &str = "~0.8.7";
+pub(crate) const BILLING_BASE_VERSION: &str = "~0.8.9";
 // @forklaunch/implementation-billing-stripe
-pub(crate) const BILLING_STRIPE_VERSION: &str = "~0.5.7";
+pub(crate) const BILLING_STRIPE_VERSION: &str = "~0.5.9";
 // @forklaunch/implementation-iam-base
-pub(crate) const IAM_BASE_VERSION: &str = "~0.8.7";
+pub(crate) const IAM_BASE_VERSION: &str = "~0.8.9";
 // @forklaunch/implementation-worker-bullmq
-pub(crate) const WORKER_BULLMQ_VERSION: &str = "~0.8.7";
+pub(crate) const WORKER_BULLMQ_VERSION: &str = "~0.8.9";
 // @forklaunch/implementation-worker-redis
-pub(crate) const WORKER_REDIS_VERSION: &str = "~0.8.7";
+pub(crate) const WORKER_REDIS_VERSION: &str = "~0.8.9";
 // @forklaunch/implementation-worker-database
-pub(crate) const WORKER_DATABASE_VERSION: &str = "~0.8.7";
+pub(crate) const WORKER_DATABASE_VERSION: &str = "~0.8.9";
 // @forklaunch/implementation-worker-kafka
-pub(crate) const WORKER_KAFKA_VERSION: &str = "~0.9.1";
+pub(crate) const WORKER_KAFKA_VERSION: &str = "~0.9.3";
 // @forklaunch/infrastructure-redis
-pub(crate) const INFRASTRUCTURE_REDIS_VERSION: &str = "~0.4.32";
+pub(crate) const INFRASTRUCTURE_REDIS_VERSION: &str = "~0.4.35";
 // @forklaunch/infrastructure-s3
-pub(crate) const INFRASTRUCTURE_S3_VERSION: &str = "~0.4.32";
+pub(crate) const INFRASTRUCTURE_S3_VERSION: &str = "~0.4.35";
 // @forklaunch/interfaces-billing
-pub(crate) const BILLING_INTERFACES_VERSION: &str = "~0.8.7";
+pub(crate) const BILLING_INTERFACES_VERSION: &str = "~0.8.9";
 // @forklaunch/interfaces-iam
-pub(crate) const IAM_INTERFACES_VERSION: &str = "~0.8.7";
+pub(crate) const IAM_INTERFACES_VERSION: &str = "~0.8.9";
 // @forklaunch/interfaces-worker
-pub(crate) const WORKER_INTERFACES_VERSION: &str = "~0.7.7";
+pub(crate) const WORKER_INTERFACES_VERSION: &str = "~0.7.9";
 // @forklaunch/internal
-pub(crate) const INTERNAL_VERSION: &str = "~0.3.23";
+pub(crate) const INTERNAL_VERSION: &str = "~0.3.26";
 // @forklaunch/testing
-pub(crate) const TESTING_VERSION: &str = "~0.0.12";
+pub(crate) const TESTING_VERSION: &str = "~0.0.15";
 // @forklaunch/universal-sdk
-pub(crate) const UNIVERSAL_SDK_VERSION: &str = "~0.7.23";
+pub(crate) const UNIVERSAL_SDK_VERSION: &str = "~0.7.26";
 // @forklaunch/validator
-pub(crate) const VALIDATOR_VERSION: &str = "~0.10.23";
+pub(crate) const VALIDATOR_VERSION: &str = "~0.10.26";
 // @mikro-orm/core
-pub(crate) const MIKRO_ORM_CORE_VERSION: &str = "^6.6.0";
+pub(crate) const MIKRO_ORM_CORE_VERSION: &str = "^6.6.4";
 // @mikro-orm/migrations
-pub(crate) const MIKRO_ORM_MIGRATIONS_VERSION: &str = "^6.6.0";
+pub(crate) const MIKRO_ORM_MIGRATIONS_VERSION: &str = "^6.6.4";
 // @mikro-orm/postgresql,@mikro-orm/mongodb,@mikro-orm/mysql,@mikro-orm/better-sqlite,@mikro-orm/sqlite,@mikro-orm/mariadb,@mikro-orm/libsql,@mikro-orm/mssql
-pub(crate) const MIKRO_ORM_DATABASE_VERSION: &str = "^6.6.0";
+pub(crate) const MIKRO_ORM_DATABASE_VERSION: &str = "^6.6.4";
 // @mikro-orm/reflection
-pub(crate) const MIKRO_ORM_REFLECTION_VERSION: &str = "^6.6.0";
+pub(crate) const MIKRO_ORM_REFLECTION_VERSION: &str = "^6.6.4";
 // @mikro-orm/seeder
-pub(crate) const MIKRO_ORM_SEEDER_VERSION: &str = "^6.6.0";
+pub(crate) const MIKRO_ORM_SEEDER_VERSION: &str = "^6.6.4";
 // @opentelemetry/api
 pub(crate) const OPENTELEMETRY_API_VERSION: &str = "^1.9.0";
 // @sinclair/typebox
-pub(crate) const TYPEBOX_VERSION: &str = "^0.34.41";
+pub(crate) const TYPEBOX_VERSION: &str = "^0.34.47";
 // ajv
 pub(crate) const AJV_VERSION: &str = "^8.17.1";
 // better-auth
-pub(crate) const BETTER_AUTH_VERSION: &str = "^1.3.34";
+pub(crate) const BETTER_AUTH_VERSION: &str = "^1.4.16";
 // bullmq
-pub(crate) const BULLMQ_VERSION: &str = "^5.63.2";
+pub(crate) const BULLMQ_VERSION: &str = "^5.66.5";
 // better-sqlite3
-pub(crate) const BETTER_SQLITE3_VERSION: &str = "^12.4.1";
+pub(crate) const BETTER_SQLITE3_VERSION: &str = "^12.6.2";
 // dotenv
 pub(crate) const DOTENV_VERSION: &str = "^17.2.3";
 // jose
-pub(crate) const JOSE_VERSION: &str = "^6.1.2";
+pub(crate) const JOSE_VERSION: &str = "^6.1.3";
 // sqlite3
 pub(crate) const SQLITE3_VERSION: &str = "^5.1.7";
 // stripe
-pub(crate) const STRIPE_VERSION: &str = "^19.3.1";
+pub(crate) const STRIPE_VERSION: &str = "^20.2.0";
 // uuid
 pub(crate) const UUID_VERSION: &str = "^13.0.0";
 // zod
-pub(crate) const ZOD_VERSION: &str = "^4.1.12";
+pub(crate) const ZOD_VERSION: &str = "^4.3.5";
 
 // Project package.json devDependencies constants
 // @mikro-orm/cli
-pub(crate) const MIKRO_ORM_CLI_VERSION: &str = "^6.6.0";
+pub(crate) const MIKRO_ORM_CLI_VERSION: &str = "^6.6.4";
 // @types/express
-pub(crate) const TYPES_EXPRESS_VERSION: &str = "^5.0.5";
+pub(crate) const TYPES_EXPRESS_VERSION: &str = "^5.0.6";
 // @types/express-serve-static-core
-pub(crate) const TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION: &str = "^5.1.0";
+pub(crate) const TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION: &str = "^5.1.1";
 // @types/jest
 pub(crate) const TYPES_JEST_VERSION: &str = "^30.0.0";
 // @types/uuid
 pub(crate) const TYPES_UUID_VERSION: &str = "^11.0.0";
 // @types/qs
 pub(crate) const TYPES_QS_VERSION: &str = "^6.14.0";
+// pino
+pub(crate) const PINO_VERSION: &str = "^10.2.1";
 // ioredis
-pub(crate) const IOREDIS_VERSION: &str = "^5.8.2";
+pub(crate) const IOREDIS_VERSION: &str = "^5.9.2";
 // typedoc
-pub(crate) const TYPEDOC_VERSION: &str = "^0.28.14";
+pub(crate) const TYPEDOC_VERSION: &str = "^0.28.16";
 
 // Project package.json scripts constants
-pub(crate) const PROJECT_BUILD_SCRIPT: &str = "tsc";
+pub(crate) const PROJECT_BUILD_SCRIPT: &str = "tsgo";
 pub(crate) const PROJECT_DOCS_SCRIPT: &str = "typedoc --out docs *";
 pub(crate) const PROJECT_SEED_SCRIPT: &str = "[ -z $DOTENV_FILE_PATH ] && export DOTENV_FILE_PATH=.env.local; NODE_OPTIONS='--import=tsx' mikro-orm seeder:run";
 
@@ -341,8 +345,8 @@ pub(crate) fn project_lint_fix_script(linter: &Linter) -> String {
 
 pub(crate) fn project_clean_script(runtime: &Runtime) -> String {
     String::from(match runtime {
-        Runtime::Bun => "rm -rf dist bun.lockb bun.lock tsconfig.tsbuildinfo node_modules",
-        Runtime::Node => "rm -rf dist pnpm.lock.yaml tsconfig.tsbuildinfo node_modules",
+        Runtime::Bun => "rm -rf dist lib bun.lockb bun.lock tsconfig.tsbuildinfo node_modules",
+        Runtime::Node => "rm -rf dist lib pnpm.lock.yaml tsconfig.tsbuildinfo node_modules",
     })
 }
 
@@ -420,7 +424,7 @@ pub(crate) fn project_migrate_script(command: &str) -> String {
 
 pub(crate) fn project_start_server_script(runtime: &Runtime, database: Option<Database>) -> String {
     format!(
-        "{}DOTENV_FILE_PATH=.env.prod {} dist/server.js",
+        "{} {}DOTENV_FILE_PATH=.env.prod dist/server.js",
         match runtime {
             Runtime::Bun => "bun",
             Runtime::Node => "node --import=tsx",
@@ -441,7 +445,7 @@ pub(crate) fn project_start_server_script(runtime: &Runtime, database: Option<Da
 }
 pub(crate) fn project_start_worker_script(runtime: &Runtime, database: Option<Database>) -> String {
     format!(
-        "{}DOTENV_FILE_PATH=.env.prod {} dist/worker.js",
+        "{} {}DOTENV_FILE_PATH=.env.prod dist/worker.js",
         match runtime {
             Runtime::Bun => "bun",
             Runtime::Node => "node --import=tsx",

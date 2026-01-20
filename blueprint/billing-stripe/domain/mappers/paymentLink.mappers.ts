@@ -6,11 +6,11 @@ import { PaymentLink } from '../../persistence/entities/paymentLink.entity';
 import { StatusEnum } from '../enum/status.enum';
 import { PaymentLinkSchemas } from '../schemas';
 
-export const CreatePaymentLinkMapper = requestMapper(
+export const CreatePaymentLinkMapper = requestMapper({
   schemaValidator,
-  PaymentLinkSchemas.CreatePaymentLinkSchema(StatusEnum),
-  PaymentLink,
-  {
+  schema: PaymentLinkSchemas.CreatePaymentLinkSchema(StatusEnum),
+  entity: PaymentLink,
+  mapperDefinition: {
     toEntity: async (
       dto,
       em: EntityManager,
@@ -27,13 +27,13 @@ export const CreatePaymentLinkMapper = requestMapper(
       );
     }
   }
-);
+});
 
-export const UpdatePaymentLinkMapper = requestMapper(
+export const UpdatePaymentLinkMapper = requestMapper({
   schemaValidator,
-  PaymentLinkSchemas.UpdatePaymentLinkSchema(StatusEnum),
-  PaymentLink,
-  {
+  schema: PaymentLinkSchemas.UpdatePaymentLinkSchema(StatusEnum),
+  entity: PaymentLink,
+  mapperDefinition: {
     toEntity: async (
       dto,
       em: EntityManager,
@@ -48,13 +48,13 @@ export const UpdatePaymentLinkMapper = requestMapper(
       );
     }
   }
-);
+});
 
-export const PaymentLinkMapper = responseMapper(
+export const PaymentLinkMapper = responseMapper({
   schemaValidator,
-  PaymentLinkSchemas.PaymentLinkSchema(StatusEnum),
-  PaymentLink,
-  {
+  schema: PaymentLinkSchemas.PaymentLinkSchema(StatusEnum),
+  entity: PaymentLink,
+  mapperDefinition: {
     toDto: async (entity: PaymentLink) => {
       return {
         ...(await entity.read()),
@@ -62,4 +62,4 @@ export const PaymentLinkMapper = responseMapper(
       };
     }
   }
-);
+});

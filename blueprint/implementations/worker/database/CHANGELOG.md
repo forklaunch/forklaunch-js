@@ -1,4 +1,20 @@
-# @forklaunch/implementation-billing-base
+# @forklaunch/implementation-worker-database
+
+## 0.8.9
+
+### Patch Changes
+
+- dependency upgrade and minor metadata fixes
+- Updated dependencies
+  - @forklaunch/interfaces-worker@0.7.9
+
+## 0.8.8
+
+### Patch Changes
+
+- Mapper syntax fixed and package bump
+- Updated dependencies
+  - @forklaunch/interfaces-worker@0.7.8
 
 ## 0.8.7
 

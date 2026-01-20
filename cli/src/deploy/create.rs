@@ -1,20 +1,20 @@
-use std::{fs::read_to_string, io::Write, thread::sleep, time::Duration};
+use std::{fs::read_to_string, io::Write};
 
 use anyhow::{Context, Result, bail};
+use base64::{Engine as _, engine::general_purpose};
 use clap::{Arg, ArgMatches, Command};
-use reqwest::blocking::Client;
+use dialoguer::{Input, theme::ColorfulTheme};
 use serde::{Deserialize, Serialize};
 use serde_json;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 use crate::{
     CliCommand,
-    constants::{ERROR_FAILED_TO_SEND_REQUEST, PLATFORM_UI_URL, get_api_url},
+    constants::{ERROR_FAILED_TO_SEND_REQUEST, PLATFORM_UI_URL, get_platform_management_api_url},
     core::{
         base_path::{RequiredLocation, find_app_root_path},
         command::command,
         manifest::application::ApplicationManifestData,
-        token::get_token,
     },
 };
 
@@ -26,6 +26,8 @@ struct CreateDeploymentRequest {
     release_version: String,
     environment: String,
     region: String,
+    #[serde(rename = "distributionConfig")]
+    distribution_config: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -35,23 +37,109 @@ struct CreateDeploymentResponse {
     status: String,
 }
 
+/// ... (DeploymentBlockedError struct)
+
+// Error handling structs
 #[derive(Debug, Deserialize)]
-struct DeploymentStatus {
-    #[allow(dead_code)]
-    id: String,
-    status: String,
-    phase: Option<String>,
-    #[serde(rename = "completedAt")]
-    #[allow(dead_code)]
-    completed_at: Option<String>,
-    endpoints: Option<DeploymentEndpoints>,
-    error: Option<String>,
+struct DeploymentBlockedError {
+    message: String,
+    details: Vec<DeploymentErrorDetail>,
 }
 
 #[derive(Debug, Deserialize)]
-struct DeploymentEndpoints {
-    api: Option<String>,
-    docs: Option<String>,
+struct DeploymentErrorDetail {
+    #[serde(rename = "type")]
+    component_type: String, // "service" or "worker"
+    id: String,
+    name: String,
+    #[serde(rename = "missingKeys")]
+    missing_keys: Vec<MissingKey>,
+}
+
+#[derive(Debug, Deserialize)]
+struct MissingKey {
+    #[serde(rename = "key")]
+    name: String,
+    component: Option<ComponentMetadata>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+struct ComponentMetadata {
+    #[serde(rename = "type")]
+    component_type: String,
+    property: String,
+}
+
+#[derive(Debug, Serialize)]
+struct UpdateEnvironmentVariablesRequest {
+    region: String,
+    variables: Vec<EnvironmentVariableUpdate>,
+}
+
+#[derive(Debug, Serialize, Clone)]
+struct EnvironmentVariableUpdate {
+    key: String,
+    value: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    component: Option<ComponentMetadata>,
+}
+
+/// Validate environment variable input based on component metadata
+fn validate_env_var_input(
+    key_name: &str,
+    value: &str,
+    component: &Option<ComponentMetadata>,
+) -> Result<(), String> {
+    if value.is_empty() {
+        return Err("Value cannot be empty".to_string());
+    }
+
+    // Check for numeric values based on variable name suffixes
+    let key_upper = key_name.to_uppercase();
+    if key_upper.ends_with("_PORT") {
+        if value.parse::<u16>().is_err() {
+            return Err(format!(
+                "Expected a valid port number (0-65535) for '{}'",
+                key_name
+            ));
+        }
+    } else if key_upper.ends_with("_SECONDS")
+        || key_upper.ends_with("_TIMEOUT")
+        || key_upper.ends_with("_DURATION")
+    {
+        if value.parse::<u32>().is_err() {
+            return Err(format!("Expected a numeric value for '{}'", key_name));
+        }
+    }
+
+    if let Some(meta) = component {
+        match meta.property.as_str() {
+            // Numeric properties
+            "port" | "timeout" => {
+                if value.parse::<u16>().is_err() {
+                    return Err(format!(
+                        "Expected a valid port number (0-65535) for property '{}'",
+                        meta.property
+                    ));
+                }
+            }
+            // Base64 validation for cryptographic keys
+            "base64-bytes-32" => match general_purpose::STANDARD.decode(value) {
+                Ok(bytes) if bytes.len() == 32 => {}
+                Ok(_) => return Err("Expected a base64-encoded 32-byte value".to_string()),
+                Err(_) => return Err("Expected a valid base64 string".to_string()),
+            },
+            "base64-bytes-64" => match general_purpose::STANDARD.decode(value) {
+                Ok(bytes) if bytes.len() == 64 => {}
+                Ok(_) => return Err("Expected a base64-encoded 64-byte value".to_string()),
+                Err(_) => return Err("Expected a valid base64 string".to_string()),
+            },
+            // For other properties, accept any non-empty string
+            _ => {}
+        }
+    }
+
+    Ok(())
 }
 
 #[derive(Debug)]
@@ -85,6 +173,11 @@ impl CliCommand for CreateCommand {
                     .long("region")
                     .required(true)
                     .help("AWS region (e.g., us-east-1)"),
+            )
+            .arg(
+                Arg::new("distribution_config")
+                    .long("distribution-config")
+                    .help("Distribution strategy (centralized or distributed)"),
             )
             .arg(
                 Arg::new("base_path")
@@ -137,192 +230,302 @@ impl CliCommand for CreateCommand {
             })?
             .clone();
 
-        let token = get_token()?;
-
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)).set_bold(true))?;
         writeln!(
             stdout,
-            "Creating deployment: {} → {} ({})",
+            "Creating deployment: {} -> {} ({})",
             release_version, environment, region
         )?;
         stdout.reset()?;
         writeln!(stdout)?;
 
-        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
-        write!(stdout, "[INFO] Triggering deployment...")?;
-        stdout.flush()?;
-        stdout.reset()?;
-
         let request_body = CreateDeploymentRequest {
             application_id: application_id.clone(),
             release_version: release_version.clone(),
-            environment,
+            environment: environment.clone(),
             region: region.clone(),
+            distribution_config: Some(
+                matches
+                    .get_one::<String>("distribution_config")
+                    .cloned()
+                    .unwrap_or_else(|| "centralized".to_string()),
+            ),
         };
 
-        let url = format!("{}/deployments", get_api_url());
-        let client = Client::new();
+        let url = format!("{}/deployments", get_platform_management_api_url());
 
-        eprintln!("[DEBUG] POST {} with body: {:?}", url, request_body);
+        use crate::core::http_client;
 
-        let response = client
-            .post(&url)
-            .bearer_auth(&token)
-            .json(&request_body)
-            .send()
-            .with_context(|| ERROR_FAILED_TO_SEND_REQUEST)?;
+        let mut retry_count = 0;
+        const MAX_RETRIES: u32 = 3;
 
-        eprintln!("[DEBUG] Response status: {}", response.status());
-
-        let status = response.status();
-        if !status.is_success() {
-            let error_text = response
-                .text()
-                .unwrap_or_else(|_| "Unknown error".to_string());
-            eprintln!("[DEBUG] Error response: {}", error_text);
-            bail!(
-                "Failed to create deployment: {} (Status: {})",
-                error_text,
-                status
-            );
-        }
-
-        let response_text = response.text().with_context(|| "Failed to read response")?;
-        eprintln!("[DEBUG] Raw response body: {}", response_text);
-
-        let deployment: CreateDeploymentResponse = serde_json::from_str(&response_text)
-            .with_context(|| format!("Failed to parse deployment response: {}", response_text))?;
-
-        eprintln!("[DEBUG] Parsed deployment: {:?}", deployment);
-
-        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-        writeln!(stdout, " [OK]")?;
-        stdout.reset()?;
-        writeln!(stdout, "[INFO] Deployment ID: {}", deployment.id)?;
-
-        if wait {
-            writeln!(stdout)?;
-            stream_deployment_status(&token, &deployment.id, &mut stdout)?;
-        } else {
-            writeln!(stdout)?;
+        loop {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
-            writeln!(stdout, "[INFO] Deployment started. Check status at:")?;
+            write!(stdout, "[INFO] Triggering deployment...")?;
+            stdout.flush()?;
             stdout.reset()?;
-            writeln!(
-                stdout,
-                "  {}/apps/{}/deployments/{}",
-                PLATFORM_UI_URL, application_id, deployment.id
-            )?;
+
+            let response = http_client::post(&url, serde_json::to_value(&request_body)?)
+                .with_context(|| ERROR_FAILED_TO_SEND_REQUEST)?;
+
+            let status = response.status();
+
+            if status.is_success() {
+                // Success case
+                let response_text = response.text().with_context(|| "Failed to read response")?;
+                let deployment: CreateDeploymentResponse = serde_json::from_str(&response_text)
+                    .with_context(|| {
+                        format!("Failed to parse deployment response: {}", response_text)
+                    })?;
+
+                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+                writeln!(stdout, " [OK]")?;
+                stdout.reset()?;
+                writeln!(stdout, "[INFO] Deployment ID: {}", deployment.id)?;
+
+                if wait {
+                    writeln!(stdout)?;
+                    crate::deploy::utils::stream_deployment_status(
+                        "", // Token not needed - http_client handles auth
+                        &deployment.id,
+                        &mut stdout,
+                    )?;
+                } else {
+                    writeln!(stdout)?;
+                    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
+                    writeln!(stdout, "[INFO] Deployment started. Check status at:")?;
+                    stdout.reset()?;
+                    writeln!(
+                        stdout,
+                        "  {}/apps/{}/deployments/{}",
+                        PLATFORM_UI_URL, application_id, deployment.id
+                    )?;
+                }
+                break;
+            } else if status.as_u16() == 400 {
+                // Handle 400 Bad Request - check for missing env vars
+                let error_text = response.text().unwrap_or_default();
+
+                // Try to parse as DeploymentBlockedError
+                if let Ok(blocked_error) =
+                    serde_json::from_str::<DeploymentBlockedError>(&error_text)
+                {
+                    // Check retry limit to prevent infinite loops
+                    retry_count += 1;
+                    if retry_count > MAX_RETRIES {
+                        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
+                        writeln!(stdout, " [ERROR]")?;
+                        stdout.reset()?;
+                        bail!(
+                            "Deployment failed after {} retries. Please check your environment variable configuration and try again.",
+                            MAX_RETRIES
+                        );
+                    }
+
+                    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+                    writeln!(stdout, " [WARNING]")?;
+                    stdout.reset()?;
+
+                    writeln!(stdout)?;
+                    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+                    writeln!(
+                        stdout,
+                        "[WARNING] Deployment blocked: {}",
+                        blocked_error.message
+                    )?;
+                    stdout.reset()?;
+                    writeln!(
+                        stdout,
+                        "[INFO] You must provide values for the missing environment variables.\n"
+                    )?;
+
+                    // Collect all missing keys first to check if we've already prompted
+                    let mut all_missing_keys: Vec<String> = Vec::new();
+                    for detail in &blocked_error.details {
+                        all_missing_keys
+                            .extend(detail.missing_keys.iter().map(|mk| mk.name.clone()));
+                    }
+
+                    // If no missing keys, something else is wrong - don't loop
+                    if all_missing_keys.is_empty() {
+                        bail!(
+                            "Deployment blocked but no missing keys reported. Error: {}",
+                            blocked_error.message
+                        );
+                    }
+
+                    // Iterate through details and prompt for missing keys
+                    let mut all_updates = Vec::new();
+                    for detail in blocked_error.details {
+                        if detail.missing_keys.is_empty() {
+                            continue;
+                        }
+
+                        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
+                        writeln!(
+                            stdout,
+                            "[INFO] Missing variables for {} '{}':",
+                            detail.component_type, detail.name
+                        )?;
+                        stdout.reset()?;
+
+                        let mut updates = Vec::new();
+                        for missing_key in detail.missing_keys {
+                            // Special handling for NODE_ENV
+                            if missing_key.name == "NODE_ENV" {
+                                let selection =
+                                    dialoguer::Select::with_theme(&ColorfulTheme::default())
+                                        .with_prompt("Is this a production deployment?")
+                                        .item("Yes (set NODE_ENV=production)")
+                                        .item("No (set NODE_ENV=development)")
+                                        .item("Skip (enter manually)")
+                                        .default(0)
+                                        .interact()?;
+
+                                match selection {
+                                    0 => {
+                                        updates.push(EnvironmentVariableUpdate {
+                                            key: "NODE_ENV".to_string(),
+                                            value: "production".to_string(),
+                                            component: missing_key.component.clone(),
+                                        });
+                                        continue;
+                                    }
+                                    1 => {
+                                        updates.push(EnvironmentVariableUpdate {
+                                            key: "NODE_ENV".to_string(),
+                                            value: "development".to_string(),
+                                            component: missing_key.component.clone(),
+                                        });
+                                        continue;
+                                    }
+                                    _ => {
+                                        // Fall through to manual entry
+                                    }
+                                }
+                            }
+
+                            let prompt_text = if let Some(ref comp) = missing_key.component {
+                                format!(
+                                    "  Enter value for {} ({}:{})",
+                                    missing_key.name, comp.component_type, comp.property
+                                )
+                            } else {
+                                format!("  Enter value for {}", missing_key.name)
+                            };
+
+                            loop {
+                                let value: String = Input::with_theme(&ColorfulTheme::default())
+                                    .with_prompt(&prompt_text)
+                                    .interact_text()?;
+
+                                match validate_env_var_input(
+                                    &missing_key.name,
+                                    &value,
+                                    &missing_key.component,
+                                ) {
+                                    Ok(_) => {
+                                        updates.push(EnvironmentVariableUpdate {
+                                            key: missing_key.name.clone(),
+                                            value,
+                                            component: missing_key.component.clone(),
+                                        });
+                                        break;
+                                    }
+                                    Err(err) => {
+                                        stdout
+                                            .set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
+                                        writeln!(stdout, "  [ERROR] {}", err)?;
+                                        stdout.reset()?;
+                                    }
+                                }
+                            }
+                        }
+
+                        if !updates.is_empty() {
+                            // Save the variables
+                            let update_url = if detail.component_type == "worker" {
+                                format!(
+                                    "{}/workers/{}/environments/{}/variables",
+                                    get_platform_management_api_url(),
+                                    detail.id,
+                                    environment
+                                )
+                            } else {
+                                format!(
+                                    "{}/services/{}/environments/{}/variables",
+                                    get_platform_management_api_url(),
+                                    detail.id,
+                                    environment
+                                )
+                            };
+
+                            let update_body = UpdateEnvironmentVariablesRequest {
+                                region: region.clone(),
+                                variables: updates.clone(),
+                            };
+
+                            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
+                            write!(stdout, "[INFO] Saving variables...")?;
+                            stdout.flush()?;
+                            stdout.reset()?;
+
+                            let update_response =
+                                http_client::put(&update_url, serde_json::to_value(&update_body)?)
+                                    .with_context(|| "Failed to save environment variables")?;
+
+                            if !update_response.status().is_success() {
+                                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
+                                writeln!(stdout, " [ERROR]")?;
+                                stdout.reset()?;
+                                let err_text = update_response.text().unwrap_or_default();
+                                bail!("Failed to save variables: {}", err_text);
+                            }
+
+                            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+                            writeln!(stdout, " [OK]")?;
+                            stdout.reset()?;
+
+                            all_updates.extend(updates);
+                        }
+                    }
+
+                    if all_updates.is_empty() {
+                        // No variables were actually saved, something went wrong
+                        bail!("No environment variables were saved. Deployment cannot proceed.");
+                    }
+
+                    writeln!(stdout)?;
+                    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
+                    writeln!(stdout, "[INFO] Retrying deployment...")?;
+                    stdout.reset()?;
+                    writeln!(stdout)?;
+                    continue; // Loop back to retry deployment
+                } else {
+                    // Could not parse as detailed error, just fail
+                    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
+                    writeln!(stdout, " [ERROR]")?;
+                    stdout.reset()?;
+                    bail!("Deployment failed: {}", error_text);
+                }
+            } else {
+                // Other error code
+                let error_text = response
+                    .text()
+                    .unwrap_or_else(|_| "Unknown error".to_string());
+
+                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
+                writeln!(stdout, " [ERROR]")?;
+                stdout.reset()?;
+
+                bail!(
+                    "Failed to create deployment: {} (Status: {})",
+                    error_text,
+                    status
+                );
+            }
         }
 
         Ok(())
     }
-}
-
-fn stream_deployment_status(
-    token: &str,
-    deployment_id: &str,
-    stdout: &mut StandardStream,
-) -> Result<()> {
-    let client = Client::new();
-    let url = format!("{}/deployments/{}", get_api_url(), deployment_id);
-
-    let mut last_phase: Option<String> = None;
-
-    loop {
-        eprintln!("[DEBUG] Polling deployment status: GET {}", url);
-
-        let response = client
-            .get(&url)
-            .bearer_auth(token)
-            .send()
-            .with_context(|| "Failed to fetch deployment status")?;
-
-        eprintln!("[DEBUG] Status poll response: {}", response.status());
-
-        if !response.status().is_success() {
-            bail!("Failed to get deployment status: {}", response.status());
-        }
-
-        let response_text = response
-            .text()
-            .with_context(|| "Failed to read status response")?;
-        eprintln!("[DEBUG] Status response body: {}", response_text);
-
-        let status: DeploymentStatus = serde_json::from_str(&response_text)
-            .with_context(|| format!("Failed to parse deployment status: {}", response_text))?;
-
-        eprintln!(
-            "[DEBUG] Parsed status - status: {}, phase: {:?}",
-            status.status, status.phase
-        );
-
-        if let Some(phase) = &status.phase {
-            if last_phase.as_ref() != Some(phase) {
-                display_phase_update(phase, stdout)?;
-                last_phase = Some(phase.clone());
-            }
-        }
-
-        match status.status.as_str() {
-            "completed" => {
-                eprintln!("[DEBUG] Deployment completed successfully");
-                eprintln!("[DEBUG] Endpoints: {:?}", status.endpoints);
-
-                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true))?;
-                writeln!(stdout, "\n[OK] Deployment successful!")?;
-                stdout.reset()?;
-
-                if let Some(endpoints) = status.endpoints {
-                    writeln!(stdout)?;
-                    if let Some(api) = endpoints.api {
-                        writeln!(stdout, "[INFO] API: {}", api)?;
-                    }
-                    if let Some(docs) = endpoints.docs {
-                        writeln!(stdout, "[INFO] Docs: {}", docs)?;
-                    }
-                }
-
-                break;
-            }
-            "failed" => {
-                eprintln!("[DEBUG] Deployment failed with error: {:?}", status.error);
-
-                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)).set_bold(true))?;
-                writeln!(stdout, "\n[ERROR] Deployment failed")?;
-                stdout.reset()?;
-
-                if let Some(error) = status.error {
-                    writeln!(stdout, "[ERROR] Error: {}", error)?;
-                }
-
-                bail!("Deployment failed");
-            }
-            _ => {
-                eprintln!("[DEBUG] Deployment still in progress, waiting 3s...");
-                // Still in progress, wait and poll again
-                sleep(Duration::from_secs(3));
-            }
-        }
-    }
-
-    Ok(())
-}
-
-fn display_phase_update(phase: &str, stdout: &mut StandardStream) -> Result<()> {
-    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
-    let message = match phase {
-        "validating" => "  Validating configuration...",
-        "provisioning_database" => "  Provisioning database (RDS PostgreSQL db.t3.micro)...",
-        "provisioning_cache" => "  Provisioning cache (ElastiCache Redis)...",
-        "creating_network" => "  Creating network infrastructure...",
-        "creating_load_balancer" => "  Creating load balancer...",
-        "deploying_services" => "  Deploying services (256m CPU, 512Mi RAM)...",
-        "configuring_autoscaling" => "  Configuring auto-scaling (1-2 replicas)...",
-        "configuring_monitoring" => "  Setting up monitoring (OTEL, Prometheus, Grafana)...",
-        _ => phase,
-    };
-    writeln!(stdout, "{}", message)?;
-    stdout.reset()?;
-    Ok(())
 }

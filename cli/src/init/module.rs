@@ -219,6 +219,11 @@ impl CliCommand for ModuleCommand {
                 || module.clone() == Module::StripeBilling,
             is_s3_enabled: false,
             is_database_enabled: true,
+            platform_application_id: manifest_data.platform_application_id.clone(),
+            platform_organization_id: manifest_data.platform_organization_id.clone(),
+            release_version: manifest_data.release_version.clone(),
+            release_git_commit: manifest_data.release_git_commit.clone(),
+            release_git_branch: manifest_data.release_git_branch.clone(),
 
             is_better_auth: module.clone() == Module::BetterAuthIam,
             is_stripe: module.clone() == Module::StripeBilling,
@@ -229,6 +234,9 @@ impl CliCommand for ModuleCommand {
                 }
                 return false;
             }),
+
+            // Default to false for module initialization, will be set by CLI flag
+            with_mappers: false,
         };
         let manifest_data = add_project_definition_to_manifest(
             ProjectType::Service,

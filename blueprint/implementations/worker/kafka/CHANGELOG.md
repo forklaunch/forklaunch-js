@@ -1,4 +1,20 @@
-# @forklaunch/implementation-billing-base
+# @forklaunch/implementation-worker-kafka
+
+## 0.9.3
+
+### Patch Changes
+
+- dependency upgrade and minor metadata fixes
+- Updated dependencies
+  - @forklaunch/interfaces-worker@0.7.9
+
+## 0.9.2
+
+### Patch Changes
+
+- Mapper syntax fixed and package bump
+- Updated dependencies
+  - @forklaunch/interfaces-worker@0.7.8
 
 ## 0.9.1
 

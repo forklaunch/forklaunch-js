@@ -5,11 +5,11 @@ import Stripe from 'stripe';
 import { Plan } from '../../persistence/entities/plan.entity';
 import { PlanSchemas } from '../schemas';
 
-export const CreatePlanMapper = requestMapper(
+export const CreatePlanMapper = requestMapper({
   schemaValidator,
-  PlanSchemas.CreatePlanSchema,
-  Plan,
-  {
+  schema: PlanSchemas.CreatePlanSchema,
+  entity: Plan,
+  mapperDefinition: {
     toEntity: async (dto, em: EntityManager, providerFields: Stripe.Plan) => {
       return Plan.create(
         {
@@ -22,13 +22,13 @@ export const CreatePlanMapper = requestMapper(
       );
     }
   }
-);
+});
 
-export const UpdatePlanMapper = requestMapper(
+export const UpdatePlanMapper = requestMapper({
   schemaValidator,
-  PlanSchemas.UpdatePlanSchema,
-  Plan,
-  {
+  schema: PlanSchemas.UpdatePlanSchema,
+  entity: Plan,
+  mapperDefinition: {
     toEntity: async (dto, em: EntityManager, providerFields: Stripe.Plan) => {
       // Find the existing plan first
       const existingPlan = await em.findOneOrFail(Plan, { id: dto.id });
@@ -43,13 +43,13 @@ export const UpdatePlanMapper = requestMapper(
       return existingPlan;
     }
   }
-);
+});
 
-export const PlanMapper = responseMapper(
+export const PlanMapper = responseMapper({
   schemaValidator,
-  PlanSchemas.PlanSchema,
-  Plan,
-  {
+  schema: PlanSchemas.PlanSchema,
+  entity: Plan,
+  mapperDefinition: {
     toDto: async (entity: Plan) => {
       const baseData = await entity.read();
       return {
@@ -58,4 +58,4 @@ export const PlanMapper = responseMapper(
       };
     }
   }
-);
+});

@@ -35,33 +35,30 @@ type SerializeStringArray<T extends string[]> = T extends [
  * A mock implementation of SchemaValidator for testing purposes.
  * This validator represents schemas as strings and provides simple string-based operations.
  */
-export class MockSchemaValidator
-  implements
-    SchemaValidator<
-      <T>() => T,
-      <T extends string>(schema: T) => T,
-      <T extends string>(schema: T) => T,
-      <T extends string>(schema: T) => `optional ${T}`,
-      <T extends string>(schema: T) => `array ${T}`,
-      <T extends readonly string[]>(schemas: T) => RecursiveUnion<T>,
-      <T extends LiteralSchema>(schema: T) => `literal ${T}`,
-      <T extends LiteralSchema>(schemaEnum: Record<string, T>) => `enum ${T}`,
-      <Args extends string[], ReturnType extends string>(
-        args: Args,
-        returnType: ReturnType
-      ) => `function(${SerializeStringArray<Args>}) => ${ReturnType}`,
-      <Key extends string, Value extends string>(
-        key: Key,
-        value: Value
-      ) => `{${Key}: ${Value}}`,
-      <T extends string>(schema: T) => `Promise<${T}>`,
-      (value: unknown) => value is string,
-      <T extends string>(value: unknown, type: T) => value is T,
-      <T extends string>(schema: T, value: string) => boolean,
-      <T extends string>(schema: T, value: string) => ParseResult<T>,
-      <T extends string>(schema: T) => SchemaObject
-    >
-{
+export class MockSchemaValidator implements SchemaValidator<
+  <T>() => T,
+  <T extends string>(schema: T) => T,
+  <T extends string>(schema: T) => T,
+  <T extends string>(schema: T) => `optional ${T}`,
+  <T extends string>(schema: T) => `array ${T}`,
+  <T extends readonly string[]>(schemas: T) => RecursiveUnion<T>,
+  <T extends LiteralSchema>(schema: T) => `literal ${T}`,
+  <T extends LiteralSchema>(schemaEnum: Record<string, T>) => `enum ${T}`,
+  <Args extends string[], ReturnType extends string>(
+    args: Args,
+    returnType: ReturnType
+  ) => `function(${SerializeStringArray<Args>}) => ${ReturnType}`,
+  <Key extends string, Value extends string>(
+    key: Key,
+    value: Value
+  ) => `{${Key}: ${Value}}`,
+  <T extends string>(schema: T) => `Promise<${T}>`,
+  (value: unknown) => value is string,
+  <T extends string>(value: unknown, type: T) => value is T,
+  <T extends string>(schema: T, value: string) => boolean,
+  <T extends string>(schema: T, value: string) => ParseResult<T>,
+  <T extends string>(schema: T) => SchemaObject
+> {
   _Type = 'Mock' as const;
   _SchemaCatchall!: string;
   _ValidSchemaObject!: string;

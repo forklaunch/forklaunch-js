@@ -22,7 +22,12 @@ use crate::core::ast::{
     parse_ast_program::parse_ast_program,
 };
 
-const WORKER_TYPE_SERVICES: &[&str] = &["WorkerProducer", "WorkerConsumer", "WorkerService"];
+const WORKER_TYPE_SERVICES: &[&str] = &[
+    "WorkerProducer",
+    "WorkerConsumer",
+    "WorkerService",
+    "WorkerOptions",
+];
 const WORKER_TYPE_PROPERTY_KEYS: &[&str] = &[
     "REDIS_URL",
     "TtlCache",
@@ -42,18 +47,19 @@ pub(crate) fn delete_from_registrations_ts_worker_type<'a>(
     registrations_program: &mut Program<'a>,
 ) {
     let mut used_property_keys = HashSet::new();
-    for statement in &mut registrations_program.body {
+    // First pass: Collect all used property keys from all statements
+    for statement in &registrations_program.body {
         let expression = match statement {
             Statement::VariableDeclaration(expr) => expr,
             _ => continue,
         };
 
-        let call_expression = match &mut expression.declarations[0].init {
+        let call_expression = match &expression.declarations[0].init {
             Some(Expression::CallExpression(call)) => call,
             _ => continue,
         };
 
-        for argument in &mut call_expression.arguments {
+        for argument in &call_expression.arguments {
             let object_expr = match argument {
                 Argument::ObjectExpression(object_expr) => object_expr,
                 _ => continue,
@@ -121,7 +127,8 @@ pub(crate) fn delete_from_registrations_ts_worker_type<'a>(
                                                 if WORKER_TYPE_PROPERTY_KEYS
                                                     .contains(&key.name.as_str())
                                                 {
-                                                    used_property_keys.insert(key.name.as_str());
+                                                    used_property_keys
+                                                        .insert(key.name.as_str().to_string());
                                                 }
                                             });
                                         }
@@ -134,6 +141,26 @@ pub(crate) fn delete_from_registrations_ts_worker_type<'a>(
                     _ => return,
                 }
             });
+        }
+    }
+
+    // Second pass: Filter properties based on global usage
+    for statement in &mut registrations_program.body {
+        let expression = match statement {
+            Statement::VariableDeclaration(expr) => expr,
+            _ => continue,
+        };
+
+        let call_expression = match &mut expression.declarations[0].init {
+            Some(Expression::CallExpression(call)) => call,
+            _ => continue,
+        };
+
+        for argument in &mut call_expression.arguments {
+            let object_expr = match argument {
+                Argument::ObjectExpression(object_expr) => object_expr,
+                _ => continue,
+            };
 
             object_expr.properties = Vec::from_iter_in(
                 object_expr
@@ -151,8 +178,12 @@ pub(crate) fn delete_from_registrations_ts_worker_type<'a>(
                             _ => return true,
                         };
 
+                        if WORKER_TYPE_SERVICES.contains(&key.name.as_str()) {
+                            return false;
+                        }
+
                         if WORKER_TYPE_PROPERTY_KEYS.contains(&key.name.as_str()) {
-                            used_property_keys.contains(&key.name.as_str())
+                            used_property_keys.contains(key.name.as_str())
                         } else {
                             true
                         }

@@ -65,7 +65,7 @@ use crate::{
                 SQLITE3_VERSION, TS_JEST_VERSION, TS_NODE_VERSION, TSX_VERSION, TYPEBOX_VERSION,
                 TYPES_BUILD_SCRIPT, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION,
                 TYPES_QS_VERSION, TYPES_UUID_VERSION, TYPES_WATCH_SCRIPT,
-                TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_VERSION, UNIVERSAL_SDK_VERSION, UUID_VERSION,
+                TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_NATIVE_PREVIEW_VERSION, TYPESCRIPT_VERSION, UNIVERSAL_SDK_VERSION, UUID_VERSION,
                 VALIDATOR_VERSION, VITEST_VERSION, ZOD_VERSION, application_build_script,
                 application_clean_purge_script, application_clean_script, application_docs_script,
                 application_format_script, application_lint_fix_script, application_lint_script,
@@ -90,6 +90,31 @@ use crate::{
         prompt_with_validation, prompt_without_validation,
     },
 };
+
+fn use_generated_sdk_mode_for_init(
+    app_root_path: &Path,
+    manifest_data: &ApplicationManifestData,
+    rendered_templates: &mut Vec<RenderedTemplate>,
+) -> Result<()> {
+    use crate::core::rendered_template::RenderedTemplatesCache;
+    use crate::sdk::mode::apply_generated_sdk_mode_setup;
+
+    // Convert Vec to Cache for processing
+    let mut cache = RenderedTemplatesCache::new();
+    for template in rendered_templates.drain(..) {
+        let path = template.path.to_string_lossy().to_string();
+        cache.insert(path, template);
+    }
+
+    // Use the shared function to set up generated SDK mode
+    // Skip universal-sdk transformation during init (already in correct format from template)
+    apply_generated_sdk_mode_setup(&app_root_path.to_path_buf(), manifest_data, &mut cache, false)?;
+
+    // Convert Cache back to Vec
+    rendered_templates.extend(cache.drain().map(|(_, template)| template));
+
+    Ok(())
+}
 
 fn generate_application_package_json(
     data: &ApplicationManifestData,
@@ -220,6 +245,7 @@ fn generate_application_package_json(
             ts_node: Some(TS_NODE_VERSION.to_string()),
             tsx: Some(TSX_VERSION.to_string()),
             typescript: Some(TYPESCRIPT_VERSION.to_string()),
+            typescript_native_preview: Some(TYPESCRIPT_NATIVE_PREVIEW_VERSION.to_string()),
             typescript_eslint: if data.is_eslint {
                 Some(TYPESCRIPT_ESLINT_VERSION.to_string())
             } else {
@@ -929,6 +955,11 @@ impl CliCommand for ApplicationCommand {
                     || template_dir.module_id == Some(Module::StripeBilling),
                 is_s3_enabled: false,
                 is_database_enabled: true,
+                platform_application_id: data.platform_application_id.clone(),
+                platform_organization_id: data.platform_organization_id.clone(),
+                release_version: data.release_version.clone(),
+                release_git_commit: data.release_git_commit.clone(),
+                release_git_branch: data.release_git_branch.clone(),
 
                 is_better_auth: template_dir.module_id == Some(Module::BetterAuthIam),
                 is_stripe: template_dir.module_id == Some(Module::StripeBilling),
@@ -939,6 +970,9 @@ impl CliCommand for ApplicationCommand {
                     }
                     return false;
                 }),
+
+                // Default to false for application initialization, will be set by CLI flag
+                with_mappers: false,
             };
 
             if service_data.service_name == "universal-sdk" {
@@ -1204,6 +1238,13 @@ impl CliCommand for ApplicationCommand {
                 .collect::<Vec<String>>(),
             dryrun,
         )?);
+
+        // Set up generated SDK mode by default
+        use_generated_sdk_mode_for_init(
+            &origin_path,
+            &data,
+            &mut rendered_templates,
+        )?;
 
         write_rendered_templates(&rendered_templates, dryrun, &mut stdout)
             .with_context(|| "Failed to write application files")?;

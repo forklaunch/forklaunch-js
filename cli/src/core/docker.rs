@@ -239,7 +239,11 @@ pub(crate) struct DockerService {
     pub(crate) restart: Option<Restart>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) build: Option<DockerBuild>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_environment"
+    )]
     pub(crate) environment: Option<IndexMap<String, String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) depends_on: Option<IndexMap<String, DependsOn>>,
@@ -260,6 +264,96 @@ pub(crate) struct DockerService {
 
     #[serde(flatten)]
     pub(crate) additional_properties: HashMap<String, Value>,
+}
+
+#[allow(dead_code)]
+fn deserialize_environment<'de, D>(
+    deserializer: D,
+) -> Result<Option<IndexMap<String, String>>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let raw: Option<IndexMap<String, Value>> = Option::deserialize(deserializer)?;
+    let mapped = raw.map(|env| {
+        env.into_iter()
+            .map(|(key, value)| (key, yaml_value_to_string(value)))
+            .collect::<IndexMap<_, _>>()
+    });
+    Ok(mapped)
+}
+
+#[allow(dead_code)]
+fn yaml_value_to_string(value: Value) -> String {
+    match value {
+        Value::String(s) => s,
+        Value::Number(n) => n.to_string(),
+        Value::Bool(b) => b.to_string(),
+        Value::Null => String::new(),
+        Value::Sequence(seq) => seq
+            .into_iter()
+            .map(yaml_value_to_string)
+            .collect::<Vec<_>>()
+            .join(","),
+        Value::Mapping(map) => {
+            let mut pairs = Vec::new();
+            for (k, v) in map {
+                pairs.push(format!(
+                    "{}={}",
+                    yaml_value_to_string(k),
+                    yaml_value_to_string(v)
+                ));
+            }
+            pairs.join(",")
+        }
+        Value::Tagged(tagged) => yaml_value_to_string(tagged.value),
+    }
+}
+
+fn parse_environment_value(value: Value) -> Result<Option<IndexMap<String, String>>> {
+    match value {
+        Value::Null => Ok(None),
+        Value::Mapping(map) => {
+            let mut env = IndexMap::new();
+            for (k, v) in map {
+                env.insert(yaml_value_to_string(k), yaml_value_to_string(v));
+            }
+            Ok(Some(env))
+        }
+        Value::Sequence(seq) => {
+            let mut env = IndexMap::new();
+            for item in seq {
+                let entry = yaml_value_to_string(item);
+                if let Some((key, val)) = entry.split_once('=') {
+                    env.insert(key.to_string(), val.to_string());
+                } else {
+                    env.insert(entry, String::new());
+                }
+            }
+            Ok(Some(env))
+        }
+        Value::String(s) => {
+            if let Some((key, val)) = s.split_once('=') {
+                let mut env = IndexMap::new();
+                env.insert(key.to_string(), val.to_string());
+                Ok(Some(env))
+            } else {
+                Ok(None)
+            }
+        }
+        other => {
+            let type_name = match &other {
+                Value::Number(_) => "Number",
+                Value::Bool(_) => "Bool",
+                Value::Tagged(_) => "Tagged",
+                _ => "Unknown",
+            };
+            Err(anyhow::anyhow!(
+                "Unsupported environment value type in parse_environment_value: {} (value: {})",
+                type_name,
+                yaml_value_to_string(other)
+            ))
+        }
+    }
 }
 
 impl<'de> Deserialize<'de> for DockerService {
@@ -306,7 +400,7 @@ impl<'de> Deserialize<'de> for DockerService {
                         }
                         "environment" => {
                             service.environment =
-                                from_value(value).map_err(serde::de::Error::custom)?
+                                parse_environment_value(value).map_err(serde::de::Error::custom)?;
                         }
                         "depends_on" => {
                             service.depends_on =
@@ -378,6 +472,18 @@ pub(crate) fn add_otel_to_docker_compose<'a>(
         &manifest_data.docker_compose_path,
         &manifest_data.modules_path,
     );
+
+    // Ensure the network definition exists
+    let network_name = format!("{}-network", app_name);
+    if !docker_compose.networks.contains_key(&network_name) {
+        docker_compose.networks.insert(
+            network_name.clone(),
+            DockerNetwork {
+                name: network_name.clone(),
+                driver: "bridge".to_string(),
+            },
+        );
+    }
 
     docker_compose.services.insert(
         "tempo".to_string(),
@@ -517,6 +623,18 @@ pub(crate) fn add_redis_to_docker_compose<'a>(
     docker_compose: &'a mut DockerCompose,
     environment: &mut IndexMap<String, String>,
 ) -> Result<&'a mut DockerCompose> {
+    // Ensure the network definition exists
+    let network_name = format!("{}-network", app_name);
+    if !docker_compose.networks.contains_key(&network_name) {
+        docker_compose.networks.insert(
+            network_name.clone(),
+            DockerNetwork {
+                name: network_name.clone(),
+                driver: "bridge".to_string(),
+            },
+        );
+    }
+
     environment.insert("REDIS_URL".to_string(), "redis://redis:6379".to_string());
     if !docker_compose.services.contains_key("redis") {
         docker_compose.services.insert(
@@ -563,6 +681,18 @@ pub(crate) fn add_s3_to_docker_compose<'a>(
     docker_compose: &'a mut DockerCompose,
     environment: &mut IndexMap<String, String>,
 ) -> Result<&'a mut DockerCompose> {
+    // Ensure the network definition exists
+    let network_name = format!("{}-network", app_name);
+    if !docker_compose.networks.contains_key(&network_name) {
+        docker_compose.networks.insert(
+            network_name.clone(),
+            DockerNetwork {
+                name: network_name.clone(),
+                driver: "bridge".to_string(),
+            },
+        );
+    }
+
     environment.insert("S3_URL".to_string(), "http://minio:9000".to_string());
     environment.insert(
         "S3_BUCKET".to_string(),
@@ -674,6 +804,18 @@ pub(crate) fn add_kafka_to_docker_compose<'a>(
     docker_compose: &'a mut DockerCompose,
     environment: &mut IndexMap<String, String>,
 ) -> Result<&'a mut DockerCompose> {
+    // Ensure the network definition exists
+    let network_name = format!("{}-network", app_name);
+    if !docker_compose.networks.contains_key(&network_name) {
+        docker_compose.networks.insert(
+            network_name.clone(),
+            DockerNetwork {
+                name: network_name.clone(),
+                driver: "bridge".to_string(),
+            },
+        );
+    }
+
     environment.insert("KAFKA_BROKERS".to_string(), "kafka:29092".to_string());
     environment.insert(
         "KAFKA_CLIENT_ID".to_string(),
@@ -837,6 +979,18 @@ pub(crate) fn add_database_to_docker_compose(
         ManifestData::Worker(worker_data) => &worker_data.app_name,
         _ => unreachable!(),
     };
+
+    // Ensure the network definition exists
+    let network_name = format!("{}-network", app_name);
+    if !docker_compose.networks.contains_key(&network_name) {
+        docker_compose.networks.insert(
+            network_name.clone(),
+            DockerNetwork {
+                name: network_name.clone(),
+                driver: "bridge".to_string(),
+            },
+        );
+    }
 
     let database = match manifest_data {
         ManifestData::Service(service_data) => &service_data.database,
@@ -1972,5 +2126,76 @@ mod tests {
         assert_eq!(lines[7], "RUN npm install");
         assert_eq!(lines[8], "COPY extra .");
         assert_eq!(lines[9], "RUN npm run build");
+    }
+
+    #[test]
+    fn test_parse_environment_value_rejects_unsupported_types() {
+        use serde_yml::Value;
+
+        // Test that Number type is rejected
+        let number_value = Value::Number(42.into());
+        let result = parse_environment_value(number_value);
+        assert!(result.is_err(), "Number type should be rejected");
+        let err = result.unwrap_err();
+        assert!(
+            err.to_string().contains("parse_environment_value"),
+            "Error should reference parse_environment_value"
+        );
+        assert!(
+            err.to_string().contains("Number"),
+            "Error should mention the type"
+        );
+
+        // Test that Bool type is rejected
+        let bool_value = Value::Bool(true);
+        let result = parse_environment_value(bool_value);
+        assert!(result.is_err(), "Bool type should be rejected");
+        let err = result.unwrap_err();
+        assert!(
+            err.to_string().contains("parse_environment_value"),
+            "Error should reference parse_environment_value"
+        );
+        assert!(
+            err.to_string().contains("Bool"),
+            "Error should mention the type"
+        );
+    }
+
+    #[test]
+    fn test_parse_environment_value_supports_valid_types() {
+        use serde_yml::Value;
+
+        // Test Null
+        let result = parse_environment_value(Value::Null);
+        assert!(result.is_ok());
+        assert!(result.unwrap().is_none());
+
+        // Test String with key=value
+        let result = parse_environment_value(Value::String("KEY=value".to_string()));
+        assert!(result.is_ok());
+        let env = result.unwrap().unwrap();
+        assert_eq!(env.get("KEY"), Some(&"value".to_string()));
+
+        // Test Sequence
+        let seq = Value::Sequence(vec![
+            Value::String("KEY1=value1".to_string()),
+            Value::String("KEY2=value2".to_string()),
+        ]);
+        let result = parse_environment_value(seq);
+        assert!(result.is_ok());
+        let env = result.unwrap().unwrap();
+        assert_eq!(env.get("KEY1"), Some(&"value1".to_string()));
+        assert_eq!(env.get("KEY2"), Some(&"value2".to_string()));
+
+        // Test Mapping
+        let mut map = serde_yml::Mapping::new();
+        map.insert(
+            Value::String("KEY".to_string()),
+            Value::String("value".to_string()),
+        );
+        let result = parse_environment_value(Value::Mapping(map));
+        assert!(result.is_ok());
+        let env = result.unwrap().unwrap();
+        assert_eq!(env.get("KEY"), Some(&"value".to_string()));
     }
 }

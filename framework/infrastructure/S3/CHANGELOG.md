@@ -1,5 +1,32 @@
 # @forklaunch/infrastructure-s3
 
+## 0.4.35
+
+### Patch Changes
+
+- Package deps version bump
+- Updated dependencies
+  - @forklaunch/common@0.6.26
+  - @forklaunch/core@0.17.2
+
+## 0.4.34
+
+### Patch Changes
+
+- package version bump
+- Updated dependencies
+  - @forklaunch/common@0.6.25
+  - @forklaunch/core@0.17.1
+
+## 0.4.33
+
+### Patch Changes
+
+- Mapper instantiation syntax more readable and express port added. Also removed error schema thrash in live sdk
+- Updated dependencies
+  - @forklaunch/core@0.17.0
+  - @forklaunch/common@0.6.24
+
 ## 0.4.32
 
 ### Patch Changes

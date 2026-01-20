@@ -6,11 +6,14 @@ import { BillingProviderEnum } from '../enum/billingProvider.enum';
 import { PartyEnum } from '../enum/party.enum';
 import { SubscriptionSchemas } from '../schemas';
 
-export const CreateSubscriptionMapper = requestMapper(
+export const CreateSubscriptionMapper = requestMapper({
   schemaValidator,
-  SubscriptionSchemas.CreateSubscriptionSchema(PartyEnum, BillingProviderEnum),
-  Subscription,
-  {
+  schema: SubscriptionSchemas.CreateSubscriptionSchema(
+    PartyEnum,
+    BillingProviderEnum
+  ),
+  entity: Subscription,
+  mapperDefinition: {
     toEntity: async (dto, em: EntityManager) => {
       return Subscription.create(
         {
@@ -22,24 +25,30 @@ export const CreateSubscriptionMapper = requestMapper(
       );
     }
   }
-);
+});
 
-export const UpdateSubscriptionMapper = requestMapper(
+export const UpdateSubscriptionMapper = requestMapper({
   schemaValidator,
-  SubscriptionSchemas.UpdateSubscriptionSchema(PartyEnum, BillingProviderEnum),
-  Subscription,
-  {
+  schema: SubscriptionSchemas.UpdateSubscriptionSchema(
+    PartyEnum,
+    BillingProviderEnum
+  ),
+  entity: Subscription,
+  mapperDefinition: {
     toEntity: async (dto, em: EntityManager) => {
       return Subscription.update(dto, em);
     }
   }
-);
+});
 
-export const SubscriptionMapper = responseMapper(
+export const SubscriptionMapper = responseMapper({
   schemaValidator,
-  SubscriptionSchemas.SubscriptionSchema(PartyEnum, BillingProviderEnum),
-  Subscription,
-  {
+  schema: SubscriptionSchemas.SubscriptionSchema(
+    PartyEnum,
+    BillingProviderEnum
+  ),
+  entity: Subscription,
+  mapperDefinition: {
     toDto: async (entity: Subscription) => {
       return {
         ...(await entity.read()),
@@ -47,4 +56,4 @@ export const SubscriptionMapper = responseMapper(
       };
     }
   }
-);
+});
