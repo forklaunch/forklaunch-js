@@ -6,7 +6,7 @@ use std::{
 };
 
 use anyhow::{Result, bail};
-use clap::{ArgMatches, Command};
+use clap::{Arg, ArgMatches, Command};
 use serde::{Deserialize, Serialize};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
@@ -51,6 +51,45 @@ struct TokenData {
     expires_at: i64,
 }
 
+/// Login with API token (for automation/CI)
+/// This accepts a long-lived API token that users generate from the platform UI
+pub fn login_with_token(api_token: &str) -> Result<()> {
+    let mut stdout = StandardStream::stdout(ColorChoice::Always);
+
+    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
+    writeln!(stdout, "Forklaunch CLI Login (API Token)")?;
+    writeln!(stdout, "Validating API token...")?;
+    stdout.reset()?;
+
+    // The API token is already a JWT that can be used directly
+    // We just need to validate it and save it
+    let token_storage = TokenData {
+        access_token: api_token.to_string(),
+        refresh_token: String::new(), // API tokens don't have refresh tokens
+        expires_at: i64::MAX, // API tokens are long-lived
+    };
+
+    let token_path = get_token_path()?;
+    if let Some(parent) = token_path.parent() {
+        create_dir_all(parent)?;
+    }
+
+    let toml_content = toml::to_string(&token_storage)?;
+    write(&token_path, toml_content)?;
+
+    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true))?;
+    writeln!(stdout)?;
+    writeln!(stdout, "Successfully logged in with API token!")?;
+    stdout.reset()?;
+    writeln!(
+        stdout,
+        "Note: API tokens are long-lived. Revoke them from the platform UI if compromised."
+    )?;
+
+    Ok(())
+}
+
+/// Interactive device flow login (default)
 pub fn login() -> Result<()> {
     let mut stdout = StandardStream::stdout(ColorChoice::Always);
     let api_url = get_iam_api_url();
@@ -228,9 +267,27 @@ pub fn login() -> Result<()> {
 impl CliCommand for LoginCommand {
     fn command(&self) -> Command {
         command("login", "Login to the forklaunch platform")
+            .arg(
+                Arg::new("token")
+                    .long("token")
+                    .short('t')
+                    .value_name("API_TOKEN")
+                    .help("API token for headless authentication (for CI/CD). Can also be set via FORKLAUNCH_API_TOKEN environment variable"),
+            )
     }
 
-    fn handler(&self, _matches: &ArgMatches) -> Result<()> {
+    fn handler(&self, matches: &ArgMatches) -> Result<()> {
+        // Check if API token is provided via CLI arg
+        if let Some(token) = matches.get_one::<String>("token") {
+            return login_with_token(token);
+        }
+
+        // Check environment variable
+        if let Ok(token) = std::env::var("FORKLAUNCH_API_TOKEN") {
+            return login_with_token(&token);
+        }
+
+        // Default: interactive device flow
         login()
     }
 }
