@@ -6,8 +6,8 @@ describe('isJwtAuthMethod', () => {
     it('when object has jwt with signatureKey', () => {
       const auth = {
         jwt: {
-          signatureKey: 'secret-key',
-        },
+          signatureKey: 'secret-key'
+        }
       };
       expect(isJwtAuthMethod(auth)).toBe(true);
     });
@@ -15,8 +15,8 @@ describe('isJwtAuthMethod', () => {
     it('when object has jwt with jwksPublicKeyUrl', () => {
       const auth = {
         jwt: {
-          jwksPublicKeyUrl: 'https://example.com/.well-known/jwks.json',
-        },
+          jwksPublicKeyUrl: 'https://example.com/.well-known/jwks.json'
+        }
       };
       expect(isJwtAuthMethod(auth)).toBe(true);
     });
@@ -27,9 +27,9 @@ describe('isJwtAuthMethod', () => {
           jwksPublicKey: {
             kty: 'RSA',
             n: 'test',
-            e: 'AQAB',
-          },
-        },
+            e: 'AQAB'
+          }
+        }
       };
       expect(isJwtAuthMethod(auth)).toBe(true);
     });
@@ -38,14 +38,14 @@ describe('isJwtAuthMethod', () => {
   describe('should return false', () => {
     it('when jwt property is null', () => {
       const auth = {
-        jwt: null,
+        jwt: null
       };
       expect(isJwtAuthMethod(auth)).toBe(false);
     });
 
     it('when jwt property is undefined', () => {
       const auth = {
-        jwt: undefined,
+        jwt: undefined
       };
       expect(isJwtAuthMethod(auth)).toBe(false);
     });
@@ -53,8 +53,8 @@ describe('isJwtAuthMethod', () => {
     it('when jwt property is missing', () => {
       const auth = {
         basic: {
-          login: () => true,
-        },
+          login: () => true
+        }
       };
       expect(isJwtAuthMethod(auth)).toBe(false);
     });
@@ -72,4 +72,3 @@ describe('isJwtAuthMethod', () => {
     });
   });
 });
-

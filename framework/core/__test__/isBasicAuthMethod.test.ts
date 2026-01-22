@@ -8,8 +8,8 @@ describe('isBasicAuthMethod', () => {
         basic: {
           login: (username: string, password: string) => {
             return username === 'admin' && password === 'password';
-          },
-        },
+          }
+        }
       };
       expect(isBasicAuthMethod(auth)).toBe(true);
     });
@@ -18,14 +18,14 @@ describe('isBasicAuthMethod', () => {
   describe('should return false', () => {
     it('when basic property is null', () => {
       const auth = {
-        basic: null,
+        basic: null
       };
       expect(isBasicAuthMethod(auth)).toBe(false);
     });
 
     it('when basic property is undefined', () => {
       const auth = {
-        basic: undefined,
+        basic: undefined
       };
       expect(isBasicAuthMethod(auth)).toBe(false);
     });
@@ -33,8 +33,8 @@ describe('isBasicAuthMethod', () => {
     it('when basic property is missing', () => {
       const auth = {
         jwt: {
-          signatureKey: 'secret',
-        },
+          signatureKey: 'secret'
+        }
       };
       expect(isBasicAuthMethod(auth)).toBe(false);
     });
@@ -52,4 +52,3 @@ describe('isBasicAuthMethod', () => {
     });
   });
 });
-

@@ -5,14 +5,14 @@ describe('hasRoleChecks', () => {
   describe('should return true', () => {
     it('when object has allowedRoles', () => {
       const auth = {
-        allowedRoles: new Set(['admin', 'user']),
+        allowedRoles: new Set(['admin', 'user'])
       };
       expect(hasRoleChecks(auth)).toBe(true);
     });
 
     it('when object has forbiddenRoles', () => {
       const auth = {
-        forbiddenRoles: new Set(['guest']),
+        forbiddenRoles: new Set(['guest'])
       };
       expect(hasRoleChecks(auth)).toBe(true);
     });
@@ -20,7 +20,7 @@ describe('hasRoleChecks', () => {
     it('when object has both allowedRoles and forbiddenRoles', () => {
       const auth = {
         allowedRoles: new Set(['admin']),
-        forbiddenRoles: new Set(['guest']),
+        forbiddenRoles: new Set(['guest'])
       };
       expect(hasRoleChecks(auth)).toBe(true);
     });
@@ -29,7 +29,7 @@ describe('hasRoleChecks', () => {
   describe('should return false', () => {
     it('when object has neither allowedRoles nor forbiddenRoles', () => {
       const auth = {
-        requiredScope: 'read:user',
+        requiredScope: 'read:user'
       };
       expect(hasRoleChecks(auth)).toBe(false);
     });
@@ -51,4 +51,3 @@ describe('hasRoleChecks', () => {
     });
   });
 });
-
