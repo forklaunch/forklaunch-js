@@ -1,5 +1,11 @@
 # @forklaunch/bunrun
 
+## 0.0.21
+
+### Patch Changes
+
+- Fix config propogation from app to route
+
 ## 0.0.20
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.6.27
+
+### Patch Changes
+
+- Fix config propogation from app to route
+
 ## 0.6.26
 
 ### Patch Changes

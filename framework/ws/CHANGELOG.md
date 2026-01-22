@@ -1,5 +1,15 @@
 # @forklaunch/ws
 
+## 0.1.6
+
+### Patch Changes
+
+- Fix config propogation from app to route
+- Updated dependencies
+  - @forklaunch/common@0.6.27
+  - @forklaunch/core@0.17.3
+  - @forklaunch/validator@0.10.27
+
 ## 0.1.5
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @forklaunch/infrastructure-s3
 
+## 0.4.36
+
+### Patch Changes
+
+- Fix config propogation from app to route
+- Updated dependencies
+  - @forklaunch/common@0.6.27
+  - @forklaunch/core@0.17.3
+
 ## 0.4.35
 
 ### Patch Changes

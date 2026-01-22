@@ -1,5 +1,11 @@
 # @forklaunch/testing
 
+## 0.0.16
+
+### Patch Changes
+
+- Fix config propogation from app to route
+
 ## 0.0.15
 
 ### Patch Changes
