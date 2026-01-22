@@ -739,6 +739,7 @@ export function resolveRouteMiddlewares<
     BaseResponse,
     NextFunction
   >[];
+  router?: { routerOptions?: ExpressLikeRouterOptions<SV, RouterSession> };
 }): {
   middlewares: RouterHandler[];
   controllerHandler: ExpressLikeSchemaHandler<
@@ -788,7 +789,8 @@ export function resolveRouteMiddlewares<
       params.requestSchema,
       params.responseSchemas,
       params.openTelemetryCollector,
-      () => params.routerOptions
+      // Use dynamic lookup from router instance instead of captured params
+      () => (params.router ? params.router.routerOptions : params.routerOptions)
     ),
     ...(params.postEnrichMiddleware as unknown[]),
     parse,
