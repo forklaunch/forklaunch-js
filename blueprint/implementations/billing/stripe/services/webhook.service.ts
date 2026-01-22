@@ -28,14 +28,14 @@ export class StripeWebhookService<
   StatusEnum,
   PartyEnum,
   BillingPortalEntities extends
-  StripeBillingPortalEntities = StripeBillingPortalEntities,
+    StripeBillingPortalEntities = StripeBillingPortalEntities,
   CheckoutSessionEntities extends
-  StripeCheckoutSessionEntities<StatusEnum> = StripeCheckoutSessionEntities<StatusEnum>,
+    StripeCheckoutSessionEntities<StatusEnum> = StripeCheckoutSessionEntities<StatusEnum>,
   PaymentLinkEntities extends
-  StripePaymentLinkEntities<StatusEnum> = StripePaymentLinkEntities<StatusEnum>,
+    StripePaymentLinkEntities<StatusEnum> = StripePaymentLinkEntities<StatusEnum>,
   PlanEntities extends StripePlanEntities = StripePlanEntities,
   SubscriptionEntities extends
-  StripeSubscriptionEntities<PartyEnum> = StripeSubscriptionEntities<PartyEnum>
+    StripeSubscriptionEntities<PartyEnum> = StripeSubscriptionEntities<PartyEnum>
 > {
   protected readonly stripeClient: Stripe;
   protected readonly em: EntityManager;
