@@ -95,6 +95,12 @@ impl CliCommand for CreateCommand {
                     .action(clap::ArgAction::SetTrue)
                     .help("Package local code and upload to S3 (for CI/CD testing without GitHub)"),
             )
+            .arg(
+                Arg::new("skip-sync")
+                    .long("skip-sync")
+                    .action(clap::ArgAction::SetTrue)
+                    .help("Skip automatic sync of projects with manifest before creating release"),
+            )
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
@@ -107,6 +113,7 @@ impl CliCommand for CreateCommand {
 
         let dry_run = matches.get_flag("dry-run");
         let local_mode = matches.get_flag("local");
+        let skip_sync = matches.get_flag("skip-sync");
 
         // Find application root
         let (app_root, _) = find_app_root_path(matches, RequiredLocation::Application)?;
@@ -118,6 +125,62 @@ impl CliCommand for CreateCommand {
 
         let mut manifest: ApplicationManifestData =
             toml::from_str(&manifest_content).with_context(|| "Failed to parse manifest.toml")?;
+
+        // Step 0: Sync projects with manifest (unless skipped)
+        if !skip_sync {
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)).set_bold(true))?;
+            writeln!(stdout, "[INFO] Syncing projects with manifest...")?;
+            stdout.reset()?;
+            writeln!(stdout)?;
+
+            use crate::core::rendered_template::RenderedTemplatesCache;
+            let mut rendered_templates_cache = RenderedTemplatesCache::new();
+
+            // Perform sync with confirm_all=true to avoid prompts during release
+            let changes_made = match crate::sync::all::sync_all_projects(
+                &app_root,
+                &mut manifest,
+                &mut rendered_templates_cache,
+                true, // confirm_all - no interactive prompts
+                &std::collections::HashMap::new(),
+                &mut stdout,
+            ) {
+                Ok(changed) => changed,
+                Err(e) => {
+                    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
+                    writeln!(stdout, "[ERROR] Sync failed: {}", e)?;
+                    stdout.reset()?;
+                    bail!("Failed to sync projects with manifest: {}", e);
+                }
+            };
+
+            if changes_made {
+                // Update manifest.toml with synced data
+                let updated_manifest_content = to_string_pretty(&manifest)
+                    .with_context(|| "Failed to serialize updated manifest")?;
+                std::fs::write(&manifest_path, updated_manifest_content)
+                    .with_context(|| "Failed to write updated manifest")?;
+
+                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+                writeln!(stdout, "[OK] Sync completed with changes")?;
+                stdout.reset()?;
+
+                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)).set_bold(true))?;
+                writeln!(stdout, "[WARN] Manifest was updated. Please commit the changes to manifest.toml")?;
+                stdout.reset()?;
+                writeln!(stdout)?;
+            } else {
+                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+                writeln!(stdout, "[OK] Sync completed - no changes detected")?;
+                stdout.reset()?;
+                writeln!(stdout)?;
+            }
+        } else {
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+            writeln!(stdout, "[INFO] Skipping project sync (--skip-sync flag set)")?;
+            stdout.reset()?;
+            writeln!(stdout)?;
+        }
 
         // Check if integrated with platform
         let application_id = manifest
