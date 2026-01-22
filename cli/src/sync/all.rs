@@ -233,11 +233,12 @@ pub fn sync_all_projects(
             continue;
         }
 
-        // Check if project already exists in manifest before syncing
-        let project_exists = manifest_data
+        // Take a snapshot of the project state before syncing to detect changes
+        let project_snapshot_before = manifest_data
             .projects
             .iter()
-            .any(|p| p.name == project_name);
+            .find(|p| p.name == project_name)
+            .map(|p| toml::to_string(p).unwrap_or_default());
 
         match project_type {
             InitializeType::Service => {
@@ -253,7 +254,14 @@ pub fn sync_all_projects(
                     stdout,
                 ) {
                     Ok(_) => {
-                        if !project_exists {
+                        // Compare snapshot to detect changes
+                        let project_snapshot_after = manifest_data
+                            .projects
+                            .iter()
+                            .find(|p| p.name == project_name)
+                            .map(|p| toml::to_string(p).unwrap_or_default());
+
+                        if project_snapshot_before != project_snapshot_after {
                             changes_made = true;
                         }
                     }
@@ -277,7 +285,14 @@ pub fn sync_all_projects(
                     stdout,
                 ) {
                     Ok(_) => {
-                        if !project_exists {
+                        // Compare snapshot to detect changes
+                        let project_snapshot_after = manifest_data
+                            .projects
+                            .iter()
+                            .find(|p| p.name == project_name)
+                            .map(|p| toml::to_string(p).unwrap_or_default());
+
+                        if project_snapshot_before != project_snapshot_after {
                             changes_made = true;
                         }
                     }
@@ -301,7 +316,14 @@ pub fn sync_all_projects(
                     stdout,
                 ) {
                     Ok(_) => {
-                        if !project_exists {
+                        // Compare snapshot to detect changes
+                        let project_snapshot_after = manifest_data
+                            .projects
+                            .iter()
+                            .find(|p| p.name == project_name)
+                            .map(|p| toml::to_string(p).unwrap_or_default());
+
+                        if project_snapshot_before != project_snapshot_after {
                             changes_made = true;
                         }
                     }

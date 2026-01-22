@@ -1,9 +1,15 @@
 use std::{
-    fs::{create_dir_all, write},
+    fs::OpenOptions,
     io::Write,
     thread::sleep,
     time::Duration,
 };
+
+#[cfg(unix)]
+use std::os::unix::fs::{DirBuilderExt, OpenOptionsExt};
+
+#[cfg(not(unix))]
+use std::fs::create_dir_all;
 
 use anyhow::{Result, bail};
 use clap::{Arg, ArgMatches, Command};
@@ -70,12 +76,46 @@ pub fn login_with_token(api_token: &str) -> Result<()> {
     };
 
     let token_path = get_token_path()?;
+
+    // Ensure parent directory exists with owner-only permissions (0o700)
     if let Some(parent) = token_path.parent() {
-        create_dir_all(parent)?;
+        #[cfg(unix)]
+        {
+            use std::fs::DirBuilder;
+            let mut builder = DirBuilder::new();
+            builder.recursive(true);
+            builder.mode(0o700);
+            builder.create(parent)?;
+        }
+
+        #[cfg(not(unix))]
+        {
+            create_dir_all(parent)?;
+        }
     }
 
     let toml_content = toml::to_string(&token_storage)?;
-    write(&token_path, toml_content)?;
+
+    // Write token file with owner-only permissions (0o600)
+    #[cfg(unix)]
+    {
+        use std::io::Write as IoWrite;
+
+        let mut file = OpenOptions::new()
+            .write(true)
+            .create(true)
+            .truncate(true)
+            .mode(0o600)
+            .open(&token_path)?;
+
+        file.write_all(toml_content.as_bytes())?;
+    }
+
+    #[cfg(not(unix))]
+    {
+        use std::fs::write;
+        write(&token_path, toml_content)?;
+    }
 
     stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true))?;
     writeln!(stdout)?;
@@ -209,12 +249,46 @@ pub fn login() -> Result<()> {
 
             // Save to ~/.forklaunch/token as TOML
             let token_path = get_token_path()?;
+
+            // Ensure parent directory exists with owner-only permissions (0o700)
             if let Some(parent) = token_path.parent() {
-                create_dir_all(parent)?;
+                #[cfg(unix)]
+                {
+                    use std::fs::DirBuilder;
+                    let mut builder = DirBuilder::new();
+                    builder.recursive(true);
+                    builder.mode(0o700);
+                    builder.create(parent)?;
+                }
+
+                #[cfg(not(unix))]
+                {
+                    create_dir_all(parent)?;
+                }
             }
 
             let toml_content = toml::to_string(&token_storage)?;
-            write(&token_path, toml_content)?;
+
+            // Write token file with owner-only permissions (0o600)
+            #[cfg(unix)]
+            {
+                use std::io::Write as IoWrite;
+
+                let mut file = OpenOptions::new()
+                    .write(true)
+                    .create(true)
+                    .truncate(true)
+                    .mode(0o600)
+                    .open(&token_path)?;
+
+                file.write_all(toml_content.as_bytes())?;
+            }
+
+            #[cfg(not(unix))]
+            {
+                use std::fs::write;
+                write(&token_path, toml_content)?;
+            }
 
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true))?;
             writeln!(stdout)?;
