@@ -867,7 +867,8 @@ export class ForklaunchExpressLikeRouter<
       routerOptions: this.routerOptions,
       postEnrichMiddleware: this.postEnrichMiddleware,
       includeCreateContext: false,
-      handlers
+      handlers,
+      router: this
     });
 
     registrationMethod.bind(this.internal)(

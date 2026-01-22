@@ -5,14 +5,14 @@ describe('hasPermissionChecks', () => {
   describe('should return true', () => {
     it('when object has allowedPermissions', () => {
       const auth = {
-        allowedPermissions: new Set(['read:user', 'write:user']),
+        allowedPermissions: new Set(['read:user', 'write:user'])
       };
       expect(hasPermissionChecks(auth)).toBe(true);
     });
 
     it('when object has forbiddenPermissions', () => {
       const auth = {
-        forbiddenPermissions: new Set(['delete:user']),
+        forbiddenPermissions: new Set(['delete:user'])
       };
       expect(hasPermissionChecks(auth)).toBe(true);
     });
@@ -20,7 +20,7 @@ describe('hasPermissionChecks', () => {
     it('when object has both allowedPermissions and forbiddenPermissions', () => {
       const auth = {
         allowedPermissions: new Set(['read:user']),
-        forbiddenPermissions: new Set(['delete:user']),
+        forbiddenPermissions: new Set(['delete:user'])
       };
       expect(hasPermissionChecks(auth)).toBe(true);
     });
@@ -29,7 +29,7 @@ describe('hasPermissionChecks', () => {
   describe('should return false', () => {
     it('when object has neither allowedPermissions nor forbiddenPermissions', () => {
       const auth = {
-        requiredScope: 'read:user',
+        requiredScope: 'read:user'
       };
       expect(hasPermissionChecks(auth)).toBe(false);
     });
@@ -51,4 +51,3 @@ describe('hasPermissionChecks', () => {
     });
   });
 });
-

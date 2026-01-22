@@ -9,8 +9,8 @@ describe('contractDetails.types', () => {
         name: 'getUser',
         summary: 'Get user by ID',
         responses: {
-          200: { json: { id: 'string', name: 'string' } },
-        },
+          200: { json: { id: 'string', name: 'string' } }
+        }
       };
 
       expect(isPathParamHttpContractDetails(contractDetails)).toBe(true);
@@ -25,8 +25,8 @@ describe('contractDetails.types', () => {
         summary: 'Get user by ID',
         params: { userId: 'string' },
         responses: {
-          200: { json: { id: 'string' } },
-        },
+          200: { json: { id: 'string' } }
+        }
       };
 
       expect(isPathParamHttpContractDetails(contractDetails)).toBe(true);
@@ -39,8 +39,8 @@ describe('contractDetails.types', () => {
         summary: 'Get user by ID',
         query: { include: 'string' },
         responses: {
-          200: { json: { id: 'string' } },
-        },
+          200: { json: { id: 'string' } }
+        }
       };
 
       expect(isPathParamHttpContractDetails(contractDetails)).toBe(true);
@@ -52,7 +52,7 @@ describe('contractDetails.types', () => {
     it('should support requiredScope in auth object', () => {
       const auth = {
         requiredScope: 'read:user',
-        jwt: { signatureKey: 'secret' },
+        jwt: { signatureKey: 'secret' }
       };
 
       expect(hasScopeChecks(auth)).toBe(true);
@@ -63,7 +63,7 @@ describe('contractDetails.types', () => {
       const auth = {
         requiredScope: 'read:user',
         surfaceScopes: () => 'admin',
-        jwt: { signatureKey: 'secret' },
+        jwt: { signatureKey: 'secret' }
       };
 
       expect(hasScopeChecks(auth)).toBe(true);
@@ -75,7 +75,7 @@ describe('contractDetails.types', () => {
       const auth = {
         requiredScope: 'read:user',
         scopeHeirarchy: ['read:user', 'write:user', 'admin'],
-        jwt: { signatureKey: 'secret' },
+        jwt: { signatureKey: 'secret' }
       };
 
       expect(hasScopeChecks(auth)).toBe(true);
@@ -86,7 +86,7 @@ describe('contractDetails.types', () => {
       const auth = {
         requiredScope: 'read:user',
         sessionSchema: { userId: 'string', role: 'string' },
-        jwt: { signatureKey: 'secret' },
+        jwt: { signatureKey: 'secret' }
       };
 
       expect(hasScopeChecks(auth)).toBe(true);
@@ -98,7 +98,7 @@ describe('contractDetails.types', () => {
     it('should support JWT auth method', () => {
       const auth = {
         requiredScope: 'read:user',
-        jwt: { signatureKey: 'secret-key' },
+        jwt: { signatureKey: 'secret-key' }
       };
 
       expect(hasScopeChecks(auth)).toBe(true);
@@ -109,8 +109,8 @@ describe('contractDetails.types', () => {
       const auth = {
         requiredScope: 'read:user',
         basic: {
-          login: (username: string, password: string) => username === 'admin',
-        },
+          login: (username: string) => username === 'admin'
+        }
       };
 
       expect(hasScopeChecks(auth)).toBe(true);
@@ -121,8 +121,8 @@ describe('contractDetails.types', () => {
     it('should support HMAC auth method', () => {
       const auth = {
         hmac: {
-          secretKeys: { key1: 'secret1', key2: 'secret2' },
-        },
+          secretKeys: { key1: 'secret1', key2: 'secret2' }
+        }
       };
 
       // HMAC doesn't require requiredScope
@@ -137,12 +137,12 @@ describe('contractDetails.types', () => {
         name: 'getUser',
         summary: 'Get user by ID',
         responses: {
-          200: { json: { id: 'string' } },
+          200: { json: { id: 'string' } }
         },
         auth: {
           requiredScope: 'read:user',
-          jwt: { signatureKey: 'secret' },
-        },
+          jwt: { signatureKey: 'secret' }
+        }
       };
 
       expect(isPathParamHttpContractDetails(contractDetails)).toBe(true);
@@ -153,4 +153,3 @@ describe('contractDetails.types', () => {
     });
   });
 });
-

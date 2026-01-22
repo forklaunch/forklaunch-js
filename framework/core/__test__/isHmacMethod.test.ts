@@ -8,9 +8,9 @@ describe('isHmacMethod', () => {
         hmac: {
           secretKeys: {
             key1: 'secret1',
-            key2: 'secret2',
-          },
-        },
+            key2: 'secret2'
+          }
+        }
       };
       expect(isHmacMethod(auth)).toBe(true);
     });
@@ -18,8 +18,8 @@ describe('isHmacMethod', () => {
     it('when object has hmac with empty secretKeys', () => {
       const auth = {
         hmac: {
-          secretKeys: {},
-        },
+          secretKeys: {}
+        }
       };
       expect(isHmacMethod(auth)).toBe(true);
     });
@@ -28,14 +28,14 @@ describe('isHmacMethod', () => {
   describe('should return false', () => {
     it('when hmac property is null', () => {
       const auth = {
-        hmac: null,
+        hmac: null
       };
       expect(isHmacMethod(auth)).toBe(false);
     });
 
     it('when hmac property is undefined', () => {
       const auth = {
-        hmac: undefined,
+        hmac: undefined
       };
       expect(isHmacMethod(auth)).toBe(false);
     });
@@ -43,8 +43,8 @@ describe('isHmacMethod', () => {
     it('when hmac property is missing', () => {
       const auth = {
         jwt: {
-          signatureKey: 'secret',
-        },
+          signatureKey: 'secret'
+        }
       };
       expect(isHmacMethod(auth)).toBe(false);
     });
@@ -62,4 +62,3 @@ describe('isHmacMethod', () => {
     });
   });
 });
-
