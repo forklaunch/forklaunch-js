@@ -400,19 +400,13 @@ pub(crate) fn generate_release_manifest(
                     .exists()
                 {
                     Some(
-                        app_root
-                            .join(&manifest.modules_path)
+                        Path::new(&manifest.modules_path)
                             .join(&project.name)
                             .to_string_lossy()
                             .into_owned(),
                     )
                 } else {
-                    Some(
-                        app_root
-                            .join(&manifest.modules_path)
-                            .to_string_lossy()
-                            .into_owned(),
-                    )
+                    Some(manifest.modules_path.clone())
                 },
                 dockerfile: manifest
                     .dockerfile
@@ -505,19 +499,13 @@ pub(crate) fn generate_release_manifest(
                     .exists()
                 {
                     Some(
-                        app_root
-                            .join(&manifest.modules_path)
+                        Path::new(&manifest.modules_path)
                             .join(&project.name)
                             .to_string_lossy()
                             .into_owned(),
                     )
                 } else {
-                    Some(
-                        app_root
-                            .join(&manifest.modules_path)
-                            .to_string_lossy()
-                            .into_owned(),
-                    )
+                    Some(manifest.modules_path.clone())
                 },
                 dockerfile: manifest
                     .dockerfile
@@ -566,19 +554,13 @@ pub(crate) fn generate_release_manifest(
                     .exists()
                 {
                     Some(
-                        app_root
-                            .join(&manifest.modules_path)
+                        Path::new(&manifest.modules_path)
                             .join(&project.name)
                             .to_string_lossy()
                             .into_owned(),
                     )
                 } else {
-                    Some(
-                        app_root
-                            .join(&manifest.modules_path)
-                            .to_string_lossy()
-                            .into_owned(),
-                    )
+                    Some(manifest.modules_path.clone())
                 },
                 dockerfile: manifest
                     .dockerfile
@@ -623,12 +605,7 @@ pub(crate) fn generate_release_manifest(
             .join("Dockerfile")
             .exists()
         {
-            Some(
-                app_root
-                    .join(&manifest.modules_path)
-                    .to_string_lossy()
-                    .into_owned(),
-            )
+            Some(manifest.modules_path.clone())
         } else {
             None
         },
