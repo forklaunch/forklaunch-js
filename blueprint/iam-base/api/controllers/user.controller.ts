@@ -123,7 +123,6 @@ export const getUser = handlers.get(
     params: IdSchema
   },
   async (req, res) => {
-    // Verify session has organizationId
     if (!req.session?.organizationId) {
       return res.status(401).send('Unauthorized: missing organization context');
     }
@@ -164,7 +163,6 @@ export const getBatchUsers = handlers.get(
   async (req, res) => {
     openTelemetryCollector.debug('Retrieving batch users', req.query);
 
-    // Verify session has organizationId
     if (!req.session?.organizationId) {
       return res.status(401).send('Unauthorized: missing organization context');
     }
@@ -207,12 +205,10 @@ export const updateUser = handlers.put(
   async (req, res) => {
     openTelemetryCollector.debug('Updating user', req.body);
 
-    // Verify session has organizationId
     if (!req.session?.organizationId) {
       return res.status(401).send('Unauthorized: missing organization context');
     }
 
-    // Verify the user being updated belongs to the same organization
     const targetUserOrgId = await serviceFactory().getOrganizationIdByUserId({
       id: req.body.id
     });
@@ -249,6 +245,7 @@ export const updateBatchUsers = handlers.put(
     body: array(UpdateUserMapper.schema),
     responses: {
       200: string,
+      401: string,
       403: string,
       404: string,
       500: string
@@ -257,12 +254,10 @@ export const updateBatchUsers = handlers.put(
   async (req, res) => {
     openTelemetryCollector.debug('Updating batch users', req.body);
 
-    // Verify session has organizationId
     if (!req.session?.organizationId) {
       return res.status(401).send('Unauthorized: missing organization context');
     }
 
-    // Verify all users being updated belong to the same organization
     for (const userDto of req.body) {
       const targetUserOrgId = await serviceFactory().getOrganizationIdByUserId({
         id: userDto.id
@@ -300,6 +295,7 @@ export const deleteUser = handlers.delete(
     },
     responses: {
       200: string,
+      401: string,
       403: string,
       404: string,
       500: string
@@ -309,12 +305,10 @@ export const deleteUser = handlers.delete(
   async (req, res) => {
     openTelemetryCollector.debug('Deleting user', req.params);
 
-    // Verify session has organizationId
     if (!req.session?.organizationId) {
       return res.status(401).send('Unauthorized: missing organization context');
     }
 
-    // Verify the user being deleted belongs to the same organization
     const targetUserOrgId = await serviceFactory().getOrganizationIdByUserId({
       id: req.params.id
     });
@@ -355,6 +349,7 @@ export const deleteBatchUsers = handlers.delete(
     },
     responses: {
       200: string,
+      401: string,
       403: string,
       404: string,
       500: string
@@ -364,12 +359,10 @@ export const deleteBatchUsers = handlers.delete(
   async (req, res) => {
     openTelemetryCollector.debug('Deleting batch users', req.query);
 
-    // Verify session has organizationId
     if (!req.session?.organizationId) {
       return res.status(401).send('Unauthorized: missing organization context');
     }
 
-    // Verify all users being deleted belong to the same organization
     for (const userId of req.query.ids) {
       const targetUserOrgId = await serviceFactory().getOrganizationIdByUserId({
         id: userId
