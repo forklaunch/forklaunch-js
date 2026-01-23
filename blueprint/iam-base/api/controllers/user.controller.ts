@@ -197,6 +197,7 @@ export const updateUser = handlers.put(
     body: UpdateUserMapper.schema,
     responses: {
       200: string,
+      401: string,
       403: string,
       404: string,
       500: string
