@@ -7,6 +7,7 @@ import {
   schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
+import { IdsDto } from '@forklaunch/common';
 import { getCachedJwks } from '@forklaunch/core/http';
 import { jwtVerify } from 'jose';
 import { ci, tokens } from '../../bootstrapper';
@@ -28,11 +29,17 @@ const decodeResourceWithOrganizationId = async (token: string) => {
   for (const jwk of jwks) {
     const { payload } = await jwtVerify(token, jwk);
     if (payload.sub) {
+      const organizationId = await serviceFactory().getOrganizationIdByUserId({
+        id: payload.sub
+      });
+
+      if (!organizationId) {
+        throw new Error('User not found or has no organization');
+      }
+
       return {
         ...payload,
-        organizationId: await serviceFactory().getOrganizationIdByUserId({
-          id: payload.sub
-        })
+        organizationId
       };
     }
   }
@@ -116,11 +123,14 @@ export const getUser = handlers.get(
     params: IdSchema
   },
   async (req, res) => {
+    if (!req.session?.organizationId) {
+      return res.status(401).send('Unauthorized: missing organization context');
+    }
+
     const user = await serviceFactory().getUser({
       id: req.params.id,
       organization: {
-        id:
-          req.session?.organizationId || '123e4567-e89b-12d3-a456-426614174001'
+        id: req.session.organizationId
       }
     });
     openTelemetryCollector.debug('Retrieving user', req.params);
@@ -146,13 +156,26 @@ export const getBatchUsers = handlers.get(
     },
     responses: {
       200: array(UserMapper.schema),
+      401: string,
       500: string
     },
     query: IdsSchema
   },
   async (req, res) => {
     openTelemetryCollector.debug('Retrieving batch users', req.query);
-    res.status(200).json(await serviceFactory().getBatchUsers(req.query));
+
+    if (!req.session?.organizationId) {
+      return res.status(401).send('Unauthorized: missing organization context');
+    }
+
+    res.status(200).json(
+      await serviceFactory().getBatchUsers({
+        ...req.query,
+        organization: {
+          id: req.session.organizationId
+        }
+      } as IdsDto)
+    );
   }
 );
 
@@ -163,20 +186,43 @@ export const updateUser = handlers.put(
     name: 'Update User',
     summary: 'Updates a user by ID',
     auth: {
-      hmac: {
-        secretKeys: {
-          default: HMAC_SECRET_KEY
-        }
-      }
+      sessionSchema: {
+        organizationId: string
+      },
+      jwt: {
+        jwksPublicKeyUrl: JWKS_PUBLIC_KEY_URL
+      },
+      decodeResource: decodeResourceWithOrganizationId,
+      allowedRoles: PLATFORM_READ_PERMISSIONS
     },
     body: UpdateUserMapper.schema,
     responses: {
       200: string,
+      401: string,
+      403: string,
+      404: string,
       500: string
     }
   },
   async (req, res) => {
     openTelemetryCollector.debug('Updating user', req.body);
+
+    if (!req.session?.organizationId) {
+      return res.status(401).send('Unauthorized: missing organization context');
+    }
+
+    const targetUserOrgId = await serviceFactory().getOrganizationIdByUserId({
+      id: req.body.id
+    });
+
+    if (!targetUserOrgId) {
+      return res.status(404).send('User not found or has no organization');
+    }
+
+    if (targetUserOrgId !== req.session.organizationId) {
+      return res.status(403).send('Forbidden: cannot update user from different organization');
+    }
+
     await serviceFactory().updateUser(req.body);
     res.status(200).send('User updated successfully');
   }
@@ -189,20 +235,45 @@ export const updateBatchUsers = handlers.put(
     name: 'Update Batch Users',
     summary: 'Updates multiple users by IDs',
     auth: {
-      hmac: {
-        secretKeys: {
-          default: HMAC_SECRET_KEY
-        }
-      }
+      sessionSchema: {
+        organizationId: string
+      },
+      jwt: {
+        jwksPublicKeyUrl: JWKS_PUBLIC_KEY_URL
+      },
+      decodeResource: decodeResourceWithOrganizationId,
+      allowedRoles: PLATFORM_READ_PERMISSIONS
     },
     body: array(UpdateUserMapper.schema),
     responses: {
       200: string,
+      401: string,
+      403: string,
+      404: string,
       500: string
     }
   },
   async (req, res) => {
     openTelemetryCollector.debug('Updating batch users', req.body);
+
+    if (!req.session?.organizationId) {
+      return res.status(401).send('Unauthorized: missing organization context');
+    }
+
+    for (const userDto of req.body) {
+      const targetUserOrgId = await serviceFactory().getOrganizationIdByUserId({
+        id: userDto.id
+      });
+
+      if (!targetUserOrgId) {
+        return res.status(404).send('User not found or has no organization');
+      }
+
+      if (targetUserOrgId !== req.session.organizationId) {
+        return res.status(403).send('Forbidden: cannot update user from different organization');
+      }
+    }
+
     await serviceFactory().updateBatchUsers(req.body);
     res.status(200).send('Batch users updated successfully');
   }
@@ -215,21 +286,49 @@ export const deleteUser = handlers.delete(
     name: 'Delete User',
     summary: 'Deletes a user by ID',
     auth: {
-      hmac: {
-        secretKeys: {
-          default: HMAC_SECRET_KEY
-        }
-      }
+      sessionSchema: {
+        organizationId: string
+      },
+      jwt: {
+        jwksPublicKeyUrl: JWKS_PUBLIC_KEY_URL
+      },
+      decodeResource: decodeResourceWithOrganizationId,
+      allowedRoles: PLATFORM_READ_PERMISSIONS
     },
     responses: {
       200: string,
+      401: string,
+      403: string,
+      404: string,
       500: string
     },
     params: IdSchema
   },
   async (req, res) => {
     openTelemetryCollector.debug('Deleting user', req.params);
-    await serviceFactory().deleteUser(req.params);
+
+    if (!req.session?.organizationId) {
+      return res.status(401).send('Unauthorized: missing organization context');
+    }
+
+    const targetUserOrgId = await serviceFactory().getOrganizationIdByUserId({
+      id: req.params.id
+    });
+
+    if (!targetUserOrgId) {
+      return res.status(404).send('User not found or has no organization');
+    }
+
+    if (targetUserOrgId !== req.session.organizationId) {
+      return res.status(403).send('Forbidden: cannot delete user from different organization');
+    }
+
+    await serviceFactory().deleteUser({
+      id: req.params.id,
+      organization: {
+        id: req.session.organizationId
+      }
+    });
     res.status(200).send('User deleted successfully');
   }
 );
@@ -241,21 +340,52 @@ export const deleteBatchUsers = handlers.delete(
     name: 'Delete Batch Users',
     summary: 'Deletes multiple users by IDs',
     auth: {
-      hmac: {
-        secretKeys: {
-          default: HMAC_SECRET_KEY
-        }
-      }
+      sessionSchema: {
+        organizationId: string
+      },
+      jwt: {
+        jwksPublicKeyUrl: JWKS_PUBLIC_KEY_URL
+      },
+      decodeResource: decodeResourceWithOrganizationId,
+      allowedRoles: PLATFORM_READ_PERMISSIONS
     },
     responses: {
       200: string,
+      401: string,
+      403: string,
+      404: string,
       500: string
     },
     query: IdsSchema
   },
   async (req, res) => {
     openTelemetryCollector.debug('Deleting batch users', req.query);
-    await serviceFactory().deleteBatchUsers(req.query);
+
+    if (!req.session?.organizationId) {
+      return res.status(401).send('Unauthorized: missing organization context');
+    }
+
+    for (const userId of req.query.ids) {
+      const targetUserOrgId = await serviceFactory().getOrganizationIdByUserId({
+        id: userId
+      });
+
+      if (!targetUserOrgId) {
+        return res.status(404).send('User not found or has no organization');
+      }
+
+      if (targetUserOrgId !== req.session.organizationId) {
+        return res.status(403).send('Forbidden: cannot delete user from different organization');
+      }
+    }
+
+    // Pass organization constraint to service layer
+    await serviceFactory().deleteBatchUsers({
+      ...req.query,
+      organization: {
+        id: req.session.organizationId
+      }
+    });
     res.status(200).send('Batch users deleted successfully');
   }
 );

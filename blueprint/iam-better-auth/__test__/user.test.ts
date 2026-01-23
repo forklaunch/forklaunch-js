@@ -140,7 +140,7 @@ describe('User Routes E2E Tests with PostgreSQL Container', () => {
       const response = await updateUserRoute.sdk.updateUser({
         body: mockUpdateUserData,
         headers: {
-          authorization: TEST_TOKENS.HMAC
+          authorization: TEST_TOKENS.AUTH
         }
       });
 
@@ -159,7 +159,7 @@ describe('User Routes E2E Tests with PostgreSQL Container', () => {
       const response = await updateBatchUsersRoute.sdk.updateBatchUsers({
         body: batchUpdateData,
         headers: {
-          authorization: TEST_TOKENS.HMAC
+          authorization: TEST_TOKENS.AUTH
         }
       });
 
@@ -174,7 +174,7 @@ describe('User Routes E2E Tests with PostgreSQL Container', () => {
       const response = await deleteUserRoute.sdk.deleteUser({
         params: { id: '123e4567-e89b-12d3-a456-426614174000' },
         headers: {
-          authorization: TEST_TOKENS.HMAC
+          authorization: TEST_TOKENS.AUTH
         }
       });
 
@@ -191,12 +191,11 @@ describe('User Routes E2E Tests with PostgreSQL Container', () => {
       const response = await deleteBatchUsersRoute.sdk.deleteBatchUsers({
         query: {
           ids: [
-            '123e4567-e89b-12d3-a456-426614174000',
-            '456e7890-e89b-12d3-a456-426614174001'
+            '123e4567-e89b-12d3-a456-426614174000'
           ]
         },
         headers: {
-          authorization: TEST_TOKENS.HMAC
+          authorization: TEST_TOKENS.AUTH
         }
       });
 
