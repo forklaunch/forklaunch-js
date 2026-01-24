@@ -328,7 +328,7 @@ export class Application<
       );
 
       this.internal.get(
-        `/api/${process.env.VERSION ?? 'v1'}/openapi-hash`,
+        `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}/openapi-hash`,
         async (_, res) => {
           const hash = await crypto
             .createHash('sha256')
