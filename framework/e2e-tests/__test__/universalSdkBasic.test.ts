@@ -240,4 +240,25 @@ describe('universalSdkBasic', async () => {
   //   });
   //   expect(filePostTest.code).toBe(200);
   // });
+
+  it('should throw error when hash endpoint returns non-200 status', async () => {
+    const badSdk = await universalSdk<
+      MapToSdk<ZodSchemaValidator, typeof sampleSdkClient>
+    >({
+      host: 'http://localhost:6935',
+      registryOptions: {
+        path: 'api/nonexistent'
+      }
+    });
+    await expect(
+      (
+        badSdk as unknown as {
+          fetch: (
+            path: string,
+            options: { method: string }
+          ) => Promise<unknown>;
+        }
+      ).fetch('/some/path', { method: 'GET' })
+    ).rejects.toThrow(/Failed to fetch OpenAPI registry hash/);
+  });
 });
