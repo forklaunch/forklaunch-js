@@ -64,7 +64,7 @@ forklaunch init application my-app
 
 ## Local Development (Building from Source)
 
-If you're developing ForkLaunch itself or building from source, use `cargo run --release --` from the `cli` directory:
+If you're working off the repository and building from source, use `cargo run --release --` from the `cli` directory:
 
 ```bash
 cd cli
