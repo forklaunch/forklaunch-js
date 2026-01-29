@@ -35,9 +35,9 @@ During initialization, you'll be prompted to configure your application. All cho
 | _Preconfigured Modules_ | `billing`, `iam` | Optional base services (see [Preconfigured Modules](/docs/preconfigured-modules)) | Remove service folder and update manifest.toml |
 
 ### Application Architecture
-To see a more comprehensive application structure you can learn more [here](/docs/architecture.md).
+To see a more comprehensive application structure, see the [Architecture documentation](/docs/architecture.md).
 **Application Structure:**
-```
+```bash
 my-app/                    ← Application
 ├── .forklaunch/
 │   └── manifest.toml      ← Application artifact

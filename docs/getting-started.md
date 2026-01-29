@@ -85,7 +85,7 @@ forklaunch version
 
 ## Create login
 
-Once you have verified your installation, log in to to your account to get started:
+Once you have verified your installation, log in to your account to get started:
 ```bash
 forklaunch login
 ```

@@ -16,7 +16,7 @@ The ForkLaunch CLI provides commands for managing your application development.
 | `forklaunch add` | Add new components to existing project | - |
 | `forklaunch change` | Modify existing project components | - |
 | `forklaunch delete` | Delete project components | `del` |
-| `forklaunch sync` | Sync existing project compenents with artifacts | - |
+| `forklaunch sync` | Sync existing project components with artifacts | - |
 
 ## Development Commands
 

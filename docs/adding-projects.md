@@ -82,10 +82,11 @@ forklaunch init router orders --path ./commerce-service --infrastructure redis
 
 | Concept | Definition | What It Does | Common Examples |
 |----------|-------------|---------------|------------------|
+| **Module** | A **preconfigured, production-ready service** that provides common functionality out of the box. | It serves as a plug-and-play solution for standard features (like authentication or billing), with best practices and integrations already built in — saving you from building these from scratch. | - A **billing module** with Stripe integration for payments and subscriptions.<br>- An **IAM module** for user authentication, authorization, and session management.<br>- An **email module** for transactional emails and notifications. |
 | **Service** | A **self-contained part of your application** that handles a specific kind of task or related features. | It runs continuously (like an API) and responds to requests — from users, other services, or front-end apps. | - An **API service** that handles user logins and profiles.<br>- A **billing service** that manages payments.<br>- A **data ingestion service** that collects and processes data. |
 | **Worker** | A **background process** that runs tasks **asynchronously**, not directly responding to user requests. | It takes jobs from a queue or schedule, performs work, and reports results or stores data — often handling heavier or delayed work. | - Sending emails after a signup.<br>- Generating daily reports.<br>- Processing large datasets.<br>- Cleaning up logs or cache files. |
 | **Library** | A **shared collection of code**, utilities, or models used across services and workers. | Provides reusable logic (like validation, database models, or helper functions) that multiple parts of the system can import. | - **Core library** with shared models and validation schemas.<br>- **Auth library** with JWT and session utilities.<br>- **Utils library** for formatting, logging, or constants. |
-| **Modules** | 
+| **Router** | A **set of routes and controllers** that extends an existing service with new endpoints. | It adds new API routes and their handling logic to a service without creating a separate service — allowing you to organize and grow your service's functionality modularly. | - A **products router** in an e-commerce service to manage product CRUD operations.<br>- An **orders router** to handle order processing and tracking.<br>- An **analytics router** to expose reporting endpoints. | 
 
 
 

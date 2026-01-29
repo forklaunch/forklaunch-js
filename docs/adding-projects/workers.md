@@ -180,7 +180,7 @@ When you're ready to deploy your worker, see [Release and Deploy](/docs/cli/rele
 **Worker-Specific Deployment Notes:**
 - Workers use the same compute defaults as services (256m CPU, 512Mi RAM)
 - Auto-scaling is based on queue depth for workers
-- Database/Redis/BullMQ workers are free tier eligible
+- Database/Redis/BullMQ workers are free-tier eligible
 - Kafka workers require paid infrastructure (~$70+/month)
 
 ### Best Practices
