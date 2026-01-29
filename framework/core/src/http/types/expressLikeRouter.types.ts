@@ -811,14 +811,14 @@ export interface TypedNestableMiddlewareDefinition<
   BaseResponse,
   NextFunction
 > extends TypedMiddlewareDefinition<
-    ChainableRouter,
-    SV,
-    Session,
-    BaseRequest,
-    BaseResponse,
-    NextFunction,
-    RouterHandler
-  > {
+  ChainableRouter,
+  SV,
+  Session,
+  BaseRequest,
+  BaseResponse,
+  NextFunction,
+  RouterHandler
+> {
   (
     middleware: RouterHandler,
     ...otherMiddleware: RouterHandler[]

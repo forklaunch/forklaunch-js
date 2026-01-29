@@ -56,6 +56,7 @@ use crate::{
                 TSX_VERSION, TYPEBOX_VERSION, TYPEDOC_VERSION,
                 TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_JEST_VERSION,
                 TYPES_QS_VERSION, TYPES_UUID_VERSION, TYPESCRIPT_ESLINT_VERSION, UUID_VERSION,
+                PINO_VERSION, IOREDIS_VERSION,
                 VALIDATOR_VERSION, WORKER_BULLMQ_VERSION, WORKER_DATABASE_VERSION,
                 WORKER_INTERFACES_VERSION, WORKER_KAFKA_VERSION, WORKER_REDIS_VERSION, ZOD_VERSION,
                 project_clean_script, project_dev_local_worker_script, project_dev_server_script,
@@ -115,11 +116,15 @@ fn generate_basic_worker(
     } else {
         vec!["consts.ts".to_string()]
     };
-    let ignore_dirs = if !manifest_data.is_database_enabled {
+    let mut ignore_dirs = if !manifest_data.is_database_enabled {
         vec!["seeder".to_string(), "seed.data.ts".to_string()]
     } else {
         vec![]
     };
+    // Skip mappers directory if with_mappers is false
+    if !manifest_data.with_mappers {
+        ignore_dirs.push("mappers".to_string());
+    }
     let preserve_files = vec![];
 
     let mut rendered_templates = generate_with_template(
@@ -534,6 +539,8 @@ pub(crate) fn generate_worker_package_json(
                 } else {
                     None
                 },
+                pino: Some(PINO_VERSION.to_string()),
+                ioredis: Some(IOREDIS_VERSION.to_string()),
                 additional_deps: HashMap::new(),
             }
         }),
@@ -586,7 +593,10 @@ pub(crate) fn generate_worker_package_json(
                 } else {
                     None
                 },
-                ioredis: None,
+                types_pino: None,
+                types_ioredis: None,
+                pino: None,
+                ioredis: Some(IOREDIS_VERSION.to_string()),
                 additional_deps: HashMap::new(),
             }
         }),
@@ -637,6 +647,12 @@ impl CliCommand for WorkerCommand {
                     .short('D')
                     .long("description")
                     .help("The description of the worker"),
+            )
+            .arg(
+                Arg::new("mappers")
+                    .long("mappers")
+                    .help("Generate mapper files for entity/DTO transformation")
+                    .action(ArgAction::SetTrue),
             )
             .arg(
                 Arg::new("dryrun")
@@ -724,7 +740,7 @@ impl CliCommand for WorkerCommand {
             &mut stdout,
             "description",
             matches,
-            "worker description (optional)",
+            "worker description",
             None,
         )?;
 
@@ -791,6 +807,11 @@ impl CliCommand for WorkerCommand {
             is_cache_enabled: r#type == WorkerType::BullMQCache || r#type == WorkerType::RedisCache,
             is_database_enabled: r#type == WorkerType::Database,
             is_kafka_enabled: r#type == WorkerType::Kafka,
+            platform_application_id: manifest_data.platform_application_id.clone(),
+            platform_organization_id: manifest_data.platform_organization_id.clone(),
+            release_version: manifest_data.release_version.clone(),
+            release_git_commit: manifest_data.release_git_commit.clone(),
+            release_git_branch: manifest_data.release_git_branch.clone(),
 
             is_postgres: if let Some(database) = &database {
                 database == &Database::PostgreSQL
@@ -846,6 +867,16 @@ impl CliCommand for WorkerCommand {
                 &worker_name.to_case(Case::Pascal),
             ),
             worker_producer_factory: get_worker_producer_factory(&r#type),
+
+            is_iam_configured: manifest_data.projects.iter().any(|project_entry| {
+                if project_entry.name == "iam" {
+                    return true;
+                }
+                return false;
+            }),
+
+            // Generate mappers if --mappers flag is set
+            with_mappers: matches.get_flag("mappers"),
         };
 
         let dryrun = matches.get_flag("dryrun");

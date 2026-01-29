@@ -60,6 +60,7 @@ use crate::{
                 TYPEBOX_VERSION, TYPEDOC_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION,
                 TYPES_EXPRESS_VERSION, TYPES_JEST_VERSION, TYPES_QS_VERSION, TYPES_UUID_VERSION,
                 TYPESCRIPT_ESLINT_VERSION, UUID_VERSION, VALIDATOR_VERSION, ZOD_VERSION,
+                PINO_VERSION,
                 project_clean_script, project_dev_local_script, project_dev_server_script,
                 project_format_script, project_lint_fix_script, project_lint_script,
                 project_migrate_script, project_start_server_script, project_test_script,
@@ -102,7 +103,12 @@ fn generate_basic_service(
     };
 
     let ignore_files = vec![];
-    let ignore_dirs = vec![];
+    // Skip mappers directory if with_mappers is false
+    let ignore_dirs = if !manifest_data.with_mappers {
+        vec!["mappers".to_string()]
+    } else {
+        vec![]
+    };
     let preserve_files = vec![];
 
     let mut rendered_templates = generate_with_template(
@@ -305,7 +311,13 @@ pub(crate) fn generate_service_package_json(
         keywords: Some(vec![]),
         license: Some(manifest_data.license.to_string()),
         author: Some(manifest_data.author.to_string()),
-        main: main_override,
+        main: main_override.or_else(|| {
+            if manifest_data.is_iam {
+                Some("dist/index.js".to_string())
+            } else {
+                None
+            }
+        }),
         types: types_override.unwrap_or(None),
         types_versions: None,
         scripts: Some(if let Some(scripts) = scripts_override {
@@ -467,6 +479,8 @@ pub(crate) fn generate_service_package_json(
                 } else {
                     None
                 },
+                pino: Some(PINO_VERSION.to_string()),
+                ioredis: Some(IOREDIS_VERSION.to_string()),
                 additional_deps: HashMap::new(),
             }
         }),
@@ -511,11 +525,10 @@ pub(crate) fn generate_service_package_json(
                 types_jest: Some(TYPES_JEST_VERSION.to_string()),
                 types_qs: Some(TYPES_QS_VERSION.to_string()),
                 types_uuid: Some(TYPES_UUID_VERSION.to_string()),
-                ioredis: if manifest_data.is_billing {
-                    Some(IOREDIS_VERSION.to_string())
-                } else {
-                    None
-                },
+                types_pino: None,
+                types_ioredis: None,
+                pino: None,
+                ioredis: None,
                 additional_deps: HashMap::new(),
             }
         }),
@@ -579,6 +592,12 @@ impl CliCommand for ServiceCommand {
                     .short('D')
                     .long("description")
                     .help("The description of the service"),
+            )
+            .arg(
+                Arg::new("mappers")
+                    .long("mappers")
+                    .help("Generate mapper files for entity/DTO transformation")
+                    .action(ArgAction::SetTrue),
             )
             .arg(
                 Arg::new("dryrun")
@@ -666,7 +685,7 @@ impl CliCommand for ServiceCommand {
             &mut stdout,
             "description",
             matches,
-            "service description (optional)",
+            "service description",
             None,
         )?;
 
@@ -731,11 +750,26 @@ impl CliCommand for ServiceCommand {
             is_iam: false,
             is_billing: false,
             is_cache_enabled: infrastructure.contains(&Infrastructure::Redis),
+            platform_application_id: manifest_data.platform_application_id.clone(),
+            platform_organization_id: manifest_data.platform_organization_id.clone(),
+            release_version: manifest_data.release_version.clone(),
+            release_git_commit: manifest_data.release_git_commit.clone(),
+            release_git_branch: manifest_data.release_git_branch.clone(),
             is_s3_enabled: infrastructure.contains(&Infrastructure::S3),
             is_database_enabled: true,
 
             is_better_auth: false,
             is_stripe: false,
+
+            is_iam_configured: manifest_data.projects.iter().any(|project_entry| {
+                if project_entry.name == "iam" {
+                    return true;
+                }
+                return false;
+            }),
+
+            // Generate mappers if --mappers flag is set, or always for billing/IAM variants
+            with_mappers: matches.get_flag("mappers"),
         };
 
         let dryrun = matches.get_flag("dryrun");

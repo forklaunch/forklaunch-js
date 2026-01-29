@@ -160,7 +160,7 @@ export class UniversalSdk {
     request?: RequestType
   ): Promise<ResponseType> {
     const { params, body, query, headers } = request || {};
-    let url = getSdkPath(this.host + path);
+    let url = getSdkPath(this.host + path).replace(/([^:]\/)\/+/g, '$1');
 
     if (params) {
       for (const key in params) {
@@ -383,7 +383,9 @@ export class UniversalSdk {
           json
         );
         if (!isValidJson) {
-          throw new Error('Response does not match OpenAPI spec');
+          throw new Error(
+            `Response does not match OpenAPI spec: ${JSON.stringify(this.ajv.errors)}`
+          );
         }
         responseBody = coerceSpecialTypes(
           json,

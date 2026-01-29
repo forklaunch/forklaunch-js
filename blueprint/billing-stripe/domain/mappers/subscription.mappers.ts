@@ -6,11 +6,11 @@ import { Subscription } from '../../persistence/entities/subscription.entity';
 import { PartyEnum } from '../enum/party.enum';
 import { SubscriptionSchemas } from '../schemas';
 
-export const CreateSubscriptionMapper = requestMapper(
+export const CreateSubscriptionMapper = requestMapper({
   schemaValidator,
-  SubscriptionSchemas.CreateSubscriptionSchema(PartyEnum),
-  Subscription,
-  {
+  schema: SubscriptionSchemas.CreateSubscriptionSchema(PartyEnum),
+  entity: Subscription,
+  mapperDefinition: {
     toEntity: async (
       dto,
       em: EntityManager,
@@ -27,13 +27,13 @@ export const CreateSubscriptionMapper = requestMapper(
       );
     }
   }
-);
+});
 
-export const UpdateSubscriptionMapper = requestMapper(
+export const UpdateSubscriptionMapper = requestMapper({
   schemaValidator,
-  SubscriptionSchemas.UpdateSubscriptionSchema(PartyEnum),
-  Subscription,
-  {
+  schema: SubscriptionSchemas.UpdateSubscriptionSchema(PartyEnum),
+  entity: Subscription,
+  mapperDefinition: {
     toEntity: async (
       dto,
       em: EntityManager,
@@ -48,13 +48,13 @@ export const UpdateSubscriptionMapper = requestMapper(
       );
     }
   }
-);
+});
 
-export const SubscriptionMapper = responseMapper(
+export const SubscriptionMapper = responseMapper({
   schemaValidator,
-  SubscriptionSchemas.SubscriptionSchema(PartyEnum),
-  Subscription,
-  {
+  schema: SubscriptionSchemas.SubscriptionSchema(PartyEnum),
+  entity: Subscription,
+  mapperDefinition: {
     toDto: async (entity: Subscription) => {
       const data = await entity.read();
       return {
@@ -65,4 +65,4 @@ export const SubscriptionMapper = responseMapper(
       };
     }
   }
-);
+});

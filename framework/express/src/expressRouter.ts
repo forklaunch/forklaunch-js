@@ -40,22 +40,20 @@ import { ExpressRouterOptions } from './types/expressOptions.types';
  * @implements {ForklaunchRouter<SV>}
  */
 export class Router<
-    SV extends AnySchemaValidator,
-    BasePath extends `/${string}`,
-    RouterSession extends SessionObject<SV>
-  >
-  extends ForklaunchExpressLikeRouter<
-    SV,
-    BasePath,
-    RequestHandler,
-    ExpressRouter,
-    Request,
-    Response,
-    NextFunction,
-    RouterSession
-  >
-  implements ForklaunchRouter<SV>
-{
+  SV extends AnySchemaValidator,
+  BasePath extends `/${string}`,
+  RouterSession extends SessionObject<SV>
+> extends ForklaunchExpressLikeRouter<
+  SV,
+  BasePath,
+  RequestHandler,
+  ExpressRouter,
+  Request,
+  Response,
+  NextFunction,
+  RouterSession
+> {
+  // implements ForklaunchRouter<SV>
   private configOptions;
 
   /**
@@ -2206,3 +2204,16 @@ export class Router<
     return clone;
   }
 }
+
+// Static assertion to ensure Router satisfies ForklaunchRouter
+// This verifies compatibility without triggering TS2589
+type _RouterSatisfiesInterface =
+  Router<
+    AnySchemaValidator,
+    '/',
+    SessionObject<AnySchemaValidator>
+  > extends ForklaunchRouter<AnySchemaValidator>
+    ? true
+    : false;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _routerCheck: _RouterSatisfiesInterface = true;

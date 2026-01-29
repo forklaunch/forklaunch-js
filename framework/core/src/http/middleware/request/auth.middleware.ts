@@ -11,6 +11,7 @@ import { hasPermissionChecks } from '../../guards/hasPermissionChecks';
 import { hasRoleChecks } from '../../guards/hasRoleChecks';
 import { hasScopeChecks } from '../../guards/hasScopeChecks';
 import { isHmacMethod } from '../../guards/isHmacMethod';
+import { meta } from '../../telemetry/pinoLogger';
 import {
   ForklaunchNextFunction,
   ForklaunchRequest,
@@ -163,7 +164,8 @@ async function checkAuthorizationToken<
       ReqHeaders,
       VersionedReqs,
       BaseRequest
-    >
+    >,
+    req.openTelemetryCollector
   );
 
   switch (type) {
@@ -200,7 +202,7 @@ async function checkAuthorizationToken<
       const verificationResult = await auth.verificationFunction({
         method: req?.method ?? '',
         path: req?.path ?? '',
-        body: req?.body,
+        body: req?._rawBody ?? req?.body,
         timestamp: new Date(parsedTimestamp),
         nonce: parsedNonce,
         signature: parsedSignature,
@@ -246,7 +248,15 @@ async function checkAuthorizationToken<
             Extract<keyof VersionedReqs, string>,
             SessionSchema
           >
-        )?.openTelemetryCollector.error(error);
+        )?.openTelemetryCollector?.error(
+          'JWT Verification Failed',
+          meta({
+            error,
+            method: req.method,
+            path: req.path,
+            token
+          })
+        );
         return invalidAuthorizationToken;
       }
 
@@ -489,6 +499,10 @@ export async function parseRequestAuth<
       >
     | undefined;
 
+  const token =
+    (req.headers[auth?.headerName ?? 'Authorization'] as string) ||
+    (req.headers[auth?.headerName ?? 'authorization'] as string);
+
   const [error, message] =
     (await checkAuthorizationToken<
       SV,
@@ -499,15 +513,17 @@ export async function parseRequestAuth<
       MapVersionedReqsSchema<SV, VersionedApi>,
       MapSessionSchema<SV, SessionSchema>,
       unknown
-    >(
-      req,
-      auth,
-      (req.headers[auth?.headerName ?? 'Authorization'] as string) ||
-        (req.headers[auth?.headerName ?? 'authorization'] as string),
-      req._globalOptions?.()?.auth
-    )) ?? [];
+    >(req, auth, token, req._globalOptions?.()?.auth)) ?? [];
   if (error != null) {
-    req.openTelemetryCollector.error(error, message);
+    req.openTelemetryCollector?.error(
+      message || 'Authorization Failed',
+      meta({
+        statusCode: error,
+        method: req.method,
+        path: req.path,
+        token
+      })
+    );
     res.type('text/plain');
     res.status(error).send(message as never);
     return;

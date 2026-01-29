@@ -343,5 +343,18 @@ describe('handlers', () => {
     );
     application.use(anyMiddleware);
     router.any('/', anyMiddleware);
+    router.upgrade(
+      '/',
+      {
+        upgrade: {
+          a: string
+        }
+      },
+      (req, res) => {
+        res.upgrade({
+          a: 'fff'
+        });
+      }
+    );
   });
 });

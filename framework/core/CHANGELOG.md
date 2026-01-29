@@ -1,5 +1,59 @@
 # @forklaunch/core
 
+## 0.17.3
+
+### Patch Changes
+
+- Fix config propogation from app to route
+- Updated dependencies
+  - @forklaunch/common@0.6.27
+  - @forklaunch/validator@0.10.27
+
+## 0.17.2
+
+### Patch Changes
+
+- Package deps version bump
+- Updated dependencies
+  - @forklaunch/validator@0.10.26
+  - @forklaunch/common@0.6.26
+
+## 0.17.1
+
+### Patch Changes
+
+- package version bump
+- Updated dependencies
+  - @forklaunch/validator@0.10.25
+  - @forklaunch/common@0.6.25
+
+## 0.17.0
+
+### Minor Changes
+
+- Mapper instantiation syntax more readable and express port added. Also removed error schema thrash in live sdk
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.10.24
+  - @forklaunch/common@0.6.24
+
+## 0.16.1
+
+### Patch Changes
+
+- update framework pages
+- Updated dependencies
+  - @forklaunch/validator@0.10.23
+  - @forklaunch/common@0.6.23
+
+## 0.16.0
+
+### Minor Changes
+
+- Introduce fl websockets for easy, fully typed socket communication
+
 ## 0.15.12
 
 ### Patch Changes

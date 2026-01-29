@@ -5,11 +5,11 @@ import { Role } from '../../persistence/entities/role.entity';
 import { RoleSchemas } from '../schemas';
 import { PermissionMapper } from './permission.mappers';
 
-export const CreateRoleMapper = requestMapper(
+export const CreateRoleMapper = requestMapper({
   schemaValidator,
-  RoleSchemas.CreateRoleSchema,
-  Role,
-  {
+  schema: RoleSchemas.CreateRoleSchema,
+  entity: Role,
+  mapperDefinition: {
     toEntity: async (dto, em: EntityManager) => {
       return Role.create(
         {
@@ -21,24 +21,24 @@ export const CreateRoleMapper = requestMapper(
       );
     }
   }
-);
+});
 
-export const UpdateRoleMapper = requestMapper(
+export const UpdateRoleMapper = requestMapper({
   schemaValidator,
-  RoleSchemas.UpdateRoleSchema,
-  Role,
-  {
+  schema: RoleSchemas.UpdateRoleSchema,
+  entity: Role,
+  mapperDefinition: {
     toEntity: async (dto, em: EntityManager) => {
       return Role.update(dto, em);
     }
   }
-);
+});
 
-export const RoleMapper = responseMapper(
+export const RoleMapper = responseMapper({
   schemaValidator,
-  RoleSchemas.RoleSchema,
-  Role,
-  {
+  schema: RoleSchemas.RoleSchema,
+  entity: Role,
+  mapperDefinition: {
     toDto: async (entity: Role) => {
       if (!entity.isInitialized()) {
         await entity.init();
@@ -59,13 +59,13 @@ export const RoleMapper = responseMapper(
       };
     }
   }
-);
+});
 
-export const RoleEntityMapper = requestMapper(
+export const RoleEntityMapper = requestMapper({
   schemaValidator,
-  RoleSchemas.UpdateRoleSchema,
-  Role,
-  {
+  schema: RoleSchemas.UpdateRoleSchema,
+  entity: Role,
+  mapperDefinition: {
     toEntity: async (dto, em: EntityManager) => {
       const role = await em.findOne(Role, dto.id);
       if (!role) {
@@ -74,4 +74,4 @@ export const RoleEntityMapper = requestMapper(
       return role;
     }
   }
-);
+});

@@ -5,9 +5,11 @@ use std::{
 };
 
 use anyhow::{Context, Result};
+use base64::{Engine, engine::general_purpose::STANDARD};
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use serde_yml::{Value, from_str, from_value, to_string};
+use uuid::Uuid;
 use walkdir::WalkDir;
 
 use super::manifest::{ManifestData, ProjectEntry};
@@ -15,7 +17,7 @@ use crate::{
     constants::{
         Database, ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE,
         ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE, ERROR_FAILED_TO_READ_DOCKER_COMPOSE, Infrastructure,
-        Runtime, WorkerType,
+        Module, Runtime, WorkerType,
     },
     core::manifest::{
         application::ApplicationManifestData, service::ServiceManifestData,
@@ -237,7 +239,11 @@ pub(crate) struct DockerService {
     pub(crate) restart: Option<Restart>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) build: Option<DockerBuild>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_environment"
+    )]
     pub(crate) environment: Option<IndexMap<String, String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) depends_on: Option<IndexMap<String, DependsOn>>,
@@ -258,6 +264,96 @@ pub(crate) struct DockerService {
 
     #[serde(flatten)]
     pub(crate) additional_properties: HashMap<String, Value>,
+}
+
+#[allow(dead_code)]
+fn deserialize_environment<'de, D>(
+    deserializer: D,
+) -> Result<Option<IndexMap<String, String>>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let raw: Option<IndexMap<String, Value>> = Option::deserialize(deserializer)?;
+    let mapped = raw.map(|env| {
+        env.into_iter()
+            .map(|(key, value)| (key, yaml_value_to_string(value)))
+            .collect::<IndexMap<_, _>>()
+    });
+    Ok(mapped)
+}
+
+#[allow(dead_code)]
+fn yaml_value_to_string(value: Value) -> String {
+    match value {
+        Value::String(s) => s,
+        Value::Number(n) => n.to_string(),
+        Value::Bool(b) => b.to_string(),
+        Value::Null => String::new(),
+        Value::Sequence(seq) => seq
+            .into_iter()
+            .map(yaml_value_to_string)
+            .collect::<Vec<_>>()
+            .join(","),
+        Value::Mapping(map) => {
+            let mut pairs = Vec::new();
+            for (k, v) in map {
+                pairs.push(format!(
+                    "{}={}",
+                    yaml_value_to_string(k),
+                    yaml_value_to_string(v)
+                ));
+            }
+            pairs.join(",")
+        }
+        Value::Tagged(tagged) => yaml_value_to_string(tagged.value),
+    }
+}
+
+fn parse_environment_value(value: Value) -> Result<Option<IndexMap<String, String>>> {
+    match value {
+        Value::Null => Ok(None),
+        Value::Mapping(map) => {
+            let mut env = IndexMap::new();
+            for (k, v) in map {
+                env.insert(yaml_value_to_string(k), yaml_value_to_string(v));
+            }
+            Ok(Some(env))
+        }
+        Value::Sequence(seq) => {
+            let mut env = IndexMap::new();
+            for item in seq {
+                let entry = yaml_value_to_string(item);
+                if let Some((key, val)) = entry.split_once('=') {
+                    env.insert(key.to_string(), val.to_string());
+                } else {
+                    env.insert(entry, String::new());
+                }
+            }
+            Ok(Some(env))
+        }
+        Value::String(s) => {
+            if let Some((key, val)) = s.split_once('=') {
+                let mut env = IndexMap::new();
+                env.insert(key.to_string(), val.to_string());
+                Ok(Some(env))
+            } else {
+                Ok(None)
+            }
+        }
+        other => {
+            let type_name = match &other {
+                Value::Number(_) => "Number",
+                Value::Bool(_) => "Bool",
+                Value::Tagged(_) => "Tagged",
+                _ => "Unknown",
+            };
+            Err(anyhow::anyhow!(
+                "Unsupported environment value type in parse_environment_value: {} (value: {})",
+                type_name,
+                yaml_value_to_string(other)
+            ))
+        }
+    }
 }
 
 impl<'de> Deserialize<'de> for DockerService {
@@ -304,7 +400,7 @@ impl<'de> Deserialize<'de> for DockerService {
                         }
                         "environment" => {
                             service.environment =
-                                from_value(value).map_err(serde::de::Error::custom)?
+                                parse_environment_value(value).map_err(serde::de::Error::custom)?;
                         }
                         "depends_on" => {
                             service.depends_on =
@@ -376,6 +472,18 @@ pub(crate) fn add_otel_to_docker_compose<'a>(
         &manifest_data.docker_compose_path,
         &manifest_data.modules_path,
     );
+
+    // Ensure the network definition exists
+    let network_name = format!("{}-network", app_name);
+    if !docker_compose.networks.contains_key(&network_name) {
+        docker_compose.networks.insert(
+            network_name.clone(),
+            DockerNetwork {
+                name: network_name.clone(),
+                driver: "bridge".to_string(),
+            },
+        );
+    }
 
     docker_compose.services.insert(
         "tempo".to_string(),
@@ -515,6 +623,18 @@ pub(crate) fn add_redis_to_docker_compose<'a>(
     docker_compose: &'a mut DockerCompose,
     environment: &mut IndexMap<String, String>,
 ) -> Result<&'a mut DockerCompose> {
+    // Ensure the network definition exists
+    let network_name = format!("{}-network", app_name);
+    if !docker_compose.networks.contains_key(&network_name) {
+        docker_compose.networks.insert(
+            network_name.clone(),
+            DockerNetwork {
+                name: network_name.clone(),
+                driver: "bridge".to_string(),
+            },
+        );
+    }
+
     environment.insert("REDIS_URL".to_string(), "redis://redis:6379".to_string());
     if !docker_compose.services.contains_key("redis") {
         docker_compose.services.insert(
@@ -561,6 +681,18 @@ pub(crate) fn add_s3_to_docker_compose<'a>(
     docker_compose: &'a mut DockerCompose,
     environment: &mut IndexMap<String, String>,
 ) -> Result<&'a mut DockerCompose> {
+    // Ensure the network definition exists
+    let network_name = format!("{}-network", app_name);
+    if !docker_compose.networks.contains_key(&network_name) {
+        docker_compose.networks.insert(
+            network_name.clone(),
+            DockerNetwork {
+                name: network_name.clone(),
+                driver: "bridge".to_string(),
+            },
+        );
+    }
+
     environment.insert("S3_URL".to_string(), "http://minio:9000".to_string());
     environment.insert(
         "S3_BUCKET".to_string(),
@@ -672,6 +804,18 @@ pub(crate) fn add_kafka_to_docker_compose<'a>(
     docker_compose: &'a mut DockerCompose,
     environment: &mut IndexMap<String, String>,
 ) -> Result<&'a mut DockerCompose> {
+    // Ensure the network definition exists
+    let network_name = format!("{}-network", app_name);
+    if !docker_compose.networks.contains_key(&network_name) {
+        docker_compose.networks.insert(
+            network_name.clone(),
+            DockerNetwork {
+                name: network_name.clone(),
+                driver: "bridge".to_string(),
+            },
+        );
+    }
+
     environment.insert("KAFKA_BROKERS".to_string(), "kafka:29092".to_string());
     environment.insert(
         "KAFKA_CLIENT_ID".to_string(),
@@ -681,100 +825,85 @@ pub(crate) fn add_kafka_to_docker_compose<'a>(
         "KAFKA_GROUP_ID".to_string(),
         format!("{}-kafka-group", app_name),
     );
-    docker_compose.services.insert(
-        "zookeeper".to_string(),
-        DockerService {
-            image: Some("confluentinc/cp-zookeeper:latest".to_string()),
-            container_name: Some(format!("{}-zookeeper", app_name)),
-            environment: Some(IndexMap::from([
-                ("ZOOKEEPER_CLIENT_PORT".to_string(), "2181".to_string()),
-                ("ZOOKEEPER_TICK_TIME".to_string(), "2000".to_string()),
-            ])),
-            ports: Some(vec!["2181:2181".to_string()]),
-            networks: Some(vec![format!("{}-network", app_name)]),
-            healthcheck: Some(Healthcheck {
-                test: HealthTest::List(vec![
-                    "CMD-SHELL".to_string(),
-                    r#"if command -v nc >/dev/null 2>&1; then
-                        nc -z -w 3 localhost 2181 || exit 1
-                    else
-                        timeout 3 bash -c 'exec 3<>/dev/tcp/localhost/2181' 2>/dev/null || exit 1
-                    fi &&
-                    echo ruok | nc localhost 2181 | grep -q imok || exit 1"#
-                        .to_string(),
-                ]),
-                interval: "10s".to_string(),
-                timeout: "8s".to_string(),
-                retries: 5,
-                start_period: "15s".to_string(),
-                additional_properties: HashMap::new(),
-            }),
-            ..Default::default()
-        },
-    );
 
+    // Generate a deterministic cluster ID based on app name using UUID v5
+    let cluster_id = Uuid::new_v5(
+        &Uuid::NAMESPACE_DNS,
+        format!("{}-kafka-cluster", app_name).as_bytes(),
+    )
+    .to_string();
+
+    // KRaft mode (Kafka without Zookeeper)
     docker_compose.services.insert(
         "kafka".to_string(),
         DockerService {
             image: Some("confluentinc/cp-kafka:latest".to_string()),
             hostname: Some("kafka".to_string()),
             container_name: Some(format!("{}-kafka", app_name)),
-            depends_on: Some(IndexMap::from([(
-                "zookeeper".to_string(),
-                DependsOn {
-                    condition: DependencyCondition::ServiceHealthy,
-                },
-            )])),
-            ports: Some(vec!["9092:9092".to_string(), "29092:29092".to_string()]),
+            ports: Some(vec!["9092:9092".to_string(), "29092:29092".to_string(), "9093:9093".to_string()]),
             environment: Some(IndexMap::from([
-                (
-                    "KAFKA_ZOOKEEPER_CONNECT".to_string(),
-                    "zookeeper:2181".to_string(),
-                ),
                 ("KAFKA_BROKER_ID".to_string(), "1".to_string()),
+                ("KAFKA_NODE_ID".to_string(), "1".to_string()),
+                (
+                    "KAFKA_LISTENER_SECURITY_PROTOCOL_MAP".to_string(),
+                    "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT".to_string(),
+                ),
                 (
                     "KAFKA_LISTENERS".to_string(),
-                    "PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092".to_string(),
+                    "PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093,PLAINTEXT_HOST://0.0.0.0:9092".to_string(),
                 ),
                 (
                     "KAFKA_ADVERTISED_LISTENERS".to_string(),
                     "PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092".to_string(),
                 ),
                 (
-                    "KAFKA_LISTENER_SECURITY_PROTOCOL_MAP".to_string(),
-                    "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT".to_string(),
-                ),
-                (
                     "KAFKA_INTER_BROKER_LISTENER_NAME".to_string(),
                     "PLAINTEXT".to_string(),
+                ),
+                (
+                    "KAFKA_CONTROLLER_LISTENER_NAMES".to_string(),
+                    "CONTROLLER".to_string(),
+                ),
+                (
+                    "KAFKA_PROCESS_ROLES".to_string(),
+                    "broker,controller".to_string(),
+                ),
+                (
+                    "KAFKA_CONTROLLER_QUORUM_VOTERS".to_string(),
+                    "1@localhost:9093".to_string(),
+                ),
+                ("KAFKA_CLUSTER_ID".to_string(), cluster_id),
+                (
+                    "KAFKA_LOG_DIRS".to_string(),
+                    "/tmp/kraft-combined-logs".to_string(),
                 ),
                 (
                     "KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR".to_string(),
                     "1".to_string(),
                 ),
                 (
-                    "KAFKA_AUTO_CREATE_TOPICS_ENABLE".to_string(),
-                    "true".to_string(),
+                    "KAFKA_TRANSACTION_STATE_LOG_MIN_ISR".to_string(),
+                    "1".to_string(),
+                ),
+                (
+                    "KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR".to_string(),
+                    "1".to_string(),
                 ),
                 ("KAFKA_NUM_PARTITIONS".to_string(), "1".to_string()),
                 (
                     "KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS".to_string(),
                     "0".to_string(),
                 ),
+                (
+                    "KAFKA_AUTO_CREATE_TOPICS_ENABLE".to_string(),
+                    "true".to_string(),
+                ),
             ])),
             networks: Some(vec![format!("{}-network", app_name)]),
             healthcheck: Some(Healthcheck {
                 test: HealthTest::List(vec![
                     "CMD-SHELL".to_string(),
-                    r#"# First ensure Zookeeper is still healthy
-                    if command -v nc >/dev/null 2>&1; then
-                        nc -z -w 3 zookeeper 2181 || exit 1
-                        echo ruok | nc zookeeper 2181 | grep -q imok || exit 1
-                    else
-                        timeout 3 bash -c 'exec 3<>/dev/tcp/zookeeper/2181' 2>/dev/null || exit 1
-                    fi &&
-                    # Then check Kafka readiness
-                    kafka-topics --bootstrap-server kafka:29092 --list >/dev/null 2>&1 || exit 1"#
+                    "kafka-topics --bootstrap-server kafka:29092 --list >/dev/null 2>&1 || exit 1"
                         .to_string(),
                 ]),
                 interval: "15s".to_string(),
@@ -783,6 +912,50 @@ pub(crate) fn add_kafka_to_docker_compose<'a>(
                 start_period: "30s".to_string(),
                 additional_properties: HashMap::new(),
             }),
+            ..Default::default()
+        },
+    );
+
+    environment.insert(
+        "QUEUE_NAME".to_string(),
+        format!("{}-{}-dev", app_name, project_name),
+    );
+
+    docker_compose.services.insert(
+        "kafka-init".to_string(),
+        DockerService {
+            image: Some("confluentinc/cp-kafka:latest".to_string()),
+            depends_on: Some(IndexMap::from([(
+                "kafka".to_string(),
+                DependsOn {
+                    condition: DependencyCondition::ServiceHealthy,
+                },
+            )])),
+            networks: Some(vec![format!("{}-network", app_name)]),
+            entrypoint: Some(vec!["/bin/bash".to_string(), "-lc".to_string()]),
+            command: Some(Command::Simple(format!(
+                r#"set -e
+until kafka-topics --bootstrap-server kafka:29092 --list; do
+  echo 'Waiting for Kafka to be ready...'
+  sleep 2
+done
+kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic {}-{}-dev --partitions 1 --replication-factor 1 || true
+echo 'Ensure topic {}-{}-dev is fully initialized (leader assigned)'
+for i in {{1..30}}; do
+  DESC=$(kafka-topics --bootstrap-server kafka:29092 --describe --topic {}-{}-dev || true)
+  echo "$DESC"
+  if echo "$DESC" | grep -q "Leader:"; then
+    if ! echo "$DESC" | grep -q "Leader: -1"; then
+      echo 'Topic leader assigned.'
+      break
+    fi
+  fi
+  echo 'Waiting for topic leader assignment...'
+  sleep 2
+done
+echo 'Topic {}-{}-dev ready'"#,
+                app_name, project_name, app_name, project_name, app_name, project_name, app_name, project_name
+            ))),
             ..Default::default()
         },
     );
@@ -806,6 +979,18 @@ pub(crate) fn add_database_to_docker_compose(
         ManifestData::Worker(worker_data) => &worker_data.app_name,
         _ => unreachable!(),
     };
+
+    // Ensure the network definition exists
+    let network_name = format!("{}-network", app_name);
+    if !docker_compose.networks.contains_key(&network_name) {
+        docker_compose.networks.insert(
+            network_name.clone(),
+            DockerNetwork {
+                name: network_name.clone(),
+                driver: "bridge".to_string(),
+            },
+        );
+    }
 
     let database = match manifest_data {
         ManifestData::Service(service_data) => &service_data.database,
@@ -846,7 +1031,7 @@ pub(crate) fn add_database_to_docker_compose(
                         ])),
                         networks: Some(vec![format!("{}-network", app_name)]),
                         volumes: Some(vec![format!(
-                            "{}-postgresql-data:/var/lib/postgresql/data",
+                            "{}-postgresql-data:/var/lib/postgresql",
                             app_name
                         )]),
                         healthcheck: Some(Healthcheck {
@@ -1318,6 +1503,70 @@ fn create_base_service(
     }
 }
 
+fn add_iam_environment_variables_to_docker_compose(
+    app_name: &str,
+    service_name: &str,
+    port_number: i32,
+    projects: Vec<ProjectEntry>,
+    docker_compose: &DockerCompose,
+    environment: &mut IndexMap<String, String>,
+) -> Result<()> {
+    let mut secret_bytes = Vec::new();
+    secret_bytes.extend_from_slice(
+        Uuid::new_v5(
+            &Uuid::NAMESPACE_DNS,
+            format!("{}-hmac-1", app_name).as_bytes(),
+        )
+        .as_bytes(),
+    );
+    secret_bytes.extend_from_slice(
+        Uuid::new_v5(
+            &Uuid::NAMESPACE_DNS,
+            format!("{}-hmac-2", app_name).as_bytes(),
+        )
+        .as_bytes(),
+    );
+    let hmac_secret = STANDARD.encode(&secret_bytes);
+    environment.insert("HMAC_SECRET_KEY".to_string(), hmac_secret);
+
+    let iam_project = projects.iter().find(|project| project.name == "iam");
+    let iam_project_variant = iam_project
+        .unwrap()
+        .variant
+        .as_ref()
+        .unwrap()
+        .parse::<Module>()
+        .unwrap();
+
+    let iam_port = if service_name == "iam" {
+        port_number
+    } else {
+        docker_compose
+            .services
+            .get("iam")
+            .unwrap()
+            .ports
+            .as_ref()
+            .unwrap()[0]
+            .split(":")
+            .next()
+            .unwrap()
+            .parse::<i32>()
+            .unwrap()
+    };
+
+    environment.insert(
+        "JWKS_PUBLIC_KEY_URL".to_string(),
+        match iam_project_variant {
+            Module::BaseIam => "replace-with-jwks-public-key-url".to_string(),
+            Module::BetterAuthIam => format!("http://iam:{}/api/auth/jwks", iam_port).to_string(),
+            _ => "replace-with-jwks-public-key-url".to_string(),
+        },
+    );
+
+    Ok(())
+}
+
 pub(crate) fn add_service_definition_to_docker_compose(
     manifest_data: &ServiceManifestData,
     base_path: &Path,
@@ -1364,6 +1613,21 @@ pub(crate) fn add_service_definition_to_docker_compose(
             "STRIPE_API_KEY".to_string(),
             "replace-with-stripe-api-key".to_string(),
         );
+        environment.insert(
+            "STRIPE_WEBHOOK_SECRET".to_string(),
+            "replace-with-stripe-webhook-secret".to_string(),
+        );
+    }
+
+    if manifest_data.is_iam_configured {
+        add_iam_environment_variables_to_docker_compose(
+            &manifest_data.app_name,
+            &manifest_data.service_name,
+            port_number,
+            manifest_data.projects.clone(),
+            &docker_compose,
+            &mut environment,
+        )?;
     }
 
     if manifest_data.is_cache_enabled {
@@ -1530,6 +1794,17 @@ pub(crate) fn add_worker_definition_to_docker_compose(
         .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
     }
 
+    if manifest_data.is_iam_configured {
+        add_iam_environment_variables_to_docker_compose(
+            &manifest_data.app_name,
+            &manifest_data.worker_name,
+            port_number,
+            manifest_data.projects.clone(),
+            &docker_compose,
+            &mut environment,
+        )?;
+    }
+
     let volumes = vec![
         format!(
             "{}/{}:/{}/{}",
@@ -1575,25 +1850,40 @@ pub(crate) fn add_worker_definition_to_docker_compose(
 
     let worker_service_name = format!("{}-worker", manifest_data.worker_name);
     if !docker_compose.services.contains_key(&worker_service_name) {
-        docker_compose.services.insert(
-            worker_service_name.clone(),
-            create_base_service(
-                &manifest_data.app_name,
-                &manifest_data.worker_name,
-                &manifest_data.runtime,
-                &manifest_data.database,
-                manifest_data.is_cache_enabled,
-                false,
-                manifest_data.is_in_memory_database,
-                None,
-                environment.clone(),
-                volumes.clone(),
-                Some("worker"),
-                "dev:worker",
-                vec![server_service_name.clone()],
-                &context_path,
-            ),
+        let mut worker_dependencies = vec![server_service_name.clone()];
+
+        if manifest_data.is_kafka_enabled {
+            worker_dependencies.push("kafka-init".to_string());
+        }
+
+        let mut worker_service = create_base_service(
+            &manifest_data.app_name,
+            &manifest_data.worker_name,
+            &manifest_data.runtime,
+            &manifest_data.database,
+            manifest_data.is_cache_enabled,
+            false,
+            manifest_data.is_in_memory_database,
+            None,
+            environment.clone(),
+            volumes.clone(),
+            Some("worker"),
+            "dev:worker",
+            worker_dependencies,
+            &context_path,
         );
+
+        if manifest_data.is_kafka_enabled {
+            if let Some(ref mut depends_on) = worker_service.depends_on {
+                if let Some(kafka_init_dep) = depends_on.get_mut("kafka-init") {
+                    kafka_init_dep.condition = DependencyCondition::ServiceCompletedSuccessfully;
+                }
+            }
+        }
+
+        docker_compose
+            .services
+            .insert(worker_service_name.clone(), worker_service);
     }
 
     Ok(to_string(&docker_compose)
@@ -1836,5 +2126,76 @@ mod tests {
         assert_eq!(lines[7], "RUN npm install");
         assert_eq!(lines[8], "COPY extra .");
         assert_eq!(lines[9], "RUN npm run build");
+    }
+
+    #[test]
+    fn test_parse_environment_value_rejects_unsupported_types() {
+        use serde_yml::Value;
+
+        // Test that Number type is rejected
+        let number_value = Value::Number(42.into());
+        let result = parse_environment_value(number_value);
+        assert!(result.is_err(), "Number type should be rejected");
+        let err = result.unwrap_err();
+        assert!(
+            err.to_string().contains("parse_environment_value"),
+            "Error should reference parse_environment_value"
+        );
+        assert!(
+            err.to_string().contains("Number"),
+            "Error should mention the type"
+        );
+
+        // Test that Bool type is rejected
+        let bool_value = Value::Bool(true);
+        let result = parse_environment_value(bool_value);
+        assert!(result.is_err(), "Bool type should be rejected");
+        let err = result.unwrap_err();
+        assert!(
+            err.to_string().contains("parse_environment_value"),
+            "Error should reference parse_environment_value"
+        );
+        assert!(
+            err.to_string().contains("Bool"),
+            "Error should mention the type"
+        );
+    }
+
+    #[test]
+    fn test_parse_environment_value_supports_valid_types() {
+        use serde_yml::Value;
+
+        // Test Null
+        let result = parse_environment_value(Value::Null);
+        assert!(result.is_ok());
+        assert!(result.unwrap().is_none());
+
+        // Test String with key=value
+        let result = parse_environment_value(Value::String("KEY=value".to_string()));
+        assert!(result.is_ok());
+        let env = result.unwrap().unwrap();
+        assert_eq!(env.get("KEY"), Some(&"value".to_string()));
+
+        // Test Sequence
+        let seq = Value::Sequence(vec![
+            Value::String("KEY1=value1".to_string()),
+            Value::String("KEY2=value2".to_string()),
+        ]);
+        let result = parse_environment_value(seq);
+        assert!(result.is_ok());
+        let env = result.unwrap().unwrap();
+        assert_eq!(env.get("KEY1"), Some(&"value1".to_string()));
+        assert_eq!(env.get("KEY2"), Some(&"value2".to_string()));
+
+        // Test Mapping
+        let mut map = serde_yml::Mapping::new();
+        map.insert(
+            Value::String("KEY".to_string()),
+            Value::String("value".to_string()),
+        );
+        let result = parse_environment_value(Value::Mapping(map));
+        assert!(result.is_ok());
+        let env = result.unwrap().unwrap();
+        assert_eq!(env.get("KEY"), Some(&"value".to_string()));
     }
 }

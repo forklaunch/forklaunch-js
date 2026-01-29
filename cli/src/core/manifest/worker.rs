@@ -76,6 +76,12 @@ config_struct!(
         pub(crate) worker_consumer_factory: String,
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) worker_producer_factory: String,
+
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) is_iam_configured: bool,
+
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) with_mappers: bool,
     }
 );
 
@@ -100,13 +106,13 @@ impl InitializableManifestConfig for WorkerManifestData {
             .iter()
             .find(|p| p.name == worker_metadata.project_name.clone())
             .unwrap();
-        let database = worker_metadata.database.clone().map(|d| d).or(project_entry
-            .resources
-            .as_ref()
-            .unwrap()
-            .database
-            .as_ref()
-            .map(|d| d.parse::<Database>().unwrap()));
+        let database = worker_metadata.database.clone().or_else(|| {
+            project_entry
+                .resources
+                .as_ref()
+                .and_then(|r| r.database.as_ref())
+                .map(|d| d.parse::<Database>().unwrap())
+        });
         let worker_type = worker_metadata.worker_type.clone().unwrap_or(
             project_entry
                 .metadata
@@ -144,17 +150,20 @@ impl InitializableManifestConfig for WorkerManifestData {
             is_cache_enabled: worker_metadata
                 .infrastructure
                 .as_ref()
-                .unwrap()
-                .contains(&Infrastructure::Redis)
-                || project_entry.resources.as_ref().unwrap().cache.is_some(),
+                .map_or(false, |i| i.contains(&Infrastructure::Redis))
+                || project_entry
+                    .resources
+                    .as_ref()
+                    .map_or(false, |r| r.cache.is_some()),
             is_database_enabled: worker_metadata.database.is_some()
-                || project_entry.resources.as_ref().unwrap().database.is_some(),
+                || project_entry
+                    .resources
+                    .as_ref()
+                    .map_or(false, |r| r.database.is_some()),
             is_kafka_enabled: project_entry
                 .resources
                 .as_ref()
-                .unwrap()
-                .queue
-                .as_ref()
+                .and_then(|r| r.queue.as_ref())
                 .is_some_and(|queue| queue == "kafka"),
 
             worker_type: worker_type.to_string(),
@@ -162,6 +171,16 @@ impl InitializableManifestConfig for WorkerManifestData {
             default_worker_options: get_default_worker_options(&worker_type),
             worker_consumer_factory: get_worker_consumer_factory(&worker_type, &worker_name),
             worker_producer_factory: get_worker_producer_factory(&worker_type),
+
+            is_iam_configured: self.projects.iter().any(|project_entry| {
+                if project_entry.name == "iam" {
+                    return true;
+                }
+                return false;
+            }),
+
+            // Default to false, will be set by CLI flag
+            with_mappers: false,
             ..self.clone()
         }
     }

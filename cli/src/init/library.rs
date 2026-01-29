@@ -298,7 +298,7 @@ impl CliCommand for LibraryCommand {
             &mut stdout,
             "description",
             matches,
-            "library description (optional)",
+            "library description",
             None,
         )?;
 
@@ -338,6 +338,11 @@ impl CliCommand for LibraryCommand {
             is_node: manifest_data.is_node,
             is_vitest: manifest_data.is_vitest,
             is_jest: manifest_data.is_jest,
+            platform_application_id: manifest_data.platform_application_id.clone(),
+            platform_organization_id: manifest_data.platform_organization_id.clone(),
+            release_version: manifest_data.release_version.clone(),
+            release_git_commit: manifest_data.release_git_commit.clone(),
+            release_git_branch: manifest_data.release_git_branch.clone(),
 
             // Library-specific fields
             library_name: library_name.clone(),

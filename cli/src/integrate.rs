@@ -9,7 +9,7 @@ use toml::to_string_pretty;
 
 use crate::{
     CliCommand,
-    constants::{ERROR_FAILED_TO_SEND_REQUEST, get_api_url},
+    constants::{ERROR_FAILED_TO_SEND_REQUEST, get_platform_management_api_url},
     core::{
         base_path::{RequiredLocation, find_app_root_path},
         command::command,
@@ -77,7 +77,11 @@ impl CliCommand for IntegrateCommand {
         writeln!(stdout, "[INFO] Validating application on platform...")?;
         stdout.reset()?;
 
-        let url = format!("{}/applications/{}", get_api_url(), application_id);
+        let url = format!(
+            "{}/applications/{}",
+            get_platform_management_api_url(),
+            application_id
+        );
         let client = Client::new();
         let response = client
             .get(&url)

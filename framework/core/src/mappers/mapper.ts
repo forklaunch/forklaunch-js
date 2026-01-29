@@ -13,29 +13,35 @@ export function requestMapper<
   DomainSchema extends IdiomaticSchema<SV>,
   Entity,
   AdditionalArgs extends unknown[] = []
->(
-  schemaValidator: SV,
-  domainSchema: DomainSchema,
-  _entityConstructor: Constructor<Entity>,
+>({
+  schemaValidator,
+  schema,
+  // eslint-disable-next-line
+  entity,
+  mapperDefinition
+}: {
+  schemaValidator: SV;
+  schema: DomainSchema;
+  entity: Constructor<Entity>;
   mapperDefinition: {
     toEntity: (
       dto: Schema<DomainSchema, SV>,
       ...args: AdditionalArgs
     ) => Promise<Entity>;
-  }
-): {
+  };
+}): {
   schema: DomainSchema;
 } & typeof mapperDefinition {
   const sv = schemaValidator as SchemaValidator;
   return {
     ...mapperDefinition,
-    schema: domainSchema,
+    schema,
 
     toEntity: async (
       dto: Schema<DomainSchema, SV>,
       ...args: AdditionalArgs
     ) => {
-      const parsedSchema = sv.parse(sv.schemify(domainSchema), dto);
+      const parsedSchema = sv.parse(sv.schemify(schema), dto);
       if (!parsedSchema.ok) {
         throw new Error(prettyPrintParseErrors(parsedSchema.errors, 'DTO'));
       }
@@ -52,17 +58,23 @@ export function responseMapper<
   DomainSchema extends IdiomaticSchema<SV>,
   Entity,
   AdditionalArgs extends unknown[] = []
->(
-  schemaValidator: SV,
-  domainSchema: DomainSchema,
-  _entityConstructor: Constructor<Entity>,
+>({
+  schemaValidator,
+  schema,
+  // eslint-disable-next-line
+  entity,
+  mapperDefinition
+}: {
+  schemaValidator: SV;
+  schema: DomainSchema;
+  entity: Constructor<Entity>;
   mapperDefinition: {
     toDto: (
       entity: Entity,
       ...args: AdditionalArgs
     ) => Promise<Schema<DomainSchema, SV>>;
-  }
-): Prettify<
+  };
+}): Prettify<
   {
     schema: DomainSchema;
   } & typeof mapperDefinition
@@ -70,11 +82,11 @@ export function responseMapper<
   const sv = schemaValidator as SchemaValidator;
   return {
     ...mapperDefinition,
-    schema: domainSchema,
+    schema,
 
     toDto: async (entity: Entity, ...args: AdditionalArgs) => {
       const domain = await mapperDefinition.toDto(entity, ...args);
-      const parsedSchema = sv.parse(sv.schemify(domainSchema), domain);
+      const parsedSchema = sv.parse(sv.schemify(schema), domain);
       if (!parsedSchema.ok) {
         throw new Error(prettyPrintParseErrors(parsedSchema.errors, 'DTO'));
       }

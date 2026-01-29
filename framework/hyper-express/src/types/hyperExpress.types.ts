@@ -33,7 +33,9 @@ export interface InternalRequest<
   LocalsObj extends Record<string, unknown>,
   Version extends string,
   SessionSchema extends SessionObject<SV>
-> extends ForklaunchRequest<
+>
+  extends
+    ForklaunchRequest<
       SV,
       P,
       ReqBody,
@@ -66,7 +68,9 @@ export interface InternalResponse<
   ResHeaders extends Record<string, string>,
   LocalsObj extends Record<string, unknown>,
   Version extends string
-> extends ForklaunchResponse<
+>
+  extends
+    ForklaunchResponse<
       ExpressResponse,
       ResBodyMap,
       ResHeaders,

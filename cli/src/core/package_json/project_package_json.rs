@@ -190,6 +190,8 @@ pub(crate) struct ProjectDependencies {
     pub(crate) stripe: Option<String>,
     pub(crate) uuid: Option<String>,
     pub(crate) zod: Option<String>,
+    pub(crate) pino: Option<String>,
+    pub(crate) ioredis: Option<String>,
 
     pub(crate) additional_deps: HashMap<String, String>,
 }
@@ -329,6 +331,12 @@ impl Serialize for ProjectDependencies {
         }
         if let Some(ref v) = self.zod {
             map.serialize_entry("zod", v)?;
+        }
+        if let Some(ref v) = self.pino {
+            map.serialize_entry("pino", v)?;
+        }
+        if let Some(ref v) = self.ioredis {
+            map.serialize_entry("ioredis", v)?;
         }
 
         for (key, value) in &self.additional_deps {
@@ -511,6 +519,8 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
                         "stripe" => deps.stripe = Some(value),
                         "uuid" => deps.uuid = Some(value),
                         "zod" => deps.zod = Some(value),
+                        "pino" => deps.pino = Some(value),
+                        "ioredis" => deps.ioredis = Some(value),
                         _ => {
                             deps.additional_deps.insert(key, value);
                         }
@@ -551,6 +561,10 @@ pub(crate) struct ProjectDevDependencies {
     pub(crate) types_qs: Option<String>,
     #[serde(rename = "@types/uuid", skip_serializing_if = "Option::is_none")]
     pub(crate) types_uuid: Option<String>,
+    #[serde(rename = "@types/pino", skip_serializing_if = "Option::is_none")]
+    pub(crate) types_pino: Option<String>,
+    #[serde(rename = "@types/ioredis", skip_serializing_if = "Option::is_none")]
+    pub(crate) types_ioredis: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) eslint: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -559,6 +573,8 @@ pub(crate) struct ProjectDevDependencies {
     pub(crate) prettier: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) tsx: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) pino: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) ioredis: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -598,10 +614,13 @@ impl<'de> Deserialize<'de> for ProjectDevDependencies {
                     types_jest: None,
                     types_qs: None,
                     types_uuid: None,
+                    types_pino: None,
+                    types_ioredis: None,
                     eslint: None,
                     oxlint: None,
                     prettier: None,
                     tsx: None,
+                    pino: None,
                     ioredis: None,
                     typedoc: None,
                     typescript_eslint: None,
@@ -621,10 +640,14 @@ impl<'de> Deserialize<'de> for ProjectDevDependencies {
                         "@types/jest" => deps.types_jest = Some(value),
                         "@types/qs" => deps.types_qs = Some(value),
                         "@types/uuid" => deps.types_uuid = Some(value),
+                        "@types/pino" => deps.types_pino = Some(value),
+                        "@types/ioredis" => deps.types_ioredis = Some(value),
                         "eslint" => deps.eslint = Some(value),
                         "oxlint" => deps.oxlint = Some(value),
                         "prettier" => deps.prettier = Some(value),
                         "tsx" => deps.tsx = Some(value),
+                        "pino" => deps.pino = Some(value),
+                        "ioredis" => deps.ioredis = Some(value),
                         "typedoc" => deps.typedoc = Some(value),
                         "typescript-eslint" => deps.typescript_eslint = Some(value),
                         _ => {

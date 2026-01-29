@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/implementation-worker-kafka",
-  "version": "0.8.6",
+  "version": "0.9.4",
   "description": "Kafka implementation for forklaunch workers",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -42,7 +42,7 @@
     "lib/**"
   ],
   "scripts": {
-    "build": "tsc --noEmit && tsup producers/index.ts consumers/index.ts domain/schemas/index.ts domain/types/index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean && if [ -f eject-package.bash ]; then pnpm package:eject; fi",
+    "build": "tsgo --noEmit && tsup producers/index.ts consumers/index.ts domain/schemas/index.ts domain/types/index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean && if [ -f eject-package.bash ]; then pnpm package:eject; fi",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
@@ -54,19 +54,19 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/core": "^0.15.12",
+    "@forklaunch/core": "^0.17.3",
     "@forklaunch/interfaces-worker": "workspace:*",
-    "@forklaunch/internal": "^0.3.22",
-    "@sinclair/typebox": "^0.34.41",
+    "@forklaunch/internal": "^0.3.27",
+    "@sinclair/typebox": "^0.34.47",
     "kafkajs": "^2.2.4",
-    "zod": "^4.1.12"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@typescript/native-preview": "7.0.0-dev.20251027.1",
+    "@typescript/native-preview": "7.0.0-dev.20260122.4",
     "depcheck": "^1.4.7",
-    "eslint": "^9.38.0",
-    "prettier": "^3.6.2",
-    "typedoc": "^0.28.14",
-    "typescript-eslint": "^8.46.2"
+    "eslint": "^9.39.2",
+    "prettier": "^3.8.1",
+    "typedoc": "^0.28.16",
+    "typescript-eslint": "^8.53.1"
   }
 }

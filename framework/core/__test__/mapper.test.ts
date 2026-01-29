@@ -31,23 +31,33 @@ const TestSchema = {
   age: number
 };
 
-const TestRequestMapper = requestMapper(SV, TestSchema, TestEntity, {
-  toEntity: async (dto, arg1: string, arg2?: string) => {
-    const entity = new TestEntity();
-    entity.id = dto.id;
-    entity.name = dto.name;
-    entity.age = dto.age;
-    return entity;
+const TestRequestMapper = requestMapper({
+  schemaValidator: SV,
+  schema: TestSchema,
+  entity: TestEntity,
+  mapperDefinition: {
+    toEntity: async (dto, arg1: string, arg2?: string) => {
+      const entity = new TestEntity();
+      entity.id = dto.id;
+      entity.name = dto.name;
+      entity.age = dto.age;
+      return entity;
+    }
   }
 });
 
-const TestResponseMapper = responseMapper(SV, TestSchema, TestEntity, {
-  toDto: async (entity, arg1: string, arg2?: string) => {
-    return {
-      id: entity.id,
-      name: entity.name,
-      age: entity.age
-    };
+const TestResponseMapper = responseMapper({
+  schemaValidator: SV,
+  schema: TestSchema,
+  entity: TestEntity,
+  mapperDefinition: {
+    toDto: async (entity, arg1: string, arg2?: string) => {
+      return {
+        id: entity.id,
+        name: entity.name,
+        age: entity.age
+      };
+    }
   }
 });
 

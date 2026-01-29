@@ -3,10 +3,11 @@ import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { MikroORM } from '@mikro-orm/core';
 import { betterAuth, BetterAuthOptions } from 'better-auth';
-import { openAPI } from 'better-auth/plugins';
+import { jwt, openAPI } from 'better-auth/plugins';
 
-type Plugins = [ReturnType<typeof openAPI>];
+type Plugins = [ReturnType<typeof jwt>, ReturnType<typeof openAPI>];
 const plugins: Plugins = [
+  jwt(),
   openAPI({
     disableDefaultReference: true
   })

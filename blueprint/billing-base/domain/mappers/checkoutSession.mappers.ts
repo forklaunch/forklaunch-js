@@ -7,15 +7,15 @@ import { PaymentMethodEnum } from '../enum/paymentMethod.enum';
 import { StatusEnum } from '../enum/status.enum';
 import { CheckoutSessionSchemas } from '../schemas';
 
-export const CreateCheckoutSessionMapper = requestMapper(
+export const CreateCheckoutSessionMapper = requestMapper({
   schemaValidator,
-  CheckoutSessionSchemas.CreateCheckoutSessionSchema(
+  schema: CheckoutSessionSchemas.CreateCheckoutSessionSchema(
     PaymentMethodEnum,
     CurrencyEnum,
     StatusEnum
   ),
-  CheckoutSession,
-  {
+  entity: CheckoutSession,
+  mapperDefinition: {
     toEntity: async (dto, em: EntityManager) => {
       return CheckoutSession.create(
         {
@@ -27,34 +27,34 @@ export const CreateCheckoutSessionMapper = requestMapper(
       );
     }
   }
-);
+});
 
-export const UpdateCheckoutSessionMapper = requestMapper(
+export const UpdateCheckoutSessionMapper = requestMapper({
   schemaValidator,
-  CheckoutSessionSchemas.UpdateCheckoutSessionSchema(
+  schema: CheckoutSessionSchemas.UpdateCheckoutSessionSchema(
     PaymentMethodEnum,
     CurrencyEnum,
     StatusEnum
   ),
-  CheckoutSession,
-  {
+  entity: CheckoutSession,
+  mapperDefinition: {
     toEntity: async (dto, em: EntityManager) => {
       return CheckoutSession.update(dto, em);
     }
   }
-);
+});
 
-export const CheckoutSessionMapper = responseMapper(
+export const CheckoutSessionMapper = responseMapper({
   schemaValidator,
-  CheckoutSessionSchemas.CheckoutSessionSchema(
+  schema: CheckoutSessionSchemas.CheckoutSessionSchema(
     PaymentMethodEnum,
     CurrencyEnum,
     StatusEnum
   ),
-  CheckoutSession,
-  {
+  entity: CheckoutSession,
+  mapperDefinition: {
     toDto: async (entity: CheckoutSession) => {
       return await entity.read();
     }
   }
-);
+});

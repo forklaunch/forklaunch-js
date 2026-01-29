@@ -268,7 +268,8 @@ const runtimeDependencies = environmentConfig.chain({
             credentials: {
               accessKeyId: S3_ACCESS_KEY_ID,
               secretAccessKey: S3_SECRET_ACCESS_KEY
-            }
+            },
+            forcePathStyle: true // Required for MinIO and path-style S3
           }
         },
         {
@@ -368,7 +369,7 @@ const serviceDependencies = runtimeDependencies.chain({
       type<KafkaWorkerConsumer<SampleWorkerEventRecord, KafkaWorkerOptions>>()
     ),
     factory:
-      ({ SAMPLE_WORKER_QUEUE, KafkaWorkerOptions }) =>
+      ({ SAMPLE_WORKER_QUEUE, KafkaWorkerOptions, OpenTelemetryCollector }) =>
       (
         processEventsFunction: WorkerProcessFunction<SampleWorkerEventRecord>,
         failureHandler: WorkerFailureHandler<SampleWorkerEventRecord>
@@ -377,7 +378,8 @@ const serviceDependencies = runtimeDependencies.chain({
           SAMPLE_WORKER_QUEUE,
           KafkaWorkerOptions,
           processEventsFunction,
-          failureHandler
+          failureHandler,
+          OpenTelemetryCollector
         )
   },
   SampleWorkerDatabaseProducer: {

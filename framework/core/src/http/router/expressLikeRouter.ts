@@ -4,7 +4,6 @@ import { ParsedQs } from 'qs';
 import {
   EmptyObject,
   hashString,
-  isRecord,
   Prettify,
   PrettyCamelCase,
   safeStringify,
@@ -14,13 +13,10 @@ import {
   toRecord,
   TypeSafeFunction
 } from '@forklaunch/common';
-import { hasVersionedSchema } from '../guards/hasVersionedSchema';
 import { isConstrainedForklaunchRouter } from '../guards/isConstrainedForklaunchRouter';
 import { isExpressLikeSchemaHandler } from '../guards/isExpressLikeSchemaHandler';
 import { isForklaunchExpressLikeRouter } from '../guards/isForklaunchExpressLikeRouter';
 import { isForklaunchRouter } from '../guards/isForklaunchRouter';
-import { isHttpContractDetails } from '../guards/isHttpContractDetails';
-import { isPathParamHttpContractDetails } from '../guards/isPathParamContractDetails';
 import { isSdkHandler } from '../guards/isSdkHandler';
 import { isTypedHandler } from '../guards/isTypedHandler';
 import {
@@ -29,10 +25,7 @@ import {
   PathBasedHandler,
   PathOrMiddlewareBasedHandler
 } from '../interfaces/expressLikeRouter.interface';
-import { parseRequestAuth } from '../middleware/request/auth.middleware';
 import { createContext } from '../middleware/request/createContext.middleware';
-import { enrichDetails } from '../middleware/request/enrichDetails.middleware';
-import { parse } from '../middleware/request/parse.middleware';
 import { OpenTelemetryCollector } from '../telemetry/openTelemetryCollector';
 import {
   ExpressLikeHandler,
@@ -44,16 +37,12 @@ import {
 } from '../types/apiDefinition.types';
 import {
   Body,
-  ContractDetails,
   HeadersObject,
-  HttpMethod,
   Method,
   ParamsDictionary,
   ParamsObject,
   PathParamHttpContractDetails,
-  PathParamMethod,
   QueryObject,
-  ResponseCompiledSchema,
   ResponsesObject,
   SchemaAuthMethods,
   SessionObject,
@@ -74,10 +63,212 @@ import {
   ForklaunchRouter
 } from '../types/router.types';
 import { FetchFunction, SdkHandlerObject } from '../types/sdk.types';
+import { discriminateBody } from './discriminateBody';
 import {
-  discriminateBody,
-  discriminateResponseBodies
-} from './discriminateBody';
+  compileRouteSchemas,
+  resolveContractDetailsAndHandlers,
+  resolveRouteMiddlewares,
+  validateContractDetails
+} from './routerSharedLogic';
+
+/**
+ * Extracts route middleware and handlers from route registration arguments.
+ * This is a port function that converts typed handlers into Express middleware
+ * without actually registering them on a router.
+ *
+ * @template SV - The schema validator type.
+ * @template Name - The route name.
+ * @template ContractMethod - The HTTP method.
+ * @template Path - The route path.
+ * @template P - The type of request parameters.
+ * @template ResBodyMap - The type of response body map.
+ * @template ReqBody - The type of request body.
+ * @template ReqQuery - The type of request query.
+ * @template ReqHeaders - The type of request headers.
+ * @template ResHeaders - The type of response headers.
+ * @template LocalsObj - The type of local variables.
+ * @template VersionedApi - The versioned API schema.
+ * @template RouterSession - The router session type.
+ * @template BaseRequest - The base request type.
+ * @template BaseResponse - The base response type.
+ * @template NextFunction - The next function type.
+ * @template Auth - The auth schema.
+ * @template RouterHandler - The router handler type.
+ * @param {object} params - The parameters for extracting route handlers.
+ * @param {ContractMethod} params.method - The HTTP method.
+ * @param {Path} params.path - The route path.
+ * @param {string} params.basePath - The base path for the router.
+ * @param {SV} params.schemaValidator - The schema validator.
+ * @param {ContractDetailsOrMiddlewareOrTypedHandler<SV, Name, ContractMethod, Path, P, ResBodyMap, ReqBody, ReqQuery, ReqHeaders, ResHeaders, LocalsObj, VersionedApi, BaseRequest, BaseResponse, NextFunction, RouterSession, Auth>} params.contractDetailsOrMiddlewareOrTypedHandler - The contract details or typed handler.
+ * @param {MiddlewareOrMiddlewareWithTypedHandler<SV, Name, ContractMethod, Path, P, ResBodyMap, ReqBody, ReqQuery, ReqHeaders, ResHeaders, LocalsObj, VersionedApi, BaseRequest, BaseResponse, NextFunction, RouterSession, Auth>[]} params.middlewareOrMiddlewareAndTypedHandler - Additional middleware or typed handlers.
+ * @param {OpenTelemetryCollector<MetricsDefinition>} params.openTelemetryCollector - The OpenTelemetry collector.
+ * @param {RouterHandler[]} params.postEnrichMiddleware - Additional middleware to run after enrichment.
+ * @param {ExpressLikeRouterOptions<SV, RouterSession> | undefined} params.routerOptions - Router options.
+ * @returns {{ middlewares: RouterHandler[]; controllerHandler: ExpressLikeHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, ReqHeaders, ResHeaders, LocalsObj, VersionedRequests, VersionedResponses, RouterSession, BaseRequest, BaseResponse, NextFunction> }} - The extracted middlewares and controller handler.
+ */
+export function extractRouteHandlers<
+  SV extends AnySchemaValidator,
+  Name extends string,
+  ContractMethod extends Method,
+  Path extends `/${string}`,
+  P extends ParamsObject<SV>,
+  ResBodyMap extends ResponsesObject<SV>,
+  ReqBody extends Body<SV>,
+  ReqQuery extends QueryObject<SV>,
+  ReqHeaders extends HeadersObject<SV>,
+  ResHeaders extends HeadersObject<SV>,
+  LocalsObj extends Record<string, unknown>,
+  VersionedApi extends VersionSchema<SV, ContractMethod>,
+  RouterSession extends SessionObject<SV>,
+  BaseRequest,
+  BaseResponse,
+  NextFunction,
+  Auth extends SchemaAuthMethods<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    VersionedApi,
+    BaseRequest
+  >,
+  RouterHandler
+>(params: {
+  method: ContractMethod;
+  path: Path;
+  basePath: string;
+  schemaValidator: SV;
+  contractDetailsOrMiddlewareOrTypedHandler: ContractDetailsOrMiddlewareOrTypedHandler<
+    SV,
+    Name,
+    ContractMethod,
+    Path,
+    P,
+    ResBodyMap,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    ResHeaders,
+    LocalsObj,
+    VersionedApi,
+    BaseRequest,
+    BaseResponse,
+    NextFunction,
+    RouterSession,
+    Auth
+  >;
+  middlewareOrMiddlewareAndTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+    SV,
+    Name,
+    ContractMethod,
+    Path,
+    P,
+    ResBodyMap,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    ResHeaders,
+    LocalsObj,
+    VersionedApi,
+    BaseRequest,
+    BaseResponse,
+    NextFunction,
+    RouterSession,
+    Auth
+  >[];
+  openTelemetryCollector?: OpenTelemetryCollector<MetricsDefinition>;
+  postEnrichMiddleware?: RouterHandler[];
+  routerOptions?: ExpressLikeRouterOptions<SV, RouterSession>;
+}): {
+  middlewares: RouterHandler[];
+  controllerHandler: ExpressLikeSchemaHandler<
+    SV,
+    P,
+    ResBodyMap,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    ResHeaders,
+    LocalsObj,
+    VersionedApi,
+    RouterSession,
+    BaseRequest,
+    BaseResponse,
+    NextFunction
+  >;
+} {
+  const schemaValidator = params.schemaValidator as SV & SchemaValidator;
+
+  const { contractDetails, handlers } = resolveContractDetailsAndHandlers<
+    SV,
+    Name,
+    ContractMethod,
+    Path,
+    P,
+    ResBodyMap,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    ResHeaders,
+    LocalsObj,
+    VersionedApi,
+    RouterSession,
+    BaseRequest,
+    BaseResponse,
+    NextFunction,
+    Auth
+  >(
+    params.contractDetailsOrMiddlewareOrTypedHandler,
+    params.middlewareOrMiddlewareAndTypedHandler
+  );
+
+  validateContractDetails(contractDetails, schemaValidator);
+
+  const { requestSchema, responseSchemas } = compileRouteSchemas(
+    contractDetails,
+    schemaValidator
+  );
+
+  const { middlewares, controllerHandler } = resolveRouteMiddlewares<
+    SV,
+    Name,
+    ContractMethod,
+    Path,
+    P,
+    ResBodyMap,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    ResHeaders,
+    LocalsObj,
+    VersionedApi,
+    RouterSession,
+    BaseRequest,
+    BaseResponse,
+    NextFunction,
+    Auth,
+    RouterHandler
+  >({
+    basePath: params.basePath,
+    path: params.path,
+    contractDetails,
+    requestSchema,
+    responseSchemas,
+    openTelemetryCollector: params.openTelemetryCollector,
+    routerOptions: params.routerOptions,
+    postEnrichMiddleware: params.postEnrichMiddleware ?? [],
+    handlers,
+    includeCreateContext: false
+  });
+
+  return {
+    middlewares: [
+      createContext(schemaValidator) as RouterHandler,
+      ...middlewares
+    ],
+    controllerHandler
+  };
+}
 
 /**
  * A class that represents an Express-like router.
@@ -93,8 +284,7 @@ export class ForklaunchExpressLikeRouter<
   RouterSession extends SessionObject<SV>,
   FetchMap extends Record<string, unknown> = EmptyObject,
   Sdk extends Record<string, unknown> = EmptyObject
-> implements ConstrainedForklaunchRouter<SV, RouterHandler>
-{
+> implements ConstrainedForklaunchRouter<SV, RouterHandler> {
   requestHandler!: RouterHandler;
   routers: ForklaunchRouter<SV>[] = [];
   routes: ForklaunchRoute<SV>[] = [];
@@ -144,91 +334,6 @@ export class ForklaunchExpressLikeRouter<
    * @param {PathParamHttpContractDetails<SV> | HttpContractDetails<SV>} contractDetails - The contract details.
    * @returns {MiddlewareHandler<SV>[]} - The resolved middlewares.
    */
-  #resolveMiddlewares<
-    P extends ParamsObject<SV>,
-    ContractMethod extends Method,
-    ResBodyMap extends ResponsesObject<SV>,
-    ReqBody extends Body<SV>,
-    ReqQuery extends QueryObject<SV>,
-    ReqHeaders extends HeadersObject<SV>,
-    ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>,
-    VersionedApi extends VersionSchema<SV, ContractMethod>,
-    RouterSession extends SessionObject<SV>
-  >(
-    path: string,
-    contractDetails: PathParamHttpContractDetails<SV>,
-    requestSchema: unknown | Record<string, unknown>,
-    responseSchemas:
-      | ResponseCompiledSchema
-      | Record<string, ResponseCompiledSchema>
-  ): ExpressLikeSchemaHandler<
-    SV,
-    P,
-    ResBodyMap,
-    ReqBody,
-    ReqQuery,
-    ReqHeaders,
-    ResHeaders,
-    LocalsObj,
-    VersionedApi,
-    RouterSession,
-    BaseRequest,
-    BaseResponse,
-    NextFunction
-  >[] {
-    return [
-      enrichDetails<
-        SV,
-        ContractMethod,
-        P,
-        ResBodyMap,
-        ReqBody,
-        ReqQuery,
-        ReqHeaders,
-        ResHeaders,
-        LocalsObj,
-        VersionedApi,
-        RouterSession
-      >(
-        `${this.basePath}${path}`,
-        contractDetails as PathParamHttpContractDetails<SV>,
-        requestSchema,
-        responseSchemas,
-        this.openTelemetryCollector,
-        () => this.routerOptions
-      ),
-      ...this.postEnrichMiddleware,
-      parse,
-      parseRequestAuth<
-        SV,
-        ContractMethod,
-        P,
-        ResBodyMap,
-        ReqBody,
-        ReqQuery,
-        ReqHeaders,
-        ResHeaders,
-        LocalsObj,
-        VersionedApi,
-        RouterSession
-      >
-    ] as ExpressLikeSchemaHandler<
-      SV,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      LocalsObj,
-      VersionedApi,
-      RouterSession,
-      BaseRequest,
-      BaseResponse,
-      NextFunction
-    >[];
-  }
 
   /**
    * Parses and runs the controller handler with error handling.
@@ -315,253 +420,6 @@ export class ForklaunchExpressLikeRouter<
    * @returns {MiddlewareHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, LocalsObj>} - The extracted controller handler.
    * @throws {Error} - Throws an error if the last argument is not a handler.
    */
-  #extractControllerHandler<
-    P extends ParamsDictionary,
-    ResBodyMap extends Record<number, unknown>,
-    ReqBody extends Record<string, unknown>,
-    ReqQuery extends ParsedQs,
-    ReqHeaders extends Record<string, string>,
-    ResHeaders extends Record<string, string>,
-    LocalsObj extends Record<string, unknown>,
-    VersionedReqs extends VersionedRequests,
-    VersionedResps extends VersionedResponses,
-    RouterSession extends Record<string, unknown>
-  >(
-    handlers: ExpressLikeHandler<
-      SV,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      LocalsObj,
-      VersionedReqs,
-      VersionedResps,
-      RouterSession,
-      BaseRequest,
-      BaseResponse,
-      NextFunction
-    >[]
-  ): ExpressLikeHandler<
-    SV,
-    P,
-    ResBodyMap,
-    ReqBody,
-    ReqQuery,
-    ReqHeaders,
-    ResHeaders,
-    LocalsObj,
-    VersionedReqs,
-    VersionedResps,
-    RouterSession,
-    BaseRequest,
-    BaseResponse,
-    NextFunction
-  > {
-    const controllerHandler = handlers.pop();
-
-    if (typeof controllerHandler !== 'function') {
-      throw new Error(
-        `Last argument must be a handler, received: ${controllerHandler}`
-      );
-    }
-
-    return controllerHandler;
-  }
-
-  #processContractDetailsIO<P extends ParamsObject<SV>>(
-    contractDetailsIO: {
-      requestHeaders?: HeadersObject<SV>;
-      responseHeaders?: HeadersObject<SV>;
-      query?: QueryObject<SV>;
-      body?: Body<SV>;
-      responses: ResponsesObject<SV>;
-    },
-    params?: P
-  ) {
-    const schemaValidator = this.schemaValidator as SchemaValidator;
-
-    const responseSchemas = {
-      400: schemaValidator.string,
-      401: schemaValidator.string,
-      403: schemaValidator.string,
-      404: schemaValidator.string,
-      500: schemaValidator.string,
-      ...Object.fromEntries(
-        Object.entries(
-          discriminateResponseBodies(
-            this.schemaValidator,
-            contractDetailsIO.responses
-          )
-        ).map(([key, value]) => {
-          return [Number(key), value.schema];
-        })
-      )
-    };
-
-    return {
-      requestSchema: schemaValidator.compile(
-        schemaValidator.schemify({
-          ...(params != null
-            ? { params }
-            : { params: schemaValidator.unknown as ParamsObject<SV> }),
-          ...(contractDetailsIO.requestHeaders != null
-            ? { headers: contractDetailsIO.requestHeaders }
-            : { headers: schemaValidator.unknown as HeadersObject<SV> }),
-          ...(contractDetailsIO.query != null
-            ? { query: contractDetailsIO.query }
-            : { query: schemaValidator.unknown as QueryObject<SV> }),
-          ...(contractDetailsIO.body != null
-            ? {
-                body: discriminateBody(
-                  this.schemaValidator,
-                  contractDetailsIO.body
-                )?.schema
-              }
-            : { body: schemaValidator.unknown as Body<SV> })
-        })
-      ),
-      responseSchemas: {
-        ...(contractDetailsIO.responseHeaders != null
-          ? {
-              headers: schemaValidator.compile(
-                schemaValidator.schemify(contractDetailsIO.responseHeaders)
-              )
-            }
-          : { headers: schemaValidator.unknown as HeadersObject<SV> }),
-        responses: Object.fromEntries(
-          Object.entries(responseSchemas).map(([key, value]) => {
-            return [
-              key,
-              schemaValidator.compile(schemaValidator.schemify(value))
-            ];
-          })
-        )
-      }
-    };
-  }
-
-  #compile<
-    ContractMethod extends Method,
-    Name extends string,
-    Path extends `/${string}`,
-    P extends ParamsObject<SV>,
-    ResBodyMap extends ResponsesObject<SV>,
-    ReqBody extends Body<SV>,
-    ReqQuery extends QueryObject<SV>,
-    ReqHeaders extends HeadersObject<SV>,
-    ResHeaders extends HeadersObject<SV>,
-    const VersionedApi extends VersionSchema<SV, ContractMethod>,
-    const Auth extends SchemaAuthMethods<
-      SV,
-      P,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      VersionedApi,
-      BaseRequest
-    >
-  >(
-    contractDetails: ContractDetails<
-      SV,
-      Name,
-      ContractMethod,
-      Path,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      VersionedApi,
-      BaseRequest,
-      Auth
-    >
-  ) {
-    const schemaValidator = this.schemaValidator as SchemaValidator;
-
-    let requestSchema: unknown | Record<string, unknown>;
-    let responseSchemas:
-      | ResponseCompiledSchema
-      | Record<string, ResponseCompiledSchema>;
-
-    if (hasVersionedSchema(contractDetails)) {
-      requestSchema = {};
-      responseSchemas = {};
-
-      Object.entries(contractDetails.versions ?? {}).forEach(
-        ([version, versionedContractDetails]) => {
-          const {
-            requestSchema: versionedRequestSchema,
-            responseSchemas: versionedResponseSchemas
-          } = this.#processContractDetailsIO(
-            versionedContractDetails,
-            contractDetails.params
-          );
-
-          if (isRecord(requestSchema)) {
-            requestSchema = {
-              ...requestSchema,
-              [version]: versionedRequestSchema
-            };
-          }
-          if (isRecord(responseSchemas)) {
-            responseSchemas = {
-              ...responseSchemas,
-              [version]: versionedResponseSchemas
-            };
-          }
-        }
-      );
-    } else {
-      const {
-        requestSchema: unversionedRequestSchema,
-        responseSchemas: unversionedResponseSchemas
-      } = this.#processContractDetailsIO(
-        {
-          ...('params' in contractDetails && contractDetails.params != null
-            ? { params: contractDetails.params }
-            : { params: schemaValidator.unknown as ParamsObject<SV> }),
-          ...('requestHeaders' in contractDetails &&
-          contractDetails.requestHeaders != null
-            ? { requestHeaders: contractDetails.requestHeaders }
-            : {
-                requestHeaders: schemaValidator.unknown as HeadersObject<SV>
-              }),
-          ...('responseHeaders' in contractDetails &&
-          contractDetails.responseHeaders != null
-            ? { responseHeaders: contractDetails.responseHeaders }
-            : {
-                responseHeaders: schemaValidator.unknown as HeadersObject<SV>
-              }),
-          ...('query' in contractDetails && contractDetails.query != null
-            ? { query: contractDetails.query }
-            : {
-                query: schemaValidator.unknown as QueryObject<SV>
-              }),
-          ...('body' in contractDetails && contractDetails.body != null
-            ? { body: contractDetails.body }
-            : {
-                body: schemaValidator.unknown as Body<SV>
-              }),
-          responses:
-            'responses' in contractDetails && contractDetails.responses != null
-              ? contractDetails.responses
-              : (schemaValidator.unknown as ResponsesObject<SV>)
-        },
-        contractDetails.params
-      );
-
-      requestSchema = unversionedRequestSchema;
-      responseSchemas = unversionedResponseSchemas;
-    }
-
-    return {
-      requestSchema,
-      responseSchemas
-    };
-  }
 
   /**
    * Fetches a route from the route map and executes it with the given parameters.
@@ -664,8 +522,11 @@ export class ForklaunchExpressLikeRouter<
    * @returns
    */
   #localParamRequest<Middleware, Route extends string>(
-    handlers: Middleware[],
+    middlewares: Middleware[],
     controllerHandler: Middleware,
+    contractDetails: PathParamHttpContractDetails<SV>,
+    requestSchema: unknown,
+    responseSchemas: unknown,
     version?: string
   ) {
     return async (
@@ -675,12 +536,16 @@ export class ForklaunchExpressLikeRouter<
         query?: Record<string, unknown>;
         headers?: Record<string, unknown>;
         body?: Record<string, unknown>;
+        executeMiddlewares?: boolean;
       }
     ) => {
-      let statusCode;
-      let responseMessage;
+      let statusCode: number | undefined;
+      let responseMessage: unknown;
       const responseHeaders: Record<string, unknown> = {};
+      const resEventHandlers: Record<string, ((...args: unknown[]) => void)[]> =
+        {};
 
+      // Create mock request with all properties needed for middleware chain
       const req = {
         params: request?.params ?? {},
         query: request?.query ?? {},
@@ -688,61 +553,101 @@ export class ForklaunchExpressLikeRouter<
         body:
           discriminateBody(this.schemaValidator, request?.body)?.schema ?? {},
         path: route,
-        version
+        originalPath: route,
+        method: 'GET',
+        version,
+        // Properties needed by middlewares
+        schemaValidator: this.schemaValidator,
+        contractDetails,
+        requestSchema,
+        openTelemetryCollector: this.openTelemetryCollector,
+        _globalOptions: () => this.routerOptions,
+        context: {
+          correlationId: 'local-fetch-' + Date.now(),
+          span: undefined
+        },
+        _rawBody: undefined as unknown,
+        _parsedVersions: undefined as unknown
       };
 
+      // Create mock response with all properties needed for middleware chain
       const res = {
+        statusCode: 200,
         status: (code: number) => {
           statusCode = code;
+          res.statusCode = code;
           return res;
         },
         send: (message: string) => {
           responseMessage = message;
+          resEventHandlers['finish']?.forEach((handler) => handler());
         },
         json: (body: Record<string, unknown>) => {
           responseMessage = body;
+          resEventHandlers['finish']?.forEach((handler) => handler());
         },
         jsonp: (body: Record<string, unknown>) => {
           responseMessage = body;
+          resEventHandlers['finish']?.forEach((handler) => handler());
         },
         setHeader: (key: string, value: string) => {
           responseHeaders[key] = value;
+          return res;
+        },
+        getHeader: (key: string) => responseHeaders[key],
+        type: (contentType: string) => {
+          responseHeaders['content-type'] = contentType;
+          return res;
         },
         sseEmitter: (
           generator: () => AsyncGenerator<Record<string, unknown>>
         ) => {
           responseMessage = generator();
         },
+        on: (event: string, handler: (...args: unknown[]) => void) => {
+          if (!resEventHandlers[event]) {
+            resEventHandlers[event] = [];
+          }
+          resEventHandlers[event].push(handler);
+          return res;
+        },
+        responseSchemas,
         version
       };
 
-      let cursor = handlers.shift() as unknown as (
-        req_: typeof req,
-        resp_: typeof res,
-        next: (err?: Error) => Promise<void> | void
-      ) => Promise<void> | void;
+      const executeMiddlewares = request?.executeMiddlewares ?? false;
 
-      if (cursor) {
-        for (const fn of handlers) {
-          await cursor(req, res, (err?: Error) => {
+      if (executeMiddlewares && middlewares.length > 0) {
+        // Execute middleware chain
+        const allHandlers = [...middlewares];
+        let cursor = allHandlers.shift() as unknown as (
+          req_: typeof req,
+          resp_: typeof res,
+          next: (err?: Error) => Promise<void> | void
+        ) => Promise<void> | void;
+
+        if (cursor) {
+          for (const fn of allHandlers) {
+            await cursor(req, res, (err?: Error) => {
+              if (err) {
+                throw err;
+              }
+              cursor = fn as unknown as (
+                req_: typeof req,
+                resp_: typeof res,
+                next: (err?: Error) => Promise<void> | void
+              ) => Promise<void> | void;
+            });
+          }
+          await cursor(req, res, async (err?: Error) => {
             if (err) {
               throw err;
             }
-
-            cursor = fn as unknown as (
-              req_: typeof req,
-              resp_: typeof res,
-              next: (err?: Error) => Promise<void> | void
-            ) => Promise<void> | void;
           });
         }
-        await cursor(req, res, async (err?: Error) => {
-          if (err) {
-            throw err;
-          }
-        });
       }
 
+      // Execute controller handler
       const cHandler = controllerHandler as unknown as (
         req_: typeof req,
         resp_: typeof res,
@@ -773,8 +678,8 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    const VersionedApi extends VersionSchema<SV, ContractMethod>,
-    const Auth extends SchemaAuthMethods<
+    VersionedApi extends VersionSchema<SV, ContractMethod>,
+    Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
@@ -896,376 +801,210 @@ export class ForklaunchExpressLikeRouter<
     >;
   } {
     // in this case, we know that the first argument is the typedHandler. As a result, we only use defined handlers
-    if (
-      isTypedHandler<
-        SV,
-        Name,
-        ContractMethod,
-        Path,
-        P,
-        ResBodyMap,
-        ReqBody,
-        ReqQuery,
-        ReqHeaders,
-        ResHeaders,
-        LocalsObj,
-        VersionedApi,
-        BaseRequest,
-        BaseResponse,
-        NextFunction,
-        Auth
-      >(contractDetailsOrMiddlewareOrTypedHandler)
-    ) {
-      const { contractDetails, handlers } =
-        contractDetailsOrMiddlewareOrTypedHandler;
-      const router = this.registerRoute<
-        Name,
-        ContractMethod,
-        Path,
-        P,
-        ResBodyMap,
-        ReqBody,
-        ReqQuery,
-        ReqHeaders,
-        ResHeaders,
-        LocalsObj,
-        VersionedApi,
-        Auth
-      >(method, path, registrationMethod, contractDetails, ...handlers);
+    const { contractDetails, handlers } = resolveContractDetailsAndHandlers<
+      SV,
+      Name,
+      ContractMethod,
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj,
+      VersionedApi,
+      RouterSession,
+      BaseRequest,
+      BaseResponse,
+      NextFunction,
+      Auth
+    >(
+      contractDetailsOrMiddlewareOrTypedHandler,
+      middlewareOrMiddlewareAndTypedHandler
+    );
 
-      return router;
+    validateContractDetails(contractDetails, this.schemaValidator);
+
+    this.routes.push({
+      basePath: this.basePath,
+      path,
+      method,
+      contractDetails: contractDetails as PathParamHttpContractDetails<SV>
+    });
+
+    const { requestSchema, responseSchemas } = compileRouteSchemas(
+      contractDetails,
+      this.schemaValidator
+    );
+
+    const { middlewares, controllerHandler } = resolveRouteMiddlewares<
+      SV,
+      Name,
+      ContractMethod,
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj,
+      VersionedApi,
+      RouterSession,
+      BaseRequest,
+      BaseResponse,
+      NextFunction,
+      Auth,
+      RouterHandler
+    >({
+      basePath: this.basePath,
+      path,
+      contractDetails,
+      requestSchema,
+      responseSchemas,
+      openTelemetryCollector: this.openTelemetryCollector,
+      routerOptions: this.routerOptions,
+      postEnrichMiddleware: this.postEnrichMiddleware,
+      includeCreateContext: false,
+      handlers,
+      router: this
+    });
+
+    registrationMethod.bind(this.internal)(
+      path,
+      ...(middlewares as RouterHandler[]),
+      this.#parseAndRunControllerHandler(controllerHandler) as RouterHandler
+    );
+
+    toRecord(this._fetchMap)[sanitizePathSlashes(`${this.basePath}${path}`)] = {
+      ...(this._fetchMap[sanitizePathSlashes(`${this.basePath}${path}`)] ?? {}),
+      [method.toUpperCase()]: contractDetails.versions
+        ? Object.fromEntries(
+            Object.keys(contractDetails.versions).map((version) => [
+              version,
+              this.#localParamRequest(
+                middlewares as RouterHandler[],
+                controllerHandler as RouterHandler,
+                contractDetails as PathParamHttpContractDetails<SV>,
+                requestSchema,
+                responseSchemas,
+                version
+              )
+            ])
+          )
+        : this.#localParamRequest(
+            middlewares as RouterHandler[],
+            controllerHandler as RouterHandler,
+            contractDetails as PathParamHttpContractDetails<SV>,
+            requestSchema,
+            responseSchemas
+          )
+    };
+
+    const contractDetailsName = contractDetails.name;
+    if (contractDetailsName) {
+      toRecord(this.sdk)[toPrettyCamelCase(contractDetailsName)] =
+        contractDetails.versions
+          ? Object.fromEntries(
+              Object.keys(contractDetails.versions).map((version) => [
+                version,
+                (req: {
+                  params?: Record<string, unknown>;
+                  query?: Record<string, unknown>;
+                  headers?: Record<string, unknown>;
+                  body?: Record<string, unknown>;
+                }) =>
+                  this.#localParamRequest(
+                    middlewares as RouterHandler[],
+                    controllerHandler as RouterHandler,
+                    contractDetails as PathParamHttpContractDetails<SV>,
+                    requestSchema,
+                    responseSchemas,
+                    version
+                  )(`${this.basePath}${path}`, req)
+              ])
+            )
+          : (req: {
+              params?: Record<string, unknown>;
+              query?: Record<string, unknown>;
+              headers?: Record<string, unknown>;
+              body?: Record<string, unknown>;
+            }) =>
+              this.#localParamRequest(
+                middlewares as RouterHandler[],
+                controllerHandler as RouterHandler,
+                contractDetails as PathParamHttpContractDetails<SV>,
+                requestSchema,
+                responseSchemas
+              )(`${this.basePath}${path}`, req);
     }
-    // in this case, we test for the last element of the handlers. If typed handler, break this down
-    else {
-      const maybeTypedHandler =
-        middlewareOrMiddlewareAndTypedHandler[
-          middlewareOrMiddlewareAndTypedHandler.length - 1
-        ];
-      if (
-        isTypedHandler<
-          SV,
-          Name,
-          ContractMethod,
-          Path,
-          P,
-          ResBodyMap,
-          ReqBody,
-          ReqQuery,
-          ReqHeaders,
-          ResHeaders,
-          LocalsObj,
-          VersionedApi,
-          BaseRequest,
-          BaseResponse,
-          NextFunction,
-          Auth
-        >(maybeTypedHandler)
-      ) {
-        const { contractDetails, handlers } = maybeTypedHandler;
-
-        const finalHandlers: typeof middlewareOrMiddlewareAndTypedHandler = [];
-        if (
-          isExpressLikeSchemaHandler(contractDetailsOrMiddlewareOrTypedHandler)
-        ) {
-          finalHandlers.push(
-            contractDetailsOrMiddlewareOrTypedHandler as (typeof middlewareOrMiddlewareAndTypedHandler)[number]
-          );
-        }
-        finalHandlers.push(...middlewareOrMiddlewareAndTypedHandler);
-        finalHandlers.push(...handlers);
-
-        const router = this.registerRoute<
-          Name,
-          ContractMethod,
-          Path,
-          P,
-          ResBodyMap,
-          ReqBody,
-          ReqQuery,
-          ReqHeaders,
-          ResHeaders,
-          LocalsObj,
-          VersionedApi,
-          Auth
-        >(method, path, registrationMethod, contractDetails, ...finalHandlers);
-
-        return router;
-      } else {
-        if (
-          isExpressLikeSchemaHandler<
-            SV,
-            ContractMethod,
-            P,
-            ResBodyMap,
-            ReqBody,
-            ReqQuery,
-            ReqHeaders,
-            ResHeaders,
-            LocalsObj,
-            VersionedApi,
-            RouterSession,
-            BaseRequest,
-            BaseResponse,
-            NextFunction
-          >(contractDetailsOrMiddlewareOrTypedHandler) ||
-          isTypedHandler<
-            SV,
-            Name,
-            ContractMethod,
-            Path,
-            P,
-            ResBodyMap,
-            ReqBody,
-            ReqQuery,
-            ReqHeaders,
-            ResHeaders,
-            LocalsObj,
-            VersionedApi,
-            BaseRequest,
-            BaseResponse,
-            NextFunction,
-            Auth
-          >(contractDetailsOrMiddlewareOrTypedHandler)
-        ) {
-          throw new Error('Contract details are not defined');
-        }
-        const contractDetails = contractDetailsOrMiddlewareOrTypedHandler;
-
-        const handlers = (
-          middlewareOrMiddlewareAndTypedHandler as unknown[]
-        ).filter((handler) =>
-          isExpressLikeSchemaHandler<
-            SV,
-            ContractMethod,
-            P,
-            ResBodyMap,
-            ReqBody,
-            ReqQuery,
-            ReqHeaders,
-            ResHeaders,
-            LocalsObj,
-            VersionedApi,
-            RouterSession,
-            BaseRequest,
-            BaseResponse,
-            NextFunction
-          >(handler)
-        );
-
-        if (
-          !isHttpContractDetails<
-            SV,
-            Name,
-            Path,
-            P,
-            ResBodyMap,
-            ReqBody,
-            ReqQuery,
-            ReqHeaders,
-            ResHeaders,
-            VersionedApi extends VersionSchema<SV, HttpMethod>
-              ? VersionedApi
-              : never,
-            BaseRequest,
-            Auth
-          >(contractDetails) &&
-          !isPathParamHttpContractDetails<
-            SV,
-            Name,
-            Path,
-            P,
-            ResBodyMap,
-            ReqBody,
-            ReqQuery,
-            ReqHeaders,
-            ResHeaders,
-            VersionedApi extends VersionSchema<SV, PathParamMethod>
-              ? VersionedApi
-              : never,
-            BaseRequest,
-            Auth
-          >(contractDetails)
-        ) {
-          throw new Error(
-            'Contract details are malformed for route definition'
-          );
-        }
-
-        if (contractDetails.versions) {
-          const parserTypes = Object.values(contractDetails.versions).map(
-            (version) =>
-              discriminateBody(this.schemaValidator, version.body)?.parserType
-          );
-
-          const allParserTypesSame =
-            parserTypes.length === 0 ||
-            parserTypes.every((pt) => pt === parserTypes[0]);
-
-          if (!allParserTypesSame) {
-            throw new Error(
-              'All versioned contractDetails must have the same parsing type for body.'
-            );
-          }
-        }
-
-        this.routes.push({
-          basePath: this.basePath,
-          path,
-          method,
-          contractDetails: contractDetails as PathParamHttpContractDetails<SV>
-        });
-
-        const { requestSchema, responseSchemas } = this.#compile<
-          ContractMethod,
-          Name,
-          Path,
-          P,
-          ResBodyMap,
-          ReqBody,
-          ReqQuery,
-          ReqHeaders,
-          ResHeaders,
-          VersionedApi,
-          Auth
-        >(contractDetails);
-
-        const controllerHandler = this.#extractControllerHandler(handlers);
-
-        const resolvedMiddlewares = this.#resolveMiddlewares<
-          P,
-          ContractMethod,
-          ResBodyMap,
-          ReqBody,
-          ReqQuery,
-          ReqHeaders,
-          ResHeaders,
-          LocalsObj,
-          VersionedApi,
-          RouterSession
-        >(
-          path,
-          contractDetails as PathParamHttpContractDetails<SV>,
-          requestSchema,
-          responseSchemas
-        ).concat(handlers);
-
-        registrationMethod.bind(this.internal)(
-          path,
-          ...(resolvedMiddlewares as RouterHandler[]),
-          this.#parseAndRunControllerHandler(controllerHandler) as RouterHandler
-        );
-
-        toRecord(this._fetchMap)[
-          sanitizePathSlashes(`${this.basePath}${path}`)
-        ] = {
-          ...(this._fetchMap[sanitizePathSlashes(`${this.basePath}${path}`)] ??
-            {}),
-          [method.toUpperCase()]: contractDetails.versions
-            ? Object.fromEntries(
-                Object.keys(contractDetails.versions).map((version) => [
-                  version,
-                  this.#localParamRequest(handlers, controllerHandler, version)
-                ])
-              )
-            : this.#localParamRequest(handlers, controllerHandler)
-        };
-
-        toRecord(this.sdk)[toPrettyCamelCase(contractDetails.name)] =
-          contractDetails.versions
-            ? Object.fromEntries(
-                Object.keys(contractDetails.versions).map((version) => [
-                  version,
-                  (req: {
-                    params?: Record<string, unknown>;
-                    query?: Record<string, unknown>;
-                    headers?: Record<string, unknown>;
-                    body?: Record<string, unknown>;
-                  }) =>
-                    this.#localParamRequest(
-                      handlers,
-                      controllerHandler,
-                      version
-                    )(`${this.basePath}${path}`, req)
-                ])
-              )
-            : (req: {
-                params?: Record<string, unknown>;
-                query?: Record<string, unknown>;
-                headers?: Record<string, unknown>;
-                body?: Record<string, unknown>;
-              }) =>
-                this.#localParamRequest(handlers, controllerHandler)(
-                  `${this.basePath}${path}`,
-                  req
-                );
-        return this as this & {
-          _fetchMap: FetchMap extends Record<
-            SanitizePathSlashes<`${BasePath}${Path}`>,
-            unknown
-          >
-            ? FetchMap &
-                Record<
-                  SanitizePathSlashes<`${BasePath}${Path}`>,
-                  FetchMap[SanitizePathSlashes<`${BasePath}${Path}`>] &
-                    Record<
-                      Uppercase<ContractMethod>,
-                      LiveTypeFunction<
-                        SV,
-                        SanitizePathSlashes<`${BasePath}${Path}`>,
-                        P,
-                        ResBodyMap,
-                        ReqBody,
-                        ReqQuery,
-                        ReqHeaders,
-                        ResHeaders,
-                        ContractMethod,
-                        VersionedApi,
-                        Auth
-                      >
-                    >
-                >
-            : FetchMap &
-                Record<
-                  SanitizePathSlashes<`${BasePath}${Path}`>,
-                  Record<
-                    Uppercase<ContractMethod>,
-                    LiveTypeFunction<
-                      SV,
-                      SanitizePathSlashes<`${BasePath}${Path}`>,
-                      P,
-                      ResBodyMap,
-                      ReqBody,
-                      ReqQuery,
-                      ReqHeaders,
-                      ResHeaders,
-                      ContractMethod,
-                      VersionedApi,
-                      Auth
-                    >
-                  >
-                >;
-          sdk: Sdk &
+    return this as this & {
+      _fetchMap: FetchMap extends Record<
+        SanitizePathSlashes<`${BasePath}${Path}`>,
+        unknown
+      >
+        ? FetchMap &
             Record<
-              PrettyCamelCase<
-                Name extends string
-                  ? Name
-                  : SanitizePathSlashes<`${BasePath}${Path}`>
-              >,
-              LiveSdkFunction<
-                SV,
-                P,
-                ResBodyMap,
-                ReqBody,
-                ReqQuery,
-                ReqHeaders,
-                ResHeaders,
-                VersionedApi,
-                Auth
+              SanitizePathSlashes<`${BasePath}${Path}`>,
+              FetchMap[SanitizePathSlashes<`${BasePath}${Path}`>] &
+                Record<
+                  Uppercase<ContractMethod>,
+                  LiveTypeFunction<
+                    SV,
+                    SanitizePathSlashes<`${BasePath}${Path}`>,
+                    P,
+                    ResBodyMap,
+                    ReqBody,
+                    ReqQuery,
+                    ReqHeaders,
+                    ResHeaders,
+                    ContractMethod,
+                    VersionedApi,
+                    Auth
+                  >
+                >
+            >
+        : FetchMap &
+            Record<
+              SanitizePathSlashes<`${BasePath}${Path}`>,
+              Record<
+                Uppercase<ContractMethod>,
+                LiveTypeFunction<
+                  SV,
+                  SanitizePathSlashes<`${BasePath}${Path}`>,
+                  P,
+                  ResBodyMap,
+                  ReqBody,
+                  ReqQuery,
+                  ReqHeaders,
+                  ResHeaders,
+                  ContractMethod,
+                  VersionedApi,
+                  Auth
+                >
               >
             >;
-        };
-      }
-    }
+      sdk: Sdk &
+        Record<
+          PrettyCamelCase<
+            Name extends string
+              ? Name
+              : SanitizePathSlashes<`${BasePath}${Path}`>
+          >,
+          LiveSdkFunction<
+            SV,
+            P,
+            ResBodyMap,
+            ReqBody,
+            ReqQuery,
+            ReqHeaders,
+            ResHeaders,
+            VersionedApi,
+            Auth
+          >
+        >;
+    };
   }
 
   #extractHandlers<
@@ -1279,8 +1018,8 @@ export class ForklaunchExpressLikeRouter<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     ArrayReturnType,
-    const VersionedApi extends VersionSchema<SV, 'middleware'>,
-    const Auth extends SchemaAuthMethods<
+    VersionedApi extends VersionSchema<SV, 'middleware'>,
+    Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
@@ -1384,8 +1123,8 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    const VersionedApi extends VersionSchema<SV, 'middleware'>,
-    const Auth extends SchemaAuthMethods<
+    VersionedApi extends VersionSchema<SV, 'middleware'>,
+    Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
@@ -1444,8 +1183,8 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    const VersionedApi extends VersionSchema<SV, 'middleware'>,
-    const Auth extends SchemaAuthMethods<
+    VersionedApi extends VersionSchema<SV, 'middleware'>,
+    Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
@@ -1522,8 +1261,8 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    const VersionedApi extends VersionSchema<SV, 'middleware'>,
-    const Auth extends SchemaAuthMethods<
+    VersionedApi extends VersionSchema<SV, 'middleware'>,
+    Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
@@ -1593,8 +1332,8 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    const VersionedApi extends VersionSchema<SV, 'middleware'>,
-    const Auth extends SchemaAuthMethods<
+    VersionedApi extends VersionSchema<SV, 'middleware'>,
+    Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
@@ -1694,8 +1433,8 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    const VersionedApi extends VersionSchema<SV, 'middleware'>,
-    const Auth extends SchemaAuthMethods<
+    VersionedApi extends VersionSchema<SV, 'middleware'>,
+    Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
@@ -1833,8 +1572,8 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    const VersionedApi extends VersionSchema<SV, 'middleware'>,
-    const Auth extends SchemaAuthMethods<
+    VersionedApi extends VersionSchema<SV, 'middleware'>,
+    Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
@@ -2044,9 +1783,9 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    const VersionedApi extends VersionSchema<SV, 'middleware'>,
+    VersionedApi extends VersionSchema<SV, 'middleware'>,
     const SessionSchema extends SessionObject<SV>,
-    const Auth extends SchemaAuthMethods<
+    Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
@@ -2276,12 +2015,12 @@ export class ForklaunchExpressLikeRouter<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     Router extends ConstrainedForklaunchRouter<SV, RouterHandler>,
-    const VersionedApi extends VersionSchema<SV, 'middleware'>,
+    VersionedApi extends VersionSchema<SV, 'middleware'>,
     SessionSchema extends SessionObject<SV>,
     ResolvedSchema extends SessionObject<SV> extends SessionSchema
       ? RouterSession
       : SessionSchema,
-    const Auth extends SchemaAuthMethods<
+    Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
@@ -2424,8 +2163,8 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    const VersionedApi extends VersionSchema<SV, 'middleware'>,
-    const Auth extends SchemaAuthMethods<
+    VersionedApi extends VersionSchema<SV, 'middleware'>,
+    Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
@@ -2539,8 +2278,8 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    const VersionedApi extends VersionSchema<SV, 'middleware'>,
-    const Auth extends SchemaAuthMethods<
+    VersionedApi extends VersionSchema<SV, 'middleware'>,
+    Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
@@ -2670,8 +2409,8 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    const VersionedApi extends VersionSchema<SV, 'get'>,
-    const Auth extends SchemaAuthMethods<
+    VersionedApi extends VersionSchema<SV, 'get'>,
+    Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
@@ -2777,8 +2516,8 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    const VersionedApi extends VersionSchema<SV, 'post'>,
-    const Auth extends SchemaAuthMethods<
+    VersionedApi extends VersionSchema<SV, 'post'>,
+    Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
@@ -2884,8 +2623,8 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    const VersionedApi extends VersionSchema<SV, 'put'>,
-    const Auth extends SchemaAuthMethods<
+    VersionedApi extends VersionSchema<SV, 'put'>,
+    Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
@@ -2991,8 +2730,8 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    const VersionedApi extends VersionSchema<SV, 'patch'>,
-    const Auth extends SchemaAuthMethods<
+    VersionedApi extends VersionSchema<SV, 'patch'>,
+    Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
@@ -3098,8 +2837,8 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    const VersionedApi extends VersionSchema<SV, 'delete'>,
-    const Auth extends SchemaAuthMethods<
+    VersionedApi extends VersionSchema<SV, 'delete'>,
+    Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
@@ -3205,8 +2944,8 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    const VersionedApi extends VersionSchema<SV, 'options'>,
-    const Auth extends SchemaAuthMethods<
+    VersionedApi extends VersionSchema<SV, 'options'>,
+    Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
@@ -3312,8 +3051,8 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    const VersionedApi extends VersionSchema<SV, 'head'>,
-    const Auth extends SchemaAuthMethods<
+    VersionedApi extends VersionSchema<SV, 'head'>,
+    Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
@@ -3419,8 +3158,8 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    const VersionedApi extends VersionSchema<SV, 'trace'>,
-    const Auth extends SchemaAuthMethods<
+    VersionedApi extends VersionSchema<SV, 'trace'>,
+    Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,

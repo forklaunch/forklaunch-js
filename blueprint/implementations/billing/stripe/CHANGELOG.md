@@ -1,4 +1,40 @@
-# @forklaunch/implementation-billing-base
+# @forklaunch/implementation-billing-stripe
+
+## 0.5.10
+
+### Patch Changes
+
+- Update package versions
+- Updated dependencies
+  - @forklaunch/implementation-billing-base@0.8.10
+  - @forklaunch/interfaces-billing@0.8.10
+
+## 0.5.9
+
+### Patch Changes
+
+- dependency upgrade and minor metadata fixes
+- Updated dependencies
+  - @forklaunch/implementation-billing-base@0.8.9
+  - @forklaunch/interfaces-billing@0.8.9
+
+## 0.5.8
+
+### Patch Changes
+
+- Mapper syntax fixed and package bump
+- Updated dependencies
+  - @forklaunch/implementation-billing-base@0.8.8
+  - @forklaunch/interfaces-billing@0.8.8
+
+## 0.5.7
+
+### Patch Changes
+
+- Update package versions
+- Updated dependencies
+  - @forklaunch/implementation-billing-base@0.8.7
+  - @forklaunch/interfaces-billing@0.8.7
 
 ## 0.5.6
 

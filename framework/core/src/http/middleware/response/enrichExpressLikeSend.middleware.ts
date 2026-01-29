@@ -101,7 +101,7 @@ export function enrichExpressLikeSend<
   if (res.statusCode === 404) {
     res.type('text/plain');
     res.status(404);
-    req.openTelemetryCollector.error('Not Found');
+    req.openTelemetryCollector?.error('Not Found');
     originalSend.call(instance, 'Not Found');
     errorSent = true;
   }
@@ -169,7 +169,7 @@ export function enrichExpressLikeSend<
               if (res.locals.errorMessage) {
                 errorString += `\n------------------\n${res.locals.errorMessage}`;
               }
-              req.openTelemetryCollector.error(errorString);
+              req.openTelemetryCollector?.error(errorString);
               res.type('text/plain');
               res.status(500);
               originalSend.call(instance, errorString);
@@ -240,7 +240,7 @@ export function enrichExpressLikeSend<
         if (res.locals.errorMessage) {
           errorString += `\n------------------\n${res.locals.errorMessage}`;
         }
-        req.openTelemetryCollector.error(errorString);
+        req.openTelemetryCollector?.error(errorString);
         res.type('text/plain');
         res.status(500);
         originalSend.call(instance, errorString);

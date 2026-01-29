@@ -69,6 +69,12 @@ config_struct!(
         pub(crate) is_better_auth: bool,
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) is_stripe: bool,
+
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) is_iam_configured: bool,
+
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) with_mappers: bool,
     }
 );
 
@@ -164,6 +170,16 @@ impl InitializableManifestConfig for ServiceManifestData {
                     .parse::<Module>()
                     .unwrap()
                     == Module::BetterAuthIam,
+
+            is_iam_configured: self.projects.iter().any(|project_entry| {
+                if project_entry.name == "iam" {
+                    return true;
+                }
+                return false;
+            }),
+
+            // Default to false, will be set by CLI flag or forced for billing/IAM
+            with_mappers: false,
             ..self.clone()
         }
     }

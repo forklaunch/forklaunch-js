@@ -16,7 +16,7 @@ import { WorkerProcessFunction, WorkerFailureHandler } from '@forklaunch/interfa
 import { EntityManager, ForkOptions, MikroORM } from "@mikro-orm/core";
 import mikroOrmOptionsConfig from './mikro-orm.config';{{/is_database_enabled}}{{#is_worker}}
 import { {{pascal_case_name}}EventRecord } from "./persistence/entities/{{camel_case_name}}EventRecord.entity";{{/is_worker}}
-import { Base{{pascal_case_name}}Service } from "./services/{{camel_case_name}}.service";
+import { Base{{pascal_case_name}}Service } from "./domain/services/{{camel_case_name}}.service";
 
 //! instantiates the config injector
 const configInjector = createConfigInjector(SchemaValidator(), {
@@ -124,7 +124,17 @@ const environmentConfig = configInjector.chain({
     lifetime: Lifetime.Singleton,
     type: string,
     value: getEnvVar('S3_BUCKET')
-  },{{/is_s3_enabled}}
+  },{{/is_s3_enabled}}{{#is_iam_configured}}
+  HMAC_SECRET_KEY: {
+    lifetime: Lifetime.Singleton,
+    type: string,
+    value: getEnvVar('HMAC_SECRET_KEY')
+  },
+  JWKS_PUBLIC_KEY_URL: {
+    lifetime: Lifetime.Singleton,
+    type: string,
+    value: getEnvVar('JWKS_PUBLIC_KEY_URL')
+  },{{/is_iam_configured}}
 });
 
 //! defines the runtime dependencies for the application
@@ -185,7 +195,8 @@ const runtimeDependencies = environmentConfig.chain({
             credentials: {
               accessKeyId: S3_ACCESS_KEY_ID,
               secretAccessKey: S3_SECRET_ACCESS_KEY
-            }
+            },
+            forcePathStyle: true // Required for MinIO and path-style S3
           }
         },
         {

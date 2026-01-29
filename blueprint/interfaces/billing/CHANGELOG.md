@@ -1,5 +1,29 @@
 # @forklaunch/interfaces-billing
 
+## 0.8.10
+
+### Patch Changes
+
+- Update package versions
+
+## 0.8.9
+
+### Patch Changes
+
+- dependency upgrade and minor metadata fixes
+
+## 0.8.8
+
+### Patch Changes
+
+- Mapper syntax fixed and package bump
+
+## 0.8.7
+
+### Patch Changes
+
+- Update package versions
+
 ## 0.8.6
 
 ### Patch Changes

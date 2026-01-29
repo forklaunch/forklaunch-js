@@ -8,11 +8,11 @@ import { {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record} from '../.
 import { {{pascal_case_name}}RequestSchema, {{pascal_case_name}}ResponseSchema } from '../schemas/{{camel_case_name}}.schema';
 
 // RequestMapper const that maps a request schema to an entity
-export const {{pascal_case_name}}RequestMapper = requestMapper(
+export const {{pascal_case_name}}RequestMapper = requestMapper({
   schemaValidator,
-  {{pascal_case_name}}RequestSchema,
-  {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record,
-  {
+  schema: {{pascal_case_name}}RequestSchema,
+  entity: {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record,
+  mapperDefinition: {
     toEntity: async (dto{{^is_worker}}, em: EntityManager{{/is_worker}}) => {
       return {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record.create({
         ...dto,{{#is_worker}}
@@ -23,17 +23,17 @@ export const {{pascal_case_name}}RequestMapper = requestMapper(
       }{{^is_worker}}, em{{/is_worker}});
     }
   }
-);
+});
 
 // ResponseMapper const that maps an entity to a response schema
-export const {{pascal_case_name}}ResponseMapper = responseMapper(
+export const {{pascal_case_name}}ResponseMapper = responseMapper({
   schemaValidator,
-  {{pascal_case_name}}ResponseSchema,
-  {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record,
-  {
+  schema: {{pascal_case_name}}ResponseSchema,
+  entity: {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record,
+  mapperDefinition: {
     toDto: async (entity: {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record) => {
       return await entity.read();
     }
   }
-);
+});
 

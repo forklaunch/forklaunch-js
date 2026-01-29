@@ -32,6 +32,7 @@ use crate::{
                 transform_test_utils_add_database, transform_test_utils_add_infrastructure,
                 transform_test_utils_remove_database, transform_test_utils_remove_infrastructure,
             },
+            transform_worker_to_service::transform_registrations_ts_worker_to_service,
         },
         base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
         command::command,
@@ -39,20 +40,22 @@ use crate::{
         docker::{
             DockerCompose, add_database_to_docker_compose, add_kafka_to_docker_compose,
             add_redis_to_docker_compose, clean_up_unused_infrastructure_services,
+            remove_service_from_docker_compose,
         },
         env::Env,
         format::format_code,
         manifest::{
             InitializableManifestConfig, InitializableManifestConfigMetadata, ManifestData,
-            MutableManifestData, ProjectInitializationMetadata, worker::WorkerManifestData,
+            MutableManifestData, ProjectInitializationMetadata, ProjectType,
+            worker::WorkerManifestData,
         },
         move_template::{MoveTemplate, move_template_files},
         name::validate_name,
         package_json::{
             application_package_json::ApplicationPackageJson,
             package_json_constants::{
-                BULLMQ_VERSION, INFRASTRUCTURE_REDIS_VERSION, MIKRO_ORM_CORE_VERSION,
-                MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
+                BULLMQ_VERSION, INFRASTRUCTURE_REDIS_VERSION, IOREDIS_VERSION,
+                MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
                 MIKRO_ORM_REFLECTION_VERSION, WORKER_BULLMQ_VERSION, WORKER_DATABASE_VERSION,
                 WORKER_KAFKA_VERSION, WORKER_REDIS_VERSION,
             },
@@ -201,6 +204,11 @@ fn change_type(
                 Some(WORKER_BULLMQ_VERSION.to_string());
             dependencies.forklaunch_infrastructure_redis =
                 Some(INFRASTRUCTURE_REDIS_VERSION.to_string());
+            project_package_json
+                .dependencies
+                .as_mut()
+                .unwrap()
+                .ioredis = Some(IOREDIS_VERSION.to_string());
             resources.cache = Some(WorkerType::RedisCache.to_string());
             let _ = add_redis_to_docker_compose(
                 &manifest_data.app_name,
@@ -321,6 +329,11 @@ fn change_type(
                 Some(WORKER_REDIS_VERSION.to_string());
             dependencies.forklaunch_infrastructure_redis =
                 Some(INFRASTRUCTURE_REDIS_VERSION.to_string());
+            project_package_json
+                .dependencies
+                .as_mut()
+                .unwrap()
+                .ioredis = Some(IOREDIS_VERSION.to_string());
             resources.cache = Some(WorkerType::RedisCache.to_string());
             let _ = add_redis_to_docker_compose(
                 &manifest_data.app_name,
@@ -424,6 +437,128 @@ fn change_type(
     Ok(())
 }
 
+fn worker_to_service(
+    base_path: &Path,
+    manifest_data: &mut WorkerManifestData,
+    project_package_json: &mut ProjectPackageJson,
+    docker_compose: &mut DockerCompose,
+    rendered_templates_cache: &mut RenderedTemplatesCache,
+    stdout: &mut StandardStream,
+) -> Result<()> {
+    let project_name = base_path.file_name().unwrap().to_string_lossy().to_string();
+
+    // 1. Transform registrations.ts
+    let registrations_path = base_path.join("registrations.ts");
+    let registrations_key = registrations_path.to_string_lossy().into_owned();
+    rendered_templates_cache.insert(
+        registrations_key,
+        RenderedTemplate {
+            path: registrations_path.clone(),
+            content: transform_registrations_ts_worker_to_service(
+                rendered_templates_cache,
+                base_path,
+            )?,
+            context: None,
+        },
+    );
+
+    // 2. Disable worker.ts
+    let worker_ts_path = base_path.join("worker.ts");
+    if let Some(template) = rendered_templates_cache.get(&worker_ts_path)? {
+        let content = template
+            .content
+            .lines()
+            .map(|l| format!("// {}", l))
+            .collect::<Vec<_>>()
+            .join("\n");
+        let worker_ts_key = worker_ts_path.to_string_lossy().into_owned();
+        rendered_templates_cache.insert(
+            worker_ts_key,
+            RenderedTemplate {
+                path: worker_ts_path.clone(),
+                content,
+                context: None,
+            },
+        );
+    }
+
+    // 3. Update package.json
+    if let Some(scripts) = project_package_json.scripts.as_mut() {
+        scripts.dev_worker = None;
+        scripts.start_worker = None;
+    }
+
+    if let Some(deps) = project_package_json.dependencies.as_mut() {
+        deps.forklaunch_interfaces_worker = None;
+        deps.forklaunch_implementation_worker_bullmq = None;
+        deps.forklaunch_implementation_worker_database = None;
+        deps.forklaunch_implementation_worker_redis = None;
+        deps.forklaunch_implementation_worker_kafka = None;
+    }
+
+    // 4. Update manifest
+    manifest_data.projects.iter_mut().for_each(|project| {
+        if project.name == project_name {
+            project.r#type = ProjectType::Service;
+            if let Some(metadata) = project.metadata.as_mut() {
+                metadata.r#type = None;
+            }
+        }
+    });
+
+    // 5. Update docker-compose
+    let worker_service_name = format!("{}-worker", project_name);
+    remove_service_from_docker_compose(docker_compose, &worker_service_name)?;
+
+    // 6. Generate README-MIGRATION.md
+    let readme_path = base_path.join("README-MIGRATION.md");
+    let readme_key = readme_path.to_string_lossy().into_owned();
+    let readme_content = format!(
+        r#"# Worker to Service Migration
+
+This worker has been converted back to a service.
+
+## Changes Made
+
+1. **registrations.ts** - Worker registrations removed.
+2. **worker.ts** - File commented out.
+3. **package.json** - Worker scripts and dependencies removed.
+4. **manifest.toml** - Project type changed to Service.
+5. **docker-compose.yaml** - Worker service removed.
+
+## Next Steps
+
+1. **Review server.ts** - Ensure your HTTP server and routes are active.
+2. **Clean up** - You can delete `worker.ts` and `*EventRecord.entity.ts` if no longer needed.
+3. **Install dependencies**:
+   ```bash
+   pnpm install
+   ```
+4. **Start the service**:
+   ```bash
+   pnpm dev
+   ```
+"#
+    );
+    rendered_templates_cache.insert(
+        readme_key,
+        RenderedTemplate {
+            path: readme_path.clone(),
+            content: readme_content,
+            context: None,
+        },
+    );
+
+    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+    writeln!(
+        stdout,
+        "Worker converted to service. See README-MIGRATION.md."
+    )?;
+    stdout.reset()?;
+
+    Ok(())
+}
+
 impl CliCommand for WorkerCommand {
     fn command(&self) -> Command {
         command("worker", "Change a forklaunch worker")
@@ -440,6 +575,12 @@ impl CliCommand for WorkerCommand {
                     .short('t')
                     .long("type")
                     .help("The type to use"),
+            )
+            .arg(
+                Arg::new("to")
+                    .long("to")
+                    .help("Convert worker to another type (service)")
+                    .value_parser(["service"]),
             )
             .arg(
                 Arg::new("database")
@@ -514,11 +655,112 @@ impl CliCommand for WorkerCommand {
         let runtime = manifest_data.runtime.parse()?;
 
         let name = matches.get_one::<String>("name");
+        let to = matches.get_one::<String>("to");
         let r#type = matches.get_one::<String>("type");
         let database = matches.get_one::<String>("database");
         let description = matches.get_one::<String>("description");
         let dryrun = matches.get_flag("dryrun");
         let confirm = matches.get_flag("confirm");
+
+        // Handle worker to service conversion
+        if let Some(to) = to {
+            if to == "service" {
+                let application_package_json_to_write =
+                    serde_json::from_str::<ApplicationPackageJson>(
+                        &rendered_templates_cache
+                            .get(worker_base_path.parent().unwrap().join("package.json"))
+                            .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?
+                            .unwrap()
+                            .content,
+                    )?;
+
+                let mut project_package_json_to_write = serde_json::from_str::<ProjectPackageJson>(
+                    &rendered_templates_cache
+                        .get(worker_base_path.join("package.json"))
+                        .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?
+                        .unwrap()
+                        .content,
+                )?;
+
+                let docker_compose_path =
+                    if let Some(docker_compose_path) = &manifest_data.docker_compose_path {
+                        app_root_path.join(docker_compose_path)
+                    } else {
+                        app_root_path.join("docker-compose.yaml")
+                    };
+                let mut docker_compose_data = serde_yml::from_str::<DockerCompose>(
+                    &rendered_templates_cache
+                        .get(&docker_compose_path)
+                        .with_context(|| ERROR_FAILED_TO_READ_DOCKER_COMPOSE)?
+                        .unwrap()
+                        .content,
+                )?;
+
+                worker_to_service(
+                    &worker_base_path,
+                    &mut manifest_data,
+                    &mut project_package_json_to_write,
+                    &mut docker_compose_data,
+                    &mut rendered_templates_cache,
+                    &mut stdout,
+                )?;
+
+                // Write modified files
+                rendered_templates_cache.insert(
+                    manifest_path.clone().to_string_lossy().to_string(),
+                    RenderedTemplate {
+                        path: manifest_path.to_path_buf(),
+                        content: toml::to_string_pretty(&manifest_data)?,
+                        context: None,
+                    },
+                );
+
+                rendered_templates_cache.insert(
+                    docker_compose_path.clone().to_string_lossy().to_string(),
+                    RenderedTemplate {
+                        path: docker_compose_path.into(),
+                        content: serde_yml::to_string(&docker_compose_data)?,
+                        context: None,
+                    },
+                );
+
+                rendered_templates_cache.insert(
+                    worker_base_path
+                        .parent()
+                        .unwrap()
+                        .join("package.json")
+                        .to_string_lossy()
+                        .to_string(),
+                    RenderedTemplate {
+                        path: worker_base_path.parent().unwrap().join("package.json"),
+                        content: serde_json::to_string_pretty(&application_package_json_to_write)?,
+                        context: None,
+                    },
+                );
+
+                rendered_templates_cache.insert(
+                    worker_base_path
+                        .join("package.json")
+                        .to_string_lossy()
+                        .to_string(),
+                    RenderedTemplate {
+                        path: worker_base_path.join("package.json"),
+                        content: serde_json::to_string_pretty(&project_package_json_to_write)?,
+                        context: None,
+                    },
+                );
+
+                let rendered_templates: Vec<RenderedTemplate> = rendered_templates_cache
+                    .drain()
+                    .map(|(_, template)| template)
+                    .collect();
+
+                write_rendered_templates(&rendered_templates, dryrun, &mut stdout)?;
+
+                return Ok(());
+            }
+        }
+
         let selected_options = if matches.ids().all(|id| id == "dryrun" || id == "confirm") {
             let options = vec!["name", "type", "description"];
 
@@ -596,7 +838,7 @@ impl CliCommand for WorkerCommand {
             &mut line_editor,
             &mut stdout,
             matches,
-            "project description (optional)",
+            "project description",
             None,
             |_input: &str| true,
             |_| "Invalid description. Please try again".to_string(),

@@ -85,7 +85,7 @@ export interface ForklaunchBaseRequest<
   originalPath: string;
 
   /** OpenTelemetry Collector */
-  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
+  openTelemetryCollector?: OpenTelemetryCollector<MetricsDefinition>;
 }
 
 /**
@@ -148,13 +148,16 @@ export interface ForklaunchRequest<
   originalPath: string;
 
   /** OpenTelemetry Collector */
-  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
+  openTelemetryCollector?: OpenTelemetryCollector<MetricsDefinition>;
 
   /** Session */
   session: JWTPayload & SessionSchema;
 
   /** Parsed versions */
   _parsedVersions: string[] | number;
+
+  /** Raw body before schema validation (for HMAC verification) */
+  _rawBody?: unknown;
 
   /** Global options */
   _globalOptions: () => ExpressLikeRouterOptions<SV, SessionSchema> | undefined;
@@ -1218,7 +1221,7 @@ type SdkResponse<
   ResBodyMap extends Record<number, unknown>,
   ResHeaders extends Record<string, unknown> | unknown
 > = ({
-  [K in keyof ForklaunchResErrors]: {
+  [K in keyof Omit<ForklaunchResErrors, keyof ResBodyMap>]: {
     code: K;
     contentType: 'text/plain';
     response: ForklaunchResErrors[K];
@@ -1229,7 +1232,7 @@ type SdkResponse<
     contentType: ExtractContentType<SV, ResBodyMap[K]>;
     response: ExtractResponseBody<SV, ResBodyMap[K]>;
   } & (unknown extends ResHeaders ? unknown : { headers: ResHeaders });
-})[keyof (ForklaunchResErrors & ResBodyMap)];
+})[keyof (Omit<ForklaunchResErrors, keyof ResBodyMap> & ResBodyMap)];
 
 /**
  * Represents the default error types for responses.

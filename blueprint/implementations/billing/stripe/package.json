@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/implementation-billing-stripe",
-  "version": "0.5.6",
+  "version": "0.5.10",
   "description": "Stripe implementation for forklaunch billing",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -42,7 +42,7 @@
     "lib/**"
   ],
   "scripts": {
-    "build": "tsc --noEmit && tsup domain/schemas/index.ts services/index.ts domain/enum/index.ts domain/types/index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean && if [ -f eject-package.bash ]; then pnpm package:eject; fi",
+    "build": "tsgo --noEmit && tsup domain/schemas/index.ts services/index.ts domain/enum/index.ts domain/types/index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean && if [ -f eject-package.bash ]; then pnpm package:eject; fi",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
@@ -54,22 +54,22 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.6.22",
-    "@forklaunch/core": "^0.15.12",
+    "@forklaunch/common": "^0.6.27",
+    "@forklaunch/core": "^0.17.3",
     "@forklaunch/implementation-billing-base": "workspace:*",
     "@forklaunch/interfaces-billing": "workspace:*",
-    "@forklaunch/internal": "^0.3.22",
-    "@forklaunch/validator": "^0.10.22",
-    "@mikro-orm/core": "^6.5.9",
-    "@sinclair/typebox": "^0.34.41",
+    "@forklaunch/internal": "^0.3.27",
+    "@forklaunch/validator": "^0.10.27",
+    "@mikro-orm/core": "^6.6.5",
+    "@sinclair/typebox": "^0.34.47",
     "ajv": "^8.17.1",
-    "stripe": "^19.1.0",
-    "zod": "^4.1.12"
+    "stripe": "^20.2.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@typescript/native-preview": "7.0.0-dev.20251027.1",
+    "@typescript/native-preview": "7.0.0-dev.20260122.4",
     "depcheck": "^1.4.7",
-    "prettier": "^3.6.2",
-    "typedoc": "^0.28.14"
+    "prettier": "^3.8.1",
+    "typedoc": "^0.28.16"
   }
 }

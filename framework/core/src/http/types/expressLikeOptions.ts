@@ -1,6 +1,7 @@
-import { FastMCP } from '@forklaunch/fastmcp-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { CorsOptions } from 'cors';
+import { FastMCP } from 'fastmcp';
+import http from 'http';
 import { JWTPayload } from 'jose';
 import { ForklaunchRequest, MapSessionSchema } from './apiDefinition.types';
 import { SessionObject } from './contractDetails.types';
@@ -191,9 +192,18 @@ export type ExpressLikeApplicationOptions<
          */
         options?: ConstructorParameters<typeof FastMCP>[0];
         /**
+         * Optional authentication callback for validating MCP requests.
+         * Called by FastMCP for each request to verify the session token.
+         * Return user info object if authenticated, undefined otherwise.
+         * Example: { email: 'user@example.com', name: 'User' }
+         */
+        authenticate?: (
+          request: http.IncomingMessage
+        ) => Promise<Record<string, unknown> | undefined>;
+        /**
          * Additional tools to register with the MCP server.
          */
-        additionalTools: (mcpServer: FastMCP) => void;
+        additionalTools?: (mcpServer: FastMCP) => void;
         /**
          * Content type mapping for the MCP server.
          */
