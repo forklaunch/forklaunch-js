@@ -81,7 +81,7 @@ export const getRole = handlers.get(
       jwt: {
         jwksPublicKeyUrl: JWKS_PUBLIC_KEY_URL
       },
-      allowedRoles: PLATFORM_READ_PERMISSIONS
+      allowedPermissions: PLATFORM_READ_PERMISSIONS
     },
     responses: {
       200: RoleMapper.schema,
@@ -105,7 +105,7 @@ export const getBatchRoles = handlers.get(
       jwt: {
         jwksPublicKeyUrl: JWKS_PUBLIC_KEY_URL
       },
-      allowedRoles: PLATFORM_READ_PERMISSIONS
+      allowedPermissions: PLATFORM_READ_PERMISSIONS
     },
     responses: {
       200: array(RoleMapper.schema),

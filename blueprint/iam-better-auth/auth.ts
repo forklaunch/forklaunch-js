@@ -30,7 +30,51 @@ export const betterAuthConfig = ({
     basePath: BETTER_AUTH_BASE_PATH,
     secret: PASSWORD_ENCRYPTION_SECRET,
     trustedOrigins: CORS_ORIGINS,
-    database: mikroOrmAdapter(orm),
+    database: mikroOrmAdapter(orm, {
+      options: {
+        advanced: {
+          database: {
+            generateId: false
+          }
+        },
+        user: {
+          additionalFields: {
+            firstName: {
+              type: 'string',
+              required: true
+            },
+            lastName: {
+              type: 'string',
+              required: true
+            },
+            phoneNumber: {
+              type: 'string',
+              required: false
+            },
+            organizationId: {
+              type: 'string',
+              required: false,
+              returned: true
+            },
+            roleIds: {
+              type: 'string[]',
+              required: false,
+              returned: true
+            },
+            organization: {
+              type: 'string',
+              required: false,
+              returned: false
+            },
+            roles: {
+              type: 'string[]',
+              required: false,
+              returned: false
+            }
+          }
+        }
+      }
+    }),
     emailAndPassword: {
       enabled: true
     },

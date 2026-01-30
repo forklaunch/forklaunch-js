@@ -107,7 +107,7 @@ export const getUser = handlers.get(
         jwksPublicKeyUrl: JWKS_PUBLIC_KEY_URL
       },
       decodeResource: decodeResourceWithOrganizationId,
-      allowedRoles: PLATFORM_READ_PERMISSIONS
+      allowedPermissions: PLATFORM_READ_PERMISSIONS
     },
     responses: {
       200: UserMapper.schema,
@@ -142,7 +142,7 @@ export const getBatchUsers = handlers.get(
         jwksPublicKeyUrl: JWKS_PUBLIC_KEY_URL
       },
       decodeResource: decodeResourceWithOrganizationId,
-      allowedRoles: PLATFORM_READ_PERMISSIONS
+      allowedPermissions: PLATFORM_READ_PERMISSIONS
     },
     responses: {
       200: array(UserMapper.schema),
