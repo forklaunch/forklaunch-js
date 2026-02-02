@@ -2,10 +2,8 @@ import {
   array,
   date,
   email,
-  nullish,
   optional,
   string,
-  union,
   unknown,
   uuid
 } from '@forklaunch/validator/zod';
@@ -18,8 +16,8 @@ export const CreateUserSchema = {
   lastName: string,
   organization: string,
   roles: array(string),
-  phoneNumber: optional(union([string, nullish])),
-  subscription: optional(union([string, nullish])),
+  phoneNumber: optional(string),
+  subscription: optional(string),
   providerFields: optional(unknown)
 };
 
@@ -30,8 +28,8 @@ export const UpdateUserSchema = ({ uuidId }: { uuidId: boolean }) => ({
   firstName: optional(string),
   lastName: optional(string),
   roles: optional(array(string)),
-  phoneNumber: optional(union([string, nullish])),
-  subscription: optional(union([string, nullish])),
+  phoneNumber: optional(string),
+  subscription: optional(string),
   providerFields: optional(unknown)
 });
 
@@ -41,8 +39,8 @@ export const UserSchema = ({ uuidId }: { uuidId: boolean }) => ({
   firstName: string,
   lastName: string,
   roles: array(RoleSchema({ uuidId })),
-  phoneNumber: optional(union([string, nullish])),
-  subscription: optional(union([string, nullish])),
+  phoneNumber: optional(string),
+  subscription: optional(string),
   providerFields: optional(unknown),
   createdAt: optional(date),
   updatedAt: optional(date)

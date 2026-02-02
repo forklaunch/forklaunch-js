@@ -13,6 +13,41 @@ const plugins: Plugins = [
   })
 ];
 
+const userAdditionalFields = {
+  firstName: {
+    type: 'string',
+    required: true
+  },
+  lastName: {
+    type: 'string',
+    required: true
+  },
+  phoneNumber: {
+    type: 'string',
+    required: false
+  },
+  organizationId: {
+    type: 'string',
+    required: false,
+    returned: true
+  },
+  roleIds: {
+    type: 'string[]',
+    required: false,
+    returned: true
+  },
+  organization: {
+    type: 'string',
+    required: false,
+    returned: false
+  },
+  roles: {
+    type: 'string[]',
+    required: false,
+    returned: false
+  }
+} as const;
+
 export const betterAuthConfig = ({
   BETTER_AUTH_BASE_PATH,
   PASSWORD_ENCRYPTION_SECRET,
@@ -38,40 +73,7 @@ export const betterAuthConfig = ({
           }
         },
         user: {
-          additionalFields: {
-            firstName: {
-              type: 'string',
-              required: true
-            },
-            lastName: {
-              type: 'string',
-              required: true
-            },
-            phoneNumber: {
-              type: 'string',
-              required: false
-            },
-            organizationId: {
-              type: 'string',
-              required: false,
-              returned: true
-            },
-            roleIds: {
-              type: 'string[]',
-              required: false,
-              returned: true
-            },
-            organization: {
-              type: 'string',
-              required: false,
-              returned: false
-            },
-            roles: {
-              type: 'string[]',
-              required: false,
-              returned: false
-            }
-          }
+          additionalFields: userAdditionalFields
         }
       }
     }),
@@ -80,40 +82,7 @@ export const betterAuthConfig = ({
     },
     plugins,
     user: {
-      additionalFields: {
-        firstName: {
-          type: 'string',
-          required: true
-        },
-        lastName: {
-          type: 'string',
-          required: true
-        },
-        phoneNumber: {
-          type: 'string',
-          required: false
-        },
-        organizationId: {
-          type: 'string',
-          required: false,
-          returned: true
-        },
-        roleIds: {
-          type: 'string[]',
-          required: false,
-          returned: true
-        },
-        organization: {
-          type: 'string',
-          required: false,
-          returned: false
-        },
-        roles: {
-          type: 'string[]',
-          required: false,
-          returned: false
-        }
-      }
+      additionalFields: userAdditionalFields
     },
     databaseHooks: {
       user: {
