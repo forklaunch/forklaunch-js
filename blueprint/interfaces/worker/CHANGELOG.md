@@ -1,5 +1,11 @@
 # @forklaunch/interfaces-worker
 
+## 0.7.11
+
+### Patch Changes
+
+- update package dependency versions
+
 ## 0.7.10
 
 ### Patch Changes

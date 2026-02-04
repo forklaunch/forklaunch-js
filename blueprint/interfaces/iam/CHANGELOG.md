@@ -1,5 +1,11 @@
 # @forklaunch/interfaces-iam
 
+## 0.8.11
+
+### Patch Changes
+
+- update package dependency versions
+
 ## 0.8.10
 
 ### Patch Changes
