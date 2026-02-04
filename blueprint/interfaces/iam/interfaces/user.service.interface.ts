@@ -1,4 +1,4 @@
-import { EntityManager } from '@mikro-orm/core';
+import { EntityManager, FilterQuery } from '@mikro-orm/core';
 import { UserServiceParameters } from '../types/user.service.types';
 
 export interface UserService<
@@ -15,13 +15,13 @@ export interface UserService<
   getOrganizationIdByUserId(
     idDto: Params['IdDto'],
     em?: EntityManager
-  ): Promise<string>;
+  ): Promise<string | undefined>;
   getUser(
     idDto: Params['IdDto'],
     em?: EntityManager
   ): Promise<Params['UserDto']>;
   getBatchUsers(
-    idsDto: Params['IdsDto'],
+    idsDto: Params['IdsDto'] & FilterQuery<unknown>,
     em?: EntityManager
   ): Promise<Params['UserDto'][]>;
   updateUser(
@@ -32,8 +32,8 @@ export interface UserService<
     userDtos: Params['UpdateUserDto'][],
     em?: EntityManager
   ): Promise<Params['UserDto'][]>;
-  deleteUser(idDto: Params['IdDto'], em?: EntityManager): Promise<void>;
-  deleteBatchUsers(idsDto: Params['IdsDto'], em?: EntityManager): Promise<void>;
+  deleteUser(idDto: Params['IdDto'] & FilterQuery<unknown>, em?: EntityManager): Promise<void>;
+  deleteBatchUsers(idsDto: Params['IdsDto'] & FilterQuery<unknown>, em?: EntityManager): Promise<void>;
   surfaceRoles(
     idDto: Params['IdDto'],
     em?: EntityManager
