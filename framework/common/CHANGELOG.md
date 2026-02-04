@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.6.28
+
+### Patch Changes
+
+- 4e10567: Update dependency versions
+
 ## 0.6.27
 
 ### Patch Changes

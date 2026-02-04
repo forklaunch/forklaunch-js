@@ -1,5 +1,14 @@
 # @forklaunch/infrastructure-redis
 
+## 0.4.38
+
+### Patch Changes
+
+- 4e10567: Update dependency versions
+- Updated dependencies [4e10567]
+  - @forklaunch/common@0.6.28
+  - @forklaunch/core@0.18.1
+
 ## 0.4.37
 
 ### Patch Changes
