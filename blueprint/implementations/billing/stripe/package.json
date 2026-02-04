@@ -55,19 +55,19 @@
   },
   "dependencies": {
     "@forklaunch/common": "^0.6.27",
-    "@forklaunch/core": "^0.17.3",
+    "@forklaunch/core": "^0.18.0",
     "@forklaunch/implementation-billing-base": "workspace:*",
     "@forklaunch/interfaces-billing": "workspace:*",
     "@forklaunch/internal": "^0.3.27",
     "@forklaunch/validator": "^0.10.27",
-    "@mikro-orm/core": "^6.6.5",
-    "@sinclair/typebox": "^0.34.47",
+    "@mikro-orm/core": "^6.6.6",
+    "@sinclair/typebox": "^0.34.48",
     "ajv": "^8.17.1",
-    "stripe": "^20.2.0",
+    "stripe": "^20.3.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@typescript/native-preview": "7.0.0-dev.20260122.4",
+    "@typescript/native-preview": "7.0.0-dev.20260204.1",
     "depcheck": "^1.4.7",
     "prettier": "^3.8.1",
     "typedoc": "^0.28.16"

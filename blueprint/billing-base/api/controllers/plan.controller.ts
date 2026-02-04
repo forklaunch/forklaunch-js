@@ -3,6 +3,7 @@ import {
   handlers,
   IdSchema,
   IdsSchema,
+  optional,
   schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
@@ -128,7 +129,7 @@ export const listPlans = handlers.get(
   {
     name: 'List Plans',
     summary: 'List plans',
-    query: IdsSchema,
+    query: optional(IdsSchema),
     auth: {
       hmac: {
         secretKeys: {
