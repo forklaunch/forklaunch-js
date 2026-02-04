@@ -89,31 +89,11 @@ describe('auth middleware - billing features', () => {
     };
   }
 
-  function createMockResponse(): ForklaunchResponse<
-    unknown,
-    Record<number, unknown>,
-    Record<string, unknown>,
-    Record<string, unknown>,
-    never
-  > {
+  function createMockResponse() {
     let statusCode = 200;
     let sentData: unknown = null;
 
-    return {
-      status: function (code: number) {
-        statusCode = code;
-        return this;
-      },
-      send: function (data: unknown) {
-        sentData = data;
-        return this;
-      },
-      type: function () {
-        return this;
-      },
-      getStatus: () => statusCode,
-      getSentData: () => sentData
-    } as ForklaunchResponse<
+    const res: ForklaunchResponse<
       unknown,
       Record<number, unknown>,
       Record<string, unknown>,
@@ -122,7 +102,49 @@ describe('auth middleware - billing features', () => {
     > & {
       getStatus: () => number;
       getSentData: () => unknown;
+    } = {
+      bodyData: null,
+      statusCode: 200,
+      headersSent: false,
+      metricRecorded: false,
+      getHeaders: () => ({ 'x-correlation-id': 'test-correlation-id' }),
+      getHeader: () => undefined,
+      setHeader: () => res,
+      on: () => res,
+      end: () => {},
+      type: () => res,
+      locals: {},
+      cors: false,
+      responseSchemas: {
+        headers: {},
+        responses: {}
+      },
+      sent: false,
+      version: {} as never,
+      status: function (code: number) {
+        statusCode = code;
+        res.statusCode = code;
+        return {
+          json: (data: unknown) => {
+            sentData = data;
+            res.bodyData = data;
+            return true;
+          },
+          jsonp: () => true,
+          send: (data: unknown) => {
+            sentData = data;
+            res.bodyData = data;
+            return true;
+          },
+          sseEmitter: () => Promise.resolve(),
+          type: () => res
+        };
+      },
+      getStatus: () => statusCode,
+      getSentData: () => sentData
     };
+
+    return res;
   }
 
   describe('requireActiveSubscription', () => {
