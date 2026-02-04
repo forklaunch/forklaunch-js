@@ -25,3 +25,5 @@ output/
 
 forklaunch-*.tgz
 bin/
+
+.DS_Store
