@@ -1,5 +1,13 @@
 # @forklaunch/hyper-express
 
+## 0.11.4
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.18.0
+  - @forklaunch/ws@0.1.7
+
 ## 0.11.3
 
 ### Patch Changes

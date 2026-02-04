@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.18.0
+
+### Minor Changes
+
+- added logic in auth middleware to support billing based authorization
+
 ## 0.17.3
 
 ### Patch Changes
