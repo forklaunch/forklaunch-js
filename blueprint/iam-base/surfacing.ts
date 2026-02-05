@@ -13,10 +13,14 @@ async function getIamSdk(iamUrl: string): Promise<IamSdkClient> {
     sdkPromise = universalSdk<IamSdkClient>({
       host: iamUrl,
       registryOptions: { path: 'api/v1/openapi' }
+    }).catch((err) => {
+      sdkCache.delete(iamUrl);
+      throw err;
     });
     sdkCache.set(iamUrl, sdkPromise);
   }
   return sdkPromise;
+}
 }
 
 /**
