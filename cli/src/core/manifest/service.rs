@@ -72,6 +72,8 @@ config_struct!(
 
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) is_iam_configured: bool,
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) is_billing_configured: bool,
 
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) with_mappers: bool,
@@ -173,6 +175,13 @@ impl InitializableManifestConfig for ServiceManifestData {
 
             is_iam_configured: self.projects.iter().any(|project_entry| {
                 if project_entry.name == "iam" {
+                    return true;
+                }
+                return false;
+            }),
+
+            is_billing_configured: self.projects.iter().any(|project_entry| {
+                if project_entry.name == "billing" {
                     return true;
                 }
                 return false;

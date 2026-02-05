@@ -9,7 +9,7 @@
  *   STRIPE_SECRET_KEY=sk_test_... npm run seed:plans
  */
 
-import { BillingPlanEnum } from '@forklaunch/blueprint-core/plan';
+import { BillingPlanEnum } from '@forklaunch/blueprint-core';
 import {
   BillingProviderEnum,
   CurrencyEnum,
@@ -133,7 +133,7 @@ async function seedPlans() {
       existing.cadence = stripeToCadence(price.recurring?.interval || 'month');
       existing.active = product.active;
       existing.features = JSON.parse(product.metadata.features || '[]');
-      existing.providerFields = product as unknown as Stripe.Plan;
+      existing.providerFields = product;
       existing.updatedAt = new Date();
 
       await em.persistAndFlush(existing);
@@ -152,7 +152,7 @@ async function seedPlans() {
         cadence: stripeToCadence(price.recurring?.interval || 'month'),
         active: product.active,
         features: JSON.parse(product.metadata.features || '[]'),
-        providerFields: product as unknown as Stripe.Plan,
+        providerFields: product,
         billingProvider: BillingProviderEnum.STRIPE,
         createdAt: new Date(),
         updatedAt: new Date()

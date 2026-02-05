@@ -4,7 +4,7 @@
  * This is an auto-generated file. Modifications are encouraged but may inhibit automated upgrades.
  */
 
-import { PERMISSIONS, ROLES } from '@forklaunch/blueprint-core/rbac';
+import { PERMISSIONS, ROLES } from '@forklaunch/blueprint-core';
 import { RequiredEntityData } from '@mikro-orm/core';
 import { v4 as uuidv4 } from 'uuid';
 import { OrganizationStatus } from '../domain/enum/organizationStatus.enum';

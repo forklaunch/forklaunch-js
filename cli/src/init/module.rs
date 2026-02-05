@@ -235,6 +235,13 @@ impl CliCommand for ModuleCommand {
                 return false;
             }),
 
+            is_billing_configured: manifest_data.projects.iter().any(|project_entry| {
+                if project_entry.name == "billing" {
+                    return true;
+                }
+                return false;
+            }),
+
             // Default to false for module initialization, will be set by CLI flag
             with_mappers: false,
         };

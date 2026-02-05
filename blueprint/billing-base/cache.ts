@@ -3,7 +3,7 @@
  * Exports only cache service - no entities, no MikroORM discovery
  */
 
-import type { ResourceLimits } from '@forklaunch/blueprint-core/feature-flags';
+import type { ResourceLimits } from '@forklaunch/blueprint-core';
 
 export type BillingCacheLike = {
   get: (key: string) => Promise<unknown>;

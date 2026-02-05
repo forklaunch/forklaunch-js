@@ -971,6 +971,13 @@ impl CliCommand for ApplicationCommand {
                     return false;
                 }),
 
+                is_billing_configured: data.projects.iter().any(|project_entry| {
+                    if project_entry.name == "billing" {
+                        return true;
+                    }
+                    return false;
+                }),
+
                 // Default to false for application initialization, will be set by CLI flag
                 with_mappers: false,
             };

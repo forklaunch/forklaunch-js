@@ -1,4 +1,4 @@
-# @forklaunch/common
+# @forklaunch/internal
 
 ## 0.3.28
 

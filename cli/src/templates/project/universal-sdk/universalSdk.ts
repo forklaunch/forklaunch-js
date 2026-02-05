@@ -5,13 +5,13 @@ import { createAuthClient } from "better-auth/client";{{/is_better_auth}}
 {{#is_better_auth}}import { inferAdditionalFields } from 'better-auth/client/plugins';{{/is_better_auth}}
 {{#is_iam}}
 //! export various service and worker sdk clients
-export const iamSdkClient = {{#is_better_auth}}({
+export const iamSdkClient{{^is_better_auth}}{{/is_better_auth}} = {{#is_better_auth}}({
     host,
     registryOptions
 }: {
     host: string,
     registryOptions: RegistryOptions
-}) => {
+}) => ({
     core: await {{/is_better_auth}}universalSdk<IamSdkClient>{{#is_better_auth}}({
         host,
         registryOptions
@@ -20,5 +20,5 @@ export const iamSdkClient = {{#is_better_auth}}({
         baseURL: host,
         plugins: [inferAdditionalFields<BetterAuthConfig>()]
     })
-}{{/is_better_auth}};{{/is_iam}}{{#is_billing}}
+}){{/is_better_auth}};{{/is_iam}}{{#is_billing}}
 export const billingSdkClient = universalSdk<BillingSdkClient>;{{/is_billing}}

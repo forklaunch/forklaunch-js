@@ -32,7 +32,7 @@ export class Plan extends SqlBaseEntity {
   features?: string[];
 
   @Property({ type: 'json' })
-  providerFields!: Stripe.Plan;
+  providerFields!: Stripe.Product;
 
   @Property()
   @Unique()

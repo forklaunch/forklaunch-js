@@ -80,9 +80,9 @@ mod tests {
         import { UserServiceSdkClient } from '@forklaunch/blueprint-user-service';
         import { universalSdk } from '@forklaunch/universal-sdk';
 
-        export const billingSdkClient = universalSdk<BillingSdkClient>;
-        export const iamSdkClient = universalSdk<IamSdkClient>;
-        export const userServiceSdkClient = universalSdk<UserServiceSdkClient>;
+        export const billingSdkClient: typeof universalSdk<BillingSdkClient> = universalSdk<BillingSdkClient>;
+        export const iamSdkClient: typeof universalSdk<IamSdkClient> = universalSdk<IamSdkClient>;
+        export const userServiceSdkClient: typeof universalSdk<UserServiceSdkClient> = universalSdk<UserServiceSdkClient>;
         "#;
         let mut app_program = parse_ast_program(&allocator, app_code, SourceType::ts());
 
@@ -91,7 +91,7 @@ mod tests {
 
         assert!(result.is_ok());
 
-        let expected_code = "import { BillingSdkClient } from \"@forklaunch/blueprint-billing-base\";\nimport { IamSdkClient } from \"@forklaunch/blueprint-iam-base\";\nimport { universalSdk } from \"@forklaunch/universal-sdk\";\nexport const billingSdkClient = universalSdk<BillingSdkClient>;\nexport const iamSdkClient = universalSdk<IamSdkClient>;\n";
+        let expected_code = "import { BillingSdkClient } from \"@forklaunch/blueprint-billing-base\";\nimport { IamSdkClient } from \"@forklaunch/blueprint-iam-base\";\nimport { universalSdk } from \"@forklaunch/universal-sdk\";\nexport const billingSdkClient: typeof universalSdk<BillingSdkClient> = universalSdk<BillingSdkClient>;\nexport const iamSdkClient: typeof universalSdk<IamSdkClient> = universalSdk<IamSdkClient>;\n";
 
         assert_eq!(
             Codegen::new()
@@ -117,8 +117,8 @@ mod tests {
         import { createAuthClient } from 'better-auth/client';
         import { inferAdditionalFields } from 'better-auth/client/plugins';
 
-        export const billingSdkClient = universalSdk<BillingSdkClient>;
-        export const iamSdkClient = universalSdk<IamSdkClient>;
+        export const billingSdkClient: typeof universalSdk<BillingSdkClient> = universalSdk<BillingSdkClient>;
+        export const iamSdkClient: typeof universalSdk<IamSdkClient> = universalSdk<IamSdkClient>;
         export const iamBetterAuthSdkClient = async ({
           host,
           registryOptions
@@ -147,7 +147,7 @@ mod tests {
 
         assert!(result.is_ok());
 
-        let expected_code = "import { BillingSdkClient } from \"@forklaunch/blueprint-billing-base\";\nimport { IamSdkClient } from \"@forklaunch/blueprint-iam-base\";\nimport { universalSdk, RegistryOptions } from \"@forklaunch/universal-sdk\";\nimport { createAuthClient } from \"better-auth/client\";\nimport { inferAdditionalFields } from \"better-auth/client/plugins\";\nexport const billingSdkClient = universalSdk<BillingSdkClient>;\nexport const iamSdkClient = universalSdk<IamSdkClient>;\n";
+        let expected_code = "import { BillingSdkClient } from \"@forklaunch/blueprint-billing-base\";\nimport { IamSdkClient } from \"@forklaunch/blueprint-iam-base\";\nimport { universalSdk, RegistryOptions } from \"@forklaunch/universal-sdk\";\nimport { createAuthClient } from \"better-auth/client\";\nimport { inferAdditionalFields } from \"better-auth/client/plugins\";\nexport const billingSdkClient: typeof universalSdk<BillingSdkClient> = universalSdk<BillingSdkClient>;\nexport const iamSdkClient: typeof universalSdk<IamSdkClient> = universalSdk<IamSdkClient>;\n";
 
         assert_eq!(
             Codegen::new()

@@ -11,10 +11,11 @@
  */
 
 import {
+  BillingPlan,
+  BillingPlanEnum,
   PLAN_FEATURES,
   PLAN_LIMITS
-} from '@forklaunch/blueprint-core/feature-flags';
-import { BillingPlan, BillingPlanEnum } from '@forklaunch/blueprint-core/plan';
+} from '@forklaunch/blueprint-core';
 import Stripe from 'stripe';
 
 // Plan pricing configuration

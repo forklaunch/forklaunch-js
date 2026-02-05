@@ -3,10 +3,10 @@ import {
   handlers,
   IdSchema,
   IdsSchema,
+  PLATFORM_READ_PERMISSIONS,
   schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
-import { PLATFORM_READ_PERMISSIONS } from '@forklaunch/blueprint-core/rbac';
 import { ci, tokens } from '../../bootstrapper';
 import {
   CreatePermissionMapper,

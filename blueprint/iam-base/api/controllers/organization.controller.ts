@@ -1,10 +1,10 @@
 import {
   handlers,
   IdSchema,
+  PLATFORM_ADMIN_ROLES,
   schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
-import { PLATFORM_ADMIN_ROLES } from '@forklaunch/blueprint-core/rbac';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { ci, tokens } from '../../bootstrapper';
 import {

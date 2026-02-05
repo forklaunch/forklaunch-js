@@ -1,5 +1,7 @@
 import { {{#is_kafka_enabled}}array, {{/is_kafka_enabled}}{{#is_worker}}function_, {{/is_worker}}number, SchemaValidator, string{{#is_worker}}, type{{/is_worker}} } from "@{{app_name}}/core";
-import { metrics } from "@{{app_name}}/monitoring";{{#is_cache_enabled}}
+import { metrics } from "@{{app_name}}/monitoring";{{#is_iam_configured}}
+import { createAuthCacheService, type AuthCacheService } from "@{{app_name}}/iam";{{/is_iam_configured}}{{#is_billing_configured}}
+import { createBillingCacheService, type BillingCacheService } from "@{{app_name}}/billing";{{/is_billing_configured}}{{#is_cache_enabled}}
 import { RedisTtlCache } from "@forklaunch/infrastructure-redis";{{/is_cache_enabled}}{{#is_s3_enabled}}
 import { S3ObjectStore } from "@forklaunch/infrastructure-s3";{{/is_s3_enabled}}
 import { OpenTelemetryCollector } from "@forklaunch/core/http";
@@ -134,7 +136,17 @@ const environmentConfig = configInjector.chain({
     lifetime: Lifetime.Singleton,
     type: string,
     value: getEnvVar('JWKS_PUBLIC_KEY_URL')
-  },{{/is_iam_configured}}
+  },
+  IAM_URL: {
+    lifetime: Lifetime.Singleton,
+    type: string,
+    value: getEnvVar('IAM_URL')
+  },{{/is_iam_configured}}{{#is_billing_configured}}
+  BILLING_URL: {
+    lifetime: Lifetime.Singleton,
+    type: string,
+    value: getEnvVar('BILLING_URL')
+  },{{/is_billing_configured}}
 });
 
 //! defines the runtime dependencies for the application
@@ -211,7 +223,17 @@ const runtimeDependencies = environmentConfig.chain({
     type: EntityManager,
     factory: ({ MikroORM }, _resolve, context) =>
       MikroORM.em.fork(context?.entityManagerOptions as ForkOptions | undefined),
-  },{{/is_database_enabled}}
+  },{{/is_database_enabled}}{{#is_iam_configured}}
+  AuthCacheService: {
+    lifetime: Lifetime.Singleton,
+    type: {} as AuthCacheService,
+    factory: ({ TtlCache }) => createAuthCacheService(TtlCache)
+  },{{/is_iam_configured}}{{#is_billing_configured}}
+  BillingCacheService: {
+    lifetime: Lifetime.Singleton,
+    type: {} as BillingCacheService,
+    factory: ({ TtlCache }) => createBillingCacheService(TtlCache)
+  },{{/is_billing_configured}}
 });
 
 //! defines the service dependencies for the application

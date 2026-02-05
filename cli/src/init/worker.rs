@@ -49,17 +49,17 @@ use crate::{
                 BETTER_SQLITE3_VERSION, BIOME_VERSION, BULLMQ_VERSION, COMMON_VERSION,
                 CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION,
                 HYPER_EXPRESS_VERSION, INFRASTRUCTURE_REDIS_VERSION, INTERNAL_VERSION,
-                MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION,
-                MIKRO_ORM_MIGRATIONS_VERSION, MIKRO_ORM_REFLECTION_VERSION,
-                MIKRO_ORM_SEEDER_VERSION, OXLINT_VERSION, PRETTIER_VERSION, PROJECT_BUILD_SCRIPT,
-                PROJECT_DOCS_SCRIPT, PROJECT_SEED_SCRIPT, SQLITE3_VERSION, TESTING_VERSION,
-                TSX_VERSION, TYPEBOX_VERSION, TYPEDOC_VERSION,
-                TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_JEST_VERSION,
-                TYPES_QS_VERSION, TYPES_UUID_VERSION, TYPESCRIPT_ESLINT_VERSION, UUID_VERSION,
-                PINO_VERSION, IOREDIS_VERSION,
-                VALIDATOR_VERSION, WORKER_BULLMQ_VERSION, WORKER_DATABASE_VERSION,
-                WORKER_INTERFACES_VERSION, WORKER_KAFKA_VERSION, WORKER_REDIS_VERSION, ZOD_VERSION,
-                project_clean_script, project_dev_local_worker_script, project_dev_server_script,
+                IOREDIS_VERSION, MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION,
+                MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
+                MIKRO_ORM_REFLECTION_VERSION, MIKRO_ORM_SEEDER_VERSION, OXLINT_VERSION,
+                PINO_VERSION, PRETTIER_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT,
+                PROJECT_SEED_SCRIPT, SQLITE3_VERSION, TESTING_VERSION, TSX_VERSION,
+                TYPEBOX_VERSION, TYPEDOC_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION,
+                TYPES_EXPRESS_VERSION, TYPES_JEST_VERSION, TYPES_QS_VERSION, TYPES_UUID_VERSION,
+                TYPESCRIPT_ESLINT_VERSION, UUID_VERSION, VALIDATOR_VERSION, WORKER_BULLMQ_VERSION,
+                WORKER_DATABASE_VERSION, WORKER_INTERFACES_VERSION, WORKER_KAFKA_VERSION,
+                WORKER_REDIS_VERSION, ZOD_VERSION, project_clean_script,
+                project_dev_local_worker_script, project_dev_server_script,
                 project_dev_worker_client_script, project_format_script, project_lint_fix_script,
                 project_lint_script, project_migrate_script, project_start_worker_script,
                 project_test_script,
@@ -870,6 +870,13 @@ impl CliCommand for WorkerCommand {
 
             is_iam_configured: manifest_data.projects.iter().any(|project_entry| {
                 if project_entry.name == "iam" {
+                    return true;
+                }
+                return false;
+            }),
+
+            is_billing_configured: manifest_data.projects.iter().any(|project_entry| {
+                if project_entry.name == "billing" {
                     return true;
                 }
                 return false;

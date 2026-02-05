@@ -55,15 +55,15 @@ use crate::{
                 IOREDIS_VERSION, JOSE_VERSION, MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION,
                 MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
                 MIKRO_ORM_REFLECTION_VERSION, MIKRO_ORM_SEEDER_VERSION, OPENTELEMETRY_API_VERSION,
-                OXLINT_VERSION, PRETTIER_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT,
-                PROJECT_SEED_SCRIPT, SQLITE3_VERSION, STRIPE_VERSION, TESTING_VERSION, TSX_VERSION,
-                TYPEBOX_VERSION, TYPEDOC_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION,
-                TYPES_EXPRESS_VERSION, TYPES_JEST_VERSION, TYPES_QS_VERSION, TYPES_UUID_VERSION,
-                TYPESCRIPT_ESLINT_VERSION, UUID_VERSION, VALIDATOR_VERSION, ZOD_VERSION,
-                PINO_VERSION,
-                project_clean_script, project_dev_local_script, project_dev_server_script,
-                project_format_script, project_lint_fix_script, project_lint_script,
-                project_migrate_script, project_start_server_script, project_test_script,
+                OXLINT_VERSION, PINO_VERSION, PRETTIER_VERSION, PROJECT_BUILD_SCRIPT,
+                PROJECT_DOCS_SCRIPT, PROJECT_SEED_SCRIPT, SQLITE3_VERSION, STRIPE_VERSION,
+                TESTING_VERSION, TSX_VERSION, TYPEBOX_VERSION, TYPEDOC_VERSION,
+                TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_JEST_VERSION,
+                TYPES_QS_VERSION, TYPES_UUID_VERSION, TYPESCRIPT_ESLINT_VERSION, UUID_VERSION,
+                VALIDATOR_VERSION, ZOD_VERSION, project_clean_script, project_dev_local_script,
+                project_dev_server_script, project_format_script, project_lint_fix_script,
+                project_lint_script, project_migrate_script, project_start_server_script,
+                project_test_script,
             },
             project_package_json::{
                 MIKRO_ORM_CONFIG_PATHS, ProjectDependencies, ProjectDevDependencies,
@@ -763,6 +763,13 @@ impl CliCommand for ServiceCommand {
 
             is_iam_configured: manifest_data.projects.iter().any(|project_entry| {
                 if project_entry.name == "iam" {
+                    return true;
+                }
+                return false;
+            }),
+
+            is_billing_configured: manifest_data.projects.iter().any(|project_entry| {
+                if project_entry.name == "billing" {
                     return true;
                 }
                 return false;
