@@ -61,8 +61,8 @@ use crate::{
                 WORKER_INTERFACES_VERSION, WORKER_KAFKA_VERSION, WORKER_REDIS_VERSION, ZOD_VERSION,
                 project_clean_script, project_dev_local_worker_script, project_dev_server_script,
                 project_dev_worker_client_script, project_format_script, project_lint_fix_script,
-                project_lint_script, project_migrate_script, project_start_worker_script,
-                project_test_script,
+                project_lint_script, project_migrate_script, project_start_server_script,
+                project_start_worker_script, project_test_script,
             },
             project_package_json::{
                 MIKRO_ORM_CONFIG_PATHS, ProjectDependencies, ProjectDevDependencies,
@@ -384,7 +384,7 @@ pub(crate) fn generate_worker_package_json(
                 } else {
                     None
                 },
-                start_server: Some(project_start_worker_script(
+                start_server: Some(project_start_server_script(
                     &manifest_data.runtime.parse()?,
                     manifest_data
                         .database

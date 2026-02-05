@@ -424,14 +424,10 @@ pub(crate) fn project_migrate_script(command: &str) -> String {
 
 pub(crate) fn project_start_server_script(runtime: &Runtime, database: Option<Database>) -> String {
     format!(
-        "{} {}DOTENV_FILE_PATH=.env.prod dist/server.js",
-        match runtime {
-            Runtime::Bun => "bun",
-            Runtime::Node => "node --import=tsx",
-        },
+        "{}[ -f .env.prod ] && export DOTENV_FILE_PATH=.env.prod; {} dist/server.js",
         if database.is_some_and(|db| db != Database::MongoDB) {
             format!(
-                "DOTENV_FILE_PATH=.env.prod {} migrate:up && ",
+                "[ -f .env.prod ] && export DOTENV_FILE_PATH=.env.prod; {} migrate:up && ",
                 if runtime == &Runtime::Node {
                     "pnpm"
                 } else {
@@ -440,19 +436,19 @@ pub(crate) fn project_start_server_script(runtime: &Runtime, database: Option<Da
             )
         } else {
             "".to_string()
+        },
+        match runtime {
+            Runtime::Bun => "bun",
+            Runtime::Node => "node --import=tsx",
         }
     )
 }
 pub(crate) fn project_start_worker_script(runtime: &Runtime, database: Option<Database>) -> String {
     format!(
-        "{} {}DOTENV_FILE_PATH=.env.prod dist/worker.js",
-        match runtime {
-            Runtime::Bun => "bun",
-            Runtime::Node => "node --import=tsx",
-        },
+        "{}[ -f .env.prod ] && export DOTENV_FILE_PATH=.env.prod; {} dist/worker.js",
         if database.is_some_and(|db| db != Database::MongoDB) {
             format!(
-                "{} migrate:up && ",
+                "[ -f .env.prod ] && export DOTENV_FILE_PATH=.env.prod; {} migrate:up && ",
                 if runtime == &Runtime::Node {
                     "pnpm"
                 } else {
@@ -461,6 +457,10 @@ pub(crate) fn project_start_worker_script(runtime: &Runtime, database: Option<Da
             )
         } else {
             "".to_string()
+        },
+        match runtime {
+            Runtime::Bun => "bun",
+            Runtime::Node => "node --import=tsx",
         }
     )
 }
