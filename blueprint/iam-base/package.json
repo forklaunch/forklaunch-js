@@ -55,7 +55,6 @@
   "dependencies": {
     "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
-    "@forklaunch/blueprint-universal-sdk": "workspace:*",
     "@forklaunch/core": "^0.18.1",
     "@forklaunch/hyper-express-fork": "^6.17.35",
     "@forklaunch/implementation-iam-base": "workspace:*",

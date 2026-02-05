@@ -51,7 +51,6 @@
     "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-iam-base": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
-    "@forklaunch/blueprint-universal-sdk": "workspace:*",
     "@forklaunch/common": "^0.6.28",
     "@forklaunch/core": "^0.18.1",
     "@forklaunch/express": "^0.10.5",

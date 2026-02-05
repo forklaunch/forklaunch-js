@@ -79,7 +79,6 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@forklaunch/blueprint-universal-sdk": "workspace:*",
     "@forklaunch/testing": "^0.0.17",
     "@mikro-orm/cli": "^6.6.6",
     "@types/express": "^5.0.6",
