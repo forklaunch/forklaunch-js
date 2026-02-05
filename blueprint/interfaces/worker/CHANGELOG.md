@@ -1,5 +1,11 @@
 # @forklaunch/interfaces-worker
 
+## 0.7.12
+
+### Patch Changes
+
+- minor typing updates
+
 ## 0.7.11
 
 ### Patch Changes

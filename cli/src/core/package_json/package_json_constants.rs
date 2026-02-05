@@ -227,29 +227,29 @@ pub(crate) const EXPRESS_VERSION: &str = "~0.10.5";
 // @forklaunch/hyper-express
 pub(crate) const HYPER_EXPRESS_VERSION: &str = "~0.11.5";
 // @forklaunch/implementation-billing-base
-pub(crate) const BILLING_BASE_VERSION: &str = "~0.8.11";
+pub(crate) const BILLING_BASE_VERSION: &str = "~0.8.12";
 // @forklaunch/implementation-billing-stripe
-pub(crate) const BILLING_STRIPE_VERSION: &str = "~0.5.11";
+pub(crate) const BILLING_STRIPE_VERSION: &str = "~0.5.12";
 // @forklaunch/implementation-iam-base
-pub(crate) const IAM_BASE_VERSION: &str = "~0.8.11";
+pub(crate) const IAM_BASE_VERSION: &str = "~0.8.12";
 // @forklaunch/implementation-worker-bullmq
-pub(crate) const WORKER_BULLMQ_VERSION: &str = "~0.8.11";
+pub(crate) const WORKER_BULLMQ_VERSION: &str = "~0.8.12";
 // @forklaunch/implementation-worker-redis
-pub(crate) const WORKER_REDIS_VERSION: &str = "~0.8.11";
+pub(crate) const WORKER_REDIS_VERSION: &str = "~0.8.12";
 // @forklaunch/implementation-worker-database
-pub(crate) const WORKER_DATABASE_VERSION: &str = "~0.8.11";
+pub(crate) const WORKER_DATABASE_VERSION: &str = "~0.8.12";
 // @forklaunch/implementation-worker-kafka
-pub(crate) const WORKER_KAFKA_VERSION: &str = "~0.9.5";
+pub(crate) const WORKER_KAFKA_VERSION: &str = "~0.9.6";
 // @forklaunch/infrastructure-redis
 pub(crate) const INFRASTRUCTURE_REDIS_VERSION: &str = "~0.4.38";
 // @forklaunch/infrastructure-s3
 pub(crate) const INFRASTRUCTURE_S3_VERSION: &str = "~0.4.38";
 // @forklaunch/interfaces-billing
-pub(crate) const BILLING_INTERFACES_VERSION: &str = "~0.8.11";
+pub(crate) const BILLING_INTERFACES_VERSION: &str = "~0.8.12";
 // @forklaunch/interfaces-iam
-pub(crate) const IAM_INTERFACES_VERSION: &str = "~0.8.11";
+pub(crate) const IAM_INTERFACES_VERSION: &str = "~0.8.12";
 // @forklaunch/interfaces-worker
-pub(crate) const WORKER_INTERFACES_VERSION: &str = "~0.7.11";
+pub(crate) const WORKER_INTERFACES_VERSION: &str = "~0.7.12";
 // @forklaunch/internal
 pub(crate) const INTERNAL_VERSION: &str = "~0.3.28";
 // @forklaunch/testing

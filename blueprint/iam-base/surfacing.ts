@@ -5,21 +5,18 @@ import type { IamSdkClient } from './sdk';
 
 export { generateHmacAuthHeaders } from '@forklaunch/core/http';
 
-const sdkCache = new Map<string, Promise<IamSdkClient>>();
+const sdkCache = new Map<string, IamSdkClient>();
 
 async function getIamSdk(iamUrl: string): Promise<IamSdkClient> {
-  let sdkPromise = sdkCache.get(iamUrl);
-  if (!sdkPromise) {
-    sdkPromise = universalSdk<IamSdkClient>({
+  let sdk = sdkCache.get(iamUrl);
+  if (!sdk) {
+    sdk = await universalSdk<IamSdkClient>({
       host: iamUrl,
       registryOptions: { path: 'api/v1/openapi' }
-    }).catch((err) => {
-      sdkCache.delete(iamUrl);
-      throw err;
     });
-    sdkCache.set(iamUrl, sdkPromise);
+    sdkCache.set(iamUrl, sdk);
   }
-  return sdkPromise;
+  return sdk;
 }
 
 /**

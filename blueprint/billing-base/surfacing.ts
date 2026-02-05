@@ -1,20 +1,39 @@
+import { generateHmacAuthHeaders } from '@forklaunch/core/http';
+import { universalSdk } from '@forklaunch/universal-sdk';
 import type { BillingCacheService, SubscriptionCacheData } from './cache';
+import type { BillingSdkClient } from './sdk';
 
-export { generateHmacAuthHeaders } from '@forklaunch/core/http';
+export { generateHmacAuthHeaders };
 
-export type SubscriptionData = SubscriptionCacheData;
+const sdkCache = new Map<string, BillingSdkClient>();
+
+async function getBillingSdk(billingUrl: string): Promise<BillingSdkClient> {
+  let sdk = sdkCache.get(billingUrl);
+  if (!sdk) {
+    sdk = await universalSdk<BillingSdkClient>({
+      host: billingUrl,
+      registryOptions: { path: 'api/v1/openapi' }
+    });
+    sdkCache.set(billingUrl, sdk);
+  }
+  return sdk;
+}
 
 /**
  * Create a surfaceSubscription function that fetches organization subscription data
- * from billing cache (populated by webhook events).
+ * from billing cache (populated by webhook events) or via SDK.
  */
 export async function createSurfaceSubscription(params: {
   billingCacheService: BillingCacheService;
   billingUrl: string;
+  hmacSecretKey: string;
 }): Promise<
-  (payload: { organizationId?: string }) => Promise<SubscriptionData | null>
+  (payload: {
+    organizationId?: string;
+  }) => Promise<SubscriptionCacheData | null>
 > {
-  const { billingCacheService } = params;
+  const { billingCacheService, billingUrl, hmacSecretKey } = params;
+  const billingSdk = await getBillingSdk(billingUrl);
 
   return async (payload: { organizationId?: string }) => {
     if (!payload.organizationId) {
@@ -24,19 +43,58 @@ export async function createSurfaceSubscription(params: {
     const cached = await billingCacheService.getCachedSubscription(
       payload.organizationId
     );
-    return cached;
+    if (cached) {
+      return cached;
+    }
+
+    try {
+      const headers = generateHmacAuthHeaders({
+        secretKey: hmacSecretKey,
+        method: 'GET',
+        path: `/${payload.organizationId}/subscription`
+      });
+
+      const response =
+        await billingSdk.subscription.getOrganizationSubscription({
+          params: { id: payload.organizationId },
+          headers
+        });
+
+      if (response.code !== 200 || !response.response) {
+        return null;
+      }
+
+      // Ensure the response matches SubscriptionCacheData
+      // response.response should be likely be Subscription type which matches SubscriptionCacheData
+      const subscription =
+        response.response as unknown as SubscriptionCacheData;
+
+      await billingCacheService.setCachedSubscription(
+        payload.organizationId,
+        subscription
+      );
+      return subscription;
+    } catch (error) {
+      console.error(
+        '[surfaceSubscription] Error surfacing subscription:',
+        error
+      );
+      return null;
+    }
   };
 }
 
 /**
  * Create a surfaceFeatures function that fetches organization feature flags
- * from billing cache (populated by webhook events).
+ * from billing cache or via SDK.
  */
 export async function createSurfaceFeatures(params: {
   billingCacheService: BillingCacheService;
   billingUrl: string;
+  hmacSecretKey: string;
 }): Promise<(payload: { organizationId?: string }) => Promise<Set<string>>> {
-  const { billingCacheService } = params;
+  const { billingCacheService, billingUrl, hmacSecretKey } = params;
+  const billingSdk = await getBillingSdk(billingUrl);
 
   return async (payload: { organizationId?: string }) => {
     if (!payload.organizationId) {
@@ -46,7 +104,41 @@ export async function createSurfaceFeatures(params: {
     const cached = await billingCacheService.getCachedFeatures(
       payload.organizationId
     );
-    return cached ?? new Set<string>();
+    if (cached) {
+      return cached;
+    }
+
+    try {
+      const headers = generateHmacAuthHeaders({
+        secretKey: hmacSecretKey,
+        method: 'GET',
+        path: `/${payload.organizationId}/subscription`
+      });
+
+      // reusing getOrganizationSubscription since it contains features
+      const response =
+        await billingSdk.subscription.getOrganizationSubscription({
+          params: { id: payload.organizationId },
+          headers
+        });
+
+      if (response.code !== 200 || !response.response) {
+        return new Set<string>();
+      }
+
+      const subscription =
+        response.response as unknown as SubscriptionCacheData;
+      const features = new Set<string>(subscription.features || []);
+
+      await billingCacheService.setCachedFeatures(
+        payload.organizationId,
+        features
+      );
+      return features;
+    } catch (error) {
+      console.error('[surfaceFeatures] Error surfacing features:', error);
+      return new Set<string>();
+    }
   };
 }
 
@@ -59,9 +151,11 @@ export function createSurfaceSubscriptionLocally(params: {
   subscriptionService: {
     getActiveSubscription: (params: {
       organizationId: string;
-    }) => Promise<SubscriptionData | null>;
+    }) => Promise<SubscriptionCacheData | null>;
   };
-}): (payload: { organizationId?: string }) => Promise<SubscriptionData | null> {
+}): (payload: {
+  organizationId?: string;
+}) => Promise<SubscriptionCacheData | null> {
   const { billingCacheService, subscriptionService } = params;
 
   return async (payload: { organizationId?: string }) => {
@@ -158,7 +252,7 @@ export function validateRequiredFeatures(
  * Validates if organization has an active subscription.
  */
 export function validateActiveSubscription(
-  subscription: SubscriptionData | null
+  subscription: SubscriptionCacheData | null
 ): {
   allowed: boolean;
   reason?: 'NO_SUBSCRIPTION' | 'INACTIVE';

@@ -12,13 +12,9 @@ export type CreateUserDto = Partial<IdDto> & {
   subscription?: string;
   providerFields?: unknown;
 };
-export type UpdateUserDto = Partial<Omit<CreateUserDto, 'organization'>> &
-  IdDto;
+export type UpdateUserDto = Partial<CreateUserDto> & IdDto;
 
-export type UserDto = Omit<
-  CreateUserDto,
-  'roles' | 'password' | 'organization'
-> &
+export type UserDto = Omit<CreateUserDto, 'roles' | 'password'> &
   IdDto &
   Partial<RecordTimingDto> & {
     roles: RoleDto[];

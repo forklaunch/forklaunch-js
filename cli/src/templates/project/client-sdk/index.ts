@@ -1,1 +1,1 @@
-export * from "./universalSdk";
+export * from "./clientSdk";

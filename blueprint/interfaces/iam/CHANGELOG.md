@@ -1,5 +1,11 @@
 # @forklaunch/interfaces-iam
 
+## 0.8.12
+
+### Patch Changes
+
+- minor typing updates
+
 ## 0.8.11
 
 ### Patch Changes

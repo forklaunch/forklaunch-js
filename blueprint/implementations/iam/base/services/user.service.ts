@@ -224,37 +224,43 @@ export class BaseUserService<
   }
 
   async deleteUser(
-    idDto: IdDto & FilterQuery<MapperEntities['UserMapper']>,
+    idDto: IdDto & { organization?: { id: string } } & FilterQuery<
+        MapperEntities['UserMapper']
+      > &
+      object,
     em?: EntityManager
   ): Promise<void> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info('Deleting user', idDto);
     }
 
-    // Build filter with organization constraint if provided
-    const filter: FilterQuery<MapperEntities['UserMapper']> = {
+    const filter = {
+      ...idDto,
       id: idDto.id,
-      ...((idDto as any).organization && {
-        organization: (idDto as any).organization
+      ...(idDto.organization && {
+        organization: idDto.organization
       })
-    };
+    } as FilterQuery<MapperEntities['UserMapper']>;
 
     await (em ?? this.em).nativeDelete('User', filter);
   }
 
   async deleteBatchUsers(
-    idsDto: IdsDto & FilterQuery<MapperEntities['UserMapper']>,
+    idsDto: IdsDto & { organization?: { id: string } } & FilterQuery<
+        MapperEntities['UserMapper']
+      > &
+      object,
     em?: EntityManager
   ): Promise<void> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info('Deleting batch users', idsDto);
     }
 
-    // Build filter with organization constraint if provided
-    const filter: FilterQuery<MapperEntities['UserMapper']> = {
+    const filter = {
+      ...idsDto,
       id: { $in: idsDto.ids },
-      ...((idsDto as any).organization && {
-        organization: (idsDto as any).organization
+      ...(idsDto.organization && {
+        organization: idsDto.organization
       })
     };
 
