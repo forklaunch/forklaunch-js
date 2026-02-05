@@ -32,8 +32,14 @@ export interface UserService<
     userDtos: Params['UpdateUserDto'][],
     em?: EntityManager
   ): Promise<Params['UserDto'][]>;
-  deleteUser(idDto: Params['IdDto'] & FilterQuery<unknown>, em?: EntityManager): Promise<void>;
-  deleteBatchUsers(idsDto: Params['IdsDto'] & FilterQuery<unknown>, em?: EntityManager): Promise<void>;
+  deleteUser(
+    idDto: Params['IdDto'] & FilterQuery<unknown>,
+    em?: EntityManager
+  ): Promise<void>;
+  deleteBatchUsers(
+    idsDto: Params['IdsDto'] & FilterQuery<unknown>,
+    em?: EntityManager
+  ): Promise<void>;
   surfaceRoles(
     idDto: Params['IdDto'],
     em?: EntityManager

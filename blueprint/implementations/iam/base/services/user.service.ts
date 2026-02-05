@@ -23,7 +23,8 @@ export class BaseUserService<
   OrganizationStatus = unknown,
   MapperEntities extends UserEntities = UserEntities,
   MapperDomains extends UserDtos = UserDtos
-> implements UserService {
+> implements UserService
+{
   private evaluatedTelemetryOptions: {
     logging?: boolean;
     metrics?: boolean;
@@ -56,10 +57,10 @@ export class BaseUserService<
     this.evaluatedTelemetryOptions = options?.telemetry
       ? evaluateTelemetryOptions(options.telemetry).enabled
       : {
-        logging: false,
-        metrics: false,
-        tracing: false
-      };
+          logging: false,
+          metrics: false,
+          tracing: false
+        };
   }
 
   async createUser(
@@ -152,18 +153,16 @@ export class BaseUserService<
     // Build filter with organization constraint if provided
     const filter: FilterQuery<MapperEntities['UserMapper']> = {
       id: { $in: idsDto.ids },
-      ...((idsDto as any).organization && { organization: (idsDto as any).organization })
+      ...((idsDto as any).organization && {
+        organization: (idsDto as any).organization
+      })
     };
 
     return Promise.all(
       (
-        await (em ?? this.em).find(
-          'User',
-          filter,
-          {
-            populate: ['id', '*']
-          }
-        )
+        await (em ?? this.em).find('User', filter, {
+          populate: ['id', '*']
+        })
       ).map((user) =>
         this.mappers.UserMapper.toDto(user as MapperEntities['UserMapper'])
       )
@@ -235,7 +234,9 @@ export class BaseUserService<
     // Build filter with organization constraint if provided
     const filter: FilterQuery<MapperEntities['UserMapper']> = {
       id: idDto.id,
-      ...((idDto as any).organization && { organization: (idDto as any).organization })
+      ...((idDto as any).organization && {
+        organization: (idDto as any).organization
+      })
     };
 
     await (em ?? this.em).nativeDelete('User', filter);
@@ -252,7 +253,9 @@ export class BaseUserService<
     // Build filter with organization constraint if provided
     const filter: FilterQuery<MapperEntities['UserMapper']> = {
       id: { $in: idsDto.ids },
-      ...((idsDto as any).organization && { organization: (idsDto as any).organization })
+      ...((idsDto as any).organization && {
+        organization: (idsDto as any).organization
+      })
     };
 
     await (em ?? this.em).nativeDelete('User', filter);
@@ -281,6 +284,6 @@ export class BaseUserService<
       });
     }
     const user = await this.getUser(idDto, em);
-    return user.roles.map((role) => role.permissions).flat();
+    return user.roles.flatMap((role) => role.permissions);
   }
 }

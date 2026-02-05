@@ -6,8 +6,6 @@
   "license": "ISC",
   "author": "",
   "type": "module",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
   "exports": {
     ".": {
       "types": "./lib/index.d.ts",
@@ -26,6 +24,8 @@
       "default": "./lib/feature-flags.js"
     }
   },
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "files": [
     "lib/**"
   ],
