@@ -1,5 +1,11 @@
 # @forklaunch/implementation-iam-base
 
+## 0.8.13
+
+### Patch Changes
+
+- Small type restoration
+
 ## 0.8.12
 
 ### Patch Changes

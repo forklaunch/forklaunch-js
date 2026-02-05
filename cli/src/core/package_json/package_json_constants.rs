@@ -231,7 +231,7 @@ pub(crate) const BILLING_BASE_VERSION: &str = "~0.8.12";
 // @forklaunch/implementation-billing-stripe
 pub(crate) const BILLING_STRIPE_VERSION: &str = "~0.5.12";
 // @forklaunch/implementation-iam-base
-pub(crate) const IAM_BASE_VERSION: &str = "~0.8.12";
+pub(crate) const IAM_BASE_VERSION: &str = "~0.8.13";
 // @forklaunch/implementation-worker-bullmq
 pub(crate) const WORKER_BULLMQ_VERSION: &str = "~0.8.12";
 // @forklaunch/implementation-worker-redis
