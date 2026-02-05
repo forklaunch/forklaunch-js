@@ -26,7 +26,7 @@ use crate::{
         Runtime, TestFramework, Validator, get_core_module_description,
         get_monitoring_module_description, get_service_module_cache,
         get_service_module_description, get_service_module_name,
-        get_universal_sdk_module_description,
+        get_client_sdk_module_description,
     },
     core::{
         command::command,
@@ -82,7 +82,7 @@ use crate::{
         template::{PathIO, generate_with_template, get_routers_from_standard_package},
         token::get_token,
         tsconfig::generate_modules_tsconfig,
-        universal_sdk::get_universal_sdk_additional_deps,
+        client_sdk::get_client_sdk_additional_deps,
         vscode::generate_vscode_settings,
     },
     prompt::{
@@ -108,7 +108,7 @@ fn use_generated_sdk_mode_for_init(
 
     // Use the shared function to set up generated SDK mode
     // Skip universal-sdk transformation during init (already in correct format from template)
-    apply_generated_sdk_mode_setup(&app_root_path.to_path_buf(), manifest_data, &mut cache, false)?;
+    apply_generated_sdk_mode_setup(&app_root_path.to_path_buf(), manifest_data, &mut cache)?;
 
     // Convert Cache back to Vec
     rendered_templates.extend(cache.drain().map(|(_, template)| template));
@@ -710,8 +710,8 @@ impl CliCommand for ApplicationCommand {
             },
             ProjectEntry {
                 r#type: ProjectType::Library,
-                name: "universal-sdk".to_string(),
-                description: get_universal_sdk_module_description(&name),
+                name: "client-sdk".to_string(),
+                description: get_client_sdk_module_description(&name),
                 variant: None,
                 resources: None,
                 routers: None,
@@ -913,7 +913,7 @@ impl CliCommand for ApplicationCommand {
                 description: match template_dir.output_path.as_str() {
                     "core" => get_core_module_description(&name),
                     "monitoring" => get_monitoring_module_description(&name),
-                    "universal-sdk" => get_universal_sdk_module_description(&name),
+                    "client-sdk" => get_client_sdk_module_description(&name),
                     _ => get_service_module_description(
                         &name,
                         &template_dir.module_id.clone().unwrap(),
@@ -982,7 +982,7 @@ impl CliCommand for ApplicationCommand {
                 with_mappers: false,
             };
 
-            if service_data.service_name == "universal-sdk" {
+            if service_data.service_name == "client-sdk" {
                 service_data.is_iam = global_module_config.iam.is_some();
                 service_data.is_billing = global_module_config.billing.is_some();
             }
@@ -990,7 +990,7 @@ impl CliCommand for ApplicationCommand {
             if !HashSet::from([
                 "core".to_string(),
                 "monitoring".to_string(),
-                "universal-sdk".to_string(),
+                "client-sdk".to_string(),
             ])
             .contains(&service_data.service_name)
             {
@@ -1070,7 +1070,7 @@ impl CliCommand for ApplicationCommand {
                         forklaunch_core: Some(CORE_VERSION.to_string()),
                         ..Default::default()
                     }),
-                    "universal-sdk" => Some(ProjectDependencies {
+                    "client-sdk" => Some(ProjectDependencies {
                         forklaunch_common: Some(COMMON_VERSION.to_string()),
                         forklaunch_universal_sdk: Some(UNIVERSAL_SDK_VERSION.to_string()),
                         better_auth: if global_module_config
@@ -1099,8 +1099,8 @@ impl CliCommand for ApplicationCommand {
                     "monitoring" => Some(ProjectDevDependencies {
                         ..Default::default()
                     }),
-                    "universal-sdk" => Some(ProjectDevDependencies {
-                        additional_deps: get_universal_sdk_additional_deps(
+                    "client-sdk" => Some(ProjectDevDependencies {
+                        additional_deps: get_client_sdk_additional_deps(
                             &service_data.app_name,
                             global_module_config.billing.is_some(),
                             global_module_config.iam.is_some(),
@@ -1132,7 +1132,7 @@ impl CliCommand for ApplicationCommand {
                         test: project_test_script(&service_data.runtime.parse()?, &test_framework),
                         ..Default::default()
                     }),
-                    "universal-sdk" => Some(ProjectScripts {
+                    "client-sdk" => Some(ProjectScripts {
                         build: Some(PROJECT_BUILD_SCRIPT.to_string()),
                         clean: Some(project_clean_script(&service_data.runtime.parse()?)),
                         docs: Some(PROJECT_DOCS_SCRIPT.to_string()),
@@ -1147,11 +1147,11 @@ impl CliCommand for ApplicationCommand {
                 match service_data.service_name.as_str() {
                     "core" => Some("lib/index.js".to_string()),
                     "monitoring" => None,
-                    "universal-sdk" => None,
+                    "client-sdk" => None,
                     _ => None,
                 },
                 match service_data.service_name.as_str() {
-                    "universal-sdk" => Some(None),
+                    "client-sdk" => Some(None),
                     _ => None,
                 },
             )?);

@@ -46,7 +46,7 @@ use crate::{
         package_json::{
             add_project_definition_to_package_json,
             package_json_constants::{
-                AJV_VERSION, APP_CORE_VERSION, APP_MONITORING_VERSION, APP_UNIVERSAL_SDK_VERSION,
+                AJV_VERSION, APP_CORE_VERSION, APP_MONITORING_VERSION,
                 BETTER_AUTH_MIKRO_ORM_VERSION, BETTER_AUTH_VERSION, BETTER_SQLITE3_VERSION,
                 BILLING_BASE_VERSION, BILLING_INTERFACES_VERSION, BILLING_STRIPE_VERSION,
                 BIOME_VERSION, COMMON_VERSION, CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION,
@@ -76,7 +76,6 @@ use crate::{
         symlinks::generate_symlinks,
         template::{PathIO, generate_with_template},
         tsconfig::{add_project_to_modules_tsconfig, generate_project_tsconfig},
-        universal_sdk::add_project_to_universal_sdk,
     },
     prompt::{
         ArrayCompleter, prompt_comma_separated_list, prompt_with_validation,
@@ -166,9 +165,9 @@ fn generate_basic_service(
         rendered_templates_cache.insert(template.path.to_string_lossy().to_string(), template);
     }
 
-    add_project_to_universal_sdk(
+    crate::core::client_sdk::add_project_to_client_sdk(
         &mut rendered_templates_cache,
-        base_path,
+        app_root_path,
         &manifest_data.app_name,
         &manifest_data.service_name,
         None,
@@ -363,7 +362,7 @@ pub(crate) fn generate_service_package_json(
                 databases: HashSet::from([manifest_data.database.parse()?]),
                 app_core: Some(APP_CORE_VERSION.to_string()),
                 app_monitoring: Some(APP_MONITORING_VERSION.to_string()),
-                app_universal_sdk: Some(APP_UNIVERSAL_SDK_VERSION.to_string()),
+                app_client_sdk: None,
                 forklaunch_better_auth_mikro_orm_fork: if manifest_data.is_better_auth {
                     Some(BETTER_AUTH_MIKRO_ORM_VERSION.to_string())
                 } else {

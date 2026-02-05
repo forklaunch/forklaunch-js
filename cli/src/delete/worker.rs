@@ -5,34 +5,34 @@ use std::{
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
-use rustyline::{history::DefaultHistory, Editor};
+use rustyline::{Editor, history::DefaultHistory};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use toml::to_string_pretty as toml_to_string_pretty;
 
 use crate::{
+    CliCommand,
     constants::{
-        Runtime, ERROR_FAILED_TO_CREATE_PACKAGE_JSON, ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE,
+        ERROR_FAILED_TO_CREATE_PACKAGE_JSON, ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE,
         ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE, ERROR_FAILED_TO_PARSE_MANIFEST,
         ERROR_FAILED_TO_READ_MANIFEST, ERROR_FAILED_TO_WRITE_DOCKER_COMPOSE,
-        ERROR_FAILED_TO_WRITE_MANIFEST,
+        ERROR_FAILED_TO_WRITE_MANIFEST, Runtime,
     },
     core::{
-        base_path::{find_app_root_path, prompt_base_path, RequiredLocation},
+        base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
+        client_sdk::remove_project_from_client_sdk,
         command::command,
-        docker::{remove_worker_from_docker_compose, DockerCompose},
+        docker::{DockerCompose, remove_worker_from_docker_compose},
         manifest::{
-            application::ApplicationManifestData, remove_project_definition_from_manifest,
             ApplicationInitializationMetadata, InitializableManifestConfig,
             InitializableManifestConfigMetadata, ManifestData, ProjectType,
+            application::ApplicationManifestData, remove_project_definition_from_manifest,
         },
         package_json::remove_project_definition_to_package_json,
         pnpm_workspace::remove_project_definition_to_pnpm_workspace,
-        rendered_template::{write_rendered_templates, RenderedTemplate, RenderedTemplatesCache},
+        rendered_template::{RenderedTemplate, RenderedTemplatesCache, write_rendered_templates},
         tsconfig::remove_project_from_modules_tsconfig,
-        universal_sdk::remove_project_from_universal_sdk,
     },
-    prompt::{prompt_for_confirmation, prompt_with_validation, ArrayCompleter},
-    CliCommand,
+    prompt::{ArrayCompleter, prompt_for_confirmation, prompt_with_validation},
 };
 
 #[derive(Debug)]
@@ -214,7 +214,7 @@ impl CliCommand for WorkerCommand {
             }
         }
 
-        remove_project_from_universal_sdk(
+        remove_project_from_client_sdk(
             &mut rendered_templates_cache,
             &worker_base_path,
             &manifest_data.app_name,

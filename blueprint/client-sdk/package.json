@@ -1,5 +1,5 @@
 {
-  "name": "@forklaunch/blueprint-universal-sdk",
+  "name": "@forklaunch/blueprint-client-sdk",
   "version": "0.1.0",
   "description": "The forklaunch universal SDK to be used anywhere",
   "keywords": [],
