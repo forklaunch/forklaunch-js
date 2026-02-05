@@ -102,6 +102,35 @@ export class StripeWebhookService<
     this.subscriptionService = subscriptionService;
   }
 
+  /**
+   * Extract features from Stripe product metadata.
+   * Features can be stored as:
+   * - metadata.features: comma-separated string (e.g., "feature1,feature2,feature3")
+   * - metadata.features: JSON array string (e.g., '["feature1","feature2"]')
+   */
+  private extractFeaturesFromProduct(product: Stripe.Product): string[] {
+    const featuresStr = product.metadata?.features;
+    if (!featuresStr) {
+      return [];
+    }
+
+    // Try parsing as JSON array first
+    try {
+      const parsed = JSON.parse(featuresStr);
+      if (Array.isArray(parsed)) {
+        return parsed.filter((f): f is string => typeof f === 'string');
+      }
+    } catch {
+      // Not JSON, treat as comma-separated
+    }
+
+    // Parse as comma-separated string
+    return featuresStr
+      .split(',')
+      .map((f) => f.trim())
+      .filter((f) => f.length > 0);
+  }
+
   async handleWebhookEvent(event: Stripe.Event): Promise<void> {
     if (this.openTelemetryCollector) {
       this.openTelemetryCollector.info('Handling webhook event', event);
@@ -185,22 +214,27 @@ export class StripeWebhookService<
 
       case 'plan.created': {
         if (
-          typeof event.data.object.product === 'object' &&
           event.data.object.product != null &&
           event.data.object.amount != null
         ) {
+          // Fetch product to get features from metadata
+          const productId =
+            typeof event.data.object.product === 'string'
+              ? event.data.object.product
+              : event.data.object.product.id;
+          const product = await this.stripeClient.products.retrieve(productId);
+          const features = this.extractFeaturesFromProduct(product);
+
           await this.planService.basePlanService.createPlan({
             id: event.data.object.id,
             billingProvider: BillingProviderEnum.STRIPE,
             cadence: event.data.object.interval as PlanCadenceEnum,
             currency: event.data.object.currency as CurrencyEnum,
-            active: true,
-            name:
-              typeof event.data.object.product === 'string'
-                ? event.data.object.product
-                : event.data.object.product?.id,
+            active: product.active,
+            name: product.name,
             price: event.data.object.amount,
-            externalId: event.data.object.id
+            externalId: event.data.object.id,
+            features
           });
         } else {
           throw new Error('Invalid plan');
@@ -210,22 +244,27 @@ export class StripeWebhookService<
 
       case 'plan.updated': {
         if (
-          typeof event.data.object.product === 'object' &&
           event.data.object.product != null &&
           event.data.object.amount != null
         ) {
+          // Fetch product to get features from metadata
+          const productId =
+            typeof event.data.object.product === 'string'
+              ? event.data.object.product
+              : event.data.object.product.id;
+          const product = await this.stripeClient.products.retrieve(productId);
+          const features = this.extractFeaturesFromProduct(product);
+
           await this.planService.basePlanService.updatePlan({
             id: event.data.object.id,
             billingProvider: BillingProviderEnum.STRIPE,
             cadence: event.data.object.interval as PlanCadenceEnum,
             currency: event.data.object.currency as CurrencyEnum,
-            active: true,
-            name:
-              typeof event.data.object.product === 'string'
-                ? event.data.object.product
-                : event.data.object.product?.id,
+            active: product.active,
+            name: product.name,
             price: event.data.object.amount,
-            externalId: event.data.object.id
+            externalId: event.data.object.id,
+            features
           });
         } else {
           throw new Error('Invalid plan');
@@ -237,6 +276,73 @@ export class StripeWebhookService<
         await this.planService.deletePlan({
           id: event.data.object.id
         });
+        break;
+      }
+
+      case 'product.created':
+      case 'product.updated': {
+        // When a product is created/updated, sync features to all associated plans
+        const product = event.data.object;
+        const features = this.extractFeaturesFromProduct(product);
+
+        // Find all plans associated with this product and update their features
+        const plans = await this.stripeClient.plans.list({
+          product: product.id,
+          active: true
+        });
+
+        for (const plan of plans.data) {
+          try {
+            await this.planService.basePlanService.updatePlan({
+              id: plan.id,
+              features,
+              active: product.active,
+              name: product.name
+            });
+          } catch (error) {
+            this.openTelemetryCollector.warn(
+              `Failed to update plan ${plan.id} with product features`,
+              error
+            );
+          }
+        }
+        break;
+      }
+
+      // Handle Stripe Prices API (newer alternative to Plans)
+      case 'price.created':
+      case 'price.updated': {
+        const price = event.data.object;
+        if (
+          price.product != null &&
+          price.unit_amount != null &&
+          price.recurring
+        ) {
+          const productId =
+            typeof price.product === 'string'
+              ? price.product
+              : price.product.id;
+          const product = await this.stripeClient.products.retrieve(productId);
+          const features = this.extractFeaturesFromProduct(product);
+
+          const planData = {
+            id: price.id,
+            billingProvider: BillingProviderEnum.STRIPE,
+            cadence: price.recurring.interval as PlanCadenceEnum,
+            currency: price.currency as CurrencyEnum,
+            active: price.active && product.active,
+            name: product.name,
+            price: price.unit_amount,
+            externalId: price.id,
+            features
+          };
+
+          if (event.type === 'price.created') {
+            await this.planService.basePlanService.createPlan(planData);
+          } else {
+            await this.planService.basePlanService.updatePlan(planData);
+          }
+        }
         break;
       }
 
