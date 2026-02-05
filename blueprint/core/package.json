@@ -8,6 +8,24 @@
   "type": "module",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./plan": {
+      "types": "./lib/plan.d.ts",
+      "default": "./lib/plan.js"
+    },
+    "./rbac": {
+      "types": "./lib/rbac.d.ts",
+      "default": "./lib/rbac.js"
+    },
+    "./feature-flags": {
+      "types": "./lib/feature-flags.d.ts",
+      "default": "./lib/feature-flags.js"
+    }
+  },
   "files": [
     "lib/**"
   ],

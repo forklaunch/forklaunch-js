@@ -9,16 +9,16 @@
  *   STRIPE_SECRET_KEY=sk_test_... npm run seed:plans
  */
 
-import { MikroORM } from '@mikro-orm/core';
-import Stripe from 'stripe';
-import { BillingPlanEnum } from '@forklaunch/blueprint-billing-base/constants';
-import mikroOrmConfig from '../mikro-orm.config';
-import { Plan } from '../persistence/entities/plan.entity';
+import { BillingPlanEnum } from '@forklaunch/blueprint-core/plan';
 import {
   BillingProviderEnum,
   CurrencyEnum,
   PlanCadenceEnum
 } from '@forklaunch/implementation-billing-stripe/enum';
+import { MikroORM } from '@mikro-orm/core';
+import Stripe from 'stripe';
+import mikroOrmConfig from '../mikro-orm.config';
+import { Plan } from '../persistence/entities/plan.entity';
 
 const PRODUCT_METADATA_KEY = 'forklaunch_plan';
 
@@ -32,7 +32,7 @@ function initStripe(): Stripe {
   }
 
   return new Stripe(apiKey, {
-    apiVersion: '2024-12-18.acacia'
+    apiVersion: '2026-01-28.clover'
   });
 }
 
@@ -74,7 +74,7 @@ function stripeToCadence(interval: string): PlanCadenceEnum {
     case 'month':
       return PlanCadenceEnum.MONTHLY;
     case 'year':
-      return PlanCadenceEnum.YEARLY;
+      return PlanCadenceEnum.ANNUALLY;
     default:
       return PlanCadenceEnum.MONTHLY;
   }
@@ -100,7 +100,7 @@ async function seedPlans() {
     console.log(`Processing: ${planName}`);
 
     // Find Stripe product
-    const product = await findStripeProduct(stripe, planName);
+    const product = await findStripeProduct(stripe, planName as string);
     if (!product) {
       console.log(`  ✗ Stripe product not found for ${planName}`);
       console.log(`    Run 'npm run sync:stripe' first`);

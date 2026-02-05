@@ -10,12 +10,12 @@
  *   STRIPE_SECRET_KEY=sk_test_... DRY_RUN=true npm run sync:stripe  # Preview changes
  */
 
-import Stripe from 'stripe';
 import {
-  BillingPlanEnum,
   PLAN_FEATURES,
   PLAN_LIMITS
-} from '@forklaunch/blueprint-billing-base/constants';
+} from '@forklaunch/blueprint-core/feature-flags';
+import { BillingPlan, BillingPlanEnum } from '@forklaunch/blueprint-core/plan';
+import Stripe from 'stripe';
 
 // Plan pricing configuration
 // Customize these values for your application
@@ -60,7 +60,7 @@ function initStripe(): Stripe {
   }
 
   return new Stripe(apiKey, {
-    apiVersion: '2024-12-18.acacia'
+    apiVersion: '2026-01-28.clover'
   });
 }
 
@@ -89,7 +89,7 @@ async function syncProduct(
   product: Stripe.Product;
   action: 'created' | 'updated' | 'unchanged';
 }> {
-  const config = PLAN_PRICING[planName];
+  const config = PLAN_PRICING[planName as BillingPlan];
   const features = PLAN_FEATURES[planName] || [];
   const limits = PLAN_LIMITS[planName] || {};
 
@@ -177,7 +177,7 @@ async function syncPrice(
   price: Stripe.Price;
   action: 'created' | 'updated' | 'unchanged';
 }> {
-  const config = PLAN_PRICING[planName];
+  const config = PLAN_PRICING[planName as BillingPlan];
 
   const priceData: Stripe.PriceCreateParams = {
     product: product.id,
@@ -299,7 +299,7 @@ async function main() {
   const results: SyncResult[] = [];
   for (const planName of planNames) {
     try {
-      const result = await syncPlan(stripe, planName, dryRun);
+      const result = await syncPlan(stripe, planName as BillingPlan, dryRun);
       results.push(result);
     } catch (error) {
       console.error(`  ✗ Error syncing ${planName}:`, error);

@@ -3,10 +3,10 @@ import {
   handlers,
   IdSchema,
   IdsSchema,
-  PLATFORM_READ_PERMISSIONS,
   schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
+import { PLATFORM_READ_PERMISSIONS } from '@forklaunch/blueprint-core/rbac';
 import { IdsDto } from '@forklaunch/common';
 import { getCachedJwks } from '@forklaunch/core/http';
 import { jwtVerify } from 'jose';
@@ -219,7 +219,9 @@ export const updateUser = handlers.put(
     }
 
     if (targetUserOrgId !== req.session.organizationId) {
-      return res.status(403).send('Forbidden: cannot update user from different organization');
+      return res
+        .status(403)
+        .send('Forbidden: cannot update user from different organization');
     }
 
     await serviceFactory().updateUser(req.body);
@@ -269,7 +271,9 @@ export const updateBatchUsers = handlers.put(
       }
 
       if (targetUserOrgId !== req.session.organizationId) {
-        return res.status(403).send('Forbidden: cannot update user from different organization');
+        return res
+          .status(403)
+          .send('Forbidden: cannot update user from different organization');
       }
     }
 
@@ -319,7 +323,9 @@ export const deleteUser = handlers.delete(
     }
 
     if (targetUserOrgId !== req.session.organizationId) {
-      return res.status(403).send('Forbidden: cannot delete user from different organization');
+      return res
+        .status(403)
+        .send('Forbidden: cannot delete user from different organization');
     }
 
     await serviceFactory().deleteUser({
@@ -374,7 +380,9 @@ export const deleteBatchUsers = handlers.delete(
       }
 
       if (targetUserOrgId !== req.session.organizationId) {
-        return res.status(403).send('Forbidden: cannot delete user from different organization');
+        return res
+          .status(403)
+          .send('Forbidden: cannot delete user from different organization');
       }
     }
 

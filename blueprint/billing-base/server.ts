@@ -1,9 +1,5 @@
-import {
-  forklaunchExpress,
-  PERMISSIONS,
-  ROLES,
-  schemaValidator
-} from '@forklaunch/blueprint-core';
+import { forklaunchExpress, schemaValidator } from '@forklaunch/blueprint-core';
+import { PERMISSIONS, ROLES } from '@forklaunch/blueprint-core/rbac';
 import { billingPortalRouter } from './api/routes/billingPortal.routes';
 import { checkoutSessionRouter } from './api/routes/checkoutSession.routes';
 import { paymentLinkRouter } from './api/routes/paymentLink.routes';

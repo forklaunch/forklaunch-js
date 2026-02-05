@@ -13,14 +13,16 @@
   "license": "MIT",
   "author": "Forklift Technologies, Inc.",
   "type": "module",
-  "typesVersions": {
-    "*": {
-      ".": [
-        "index.ts"
-      ],
-      "serialized": [
-        "./dist/index.d.ts"
-      ]
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./sdk": {
+      "types": "./dist/sdk.d.ts",
+      "default": "./dist/sdk.js"
     }
   },
   "scripts": {
@@ -47,6 +49,7 @@
   },
   "dependencies": {
     "@forklaunch/blueprint-core": "workspace:*",
+    "@forklaunch/blueprint-iam-base": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
     "@forklaunch/blueprint-universal-sdk": "workspace:*",
     "@forklaunch/common": "^0.6.28",

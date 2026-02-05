@@ -13,32 +13,24 @@
   "license": "MIT",
   "author": "Forklift Technologies, Inc.",
   "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./constants": {
-      "types": "./dist/constants.d.ts",
-      "default": "./dist/constants.js"
-    },
     "./cache": {
       "types": "./dist/cache.d.ts",
       "default": "./dist/cache.js"
     },
-    "./utils": {
-      "types": "./dist/utils.d.ts",
-      "default": "./dist/utils.js"
-    }
-  },
-  "typesVersions": {
-    "*": {
-      ".": [
-        "index.ts"
-      ],
-      "serialized": [
-        "./dist/index.d.ts"
-      ]
+    "./surfacing": {
+      "types": "./dist/surfacing.d.ts",
+      "default": "./dist/surfacing.js"
+    },
+    "./sdk": {
+      "types": "./dist/sdk.d.ts",
+      "default": "./dist/sdk.js"
     }
   },
   "scripts": {

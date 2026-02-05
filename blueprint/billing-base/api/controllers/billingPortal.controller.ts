@@ -1,10 +1,10 @@
 import {
   handlers,
   IdSchema,
-  ROLES,
   schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
+import { ROLES } from '@forklaunch/blueprint-core/rbac';
 import { ci, tokens } from '../../bootstrapper';
 import {
   BillingPortalMapper,

@@ -3,5 +3,6 @@
   "compilerOptions": {
     "outDir": "dist"
   },
-  "exclude": ["node_modules", "dist", "eslint.config.mjs", "**/*.d.ts"]
+  "exclude": ["node_modules", "dist", "eslint.config.mjs", "**/*.d.ts"],
+  "include": ["**/*.ts"]
 }

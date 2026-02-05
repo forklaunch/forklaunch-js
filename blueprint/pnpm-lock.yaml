@@ -21,7 +21,7 @@ importers:
         version: 0.18.1(encoding@0.1.13)(socks@2.8.7)
       '@forklaunch/express':
         specifier: ^0.10.5
-        version: 0.10.5(encoding@0.1.13)(zod@4.3.6)
+        version: 0.10.5(encoding@0.1.13)(jose@6.1.3)(socks@2.8.7)(zod@4.3.6)
       '@forklaunch/hyper-express':
         specifier: ^0.11.5
         version: 0.11.5(encoding@0.1.13)(express@5.2.1)(socks@2.8.7)
@@ -89,6 +89,9 @@ importers:
       '@forklaunch/blueprint-core':
         specifier: workspace:*
         version: link:../core
+      '@forklaunch/blueprint-iam-base':
+        specifier: workspace:*
+        version: link:../iam-base
       '@forklaunch/blueprint-monitoring':
         specifier: workspace:*
         version: link:../monitoring
@@ -207,6 +210,9 @@ importers:
       '@forklaunch/blueprint-core':
         specifier: workspace:*
         version: link:../core
+      '@forklaunch/blueprint-iam-base':
+        specifier: workspace:*
+        version: link:../iam-base
       '@forklaunch/blueprint-monitoring':
         specifier: workspace:*
         version: link:../monitoring
@@ -474,6 +480,9 @@ importers:
       '@forklaunch/blueprint-core':
         specifier: workspace:*
         version: link:../core
+      '@forklaunch/blueprint-iam-base':
+        specifier: workspace:*
+        version: link:../iam-base
       '@forklaunch/blueprint-monitoring':
         specifier: workspace:*
         version: link:../monitoring
@@ -9093,41 +9102,6 @@ snapshots:
       - sury
 
   '@forklaunch/express@0.10.5(encoding@0.1.13)(jose@6.1.3)(socks@2.8.7)(zod@4.3.6)':
-    dependencies:
-      '@forklaunch/common': 0.6.28
-      '@forklaunch/core': 0.18.1(encoding@0.1.13)(socks@2.8.7)
-      '@forklaunch/validator': 0.10.28
-      '@modelcontextprotocol/sdk': 1.26.0(zod@4.3.6)
-      '@scalar/express-api-reference': 0.8.40
-      '@types/multer': 2.0.0
-      body-parser: 2.2.2
-      busboy: 1.6.0
-      cors: 2.8.6
-      express: 5.2.1
-      fastmcp: 3.31.0(jose@6.1.3)
-      multer: 2.0.2
-      qs: 6.14.1
-      range-parser: 1.2.1
-      swagger-ui-express: 5.0.1(express@5.2.1)
-    transitivePeerDependencies:
-      - '@aws-sdk/credential-providers'
-      - '@cfworker/json-schema'
-      - '@mongodb-js/zstd'
-      - '@valibot/to-json-schema'
-      - arktype
-      - effect
-      - encoding
-      - gcp-metadata
-      - jose
-      - kerberos
-      - mongodb-client-encryption
-      - snappy
-      - socks
-      - supports-color
-      - sury
-      - zod
-
-  '@forklaunch/express@0.10.5(encoding@0.1.13)(zod@4.3.6)':
     dependencies:
       '@forklaunch/common': 0.6.28
       '@forklaunch/core': 0.18.1(encoding@0.1.13)(socks@2.8.7)
