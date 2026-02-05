@@ -21,7 +21,6 @@ async function getIamSdk(iamUrl: string): Promise<IamSdkClient> {
   }
   return sdkPromise;
 }
-}
 
 /**
  * Create a surfaceRoles function that fetches user roles from IAM service
