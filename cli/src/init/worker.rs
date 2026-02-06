@@ -478,7 +478,10 @@ pub(crate) fn generate_worker_package_json(
                 } else {
                     None
                 },
-                forklaunch_infrastructure_redis: if manifest_data.is_cache_enabled {
+                forklaunch_infrastructure_redis: if manifest_data.is_cache_enabled
+                    || manifest_data.is_iam_configured
+                    || manifest_data.is_billing_configured
+                {
                     Some(INFRASTRUCTURE_REDIS_VERSION.to_string())
                 } else {
                     None
