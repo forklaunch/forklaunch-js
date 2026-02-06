@@ -124,7 +124,6 @@ export class StripeWebhookService<
       // Not JSON, treat as comma-separated
     }
 
-    // Parse as comma-separated string
     return featuresStr
       .split(',')
       .map((f) => f.trim())
@@ -217,7 +216,6 @@ export class StripeWebhookService<
           event.data.object.product != null &&
           event.data.object.amount != null
         ) {
-          // Fetch product to get features from metadata
           const productId =
             typeof event.data.object.product === 'string'
               ? event.data.object.product
@@ -247,7 +245,6 @@ export class StripeWebhookService<
           event.data.object.product != null &&
           event.data.object.amount != null
         ) {
-          // Fetch product to get features from metadata
           const productId =
             typeof event.data.object.product === 'string'
               ? event.data.object.product
@@ -285,7 +282,6 @@ export class StripeWebhookService<
         const product = event.data.object;
         const features = this.extractFeaturesFromProduct(product);
 
-        // Find all plans associated with this product and update their features
         const plans = await this.stripeClient.plans.list({
           product: product.id,
           active: true
