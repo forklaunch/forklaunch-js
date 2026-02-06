@@ -80,7 +80,7 @@ pub(crate) fn determine_env_var_scopes(
                     Some(project_name.clone()),
                 ),
                 Some(ProjectType::Worker) => {
-                    (EnvironmentVariableScope::Worker, Some(project_name.clone()))
+                    (EnvironmentVariableScope::Worker, Some(format!("{}-worker", project_name)))
                 }
                 _ => (EnvironmentVariableScope::Application, None),
             }
