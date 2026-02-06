@@ -1,4 +1,5 @@
 pub(crate) mod transform_base_entity_ts;
+pub(crate) mod transform_client_sdk;
 pub(crate) mod transform_controllers_index_ts;
 pub(crate) mod transform_core_registrations_ts;
 pub(crate) mod transform_domain_schemas_index;
@@ -11,5 +12,4 @@ pub(crate) mod transform_seeders_index_ts;
 pub(crate) mod transform_server_ts;
 pub(crate) mod transform_service_to_worker;
 pub(crate) mod transform_test_utils_ts;
-pub(crate) mod transform_universal_sdk;
 pub(crate) mod transform_worker_to_service;

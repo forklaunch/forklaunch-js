@@ -89,12 +89,17 @@ export class StripePlanService<
     planDto: StripeCreatePlanDto,
     em?: EntityManager
   ): Promise<Dto['PlanMapper']> {
-    const stripePlan = await this.stripeClient.plans.create({
+    let stripePlan = await this.stripeClient.plans.create({
       ...planDto.stripeFields,
       amount: planDto.price,
       interval: planDto.cadence,
       product: planDto.name,
       currency: planDto.currency as string
+    });
+
+    // retrieve the plan with the product expanded
+    stripePlan = await this.stripeClient.plans.retrieve(stripePlan.id, {
+      expand: ['product']
     });
 
     const plan = await this.basePlanService.createPlan(
@@ -104,7 +109,7 @@ export class StripePlanService<
         billingProvider: 'stripe'
       },
       em ?? this.em,
-      stripePlan
+      stripePlan.product as Stripe.Product
     );
 
     return plan;
@@ -115,8 +120,10 @@ export class StripePlanService<
     if (!planEntity.externalId) {
       throw new Error('Plan not found');
     }
-    const plan = await this.stripeClient.plans.retrieve(planEntity.externalId);
-    planEntity.stripeFields = plan;
+    const plan = await this.stripeClient.plans.retrieve(planEntity.externalId, {
+      expand: ['product']
+    });
+    planEntity.stripeFields = plan.product as Stripe.Product;
     return planEntity;
   }
 
@@ -146,12 +153,16 @@ export class StripePlanService<
         : existingProduct.id;
 
     await this.stripeClient.plans.del(planEntity.externalId);
-    const updatedPlan = await this.stripeClient.plans.create({
+    let updatedPlan = await this.stripeClient.plans.create({
       ...planDto.stripeFields,
       interval: planDto.cadence ?? existingPlan.interval,
       currency: planDto.currency ?? existingPlan.currency,
       amount: planDto.price ?? existingPlan.amount ?? undefined,
       product: productId
+    });
+
+    updatedPlan = await this.stripeClient.plans.retrieve(updatedPlan.id, {
+      expand: ['product']
     });
 
     const updatedPlanEntity = await this.basePlanService.updatePlan(
@@ -162,10 +173,10 @@ export class StripePlanService<
         billingProvider: 'stripe'
       },
       em,
-      updatedPlan
+      updatedPlan.product as Stripe.Product
     );
 
-    updatedPlanEntity.stripeFields = updatedPlan;
+    updatedPlanEntity.stripeFields = updatedPlan.product as Stripe.Product;
 
     return updatedPlanEntity;
   }
@@ -192,7 +203,13 @@ export class StripePlanService<
     const stripePlans = await Promise.all(
       plans.map(async (plan) => {
         try {
-          return await this.stripeClient.plans.retrieve(plan.externalId);
+          const fetchedPlan = await this.stripeClient.plans.retrieve(
+            plan.externalId,
+            {
+              expand: ['product']
+            }
+          );
+          return fetchedPlan.product as Stripe.Product;
         } catch {
           return null;
         }

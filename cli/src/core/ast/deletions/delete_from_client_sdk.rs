@@ -5,7 +5,7 @@ use oxc_ast::ast::{BindingPatternKind, Declaration, Program, Statement};
 
 use crate::core::ast::deletions::delete_import_statement::delete_import_statement;
 
-fn delete_from_universal_sdk_function<'a>(
+fn delete_from_client_sdk_function<'a>(
     _allocator: &'a Allocator,
     app_program_ast: &mut Program<'a>,
     camel_case_name: &str,
@@ -39,7 +39,7 @@ fn delete_from_universal_sdk_function<'a>(
     Ok(())
 }
 
-pub(crate) fn delete_from_universal_sdk<'a>(
+pub(crate) fn delete_from_client_sdk<'a>(
     allocator: &'a Allocator,
     app_program_ast: &mut Program<'a>,
     app_name: &str,
@@ -56,7 +56,7 @@ pub(crate) fn delete_from_universal_sdk<'a>(
         format!("@{}/{}{}", kebab_app_name, "blueprint-", kebab_case_name);
     delete_import_statement(allocator, app_program_ast, &blueprint_import_source)?;
 
-    delete_from_universal_sdk_function(allocator, app_program_ast, camel_case_name)?;
+    delete_from_client_sdk_function(allocator, app_program_ast, camel_case_name)?;
 
     Ok(())
 }
@@ -67,11 +67,13 @@ mod tests {
     use oxc_ast::ast::SourceType;
     use oxc_codegen::{Codegen, CodegenOptions};
 
-    use super::*;
-    use crate::core::ast::parse_ast_program::parse_ast_program;
+    use crate::core::ast::{
+        deletions::delete_from_client_sdk::delete_from_client_sdk,
+        parse_ast_program::parse_ast_program,
+    };
 
     #[test]
-    fn test_delete_from_universal_sdk_function() {
+    fn test_delete_from_client_sdk_function() {
         let allocator = Allocator::default();
 
         let app_code = r#"
@@ -80,18 +82,18 @@ mod tests {
         import { UserServiceSdkClient } from '@forklaunch/blueprint-user-service';
         import { universalSdk } from '@forklaunch/universal-sdk';
 
-        export const billingSdkClient = universalSdk<BillingSdkClient>;
-        export const iamSdkClient = universalSdk<IamSdkClient>;
-        export const userServiceSdkClient = universalSdk<UserServiceSdkClient>;
+        export const billingSdkClient: typeof universalSdk<BillingSdkClient> = universalSdk<BillingSdkClient>;
+        export const iamSdkClient: typeof universalSdk<IamSdkClient> = universalSdk<IamSdkClient>;
+        export const userServiceSdkClient: typeof universalSdk<UserServiceSdkClient> = universalSdk<UserServiceSdkClient>;
         "#;
         let mut app_program = parse_ast_program(&allocator, app_code, SourceType::ts());
 
         let result =
-            delete_from_universal_sdk(&allocator, &mut app_program, "forklaunch", "user-service");
+            delete_from_client_sdk(&allocator, &mut app_program, "forklaunch", "user-service");
 
         assert!(result.is_ok());
 
-        let expected_code = "import { BillingSdkClient } from \"@forklaunch/blueprint-billing-base\";\nimport { IamSdkClient } from \"@forklaunch/blueprint-iam-base\";\nimport { universalSdk } from \"@forklaunch/universal-sdk\";\nexport const billingSdkClient = universalSdk<BillingSdkClient>;\nexport const iamSdkClient = universalSdk<IamSdkClient>;\n";
+        let expected_code = "import { BillingSdkClient } from \"@forklaunch/blueprint-billing-base\";\nimport { IamSdkClient } from \"@forklaunch/blueprint-iam-base\";\nimport { universalSdk } from \"@forklaunch/universal-sdk\";\nexport const billingSdkClient: typeof universalSdk<BillingSdkClient> = universalSdk<BillingSdkClient>;\nexport const iamSdkClient: typeof universalSdk<IamSdkClient> = universalSdk<IamSdkClient>;\n";
 
         assert_eq!(
             Codegen::new()
@@ -103,7 +105,7 @@ mod tests {
     }
 
     #[test]
-    fn test_delete_from_universal_sdk_with_better_auth() {
+    fn test_delete_from_client_sdk_with_better_auth() {
         let allocator = Allocator::default();
 
         let app_code = r#"
@@ -117,8 +119,8 @@ mod tests {
         import { createAuthClient } from 'better-auth/client';
         import { inferAdditionalFields } from 'better-auth/client/plugins';
 
-        export const billingSdkClient = universalSdk<BillingSdkClient>;
-        export const iamSdkClient = universalSdk<IamSdkClient>;
+        export const billingSdkClient: typeof universalSdk<BillingSdkClient> = universalSdk<BillingSdkClient>;
+        export const iamSdkClient: typeof universalSdk<IamSdkClient> = universalSdk<IamSdkClient>;
         export const iamBetterAuthSdkClient = async ({
           host,
           registryOptions
@@ -138,7 +140,7 @@ mod tests {
         "#;
         let mut app_program = parse_ast_program(&allocator, app_code, SourceType::ts());
 
-        let result = delete_from_universal_sdk(
+        let result = delete_from_client_sdk(
             &allocator,
             &mut app_program,
             "forklaunch",
@@ -147,7 +149,7 @@ mod tests {
 
         assert!(result.is_ok());
 
-        let expected_code = "import { BillingSdkClient } from \"@forklaunch/blueprint-billing-base\";\nimport { IamSdkClient } from \"@forklaunch/blueprint-iam-base\";\nimport { universalSdk, RegistryOptions } from \"@forklaunch/universal-sdk\";\nimport { createAuthClient } from \"better-auth/client\";\nimport { inferAdditionalFields } from \"better-auth/client/plugins\";\nexport const billingSdkClient = universalSdk<BillingSdkClient>;\nexport const iamSdkClient = universalSdk<IamSdkClient>;\n";
+        let expected_code = "import { BillingSdkClient } from \"@forklaunch/blueprint-billing-base\";\nimport { IamSdkClient } from \"@forklaunch/blueprint-iam-base\";\nimport { universalSdk, RegistryOptions } from \"@forklaunch/universal-sdk\";\nimport { createAuthClient } from \"better-auth/client\";\nimport { inferAdditionalFields } from \"better-auth/client/plugins\";\nexport const billingSdkClient: typeof universalSdk<BillingSdkClient> = universalSdk<BillingSdkClient>;\nexport const iamSdkClient: typeof universalSdk<IamSdkClient> = universalSdk<IamSdkClient>;\n";
 
         assert_eq!(
             Codegen::new()

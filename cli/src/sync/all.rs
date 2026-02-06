@@ -130,7 +130,7 @@ pub fn sync_all_projects(
                         ArtifactType::Manifest,
                         ArtifactType::DockerCompose,
                         ArtifactType::Runtime,
-                        ArtifactType::UniversalSdk,
+                        ArtifactType::ClientSdk,
                     ],
                     app_root_path,
                     &modules_path,

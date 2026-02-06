@@ -68,6 +68,7 @@ pub(crate) fn generate_modules_tsconfig(
     let references = manifest_data
         .projects
         .iter()
+        .filter(|project| project.name != "client-sdk")
         .map(|project| json!({ "path": project.name }))
         .collect::<Vec<Value>>();
 

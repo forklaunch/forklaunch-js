@@ -1,5 +1,13 @@
 # @forklaunch/universal-sdk
 
+## 0.7.28
+
+### Patch Changes
+
+- 4e10567: Update dependency versions
+- Updated dependencies [4e10567]
+  - @forklaunch/common@0.6.28
+
 ## 0.7.27
 
 ### Patch Changes

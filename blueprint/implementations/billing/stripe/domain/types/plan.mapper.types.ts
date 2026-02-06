@@ -14,7 +14,7 @@ export type StripePlanMappers<
     toEntity: (
       dto: Dto['CreatePlanMapper'],
       em: EntityManager,
-      stripePlan: Stripe.Plan,
+      stripePlan: Stripe.Product,
       ...args: unknown[]
     ) => Promise<Entities['CreatePlanMapper']>;
   };
@@ -22,7 +22,7 @@ export type StripePlanMappers<
     toEntity: (
       dto: Dto['UpdatePlanMapper'],
       em: EntityManager,
-      stripePlan: Stripe.Plan,
+      stripePlan: Stripe.Product,
       ...args: unknown[]
     ) => Promise<Entities['UpdatePlanMapper']>;
   };

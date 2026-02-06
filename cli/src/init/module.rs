@@ -16,8 +16,9 @@ use crate::{
         get_service_module_cache, get_service_module_description, get_service_module_name,
     },
     core::{
-        ast::injections::inject_into_universal_sdk::UniversalSdkSpecialCase,
+        ast::injections::inject_into_client_sdk::ClientSdkSpecialCase,
         base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
+        client_sdk::add_project_to_client_sdk,
         command::command,
         database::{
             get_database_port, get_database_variants, get_db_driver, is_in_memory_database,
@@ -36,7 +37,6 @@ use crate::{
         rendered_template::{RenderedTemplate, RenderedTemplatesCache, write_rendered_templates},
         symlinks::generate_symlinks,
         template::{PathIO, generate_with_template, get_routers_from_standard_package},
-        universal_sdk::add_project_to_universal_sdk,
     },
     prompt::{ArrayCompleter, prompt_with_validation},
 };
@@ -235,6 +235,22 @@ impl CliCommand for ModuleCommand {
                 return false;
             }),
 
+            is_billing_configured: manifest_data.projects.iter().any(|project_entry| {
+                if project_entry.name == "billing" {
+                    return true;
+                }
+                return false;
+            }),
+
+            is_request_cache_needed: (module.clone() == Module::BaseBilling
+                || module.clone() == Module::StripeBilling)
+                || manifest_data.projects.iter().any(|project_entry| {
+                    project_entry.name == "iam" || project_entry.name == "billing"
+                }),
+            is_type_needed: manifest_data.projects.iter().any(|project_entry| {
+                project_entry.name == "iam" || project_entry.name == "billing"
+            }),
+
             // Default to false for module initialization, will be set by CLI flag
             with_mappers: false,
         };
@@ -312,11 +328,11 @@ impl CliCommand for ModuleCommand {
         }
 
         let special_case = if module == Module::BetterAuthIam {
-            Some(UniversalSdkSpecialCase::BetterAuth)
+            Some(ClientSdkSpecialCase::BetterAuth)
         } else {
             None
         };
-        add_project_to_universal_sdk(
+        add_project_to_client_sdk(
             &mut rendered_templates_cache,
             &base_path,
             &service_data.app_name,
