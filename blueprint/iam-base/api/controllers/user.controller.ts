@@ -129,7 +129,9 @@ export const getUser = handlers.get(
 
     const user = await serviceFactory().getUser({
       id: req.params.id,
-      organization: req.session.organizationId
+      organization: {
+        id: req.session.organizationId
+      }
     });
     openTelemetryCollector.debug('Retrieving user', req.params);
     res.status(200).json(user);
