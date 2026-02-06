@@ -282,26 +282,43 @@ export class StripeWebhookService<
         const product = event.data.object;
         const features = this.extractFeaturesFromProduct(product);
 
-        const plans = await this.stripeClient.plans.list({
-          product: product.id,
-          active: true
-        });
+        // Update all legacy plans (iterates through all pages)
+        await this.stripeClient.plans
+          .list({ product: product.id })
+          .autoPagingEach(async (plan) => {
+            try {
+              await this.planService.basePlanService.updatePlan({
+                id: plan.id,
+                features,
+                active: product.active,
+                name: product.name
+              });
+            } catch (error) {
+              this.openTelemetryCollector.warn(
+                `Failed to update plan ${plan.id} with product features`,
+                error
+              );
+            }
+          });
 
-        for (const plan of plans.data) {
-          try {
-            await this.planService.basePlanService.updatePlan({
-              id: plan.id,
-              features,
-              active: product.active,
-              name: product.name
-            });
-          } catch (error) {
-            this.openTelemetryCollector.warn(
-              `Failed to update plan ${plan.id} with product features`,
-              error
-            );
-          }
-        }
+        // Update all price-based plans (iterates through all pages)
+        await this.stripeClient.prices
+          .list({ product: product.id })
+          .autoPagingEach(async (price) => {
+            try {
+              await this.planService.basePlanService.updatePlan({
+                id: price.id,
+                features,
+                active: price.active && product.active,
+                name: product.name
+              });
+            } catch (error) {
+              this.openTelemetryCollector.warn(
+                `Failed to update price-based plan ${price.id} with product features`,
+                error
+              );
+            }
+          });
         break;
       }
 
