@@ -204,9 +204,8 @@ impl InitializableManifestConfig for WorkerManifestData {
                 || self.projects.iter().any(|project_entry| {
                     project_entry.name == "iam" || project_entry.name == "billing"
                 }),
-            is_type_needed: self.projects.iter().any(|project_entry| {
-                project_entry.name == "iam" || project_entry.name == "billing"
-            }),
+            // Workers always need type because WorkerConsumer uses type<>()
+            is_type_needed: true,
 
             // Default to false, will be set by CLI flag
             with_mappers: false,

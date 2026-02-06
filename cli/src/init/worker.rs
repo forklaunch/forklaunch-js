@@ -901,11 +901,7 @@ impl CliCommand for WorkerCommand {
                     project_entry.name == "iam" || project_entry.name == "billing"
                 }),
             },
-            is_type_needed: manifest_data.projects.iter().any(|project_entry| {
-                project_entry.name == "iam" || project_entry.name == "billing"
-            }),
-
-            // Generate mappers if --mappers flag is set
+            is_type_needed: true,
             with_mappers: matches.get_flag("mappers"),
         };
 
