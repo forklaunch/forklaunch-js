@@ -33,24 +33,24 @@ fn inject_into_universal_sdk_function<'a>(
     Ok(())
 }
 
-pub enum UniversalSdkSpecialCase {
+pub enum ClientSdkSpecialCase {
     BetterAuth,
 }
 
-pub(crate) fn inject_into_universal_sdk<'a>(
+pub(crate) fn inject_into_client_sdk<'a>(
     allocator: &'a Allocator,
     app_program_ast: &mut Program<'a>,
     app_name: &str,
     name: &str,
     source_text: &str,
-    special_case: Option<UniversalSdkSpecialCase>,
+    special_case: Option<ClientSdkSpecialCase>,
 ) -> Result<()> {
     let kebab_app_name = &app_name.to_case(Case::Kebab);
     let camel_case_name = &name.to_case(Case::Camel);
     let pascal_case_name = &name.to_case(Case::Pascal);
     let kebab_case_name = &name.to_case(Case::Kebab);
 
-    if let Some(UniversalSdkSpecialCase::BetterAuth) = special_case {
+    if let Some(ClientSdkSpecialCase::BetterAuth) = special_case {
         let import_text = format!(
             "import {{\n  BetterAuthConfig,\n  IamSdkClient as {}SdkClient\n}} from \"@{}/{}\";",
             pascal_case_name, kebab_app_name, kebab_case_name
@@ -140,7 +140,7 @@ mod tests {
     use crate::core::ast::parse_ast_program::parse_ast_program;
 
     #[test]
-    fn test_inject_into_universal_sdk_function() {
+    fn test_inject_into_client_sdk_function() {
         let allocator = Allocator::default();
 
         let app_code = r#"
@@ -151,7 +151,7 @@ mod tests {
         "#;
         let mut app_program = parse_ast_program(&allocator, app_code, SourceType::ts());
 
-        let result = inject_into_universal_sdk(
+        let result = inject_into_client_sdk(
             &allocator,
             &mut app_program,
             "forklaunch",
@@ -174,7 +174,7 @@ mod tests {
     }
 
     #[test]
-    fn test_inject_into_universal_sdk_with_better_auth() {
+    fn test_inject_into_client_sdk_with_better_auth() {
         let allocator = Allocator::default();
 
         let app_code = r#"
@@ -185,13 +185,13 @@ mod tests {
         "#;
         let mut app_program = parse_ast_program(&allocator, app_code, SourceType::ts());
 
-        let result = inject_into_universal_sdk(
+        let result = inject_into_client_sdk(
             &allocator,
             &mut app_program,
             "forklaunch",
             "iam",
             app_code,
-            Some(UniversalSdkSpecialCase::BetterAuth),
+            Some(ClientSdkSpecialCase::BetterAuth),
         );
 
         assert!(result.is_ok());

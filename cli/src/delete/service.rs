@@ -19,6 +19,7 @@ use crate::{
     },
     core::{
         base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
+        client_sdk::remove_project_from_client_sdk,
         command::command,
         docker::{DockerCompose, remove_service_from_docker_compose},
         manifest::{
@@ -30,7 +31,6 @@ use crate::{
         pnpm_workspace::remove_project_definition_to_pnpm_workspace,
         rendered_template::{RenderedTemplate, RenderedTemplatesCache, write_rendered_templates},
         tsconfig::remove_project_from_modules_tsconfig,
-        universal_sdk::remove_project_from_universal_sdk,
     },
     prompt::{ArrayCompleter, prompt_for_confirmation, prompt_with_validation},
 };
@@ -216,7 +216,14 @@ impl CliCommand for ServiceCommand {
             }
         }
 
-        remove_project_from_universal_sdk(
+        remove_project_from_client_sdk(
+            &mut rendered_templates_cache,
+            &service_base_path,
+            &manifest_data.app_name,
+            &service_name,
+        )?;
+
+        remove_project_from_client_sdk(
             &mut rendered_templates_cache,
             &service_base_path,
             &manifest_data.app_name,

@@ -59,7 +59,7 @@ export type StripePlanEntity = PlanDto<
   typeof CurrencyEnum,
   typeof BillingProviderEnum
 > & {
-  providerFields: Stripe.Plan;
+  providerFields: Stripe.Product;
 };
 
 export type StripePlanEntities = {

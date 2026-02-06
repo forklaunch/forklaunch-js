@@ -428,9 +428,9 @@ pub(crate) fn get_monitoring_module_description(name: &str) -> String {
         name
     )
 }
-pub(crate) fn get_universal_sdk_module_description(name: &str) -> String {
+pub(crate) fn get_client_sdk_module_description(name: &str) -> String {
     format!(
-        "Universal SDK for {}, containing shared foundational infrastrucuture and utilities",
+        "Client SDK for {}, containing shared foundational infrastrucuture and utilities",
         name
     )
 }
@@ -469,5 +469,5 @@ pub(crate) const DIRS_TO_IGNORE: &[&str] = &[
     ".vscode",
     "monitoring",
     "core",
-    "universal-sdk",
+    "client-sdk",
 ];

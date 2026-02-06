@@ -13,16 +13,18 @@
   "license": "MIT",
   "author": "Forklift Technologies, Inc.",
   "type": "module",
-  "typesVersions": {
-    "*": {
-      ".": [
-        "index.ts"
-      ],
-      "serialized": [
-        "./dist/index.d.ts"
-      ]
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./sdk": {
+      "types": "./dist/sdk.d.ts",
+      "default": "./dist/sdk.js"
     }
   },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist pnpm.lock.yaml node_modules",
@@ -38,45 +40,48 @@
     "migrate:up": "NODE_OPTIONS='--import=tsx' mikro-orm migration:up",
     "prepack": "pnpm run build",
     "seed": "DOTENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' mikro-orm seeder:run",
+    "seed:plans": "NODE_OPTIONS='--import=tsx' tsx scripts/seed-plans-from-stripe.ts",
+    "setup:billing": "NODE_OPTIONS='--import=tsx' tsx scripts/setup-billing.ts",
     "start": "DOTENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' node dist/server.js",
     "start:bun": "bun run migrate:up && bun dist/server.js",
+    "sync:stripe": "NODE_OPTIONS='--import=tsx' tsx scripts/sync-stripe-plans.ts",
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
     "@forklaunch/blueprint-core": "workspace:*",
+    "@forklaunch/blueprint-iam-base": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
-    "@forklaunch/blueprint-universal-sdk": "workspace:*",
-    "@forklaunch/common": "^0.6.27",
-    "@forklaunch/core": "^0.17.3",
-    "@forklaunch/express": "^0.10.3",
-    "@forklaunch/hyper-express": "^0.11.3",
+    "@forklaunch/common": "^0.6.28",
+    "@forklaunch/core": "^0.18.1",
+    "@forklaunch/express": "^0.10.5",
+    "@forklaunch/hyper-express": "^0.11.5",
     "@forklaunch/implementation-billing-stripe": "workspace:*",
-    "@forklaunch/infrastructure-redis": "^0.4.36",
+    "@forklaunch/infrastructure-redis": "^0.4.38",
     "@forklaunch/interfaces-billing": "workspace:*",
-    "@forklaunch/validator": "^0.10.27",
-    "@mikro-orm/core": "^6.6.5",
-    "@mikro-orm/migrations": "^6.6.5",
-    "@mikro-orm/mongodb": "^6.6.5",
-    "@mikro-orm/mysql": "^6.6.5",
-    "@mikro-orm/postgresql": "^6.6.5",
-    "@mikro-orm/reflection": "^6.6.5",
-    "@mikro-orm/seeder": "^6.6.5",
-    "@mikro-orm/sqlite": "^6.6.5",
-    "@sinclair/typebox": "^0.34.47",
+    "@forklaunch/validator": "^0.10.28",
+    "@mikro-orm/core": "^6.6.6",
+    "@mikro-orm/migrations": "^6.6.6",
+    "@mikro-orm/mongodb": "^6.6.6",
+    "@mikro-orm/mysql": "^6.6.6",
+    "@mikro-orm/postgresql": "^6.6.6",
+    "@mikro-orm/reflection": "^6.6.6",
+    "@mikro-orm/seeder": "^6.6.6",
+    "@mikro-orm/sqlite": "^6.6.6",
+    "@sinclair/typebox": "^0.34.48",
     "ajv": "^8.17.1",
     "dotenv": "^17.2.3",
-    "stripe": "^20.2.0",
+    "stripe": "^20.3.0",
     "uuid": "^13.0.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@forklaunch/testing": "^0.0.16",
-    "@mikro-orm/cli": "^6.6.5",
+    "@forklaunch/testing": "^0.0.17",
+    "@mikro-orm/cli": "^6.6.6",
     "@types/express": "^5.0.6",
     "@types/express-serve-static-core": "^5.1.1",
     "@types/qs": "^6.14.0",
     "@types/uuid": "^11.0.0",
-    "@typescript/native-preview": "7.0.0-dev.20260122.4",
+    "@typescript/native-preview": "7.0.0-dev.20260204.1",
     "depcheck": "^1.4.7",
     "ioredis": "^5.9.2",
     "prettier": "^3.8.1",

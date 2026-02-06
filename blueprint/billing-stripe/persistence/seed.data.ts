@@ -34,7 +34,7 @@ export const plan = {
   currency: CurrencyEnum.USD,
   cadence: PlanCadenceEnum.MONTHLY,
   features: ['feature1', 'feature2'],
-  providerFields: {} as Stripe.Plan,
+  providerFields: {} as Stripe.Product,
   externalId: '1234567890',
   billingProvider: BillingProviderEnum.STRIPE,
   createdAt: new Date(),

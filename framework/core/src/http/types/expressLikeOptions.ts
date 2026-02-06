@@ -8,17 +8,32 @@ import { SessionObject } from './contractDetails.types';
 import { DocsConfiguration } from './docsConfiguration.types';
 
 /**
+ * Default subscription data structure.
+ * Applications can override this with their own subscription type.
+ */
+export type DefaultSubscriptionData = {
+  subscriptionId: string;
+  planId: string;
+  planName: string;
+  status: string;
+  currentPeriodEnd: Date;
+} | null;
+
+/**
  * Options for global authentication in Express-like applications.
  *
  * @template SV - The schema validator type.
  * @template SessionSchema - The session schema type.
+ * @template SubscriptionData - The subscription data type (defaults to DefaultSubscriptionData, must extend Record<string, unknown> | null).
  *
  * Can be `false` to disable authentication, or an object specifying session schema and
- * functions to surface scopes, permissions, and roles from the JWT/session.
+ * functions to surface scopes, permissions, roles, subscription, and features from the JWT/session.
  */
 export type ExpressLikeGlobalAuthOptions<
   SV extends AnySchemaValidator,
-  SessionSchema extends Record<string, unknown>
+  SessionSchema extends Record<string, unknown>,
+  SubscriptionData extends Record<string, unknown> | null =
+    DefaultSubscriptionData
 > =
   | false
   | {
@@ -75,6 +90,38 @@ export type ExpressLikeGlobalAuthOptions<
           SessionSchema
         >
       ) => Set<string> | Promise<Set<string>>;
+      /**
+       * Function to extract subscription data from the JWT payload and request.
+       * Returns subscription information (status, plan, etc.) or null if no subscription.
+       */
+      surfaceSubscription?: (
+        payload: JWTPayload & SessionSchema,
+        req?: ForklaunchRequest<
+          SV,
+          Record<string, string>,
+          Record<string, unknown>,
+          Record<string, unknown>,
+          Record<string, unknown>,
+          string,
+          SessionSchema
+        >
+      ) => SubscriptionData | Promise<SubscriptionData>;
+      /**
+       * Function to extract a set of feature flags from the JWT payload and request.
+       * Returns features available to the organization based on their billing plan.
+       */
+      surfaceFeatures?: (
+        payload: JWTPayload & SessionSchema,
+        req?: ForklaunchRequest<
+          SV,
+          Record<string, string>,
+          Record<string, unknown>,
+          Record<string, unknown>,
+          Record<string, unknown>,
+          string,
+          SessionSchema
+        >
+      ) => Set<string> | Promise<Set<string>>;
     };
 
 /**
@@ -82,26 +129,40 @@ export type ExpressLikeGlobalAuthOptions<
  *
  * @template SV - The schema validator type.
  * @template SessionSchema - The session object type.
+ * @template SubscriptionData - The subscription data type.
  */
 export type ExpressLikeSchemaGlobalAuthOptions<
   SV extends AnySchemaValidator,
-  SessionSchema extends SessionObject<SV>
-> = ExpressLikeGlobalAuthOptions<SV, MapSessionSchema<SV, SessionSchema>>;
+  SessionSchema extends SessionObject<SV>,
+  SubscriptionData extends Record<string, unknown> | null =
+    DefaultSubscriptionData
+> = ExpressLikeGlobalAuthOptions<
+  SV,
+  MapSessionSchema<SV, SessionSchema>,
+  SubscriptionData
+>;
 
 /**
  * Options for configuring an Express-like router.
  *
  * @template SV - The schema validator type.
  * @template SessionSchema - The session object type.
+ * @template SubscriptionData - The subscription data type.
  */
 export type ExpressLikeRouterOptions<
   SV extends AnySchemaValidator,
-  SessionSchema extends SessionObject<SV>
+  SessionSchema extends SessionObject<SV>,
+  SubscriptionData extends Record<string, unknown> | null =
+    DefaultSubscriptionData
 > = {
   /**
    * Authentication options for the router.
    */
-  auth?: ExpressLikeSchemaGlobalAuthOptions<SV, SessionSchema>;
+  auth?: ExpressLikeSchemaGlobalAuthOptions<
+    SV,
+    SessionSchema,
+    SubscriptionData
+  >;
   /**
    * Validation options for request and response.
    * Can be `false` to disable validation, or an object to configure request/response validation levels.
@@ -133,11 +194,17 @@ export type ExpressLikeRouterOptions<
  *
  * @template SV - The schema validator type.
  * @template SessionSchema - The session object type.
+ * @template SubscriptionData - The subscription data type.
  */
 export type ExpressLikeApplicationOptions<
   SV extends AnySchemaValidator,
-  SessionSchema extends SessionObject<SV>
-> = Omit<ExpressLikeRouterOptions<SV, SessionSchema>, 'openapi' | 'mcp'> & {
+  SessionSchema extends SessionObject<SV>,
+  SubscriptionData extends Record<string, unknown> | null =
+    DefaultSubscriptionData
+> = Omit<
+  ExpressLikeRouterOptions<SV, SessionSchema, SubscriptionData>,
+  'openapi' | 'mcp'
+> & {
   /**
    * Documentation configuration.
    */

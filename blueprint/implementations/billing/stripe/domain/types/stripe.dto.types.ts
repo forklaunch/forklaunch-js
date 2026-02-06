@@ -176,7 +176,7 @@ export type StripePlanDto = Omit<
   >,
   'providerFields'
 > & {
-  stripeFields: Stripe.Plan;
+  stripeFields: Stripe.Product;
 };
 
 export type StripePlanDtos = {

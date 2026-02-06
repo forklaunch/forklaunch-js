@@ -397,6 +397,8 @@ export type SchemaAuthMethods<
     SessionObject<SV>,
     BaseRequest
   >;
+  readonly requiredFeatures?: string[];
+  readonly requireActiveSubscription?: boolean;
 } & (
     | {
         readonly surfacePermissions?: ExpressLikeSchemaAuthMapper<
@@ -446,6 +448,8 @@ export type AuthMethods<
     SessionObject<SV>,
     BaseRequest
   >;
+  readonly requiredFeatures?: string[];
+  readonly requireActiveSubscription?: boolean;
 } & (
     | ({
         readonly surfacePermissions?: ExpressLikeAuthMapper<

@@ -7,9 +7,11 @@ import {
 import { JWTPayload } from 'jose';
 import { ParsedQs } from 'qs';
 import { discriminateAuthMethod } from '../../discriminateAuthMethod';
+import { hasFeatureChecks } from '../../guards/hasFeatureChecks';
 import { hasPermissionChecks } from '../../guards/hasPermissionChecks';
 import { hasRoleChecks } from '../../guards/hasRoleChecks';
 import { hasScopeChecks } from '../../guards/hasScopeChecks';
+import { hasSubscriptionChecks } from '../../guards/hasSubscriptionChecks';
 import { isHmacMethod } from '../../guards/isHmacMethod';
 import { meta } from '../../telemetry/pinoLogger';
 import {
@@ -56,6 +58,14 @@ const invalidAuthorizationTokenPermissions = [
 const invalidAuthorizationTokenRoles = [
   403,
   'Invalid Authorization roles.'
+] as const;
+const invalidAuthorizationTokenFeatures = [
+  403,
+  'Required features not available.'
+] as const;
+const invalidAuthorizationSubscription = [
+  403,
+  'Active subscription required.'
 ] as const;
 const invalidAuthorizationToken = [
   403,
@@ -442,6 +452,70 @@ async function checkAuthorizationToken<
     }
   } else {
     return invalidAuthorizationMethod;
+  }
+
+  // Check subscription requirements if configured
+  if (hasSubscriptionChecks(collapsedAuthorizationMethod)) {
+    if (!collapsedAuthorizationMethod.surfaceSubscription) {
+      return [500, 'No subscription surfacing function provided.'];
+    }
+
+    const subscription = await collapsedAuthorizationMethod.surfaceSubscription(
+      sessionPayload,
+      req as ResolvedForklaunchRequest<
+        SV,
+        P,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        VersionedReqs,
+        SessionSchema,
+        BaseRequest
+      >
+    );
+
+    // Validate subscription exists (non-null)
+    if (!subscription) {
+      return invalidAuthorizationSubscription;
+    }
+
+    // Additional validation (status, expiry, etc.) can be done by:
+    // 1. Providing validation in the surfaceSubscription function itself
+    // 2. Using inline checks in individual handlers for specific requirements
+    // 3. Using custom middleware for application-specific subscription rules
+  }
+
+  // Check feature requirements if configured
+  if (hasFeatureChecks(collapsedAuthorizationMethod)) {
+    if (!collapsedAuthorizationMethod.surfaceFeatures) {
+      return [500, 'No features surfacing function provided.'];
+    }
+
+    const availableFeatures =
+      await collapsedAuthorizationMethod.surfaceFeatures(
+        sessionPayload,
+        req as ResolvedForklaunchRequest<
+          SV,
+          P,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          VersionedReqs,
+          SessionSchema,
+          BaseRequest
+        >
+      );
+
+    // Check if all required features are available
+    const requiredFeatures =
+      collapsedAuthorizationMethod.requiredFeatures ?? [];
+    const missingFeatures = requiredFeatures.filter(
+      (feature) => !availableFeatures.has(feature)
+    );
+
+    if (missingFeatures.length > 0) {
+      return invalidAuthorizationTokenFeatures;
+    }
   }
 }
 
