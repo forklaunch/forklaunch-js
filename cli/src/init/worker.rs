@@ -414,6 +414,8 @@ pub(crate) fn generate_worker_package_json(
                 app_core: Some(APP_CORE_VERSION.to_string()),
                 app_monitoring: Some(APP_MONITORING_VERSION.to_string()),
                 app_client_sdk: None,
+                app_billing: None,
+                app_iam: None,
                 forklaunch_better_auth_mikro_orm_fork: None,
                 forklaunch_common: Some(COMMON_VERSION.to_string()),
                 forklaunch_core: Some(CORE_VERSION.to_string()),

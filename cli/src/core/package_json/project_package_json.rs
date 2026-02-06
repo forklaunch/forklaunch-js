@@ -153,6 +153,8 @@ pub(crate) struct ProjectDependencies {
     pub(crate) app_core: Option<String>,
     pub(crate) app_monitoring: Option<String>,
     pub(crate) app_client_sdk: Option<String>,
+    pub(crate) app_billing: Option<String>,
+    pub(crate) app_iam: Option<String>,
     pub(crate) forklaunch_better_auth_mikro_orm_fork: Option<String>,
     pub(crate) forklaunch_common: Option<String>,
     pub(crate) forklaunch_core: Option<String>,
@@ -212,6 +214,12 @@ impl Serialize for ProjectDependencies {
         }
         if let Some(ref v) = self.app_client_sdk {
             map.serialize_entry(&format!("@{}/client-sdk", self.app_name), v)?;
+        }
+        if let Some(ref v) = self.app_billing {
+            map.serialize_entry(&format!("@{}/billing", self.app_name), v)?;
+        }
+        if let Some(ref v) = self.app_iam {
+            map.serialize_entry(&format!("@{}/iam", self.app_name), v)?;
         }
         if let Some(ref v) = self.forklaunch_better_auth_mikro_orm_fork {
             map.serialize_entry("@forklaunch/better-auth-mikro-orm-fork", v)?;
@@ -394,6 +402,20 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
                         && key.ends_with("client-sdk")
                     {
                         deps.app_client_sdk = Some(value);
+                        continue;
+                    }
+                    if deps.app_name.len() > 0
+                        && key.starts_with(&format!("@{}", deps.app_name))
+                        && key.ends_with("billing")
+                    {
+                        deps.app_billing = Some(value);
+                        continue;
+                    }
+                    if deps.app_name.len() > 0
+                        && key.starts_with(&format!("@{}", deps.app_name))
+                        && key.ends_with("iam")
+                    {
+                        deps.app_iam = Some(value);
                         continue;
                     }
                     if key.starts_with("@mikro-orm") && key.ends_with("mongodb") {

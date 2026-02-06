@@ -364,6 +364,18 @@ pub(crate) fn generate_service_package_json(
                 app_core: Some(APP_CORE_VERSION.to_string()),
                 app_monitoring: Some(APP_MONITORING_VERSION.to_string()),
                 app_client_sdk: None,
+                // For services that are not billing, install billing from workspace if billing is configured
+                app_billing: if !manifest_data.is_billing && manifest_data.is_billing_configured {
+                    Some(APP_CORE_VERSION.to_string())
+                } else {
+                    None
+                },
+                // For services that are not iam, install iam from workspace if iam is configured
+                app_iam: if !manifest_data.is_iam && manifest_data.is_iam_configured {
+                    Some(APP_CORE_VERSION.to_string())
+                } else {
+                    None
+                },
                 forklaunch_better_auth_mikro_orm_fork: if manifest_data.is_better_auth {
                     Some(BETTER_AUTH_MIKRO_ORM_VERSION.to_string())
                 } else {
@@ -401,7 +413,11 @@ pub(crate) fn generate_service_package_json(
                 } else {
                     None
                 },
-                forklaunch_infrastructure_redis: if manifest_data.is_cache_enabled {
+                // Infrastructure redis needed for cache or when iam/billing is configured
+                forklaunch_infrastructure_redis: if manifest_data.is_cache_enabled
+                    || manifest_data.is_iam_configured
+                    || manifest_data.is_billing_configured
+                {
                     Some(INFRASTRUCTURE_REDIS_VERSION.to_string())
                 } else {
                     None
