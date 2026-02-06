@@ -214,6 +214,10 @@ pub(crate) fn application_up_packages_script(runtime: &Runtime) -> String {
 pub(crate) const BETTER_AUTH_MIKRO_ORM_VERSION: &str = "~0.4.106";
 // @forklaunch/blueprint-core
 pub(crate) const APP_CORE_VERSION: &str = "workspace:*";
+// @forklaunch/blueprint-billing
+pub(crate) const APP_BILLING_VERSION: &str = "workspace:*";
+// @forklaunch/blueprint-iam
+pub(crate) const APP_IAM_VERSION: &str = "workspace:*";
 // @forklaunch/blueprint-monitoring
 pub(crate) const APP_MONITORING_VERSION: &str = "workspace:*";
 // @forklaunch/bunrun

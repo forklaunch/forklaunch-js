@@ -47,24 +47,25 @@ use crate::{
         package_json::{
             add_project_definition_to_package_json,
             package_json_constants::{
-                AJV_VERSION, APP_CORE_VERSION, APP_MONITORING_VERSION,
-                BETTER_AUTH_MIKRO_ORM_VERSION, BETTER_AUTH_VERSION, BETTER_SQLITE3_VERSION,
-                BILLING_BASE_VERSION, BILLING_INTERFACES_VERSION, BILLING_STRIPE_VERSION,
-                BIOME_VERSION, COMMON_VERSION, CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION,
-                EXPRESS_VERSION, HYPER_EXPRESS_VERSION, IAM_BASE_VERSION, IAM_INTERFACES_VERSION,
-                INFRASTRUCTURE_REDIS_VERSION, INFRASTRUCTURE_S3_VERSION, INTERNAL_VERSION,
-                IOREDIS_VERSION, JOSE_VERSION, MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION,
-                MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
-                MIKRO_ORM_REFLECTION_VERSION, MIKRO_ORM_SEEDER_VERSION, OPENTELEMETRY_API_VERSION,
-                OXLINT_VERSION, PINO_VERSION, PRETTIER_VERSION, PROJECT_BUILD_SCRIPT,
-                PROJECT_DOCS_SCRIPT, PROJECT_SEED_SCRIPT, SQLITE3_VERSION, STRIPE_VERSION,
-                TESTING_VERSION, TSX_VERSION, TYPEBOX_VERSION, TYPEDOC_VERSION,
-                TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_JEST_VERSION,
-                TYPES_QS_VERSION, TYPES_UUID_VERSION, TYPESCRIPT_ESLINT_VERSION,
-                UNIVERSAL_SDK_VERSION, UUID_VERSION, VALIDATOR_VERSION, ZOD_VERSION,
-                project_clean_script, project_dev_local_script, project_dev_server_script,
-                project_format_script, project_lint_fix_script, project_lint_script,
-                project_migrate_script, project_start_server_script, project_test_script,
+                AJV_VERSION, APP_BILLING_VERSION, APP_CORE_VERSION, APP_IAM_VERSION,
+                APP_MONITORING_VERSION, BETTER_AUTH_MIKRO_ORM_VERSION, BETTER_AUTH_VERSION,
+                BETTER_SQLITE3_VERSION, BILLING_BASE_VERSION, BILLING_INTERFACES_VERSION,
+                BILLING_STRIPE_VERSION, BIOME_VERSION, COMMON_VERSION, CORE_VERSION,
+                DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION, HYPER_EXPRESS_VERSION,
+                IAM_BASE_VERSION, IAM_INTERFACES_VERSION, INFRASTRUCTURE_REDIS_VERSION,
+                INFRASTRUCTURE_S3_VERSION, INTERNAL_VERSION, IOREDIS_VERSION, JOSE_VERSION,
+                MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION,
+                MIKRO_ORM_MIGRATIONS_VERSION, MIKRO_ORM_REFLECTION_VERSION,
+                MIKRO_ORM_SEEDER_VERSION, OPENTELEMETRY_API_VERSION, OXLINT_VERSION, PINO_VERSION,
+                PRETTIER_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT, PROJECT_SEED_SCRIPT,
+                SQLITE3_VERSION, STRIPE_VERSION, TESTING_VERSION, TSX_VERSION, TYPEBOX_VERSION,
+                TYPEDOC_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION,
+                TYPES_JEST_VERSION, TYPES_QS_VERSION, TYPES_UUID_VERSION,
+                TYPESCRIPT_ESLINT_VERSION, UNIVERSAL_SDK_VERSION, UUID_VERSION, VALIDATOR_VERSION,
+                ZOD_VERSION, project_clean_script, project_dev_local_script,
+                project_dev_server_script, project_format_script, project_lint_fix_script,
+                project_lint_script, project_migrate_script, project_start_server_script,
+                project_test_script,
             },
             project_package_json::{
                 MIKRO_ORM_CONFIG_PATHS, ProjectDependencies, ProjectDevDependencies,
@@ -364,15 +365,13 @@ pub(crate) fn generate_service_package_json(
                 app_core: Some(APP_CORE_VERSION.to_string()),
                 app_monitoring: Some(APP_MONITORING_VERSION.to_string()),
                 app_client_sdk: None,
-                // For services that are not billing, install billing from workspace if billing is configured
                 app_billing: if !manifest_data.is_billing && manifest_data.is_billing_configured {
-                    Some(APP_CORE_VERSION.to_string())
+                    Some(APP_BILLING_VERSION.to_string())
                 } else {
                     None
                 },
-                // For services that are not iam, install iam from workspace if iam is configured
                 app_iam: if !manifest_data.is_iam && manifest_data.is_iam_configured {
-                    Some(APP_CORE_VERSION.to_string())
+                    Some(APP_IAM_VERSION.to_string())
                 } else {
                     None
                 },
