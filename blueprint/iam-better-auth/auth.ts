@@ -7,7 +7,16 @@ import { jwt, openAPI } from 'better-auth/plugins';
 
 type Plugins = [ReturnType<typeof jwt>, ReturnType<typeof openAPI>];
 const plugins: Plugins = [
-  jwt(),
+  jwt({
+    jwt: {
+      definePayload: async ({ user }) => ({
+        sub: user.id,
+        email: user.email,
+        organizationId: user.organizationId,
+        roleIds: user.roleIds
+      })
+    }
+  }),
   openAPI({
     disableDefaultReference: true
   })

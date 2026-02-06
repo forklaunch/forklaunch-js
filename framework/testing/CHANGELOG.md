@@ -1,5 +1,11 @@
 # @forklaunch/testing
 
+## 0.0.17
+
+### Patch Changes
+
+- 4e10567: Update dependency versions
+
 ## 0.0.16
 
 ### Patch Changes

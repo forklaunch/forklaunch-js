@@ -1,5 +1,11 @@
 # @forklaunch/bunrun
 
+## 0.0.22
+
+### Patch Changes
+
+- 4e10567: Update dependency versions
+
 ## 0.0.21
 
 ### Patch Changes

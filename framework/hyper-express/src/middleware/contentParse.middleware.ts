@@ -70,7 +70,9 @@ export function contentParse<SV extends AnySchemaValidator>(options?: {
             if (field.file) {
               const chunks: Buffer[] = [];
               for await (const chunk of field.file.stream) {
-                chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+                chunks.push(
+                  Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)
+                );
               }
               const fileBuffer = Buffer.concat(chunks);
               body[field.name] = fileBuffer;

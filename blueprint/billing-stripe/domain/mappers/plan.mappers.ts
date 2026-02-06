@@ -10,7 +10,11 @@ export const CreatePlanMapper = requestMapper({
   schema: PlanSchemas.CreatePlanSchema,
   entity: Plan,
   mapperDefinition: {
-    toEntity: async (dto, em: EntityManager, providerFields: Stripe.Plan) => {
+    toEntity: async (
+      dto,
+      em: EntityManager,
+      providerFields: Stripe.Product
+    ) => {
       return Plan.create(
         {
           ...dto,
@@ -29,11 +33,13 @@ export const UpdatePlanMapper = requestMapper({
   schema: PlanSchemas.UpdatePlanSchema,
   entity: Plan,
   mapperDefinition: {
-    toEntity: async (dto, em: EntityManager, providerFields: Stripe.Plan) => {
-      // Find the existing plan first
+    toEntity: async (
+      dto,
+      em: EntityManager,
+      providerFields: Stripe.Product
+    ) => {
       const existingPlan = await em.findOneOrFail(Plan, { id: dto.id });
 
-      // Update the existing plan with new data
       Object.assign(existingPlan, {
         ...dto,
         providerFields,

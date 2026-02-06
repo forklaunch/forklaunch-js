@@ -39,7 +39,7 @@ impl SdkImportVisitor {
             if parts.len() >= 2 {
                 let service_name = parts[1].to_string();
                 // Exclude known non-service packages
-                if !service_name.starts_with("universal-sdk")
+                if !service_name.starts_with("client-sdk")
                     && !service_name.starts_with("forklaunch")
                     && !service_name.starts_with("core")
                     && !service_name.starts_with("common")

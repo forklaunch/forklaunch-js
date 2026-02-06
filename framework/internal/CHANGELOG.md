@@ -1,4 +1,13 @@
-# @forklaunch/common
+# @forklaunch/internal
+
+## 0.3.28
+
+### Patch Changes
+
+- 4e10567: Update dependency versions
+- Updated dependencies [4e10567]
+  - @forklaunch/validator@0.10.28
+  - @forklaunch/common@0.6.28
 
 ## 0.3.27
 

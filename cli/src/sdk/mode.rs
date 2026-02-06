@@ -13,9 +13,6 @@ use crate::{
         ERROR_FAILED_TO_READ_MANIFEST, ERROR_FAILED_TO_READ_PACKAGE_JSON, SdkModeType,
     },
     core::{
-        ast::transformations::transform_universal_sdk::{
-            transform_universal_sdk_use_generated_path, transform_universal_sdk_use_live_sdk,
-        },
         base_path::{RequiredLocation, find_app_root_path},
         command::command,
         manifest::application::ApplicationManifestData,
@@ -41,27 +38,7 @@ pub(crate) fn apply_generated_sdk_mode_setup(
     app_root_path: &PathBuf,
     manifest_data: &ApplicationManifestData,
     rendered_templates_cache: &mut RenderedTemplatesCache,
-    transform_sdk: bool,
 ) -> Result<()> {
-    // Transform universal-sdk only during mode change, not during init
-    if transform_sdk {
-        let universal_sdk_path = app_root_path
-            .join(manifest_data.modules_path.clone())
-            .join("universal-sdk")
-            .join("universalSdk.ts");
-        rendered_templates_cache.insert(
-            universal_sdk_path.to_string_lossy(),
-            RenderedTemplate {
-                path: universal_sdk_path.clone(),
-                content: transform_universal_sdk_use_generated_path(
-                    rendered_templates_cache,
-                    &app_root_path.join(manifest_data.modules_path.clone()),
-                )?,
-                context: None,
-            },
-        );
-    }
-
     if let Some(root_tsconfig) = generate_root_tsconfig(app_root_path, manifest_data)? {
         rendered_templates_cache.insert(
             app_root_path.join("tsconfig.json").to_string_lossy(),
@@ -81,7 +58,7 @@ pub(crate) fn apply_generated_sdk_mode_setup(
 
     let modules_path = app_root_path.join(manifest_data.modules_path.clone());
     for project in &manifest_data.projects {
-        if project.name == "universal-sdk" {
+        if project.name == "client-sdk" {
             continue;
         }
 
@@ -91,8 +68,7 @@ pub(crate) fn apply_generated_sdk_mode_setup(
         let content = if let Ok(Some(template)) = rendered_templates_cache.get(&package_json_path) {
             template.content.clone()
         } else if package_json_path.exists() {
-            read_to_string(&package_json_path)
-                .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?
+            read_to_string(&package_json_path).with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?
         } else {
             continue;
         };
@@ -120,7 +96,7 @@ pub(crate) fn use_generated_sdk_mode(
     manifest_data: &ApplicationManifestData,
     rendered_templates_cache: &mut RenderedTemplatesCache,
 ) -> Result<()> {
-    apply_generated_sdk_mode_setup(app_root_path, manifest_data, rendered_templates_cache, true)
+    apply_generated_sdk_mode_setup(app_root_path, manifest_data, rendered_templates_cache)
 }
 
 fn use_live_sdk_mode(
@@ -129,21 +105,6 @@ fn use_live_sdk_mode(
     rendered_templates_cache: &mut RenderedTemplatesCache,
 ) -> Result<Vec<RemovalTemplate>> {
     let mut removal_templates = vec![];
-    let universal_sdk_path = app_root_path
-        .join(manifest_data.modules_path.clone())
-        .join("universal-sdk")
-        .join("universalSdk.ts");
-    rendered_templates_cache.insert(
-        universal_sdk_path.to_string_lossy(),
-        RenderedTemplate {
-            path: universal_sdk_path.clone(),
-            content: transform_universal_sdk_use_live_sdk(
-                rendered_templates_cache,
-                &app_root_path.join(manifest_data.modules_path.clone()),
-            )?,
-            context: None,
-        },
-    );
 
     removal_templates.push(RemovalTemplate {
         path: app_root_path.join("tsconfig.json"),
@@ -157,7 +118,7 @@ fn use_live_sdk_mode(
 
     let modules_path = app_root_path.join(manifest_data.modules_path.clone());
     for project in &manifest_data.projects {
-        if project.name == "universal-sdk" {
+        if project.name == "client-sdk" {
             continue;
         }
 

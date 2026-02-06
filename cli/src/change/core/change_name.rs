@@ -11,6 +11,7 @@ use super::clean_application::clean_application;
 use crate::{
     constants::Runtime,
     core::{
+        client_sdk::change_project_in_client_sdk,
         docker::{Command, DependsOn, DockerBuild, DockerCompose, DockerService, Healthcheck},
         manifest::{MutableManifestData, ProjectEntry, ProjectType},
         move_template::{MoveTemplate, MoveTemplateType},
@@ -22,7 +23,6 @@ use crate::{
         rendered_template::{RenderedTemplate, RenderedTemplatesCache},
         string::short_circuit_replacement,
         tsconfig::update_project_in_modules_tsconfig,
-        universal_sdk::change_project_in_universal_sdk,
     },
 };
 
@@ -131,7 +131,7 @@ pub(crate) fn change_name(
 ) -> Result<MoveTemplate> {
     let existing_name = base_path.file_name().unwrap().to_string_lossy().to_string();
 
-    // TODO: change the name of the package in universal-sdk if service or worker (could just be simple find/replace)
+    // TODO: change the name of the package in client-sdk if service or worker (could just be simple find/replace)
     let (runtime, app_name, mut project_entries, project_peer_topology) = match manifest_data {
         MutableManifestData::Service(manifest_data) => {
             manifest_data.service_name = name.to_string();
@@ -362,7 +362,7 @@ pub(crate) fn change_name(
     )?);
 
     if project_entry.r#type == ProjectType::Service || project_entry.r#type == ProjectType::Worker {
-        change_project_in_universal_sdk(
+        change_project_in_client_sdk(
             rendered_templates_cache,
             base_path.parent().unwrap(),
             &app_name,

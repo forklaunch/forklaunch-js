@@ -1,5 +1,20 @@
 # @forklaunch/core
 
+## 0.18.1
+
+### Patch Changes
+
+- 4e10567: Update dependency versions
+- Updated dependencies [4e10567]
+  - @forklaunch/validator@0.10.28
+  - @forklaunch/common@0.6.28
+
+## 0.18.0
+
+### Minor Changes
+
+- added logic in auth middleware to support billing based authorization
+
 ## 0.17.3
 
 ### Patch Changes
