@@ -51,7 +51,7 @@ pub(crate) fn generate_vscode_tasks(
             {
               "label": "Watch Types",
               "type": "shell",
-              "command": format!("cd modules && {} run types:watch", match manifest_data.runtime.parse()? {
+              "command": format!("cd {} && {} run types:watch", manifest_data.modules_path, match manifest_data.runtime.parse()? {
                 Runtime::Bun => "bun",
                 Runtime::Node => "pnpm",
               }),

@@ -5,15 +5,24 @@
 
 import type { ResourceLimits } from '@forklaunch/blueprint-core';
 
-export type BillingCacheLike = {
-  get: (key: string) => Promise<unknown>;
-  set: (key: string, value: unknown, ttl?: number) => Promise<void>;
-  delete: (key: string) => Promise<void>;
-};
+export interface BillingCacheLike {
+  readRecord<T>(key: string): Promise<{ value: T }>;
+  putRecord<T>(record: {
+    key: string;
+    value: T;
+    ttlMilliseconds: number;
+  }): Promise<void>;
+  deleteRecord(key: string): Promise<void>;
+  listKeys(prefix: string): Promise<string[]>;
+  deleteBatchRecords(keys: string[]): Promise<void>;
+}
 
 export type SubscriptionCacheData = {
+  subscriptionId: string;
+  planId: string;
   planName: string;
   status: string;
+  currentPeriodEnd: Date;
   features: string[];
 };
 
@@ -77,60 +86,98 @@ export function createBillingCacheService(
 
   return {
     async getCachedSubscription(organizationId: string) {
-      const data = await cache.get(`${SUBSCRIPTION_PREFIX}${organizationId}`);
-      return data as SubscriptionCacheData | null;
+      try {
+        const result = await cache.readRecord<SubscriptionCacheData>(
+          `${SUBSCRIPTION_PREFIX}${organizationId}`
+        );
+        const subscription = result.value;
+        if (typeof subscription.currentPeriodEnd === 'string') {
+          subscription.currentPeriodEnd = new Date(
+            subscription.currentPeriodEnd
+          );
+        }
+        return subscription;
+      } catch {
+        return null;
+      }
     },
     async setCachedSubscription(
       organizationId: string,
       data: SubscriptionCacheData
     ) {
-      await cache.set(`${SUBSCRIPTION_PREFIX}${organizationId}`, data, TTL);
+      await cache.putRecord({
+        key: `${SUBSCRIPTION_PREFIX}${organizationId}`,
+        value: data,
+        ttlMilliseconds: TTL
+      });
     },
     async deleteCachedSubscription(organizationId: string) {
-      await cache.delete(`${SUBSCRIPTION_PREFIX}${organizationId}`);
+      await cache.deleteRecord(`${SUBSCRIPTION_PREFIX}${organizationId}`);
     },
     async getCachedPlan(planId: string) {
-      const data = await cache.get(`${PLAN_PREFIX}${planId}`);
-      return data as PlanCacheData | null;
+      try {
+        const result = await cache.readRecord<PlanCacheData>(
+          `${PLAN_PREFIX}${planId}`
+        );
+        return result.value;
+      } catch {
+        return null;
+      }
     },
     async setCachedPlan(planId: string, data: PlanCacheData) {
-      await cache.set(`${PLAN_PREFIX}${planId}`, data, TTL);
+      await cache.putRecord({
+        key: `${PLAN_PREFIX}${planId}`,
+        value: data,
+        ttlMilliseconds: TTL
+      });
     },
 
     // Feature caching methods
     async getCachedFeatures(organizationId: string) {
-      const data = await cache.get(`${FEATURE_PREFIX}${organizationId}`);
-      if (data && Array.isArray(data)) {
-        return new Set<string>(data);
+      try {
+        const result = await cache.readRecord<string[]>(
+          `${FEATURE_PREFIX}${organizationId}`
+        );
+        if (Array.isArray(result.value)) {
+          return new Set<string>(result.value);
+        }
+        return null;
+      } catch {
+        return null;
       }
-      return null;
     },
     async setCachedFeatures(organizationId: string, features: Set<string>) {
-      await cache.set(
-        `${FEATURE_PREFIX}${organizationId}`,
-        Array.from(features),
-        TTL
-      );
+      await cache.putRecord({
+        key: `${FEATURE_PREFIX}${organizationId}`,
+        value: Array.from(features),
+        ttlMilliseconds: TTL
+      });
     },
 
     // Entitlement caching methods
     async getCachedEntitlements(partyKey: string) {
-      const data = await cache.get(`${ENTITLEMENT_PREFIX}${partyKey}`);
-      if (data) {
-        // Restore Date object from serialization
-        const entitlement = data as EntitlementCacheData;
+      try {
+        const result = await cache.readRecord<EntitlementCacheData>(
+          `${ENTITLEMENT_PREFIX}${partyKey}`
+        );
+        const entitlement = result.value;
         if (typeof entitlement.syncedAt === 'string') {
           entitlement.syncedAt = new Date(entitlement.syncedAt);
         }
         return entitlement;
+      } catch {
+        return null;
       }
-      return null;
     },
     async setCachedEntitlements(partyKey: string, data: EntitlementCacheData) {
-      await cache.set(`${ENTITLEMENT_PREFIX}${partyKey}`, data, TTL);
+      await cache.putRecord({
+        key: `${ENTITLEMENT_PREFIX}${partyKey}`,
+        value: data,
+        ttlMilliseconds: TTL
+      });
     },
     async deleteCachedEntitlements(partyKey: string) {
-      await cache.delete(`${ENTITLEMENT_PREFIX}${partyKey}`);
+      await cache.deleteRecord(`${ENTITLEMENT_PREFIX}${partyKey}`);
     }
   };
 }

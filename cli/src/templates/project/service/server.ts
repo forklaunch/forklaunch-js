@@ -16,6 +16,9 @@ const hmacSecretKey = ci.resolve(tokens.HMAC_SECRET_KEY);
 {{/is_iam_configured}}{{#is_billing_configured}}
 const billingCacheService = ci.resolve(tokens.BillingCacheService);
 const billingUrl = ci.resolve(tokens.BILLING_URL);
+{{^is_iam_configured}}
+const hmacSecretKey = ci.resolve(tokens.HMAC_SECRET_KEY);
+{{/is_iam_configured}}
 {{/is_billing_configured}}
 
 /**
@@ -27,8 +30,8 @@ async function createAuthOptions() {
   const [surfaceRoles, surfacePermissions, surfaceFeatures, surfaceSubscription] = await Promise.all([
     createSurfaceRoles({ authCacheService, iamUrl, hmacSecretKey }),
     createSurfacePermissions({ authCacheService, iamUrl, hmacSecretKey }),
-    createSurfaceFeatures({ billingCacheService, billingUrl }),
-    createSurfaceSubscription({ billingCacheService, billingUrl })
+    createSurfaceFeatures({ billingCacheService, billingUrl, hmacSecretKey }),
+    createSurfaceSubscription({ billingCacheService, billingUrl, hmacSecretKey })
   ]);
 
   return {
@@ -53,8 +56,8 @@ async function createAuthOptions() {
 {{/is_billing_configured}}{{/is_iam_configured}}{{^is_iam_configured}}{{#is_billing_configured}}
   // Only Billing is configured
   const [surfaceFeatures, surfaceSubscription] = await Promise.all([
-    createSurfaceFeatures({ billingCacheService, billingUrl }),
-    createSurfaceSubscription({ billingCacheService, billingUrl })
+    createSurfaceFeatures({ billingCacheService, billingUrl, hmacSecretKey }),
+    createSurfaceSubscription({ billingCacheService, billingUrl, hmacSecretKey })
   ]);
 
   return {

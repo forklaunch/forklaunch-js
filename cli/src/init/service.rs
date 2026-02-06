@@ -29,6 +29,7 @@ use crate::{
     },
     core::{
         base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
+        client_sdk::add_project_to_client_sdk,
         command::command,
         database::{
             add_base_entity_to_core, get_database_port, get_db_driver, is_in_memory_database,
@@ -165,9 +166,9 @@ fn generate_basic_service(
         rendered_templates_cache.insert(template.path.to_string_lossy().to_string(), template);
     }
 
-    crate::core::client_sdk::add_project_to_client_sdk(
+    add_project_to_client_sdk(
         &mut rendered_templates_cache,
-        app_root_path,
+        &base_path,
         &manifest_data.app_name,
         &manifest_data.service_name,
         None,
@@ -772,6 +773,14 @@ impl CliCommand for ServiceCommand {
                     return true;
                 }
                 return false;
+            }),
+
+            is_request_cache_needed: infrastructure.contains(&Infrastructure::Redis)
+                || manifest_data.projects.iter().any(|project_entry| {
+                    project_entry.name == "iam" || project_entry.name == "billing"
+                }),
+            is_type_needed: manifest_data.projects.iter().any(|project_entry| {
+                project_entry.name == "iam" || project_entry.name == "billing"
             }),
 
             // Generate mappers if --mappers flag is set, or always for billing/IAM variants

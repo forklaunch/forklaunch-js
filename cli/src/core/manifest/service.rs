@@ -76,6 +76,11 @@ config_struct!(
         pub(crate) is_billing_configured: bool,
 
         #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) is_request_cache_needed: bool,
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) is_type_needed: bool,
+
+        #[serde(skip_serializing, skip_deserializing)]
         pub(crate) with_mappers: bool,
     }
 );
@@ -112,6 +117,28 @@ impl InitializableManifestConfig for ServiceManifestData {
                 .parse()
                 .unwrap(),
         );
+
+        let is_iam_configured = self.projects.iter().any(|project_entry| {
+            if project_entry.name == "iam" {
+                return true;
+            }
+            return false;
+        });
+
+        let is_billing_configured = self.projects.iter().any(|project_entry| {
+            if project_entry.name == "billing" {
+                return true;
+            }
+            return false;
+        });
+
+        let is_cache_enabled = service_metadata
+            .infrastructure
+            .as_ref()
+            .unwrap_or(&vec![])
+            .contains(&Infrastructure::Redis)
+            || project_entry.resources.as_ref().unwrap().cache.is_some();
+
         Self {
             service_name: service_name.clone(),
             camel_case_name: service_name.clone().to_case(Case::Camel),
@@ -141,12 +168,7 @@ impl InitializableManifestConfig for ServiceManifestData {
                 || service_name == get_service_module_name(&Module::BetterAuthIam),
             is_billing: service_name == get_service_module_name(&Module::BaseBilling)
                 || service_name == get_service_module_name(&Module::StripeBilling),
-            is_cache_enabled: service_metadata
-                .infrastructure
-                .as_ref()
-                .unwrap_or(&vec![])
-                .contains(&Infrastructure::Redis)
-                || project_entry.resources.as_ref().unwrap().cache.is_some(),
+            is_cache_enabled,
             is_s3_enabled: service_metadata
                 .infrastructure
                 .as_ref()
@@ -173,19 +195,10 @@ impl InitializableManifestConfig for ServiceManifestData {
                     .unwrap()
                     == Module::BetterAuthIam,
 
-            is_iam_configured: self.projects.iter().any(|project_entry| {
-                if project_entry.name == "iam" {
-                    return true;
-                }
-                return false;
-            }),
-
-            is_billing_configured: self.projects.iter().any(|project_entry| {
-                if project_entry.name == "billing" {
-                    return true;
-                }
-                return false;
-            }),
+            is_iam_configured,
+            is_billing_configured,
+            is_request_cache_needed: is_cache_enabled || is_iam_configured || is_billing_configured,
+            is_type_needed: is_iam_configured || is_billing_configured,
 
             // Default to false, will be set by CLI flag or forced for billing/IAM
             with_mappers: false,

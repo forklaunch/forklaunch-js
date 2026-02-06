@@ -83,6 +83,11 @@ config_struct!(
         pub(crate) is_billing_configured: bool,
 
         #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) is_request_cache_needed: bool,
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) is_type_needed: bool,
+
+        #[serde(skip_serializing, skip_deserializing)]
         pub(crate) with_mappers: bool,
     }
 );
@@ -186,6 +191,21 @@ impl InitializableManifestConfig for WorkerManifestData {
                     return true;
                 }
                 return false;
+            }),
+
+            is_request_cache_needed: worker_metadata
+                .infrastructure
+                .as_ref()
+                .map_or(false, |i| i.contains(&Infrastructure::Redis))
+                || project_entry
+                    .resources
+                    .as_ref()
+                    .map_or(false, |r| r.cache.is_some())
+                || self.projects.iter().any(|project_entry| {
+                    project_entry.name == "iam" || project_entry.name == "billing"
+                }),
+            is_type_needed: self.projects.iter().any(|project_entry| {
+                project_entry.name == "iam" || project_entry.name == "billing"
             }),
 
             // Default to false, will be set by CLI flag

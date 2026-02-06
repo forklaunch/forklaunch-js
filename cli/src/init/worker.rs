@@ -170,7 +170,7 @@ fn generate_basic_worker(
 
     add_project_to_client_sdk(
         &mut rendered_templates_cache,
-        app_root_path,
+        &base_path,
         &manifest_data.app_name,
         &manifest_data.worker_name,
         None,
@@ -880,6 +880,16 @@ impl CliCommand for WorkerCommand {
                     return true;
                 }
                 return false;
+            }),
+
+            is_request_cache_needed: match r#type {
+                WorkerType::BullMQCache | WorkerType::RedisCache => true,
+                _ => manifest_data.projects.iter().any(|project_entry| {
+                    project_entry.name == "iam" || project_entry.name == "billing"
+                }),
+            },
+            is_type_needed: manifest_data.projects.iter().any(|project_entry| {
+                project_entry.name == "iam" || project_entry.name == "billing"
             }),
 
             // Generate mappers if --mappers flag is set

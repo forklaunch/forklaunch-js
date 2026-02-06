@@ -1,5 +1,6 @@
 import { generateHmacAuthHeaders } from '@forklaunch/core/http';
 import { universalSdk } from '@forklaunch/universal-sdk';
+import type { JWTPayload } from 'jose';
 import type { BillingCacheService, SubscriptionCacheData } from './cache';
 import type { BillingSdkClient } from './sdk';
 
@@ -28,16 +29,16 @@ export async function createSurfaceSubscription(params: {
   billingUrl: string;
   hmacSecretKey: string;
 }): Promise<
-  (payload: {
-    organizationId?: string;
-  }) => Promise<SubscriptionCacheData | null>
+  (
+    payload: JWTPayload & { organizationId?: string }
+  ) => Promise<SubscriptionCacheData | null>
 > {
   const { billingCacheService, billingUrl, hmacSecretKey } = params;
   const billingSdk = await getBillingSdk(billingUrl);
 
-  return async (payload: { organizationId?: string }) => {
+  return async (payload: JWTPayload & { organizationId?: string }) => {
     if (!payload.organizationId) {
-      return null;
+      throw new Error('organizationId is required in JWT payload');
     }
 
     const cached = await billingCacheService.getCachedSubscription(
@@ -92,13 +93,15 @@ export async function createSurfaceFeatures(params: {
   billingCacheService: BillingCacheService;
   billingUrl: string;
   hmacSecretKey: string;
-}): Promise<(payload: { organizationId?: string }) => Promise<Set<string>>> {
+}): Promise<
+  (payload: JWTPayload & { organizationId?: string }) => Promise<Set<string>>
+> {
   const { billingCacheService, billingUrl, hmacSecretKey } = params;
   const billingSdk = await getBillingSdk(billingUrl);
 
-  return async (payload: { organizationId?: string }) => {
+  return async (payload: JWTPayload & { organizationId?: string }) => {
     if (!payload.organizationId) {
-      return new Set<string>();
+      throw new Error('organizationId is required in JWT payload');
     }
 
     const cached = await billingCacheService.getCachedFeatures(

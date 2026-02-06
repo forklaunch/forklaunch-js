@@ -1,8 +1,8 @@
-import { {{#is_kafka_enabled}}array, {{/is_kafka_enabled}}{{#is_worker}}function_, {{/is_worker}}number, SchemaValidator, string{{#is_worker}}, type{{/is_worker}} } from "@{{app_name}}/core";
+import { {{#is_kafka_enabled}}array, {{/is_kafka_enabled}}{{#is_worker}}function_, {{/is_worker}}number, SchemaValidator, string{{#is_type_needed}}, type{{/is_type_needed}} } from "@{{app_name}}/core";
 import { metrics } from "@{{app_name}}/monitoring";{{#is_iam_configured}}
-import { createAuthCacheService, type AuthCacheService } from "@{{app_name}}/iam";{{/is_iam_configured}}{{#is_billing_configured}}
-import { createBillingCacheService, type BillingCacheService } from "@{{app_name}}/billing";{{/is_billing_configured}}{{#is_cache_enabled}}
-import { RedisTtlCache } from "@forklaunch/infrastructure-redis";{{/is_cache_enabled}}{{#is_s3_enabled}}
+import { createAuthCacheService, type AuthCacheService } from "@{{app_name}}/iam/cache";{{/is_iam_configured}}{{#is_billing_configured}}
+import { createBillingCacheService, type BillingCacheService } from "@{{app_name}}/billing/cache";{{/is_billing_configured}}{{#is_request_cache_needed}}
+import { RedisTtlCache } from "@forklaunch/infrastructure-redis";{{/is_request_cache_needed}}{{#is_s3_enabled}}
 import { S3ObjectStore } from "@forklaunch/infrastructure-s3";{{/is_s3_enabled}}
 import { OpenTelemetryCollector } from "@forklaunch/core/http";
 import {
@@ -37,11 +37,11 @@ const configInjector = createConfigInjector(SchemaValidator(), {
   
 //! defines the environment configuration for the application
 const environmentConfig = configInjector.chain({
-  {{#is_cache_enabled}}REDIS_URL: {
+  {{#is_request_cache_needed}}REDIS_URL: {
     lifetime: Lifetime.Singleton,
     type: string,
     value: getEnvVar('REDIS_URL')
-  },{{/is_cache_enabled}}
+  },{{/is_request_cache_needed}}
   PROTOCOL: {
     lifetime: Lifetime.Singleton,
     type: string,
@@ -146,7 +146,15 @@ const environmentConfig = configInjector.chain({
     lifetime: Lifetime.Singleton,
     type: string,
     value: getEnvVar('BILLING_URL')
-  },{{/is_billing_configured}}
+  },
+  {{^is_iam_configured}}
+  HMAC_SECRET_KEY: {
+    lifetime: Lifetime.Singleton,
+    type: string,
+    value: getEnvVar('HMAC_SECRET_KEY')
+  },
+  {{/is_iam_configured}}
+  {{/is_billing_configured}}
 });
 
 //! defines the runtime dependencies for the application
@@ -173,7 +181,7 @@ const runtimeDependencies = environmentConfig.chain({
         OTEL_LEVEL || "info",
         metrics
       ),
-  },{{#is_cache_enabled}}
+  },{{#is_request_cache_needed}}
   TtlCache: {
     lifetime: Lifetime.Singleton,
     type: RedisTtlCache,
@@ -184,7 +192,7 @@ const runtimeDependencies = environmentConfig.chain({
         enabled: true,
         level: "info",
       }),
-  },{{/is_cache_enabled}}{{#is_s3_enabled}}
+  },{{/is_request_cache_needed}}{{#is_s3_enabled}}
   S3ObjectStore: {
     lifetime: Lifetime.Singleton,
     type: S3ObjectStore,
@@ -226,12 +234,12 @@ const runtimeDependencies = environmentConfig.chain({
   },{{/is_database_enabled}}{{#is_iam_configured}}
   AuthCacheService: {
     lifetime: Lifetime.Singleton,
-    type: {} as AuthCacheService,
+    type: type<AuthCacheService>(),
     factory: ({ TtlCache }) => createAuthCacheService(TtlCache)
   },{{/is_iam_configured}}{{#is_billing_configured}}
   BillingCacheService: {
     lifetime: Lifetime.Singleton,
-    type: {} as BillingCacheService,
+    type: type<BillingCacheService>(),
     factory: ({ TtlCache }) => createBillingCacheService(TtlCache)
   },{{/is_billing_configured}}
 });
