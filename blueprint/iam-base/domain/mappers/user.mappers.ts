@@ -48,8 +48,11 @@ export const UserMapper = responseMapper({
   entity: User,
   mapperDefinition: {
     toDto: async (entity: User) => {
+      const read = await entity.read();
       return {
-        ...(await entity.read()),
+        ...read,
+        phoneNumber: entity.phoneNumber ?? undefined,
+        subscription: entity.subscription ?? undefined,
         roles: await Promise.all(
           (entity.roles && entity.roles.isInitialized()
             ? entity.roles

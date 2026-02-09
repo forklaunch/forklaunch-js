@@ -68,11 +68,13 @@ export function contentParse<SV extends AnySchemaValidator>(options?: {
           const body: Record<string, unknown> = {};
           await req.multipart(options?.busboy ?? {}, async (field) => {
             if (field.file) {
-              let buffer = '';
+              const chunks: Buffer[] = [];
               for await (const chunk of field.file.stream) {
-                buffer += chunk;
+                chunks.push(
+                  Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)
+                );
               }
-              const fileBuffer = Buffer.from(buffer);
+              const fileBuffer = Buffer.concat(chunks);
               body[field.name] = fileBuffer;
             } else {
               body[field.name] = field.value;

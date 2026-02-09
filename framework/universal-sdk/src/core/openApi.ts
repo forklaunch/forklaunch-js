@@ -88,6 +88,11 @@ export async function refreshOpenApi(
   }
 
   const registryOpenApiHashFetch = await fetch(`${registry}-hash`);
+  if (!registryOpenApiHashFetch.ok) {
+    throw new Error(
+      `Failed to fetch OpenAPI registry hash: ${registryOpenApiHashFetch.status} ${registryOpenApiHashFetch.statusText}`
+    );
+  }
   const registryOpenApiHash = await registryOpenApiHashFetch.text();
 
   if (
@@ -95,6 +100,11 @@ export async function refreshOpenApi(
     existingRegistryOpenApiHash !== registryOpenApiHash
   ) {
     const registryOpenApiFetch = await fetch(registry);
+    if (!registryOpenApiFetch.ok) {
+      throw new Error(
+        `Failed to fetch OpenAPI registry: ${registryOpenApiFetch.status} ${registryOpenApiFetch.statusText}`
+      );
+    }
     const registryOpenApiJson = await registryOpenApiFetch.json();
 
     return {

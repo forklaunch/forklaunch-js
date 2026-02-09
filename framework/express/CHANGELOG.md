@@ -1,5 +1,22 @@
 # @forklaunch/express
 
+## 0.10.5
+
+### Patch Changes
+
+- 4e10567: Update dependency versions
+- Updated dependencies [4e10567]
+  - @forklaunch/validator@0.10.28
+  - @forklaunch/common@0.6.28
+  - @forklaunch/core@0.18.1
+
+## 0.10.4
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.18.0
+
 ## 0.10.3
 
 ### Patch Changes

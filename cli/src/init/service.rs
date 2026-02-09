@@ -29,6 +29,7 @@ use crate::{
     },
     core::{
         base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
+        client_sdk::add_project_to_client_sdk,
         command::command,
         database::{
             add_base_entity_to_core, get_database_port, get_db_driver, is_in_memory_database,
@@ -46,24 +47,25 @@ use crate::{
         package_json::{
             add_project_definition_to_package_json,
             package_json_constants::{
-                AJV_VERSION, APP_CORE_VERSION, APP_MONITORING_VERSION, APP_UNIVERSAL_SDK_VERSION,
-                BETTER_AUTH_MIKRO_ORM_VERSION, BETTER_AUTH_VERSION, BETTER_SQLITE3_VERSION,
-                BILLING_BASE_VERSION, BILLING_INTERFACES_VERSION, BILLING_STRIPE_VERSION,
-                BIOME_VERSION, COMMON_VERSION, CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION,
-                EXPRESS_VERSION, HYPER_EXPRESS_VERSION, IAM_BASE_VERSION, IAM_INTERFACES_VERSION,
-                INFRASTRUCTURE_REDIS_VERSION, INFRASTRUCTURE_S3_VERSION, INTERNAL_VERSION,
-                IOREDIS_VERSION, JOSE_VERSION, MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION,
-                MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
-                MIKRO_ORM_REFLECTION_VERSION, MIKRO_ORM_SEEDER_VERSION, OPENTELEMETRY_API_VERSION,
-                OXLINT_VERSION, PRETTIER_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT,
-                PROJECT_SEED_SCRIPT, SQLITE3_VERSION, STRIPE_VERSION, TESTING_VERSION, TSX_VERSION,
-                TYPEBOX_VERSION, TYPEDOC_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION,
-                TYPES_EXPRESS_VERSION, TYPES_JEST_VERSION, TYPES_QS_VERSION, TYPES_UUID_VERSION,
-                TYPESCRIPT_ESLINT_VERSION, UUID_VERSION, VALIDATOR_VERSION, ZOD_VERSION,
-                PINO_VERSION,
-                project_clean_script, project_dev_local_script, project_dev_server_script,
-                project_format_script, project_lint_fix_script, project_lint_script,
-                project_migrate_script, project_start_server_script, project_test_script,
+                AJV_VERSION, APP_BILLING_VERSION, APP_CORE_VERSION, APP_IAM_VERSION,
+                APP_MONITORING_VERSION, BETTER_AUTH_MIKRO_ORM_VERSION, BETTER_AUTH_VERSION,
+                BETTER_SQLITE3_VERSION, BILLING_BASE_VERSION, BILLING_INTERFACES_VERSION,
+                BILLING_STRIPE_VERSION, BIOME_VERSION, COMMON_VERSION, CORE_VERSION,
+                DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION, HYPER_EXPRESS_VERSION,
+                IAM_BASE_VERSION, IAM_INTERFACES_VERSION, INFRASTRUCTURE_REDIS_VERSION,
+                INFRASTRUCTURE_S3_VERSION, INTERNAL_VERSION, IOREDIS_VERSION, JOSE_VERSION,
+                MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION,
+                MIKRO_ORM_MIGRATIONS_VERSION, MIKRO_ORM_REFLECTION_VERSION,
+                MIKRO_ORM_SEEDER_VERSION, OPENTELEMETRY_API_VERSION, OXLINT_VERSION, PINO_VERSION,
+                PRETTIER_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT, PROJECT_SEED_SCRIPT,
+                SQLITE3_VERSION, STRIPE_VERSION, TESTING_VERSION, TSX_VERSION, TYPEBOX_VERSION,
+                TYPEDOC_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION,
+                TYPES_JEST_VERSION, TYPES_QS_VERSION, TYPES_UUID_VERSION,
+                TYPESCRIPT_ESLINT_VERSION, UNIVERSAL_SDK_VERSION, UUID_VERSION, VALIDATOR_VERSION,
+                ZOD_VERSION, project_clean_script, project_dev_local_script,
+                project_dev_server_script, project_format_script, project_lint_fix_script,
+                project_lint_script, project_migrate_script, project_start_server_script,
+                project_test_script,
             },
             project_package_json::{
                 MIKRO_ORM_CONFIG_PATHS, ProjectDependencies, ProjectDevDependencies,
@@ -76,7 +78,6 @@ use crate::{
         symlinks::generate_symlinks,
         template::{PathIO, generate_with_template},
         tsconfig::{add_project_to_modules_tsconfig, generate_project_tsconfig},
-        universal_sdk::add_project_to_universal_sdk,
     },
     prompt::{
         ArrayCompleter, prompt_comma_separated_list, prompt_with_validation,
@@ -166,9 +167,9 @@ fn generate_basic_service(
         rendered_templates_cache.insert(template.path.to_string_lossy().to_string(), template);
     }
 
-    add_project_to_universal_sdk(
+    add_project_to_client_sdk(
         &mut rendered_templates_cache,
-        base_path,
+        &base_path,
         &manifest_data.app_name,
         &manifest_data.service_name,
         None,
@@ -363,7 +364,17 @@ pub(crate) fn generate_service_package_json(
                 databases: HashSet::from([manifest_data.database.parse()?]),
                 app_core: Some(APP_CORE_VERSION.to_string()),
                 app_monitoring: Some(APP_MONITORING_VERSION.to_string()),
-                app_universal_sdk: Some(APP_UNIVERSAL_SDK_VERSION.to_string()),
+                app_client_sdk: None,
+                app_billing: if !manifest_data.is_billing && manifest_data.is_billing_configured {
+                    Some(APP_BILLING_VERSION.to_string())
+                } else {
+                    None
+                },
+                app_iam: if !manifest_data.is_iam && manifest_data.is_iam_configured {
+                    Some(APP_IAM_VERSION.to_string())
+                } else {
+                    None
+                },
                 forklaunch_better_auth_mikro_orm_fork: if manifest_data.is_better_auth {
                     Some(BETTER_AUTH_MIKRO_ORM_VERSION.to_string())
                 } else {
@@ -401,7 +412,11 @@ pub(crate) fn generate_service_package_json(
                 } else {
                     None
                 },
-                forklaunch_infrastructure_redis: if manifest_data.is_cache_enabled {
+                // Infrastructure redis needed for cache or when iam/billing is configured
+                forklaunch_infrastructure_redis: if manifest_data.is_cache_enabled
+                    || manifest_data.is_iam_configured
+                    || manifest_data.is_billing_configured
+                {
                     Some(INFRASTRUCTURE_REDIS_VERSION.to_string())
                 } else {
                     None
@@ -422,7 +437,7 @@ pub(crate) fn generate_service_package_json(
                 forklaunch_implementation_worker_redis: None,
                 forklaunch_interfaces_worker: None,
                 forklaunch_internal: Some(INTERNAL_VERSION.to_string()),
-                forklaunch_universal_sdk: None,
+                forklaunch_universal_sdk: Some(UNIVERSAL_SDK_VERSION.to_string()),
                 forklaunch_validator: Some(VALIDATOR_VERSION.to_string()),
                 mikro_orm_core: Some(MIKRO_ORM_CORE_VERSION.to_string()),
                 mikro_orm_migrations: Some(MIKRO_ORM_MIGRATIONS_VERSION.to_string()),
@@ -455,7 +470,7 @@ pub(crate) fn generate_service_package_json(
                     None
                 },
                 dotenv: Some(DOTENV_VERSION.to_string()),
-                jose: if manifest_data.is_iam {
+                jose: if manifest_data.is_iam || manifest_data.is_billing {
                     Some(JOSE_VERSION.to_string())
                 } else {
                     None
@@ -766,6 +781,21 @@ impl CliCommand for ServiceCommand {
                     return true;
                 }
                 return false;
+            }),
+
+            is_billing_configured: manifest_data.projects.iter().any(|project_entry| {
+                if project_entry.name == "billing" {
+                    return true;
+                }
+                return false;
+            }),
+
+            is_request_cache_needed: infrastructure.contains(&Infrastructure::Redis)
+                || manifest_data.projects.iter().any(|project_entry| {
+                    project_entry.name == "iam" || project_entry.name == "billing"
+                }),
+            is_type_needed: manifest_data.projects.iter().any(|project_entry| {
+                project_entry.name == "iam" || project_entry.name == "billing"
             }),
 
             // Generate mappers if --mappers flag is set, or always for billing/IAM variants

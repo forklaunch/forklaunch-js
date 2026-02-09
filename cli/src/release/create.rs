@@ -355,7 +355,7 @@ impl CliCommand for CreateCommand {
                         ),
                         Some(crate::core::manifest::ProjectType::Worker) => (
                             crate::core::env_scope::EnvironmentVariableScope::Worker,
-                            Some(service_name.clone()),
+                            Some(format!("{}-worker", service_name)),
                         ),
                         _ => continue, // Skip if not a service or worker
                     }
@@ -1711,7 +1711,7 @@ mod tests {
                 ),
                 Some(ProjectType::Worker) => (
                     crate::core::env_scope::EnvironmentVariableScope::Worker,
-                    Some(service_name.clone()),
+                    Some(format!("{}-worker", service_name)),
                 ),
                 _ => continue,
             };

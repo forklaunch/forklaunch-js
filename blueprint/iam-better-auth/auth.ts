@@ -7,11 +7,55 @@ import { jwt, openAPI } from 'better-auth/plugins';
 
 type Plugins = [ReturnType<typeof jwt>, ReturnType<typeof openAPI>];
 const plugins: Plugins = [
-  jwt(),
+  jwt({
+    jwt: {
+      definePayload: async ({ user }) => ({
+        sub: user.id,
+        email: user.email,
+        organizationId: user.organizationId,
+        roleIds: user.roleIds
+      })
+    }
+  }),
   openAPI({
     disableDefaultReference: true
   })
 ];
+
+const userAdditionalFields = {
+  firstName: {
+    type: 'string',
+    required: true
+  },
+  lastName: {
+    type: 'string',
+    required: true
+  },
+  phoneNumber: {
+    type: 'string',
+    required: false
+  },
+  organizationId: {
+    type: 'string',
+    required: false,
+    returned: true
+  },
+  roleIds: {
+    type: 'string[]',
+    required: false,
+    returned: true
+  },
+  organization: {
+    type: 'string',
+    required: false,
+    returned: false
+  },
+  roles: {
+    type: 'string[]',
+    required: false,
+    returned: false
+  }
+} as const;
 
 export const betterAuthConfig = ({
   BETTER_AUTH_BASE_PATH,
@@ -30,46 +74,24 @@ export const betterAuthConfig = ({
     basePath: BETTER_AUTH_BASE_PATH,
     secret: PASSWORD_ENCRYPTION_SECRET,
     trustedOrigins: CORS_ORIGINS,
-    database: mikroOrmAdapter(orm),
+    database: mikroOrmAdapter(orm, {
+      options: {
+        advanced: {
+          database: {
+            generateId: false
+          }
+        },
+        user: {
+          additionalFields: userAdditionalFields
+        }
+      }
+    }),
     emailAndPassword: {
       enabled: true
     },
     plugins,
     user: {
-      additionalFields: {
-        firstName: {
-          type: 'string',
-          required: true
-        },
-        lastName: {
-          type: 'string',
-          required: true
-        },
-        phoneNumber: {
-          type: 'string',
-          required: false
-        },
-        organizationId: {
-          type: 'string',
-          required: false,
-          returned: true
-        },
-        roleIds: {
-          type: 'string[]',
-          required: false,
-          returned: true
-        },
-        organization: {
-          type: 'string',
-          required: false,
-          returned: false
-        },
-        roles: {
-          type: 'string[]',
-          required: false,
-          returned: false
-        }
-      }
+      additionalFields: userAdditionalFields
     },
     databaseHooks: {
       user: {

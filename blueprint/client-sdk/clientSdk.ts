@@ -10,10 +10,19 @@ import { RegistryOptions, universalSdk } from '@forklaunch/universal-sdk';
 import { createAuthClient } from 'better-auth/client';
 import { inferAdditionalFields } from 'better-auth/client/plugins';
 
-export const billingSdkClient = universalSdk<BillingSdkClient>;
-export const billingStripeSdkClient = universalSdk<BillingStripeSdkClient>;
-export const iamSdkClient = universalSdk<IamSdkClient>;
-export const iamBetterAuthSdkClient = async ({
+/**
+ * The Client SDK is designed for use by external consumers (e.g. frontend applications,
+ * partner integrations) to access all services in the workspace via a single client.
+ *
+ * internal services should NOT use this SDK. Instead, they should import the
+ * framework `universalSdk` directly (`@forklaunch/universal-sdk`) and instantiate it
+ * with the specific service types they need (e.g. `universalSdk<IamSdkClient>`).
+ */
+export const clientBillingSdkClient = universalSdk<BillingSdkClient>;
+export const clientBillingStripeSdkClient =
+  universalSdk<BillingStripeSdkClient>;
+export const clientIamSdkClient = universalSdk<IamSdkClient>;
+export const clientIamBetterAuthSdkClient = async ({
   host,
   registryOptions
 }: {
@@ -29,4 +38,4 @@ export const iamBetterAuthSdkClient = async ({
     plugins: [inferAdditionalFields<BetterAuthConfig>()]
   })
 });
-export const sampleWorkerSdkClient = universalSdk<SampleWorkerSdkClient>;
+export const clientSampleWorkerSdkClient = universalSdk<SampleWorkerSdkClient>;

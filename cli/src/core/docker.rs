@@ -1037,10 +1037,7 @@ pub(crate) fn add_database_to_docker_compose(
                         healthcheck: Some(Healthcheck {
                             test: HealthTest::List(vec![
                                 "CMD-SHELL".to_string(),
-                                format!(
-                                    "pg_isready -U postgresql -d {}-{}-dev -h localhost",
-                                    app_name, name
-                                ),
+                                "pg_isready -U postgresql -h localhost".to_string(),
                             ]),
                             interval: "10s".to_string(),
                             timeout: "5s".to_string(),
@@ -1689,7 +1686,7 @@ pub(crate) fn add_service_definition_to_docker_compose(
         ),
         format!("/{}/core/node_modules", manifest_data.app_name),
         format!("/{}/monitoring/node_modules", manifest_data.app_name),
-        format!("/{}/universal-sdk/node_modules", manifest_data.app_name),
+        format!("/{}/client-sdk/node_modules", manifest_data.app_name),
         format!("/{}/node_modules", manifest_data.app_name),
     ];
 

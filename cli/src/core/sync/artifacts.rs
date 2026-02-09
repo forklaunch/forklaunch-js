@@ -13,6 +13,7 @@ use crate::{
         Runtime, WorkerType,
     },
     core::{
+        client_sdk::remove_project_from_client_sdk,
         docker::{
             DockerCompose, add_service_definition_to_docker_compose,
             add_worker_definition_to_docker_compose, remove_service_from_docker_compose,
@@ -32,7 +33,6 @@ use crate::{
         rendered_template::{RenderedTemplate, RenderedTemplatesCache},
         sync::detection::detect_routers_from_service,
         tsconfig::add_project_to_modules_tsconfig,
-        universal_sdk::remove_project_from_universal_sdk,
     },
 };
 
@@ -41,7 +41,7 @@ pub enum ArtifactType {
     Manifest,
     DockerCompose,
     Runtime,
-    UniversalSdk,
+    ClientSdk,
     ModulesTsconfig,
 }
 
@@ -121,8 +121,8 @@ pub fn sync_project_to_artifacts(
             ArtifactType::Runtime => {
                 sync_to_runtime(manifest_data, cache, metadata, modules_path, stdout)?;
             }
-            ArtifactType::UniversalSdk => {
-                sync_to_universal_sdk(manifest_data, cache, metadata, modules_path, stdout)?;
+            ArtifactType::ClientSdk => {
+                sync_to_client_sdk(manifest_data, cache, metadata, modules_path, stdout)?;
             }
             ArtifactType::ModulesTsconfig => {
                 sync_to_modules_tsconfig(cache, metadata, modules_path, stdout)?;
@@ -385,7 +385,7 @@ fn sync_to_package_json(
     Ok(())
 }
 
-fn sync_to_universal_sdk(
+fn sync_to_client_sdk(
     manifest_data: &mut ApplicationManifestData,
     cache: &mut RenderedTemplatesCache,
     metadata: &ProjectSyncMetadata,
@@ -396,12 +396,10 @@ fn sync_to_universal_sdk(
         return Ok(());
     }
 
-    let sdk_ts_path = modules_path.join("universal-sdk").join("universalSdk.ts");
-    let sdk_json_path = modules_path.join("universal-sdk").join("package.json");
+    let sdk_ts_path = modules_path.join("client-sdk").join("clientSdk.ts");
+    let sdk_json_path = modules_path.join("client-sdk").join("package.json");
 
-    let ts_template = cache
-        .get(&sdk_ts_path)?
-        .context("universalSdk.ts not found")?;
+    let ts_template = cache.get(&sdk_ts_path)?.context("clientSdk.ts not found")?;
     let json_template = cache
         .get(&sdk_json_path)?
         .context("SDK package.json not found")?;
@@ -409,13 +407,12 @@ fn sync_to_universal_sdk(
     let mut sdk_pkg_json: ProjectPackageJson = json_from_str(&json_template.content)?;
 
     // Use existing SDK function (it handles the AST transformation)
-    let (new_ts_content, new_pkg_json) =
-        crate::core::universal_sdk::add_project_vec_to_universal_sdk(
-            &manifest_data.app_name,
-            &vec![metadata.project_name.clone()],
-            &ts_template.content,
-            &mut sdk_pkg_json,
-        )?;
+    let (new_ts_content, new_pkg_json) = crate::core::client_sdk::add_project_vec_to_client_sdk(
+        &manifest_data.app_name,
+        &vec![metadata.project_name.clone()],
+        &ts_template.content,
+        &mut sdk_pkg_json,
+    )?;
 
     cache.insert(
         sdk_ts_path.to_string_lossy().to_string(),
@@ -661,9 +658,9 @@ pub fn remove_project_from_artifacts(
                     }
                 }
             }
-            ArtifactType::UniversalSdk => {
+            ArtifactType::ClientSdk => {
                 if project_type == ProjectType::Service || project_type == ProjectType::Worker {
-                    remove_project_from_universal_sdk(
+                    remove_project_from_client_sdk(
                         rendered_templates_cache,
                         modules_path,
                         &manifest_data.app_name,

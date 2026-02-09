@@ -13,16 +13,7 @@
   "license": "MIT",
   "author": "Forklift Technologies, Inc.",
   "type": "module",
-  "typesVersions": {
-    "*": {
-      ".": [
-        "index.ts"
-      ],
-      "serialized": [
-        "./dist/index.d.ts"
-      ]
-    }
-  },
+  "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist bun.lockb bun.lock node_modules",
@@ -49,41 +40,40 @@
   "dependencies": {
     "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
-    "@forklaunch/blueprint-universal-sdk": "workspace:*",
-    "@forklaunch/core": "^0.17.3",
+    "@forklaunch/core": "^0.18.1",
     "@forklaunch/implementation-worker-bullmq": "workspace:*",
     "@forklaunch/implementation-worker-database": "workspace:*",
     "@forklaunch/implementation-worker-kafka": "workspace:*",
     "@forklaunch/implementation-worker-redis": "workspace:*",
-    "@forklaunch/infrastructure-redis": "^0.4.36",
-    "@forklaunch/infrastructure-s3": "^0.4.36",
+    "@forklaunch/infrastructure-redis": "^0.4.38",
+    "@forklaunch/infrastructure-s3": "^0.4.38",
     "@forklaunch/interfaces-worker": "workspace:*",
-    "@forklaunch/universal-sdk": "^0.7.27",
-    "@mikro-orm/better-sqlite": "^6.6.5",
-    "@mikro-orm/core": "^6.6.5",
-    "@mikro-orm/libsql": "^6.6.5",
-    "@mikro-orm/mariadb": "^6.6.5",
-    "@mikro-orm/migrations": "^6.6.5",
-    "@mikro-orm/mongodb": "^6.6.5",
-    "@mikro-orm/mssql": "^6.6.5",
-    "@mikro-orm/mysql": "^6.6.5",
-    "@mikro-orm/postgresql": "^6.6.5",
-    "@mikro-orm/reflection": "^6.6.5",
-    "@mikro-orm/seeder": "^6.6.5",
-    "@mikro-orm/sqlite": "^6.6.5",
-    "@sinclair/typebox": "^0.34.47",
+    "@forklaunch/universal-sdk": "^0.7.28",
+    "@mikro-orm/better-sqlite": "^6.6.6",
+    "@mikro-orm/core": "^6.6.6",
+    "@mikro-orm/libsql": "^6.6.6",
+    "@mikro-orm/mariadb": "^6.6.6",
+    "@mikro-orm/migrations": "^6.6.6",
+    "@mikro-orm/mongodb": "^6.6.6",
+    "@mikro-orm/mssql": "^6.6.6",
+    "@mikro-orm/mysql": "^6.6.6",
+    "@mikro-orm/postgresql": "^6.6.6",
+    "@mikro-orm/reflection": "^6.6.6",
+    "@mikro-orm/seeder": "^6.6.6",
+    "@mikro-orm/sqlite": "^6.6.6",
+    "@sinclair/typebox": "^0.34.48",
     "ajv": "^8.17.1",
     "better-sqlite3": "^12.6.2",
-    "bullmq": "^5.66.6",
+    "bullmq": "^5.67.2",
     "dotenv": "^17.2.3",
     "kafkajs": "^2.2.4",
-    "node-gyp": "^12.1.0",
+    "node-gyp": "^12.2.0",
     "sqlite3": "^5.1.7",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@forklaunch/testing": "^0.0.16",
-    "@mikro-orm/cli": "^6.6.5",
+    "@forklaunch/testing": "^0.0.17",
+    "@mikro-orm/cli": "^6.6.6",
     "@types/express": "^5.0.6",
     "@types/express-serve-static-core": "^5.1.1",
     "@types/qs": "^6.14.0",
@@ -94,7 +84,7 @@
     "testcontainers": "^11.11.0",
     "tsx": "^4.21.0",
     "typedoc": "^0.28.16",
-    "typescript-eslint": "^8.53.1"
+    "typescript-eslint": "^8.54.0"
   },
   "mikro-orm": {
     "config_paths": [

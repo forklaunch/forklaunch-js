@@ -172,19 +172,13 @@ export class BasePaymentLinkService<
     }
     const cacheKey = this.createCacheKey(id);
     const paymentLink =
-      await this.cache.readRecord<MapperEntities['PaymentLinkMapper']>(
-        cacheKey
-      );
+      await this.cache.readRecord<MapperDomains['PaymentLinkMapper']>(cacheKey);
     if (!paymentLink) {
       throw new Error('Payment link not found');
     }
 
-    return this.mappers.PaymentLinkMapper.toDto(
-      await this.mappers.UpdatePaymentLinkMapper.toEntity(
-        paymentLink.value,
-        this.em
-      )
-    );
+    // Return cached DTO directly - no need to convert to entity and back
+    return paymentLink.value;
   }
 
   async expirePaymentLink({ id }: IdDto): Promise<void> {
@@ -232,18 +226,12 @@ export class BasePaymentLinkService<
         ? idsDto?.ids.map((id) => this.createCacheKey(id))
         : await this.cache.listKeys(this.cacheKeyPrefix);
 
-    console.log('keys', keys);
+    // Read cached DTOs directly - no need to convert to entity and back
     return Promise.all(
       keys.map(async (key) => {
         const paymentLink =
-          await this.cache.readRecord<MapperEntities['PaymentLinkMapper']>(key);
-        const paymentLinkDto = this.mappers.PaymentLinkMapper.toDto(
-          await this.mappers.UpdatePaymentLinkMapper.toEntity(
-            paymentLink.value,
-            this.em
-          )
-        );
-        return paymentLinkDto;
+          await this.cache.readRecord<MapperDomains['PaymentLinkMapper']>(key);
+        return paymentLink.value;
       })
     );
   }
