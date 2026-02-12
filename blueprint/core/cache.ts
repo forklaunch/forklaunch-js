@@ -4,7 +4,7 @@
  * Shared across all services to reduce cross-module calls
  */
 
-import type { ResourceLimits } from '@forklaunch/blueprint-core';
+import { ResourceLimits } from './feature-flags';
 
 // ─── Common Cache Interface ───────────────────────────────────────────────────
 

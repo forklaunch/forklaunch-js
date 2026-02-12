@@ -208,7 +208,7 @@ services:
       dockerfile: ./Dockerfile.${RUNTIME}.dev
     environment:
       NODE_ENV: development
-      PORT: 8001
+      PORT: 8000
       DB_NAME: forklaunch-dev
 
       DB_HOST: postgres
@@ -240,7 +240,7 @@ services:
       OTEL_SERVICE_NAME: forklaunch-iam
 
       # Better Auth OAuth configuration
-      BETTER_AUTH_URL: http://localhost:8001
+      BETTER_AUTH_URL: http://localhost:8000
       BETTER_AUTH_BASE_PATH: /api/auth
       CORS_ORIGINS: http://localhost:3001
       # OAuth credentials (set these in .env file or replace ${} with actual values)
@@ -250,7 +250,7 @@ services:
       - postgres
       - redis
     ports:
-      - 8001:8001
+      - 8000:8000
     networks:
       - forklaunch-network
     working_dir: /app/iam
