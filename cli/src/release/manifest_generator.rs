@@ -1,4 +1,4 @@
-use std::{collections::HashMap, path::Path};
+use std::{collections::HashMap, path::{Path, PathBuf}};
 
 use anyhow::Result;
 use convert_case::{Case, Casing};
@@ -9,7 +9,8 @@ use crate::{
     constants::RELEASE_MANIFEST_SCHEMA_VERSION,
     core::{
         library_scanner::{
-            CodeNode, LibraryDefinition, scan_project_libraries, scan_route_topology,
+            CodeNode, LibraryDefinition, parse_route_file, scan_project_libraries,
+            scan_route_topology,
         },
         manifest::{ProjectType, ResourceInventory, application::ApplicationManifestData},
         sync::detection::detect_routers_from_service,
@@ -257,6 +258,8 @@ pub(crate) struct RouteDefinition {
     pub schema: Option<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub auth: Option<Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub topology: Option<CodeNode>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -358,28 +361,84 @@ pub(crate) fn generate_release_manifest(
                     .collect()
             });
 
-            // Scan for controllers and their dependencies
+            // Scan for controllers, routes, and their dependencies
             let service_path = app_root.join(&manifest.modules_path).join(&project.name);
+            let modules_root = app_root.join(&manifest.modules_path);
+            let package_json_path = app_root.join("package.json");
             let controllers = if service_path.join("api").join("routes").exists() {
                 if let Ok(routers) = detect_routers_from_service(&service_path) {
                     if !routers.is_empty() {
+                        // Cache topology scans per unique source file to avoid redundant work
+                        let mut topology_cache: HashMap<PathBuf, Option<CodeNode>> = HashMap::new();
+
                         Some(
                             routers
                                 .into_iter()
-                                .map(|router_name| ControllerDefinition {
-                                    id: router_name.clone(),
-                                    name: router_name.clone(),
-                                    path: format!("/{}", router_name),
-                                    routes: vec![],
-                                    topology: scan_route_topology(
+                                .map(|router_name| {
+                                    let route_file = service_path.join("api").join("routes").join(format!(
+                                        "{}.routes.ts",
+                                        router_name.to_case(Case::Camel)
+                                    ));
+
+                                    // Parse route file to extract routes and handler→source mappings
+                                    let (parsed_routes, handler_sources) = parse_route_file(
+                                        &route_file,
+                                        &modules_root,
+                                    ).unwrap_or_default();
+
+                                    // Build RouteDefinitions with per-route topology
+                                    let routes: Vec<RouteDefinition> = parsed_routes
+                                        .into_iter()
+                                        .map(|parsed| {
+                                            // Look up the source file for this handler
+                                            let topology = handler_sources
+                                                .get(&parsed.handler)
+                                                .and_then(|source_path| {
+                                                    // Use cached topology or scan and cache
+                                                    topology_cache
+                                                        .entry(source_path.clone())
+                                                        .or_insert_with(|| {
+                                                            scan_route_topology(
+                                                                source_path,
+                                                                &modules_root,
+                                                                &package_json_path,
+                                                            )
+                                                            .ok()
+                                                        })
+                                                        .clone()
+                                                });
+
+                                            RouteDefinition {
+                                                id: format!("{}-{}", parsed.method.to_lowercase(), parsed.path.replace('/', "-").trim_matches('-').to_string()),
+                                                method: parsed.method,
+                                                path: parsed.path,
+                                                handler: parsed.handler,
+                                                middleware: None,
+                                                schema: None,
+                                                auth: None,
+                                                topology,
+                                            }
+                                        })
+                                        .collect();
+
+                                    // Controller-level topology: scan the main controller file
+                                    let controller_topology = scan_route_topology(
                                         &service_path.join("api").join("controllers").join(format!(
                                             "{}.controller.ts",
                                             router_name.to_case(Case::Camel)
                                         )),
-                                        &app_root.join(&manifest.modules_path),
-                                        &app_root.join("package.json"),
+                                        &modules_root,
+                                        &package_json_path,
                                     )
-                                    .ok(),
+                                    .ok();
+
+                                    ControllerDefinition {
+                                        id: router_name.clone(),
+                                        name: router_name.clone(),
+                                        path: format!("/{}", router_name),
+                                        routes,
+                                        topology: controller_topology,
+                                    }
                                 })
                                 .collect(),
                         )
@@ -453,28 +512,76 @@ pub(crate) fn generate_release_manifest(
             let open_api_spec = openapi_specs.get(&project.name).cloned();
 
             let worker_path = app_root.join(&manifest.modules_path).join(&project.name);
+            let w_modules_root = app_root.join(&manifest.modules_path);
+            let w_package_json_path = app_root.join("package.json");
             let controllers = if worker_path.join("api").join("routes").exists() {
                 if let Ok(routers) = detect_routers_from_service(&worker_path) {
                     if !routers.is_empty() {
-                        // Convert routers to controller definitions
-                        // This is a simplified version - can be extended to extract full route details
+                        let mut topology_cache: HashMap<PathBuf, Option<CodeNode>> = HashMap::new();
+
                         Some(
                             routers
                                 .into_iter()
-                                .map(|router_name| ControllerDefinition {
-                                    id: router_name.clone(),
-                                    name: router_name.clone(),
-                                    path: format!("/{}", router_name),
-                                    routes: vec![], // Can be populated with full route analysis later
-                                    topology: scan_route_topology(
+                                .map(|router_name| {
+                                    let route_file = worker_path.join("api").join("routes").join(format!(
+                                        "{}.routes.ts",
+                                        router_name.to_case(Case::Camel)
+                                    ));
+
+                                    let (parsed_routes, handler_sources) = parse_route_file(
+                                        &route_file,
+                                        &w_modules_root,
+                                    ).unwrap_or_default();
+
+                                    let routes: Vec<RouteDefinition> = parsed_routes
+                                        .into_iter()
+                                        .map(|parsed| {
+                                            let topology = handler_sources
+                                                .get(&parsed.handler)
+                                                .and_then(|source_path| {
+                                                    topology_cache
+                                                        .entry(source_path.clone())
+                                                        .or_insert_with(|| {
+                                                            scan_route_topology(
+                                                                source_path,
+                                                                &w_modules_root,
+                                                                &w_package_json_path,
+                                                            )
+                                                            .ok()
+                                                        })
+                                                        .clone()
+                                                });
+
+                                            RouteDefinition {
+                                                id: format!("{}-{}", parsed.method.to_lowercase(), parsed.path.replace('/', "-").trim_matches('-').to_string()),
+                                                method: parsed.method,
+                                                path: parsed.path,
+                                                handler: parsed.handler,
+                                                middleware: None,
+                                                schema: None,
+                                                auth: None,
+                                                topology,
+                                            }
+                                        })
+                                        .collect();
+
+                                    let controller_topology = scan_route_topology(
                                         &worker_path.join("api").join("controllers").join(format!(
                                             "{}.controller.ts",
                                             router_name.to_case(Case::Camel)
                                         )),
-                                        &app_root.join(&manifest.modules_path),
-                                        &app_root.join("package.json"),
+                                        &w_modules_root,
+                                        &w_package_json_path,
                                     )
-                                    .ok(),
+                                    .ok();
+
+                                    ControllerDefinition {
+                                        id: router_name.clone(),
+                                        name: router_name.clone(),
+                                        path: format!("/{}", router_name),
+                                        routes,
+                                        topology: controller_topology,
+                                    }
                                 })
                                 .collect(),
                         )

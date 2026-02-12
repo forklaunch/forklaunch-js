@@ -18,8 +18,15 @@ const PROD_PLATFORM_UI_URL: &str = "https://forklaunch.com";
 fn is_dev_build() -> bool {
     std::env::current_exe()
         .ok()
-        .and_then(|p| p.to_str().map(|s| s.to_string()))
-        .map(|path| path.contains("/target/debug/") || path.contains("/target/release/"))
+        .map(|path| {
+            path.components()
+                .collect::<Vec<_>>()
+                .windows(2)
+                .any(|window| {
+                    window[0].as_os_str() == "target"
+                        && (window[1].as_os_str() == "debug" || window[1].as_os_str() == "release")
+                })
+        })
         .unwrap_or(false)
 }
 

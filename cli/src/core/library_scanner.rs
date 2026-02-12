@@ -214,14 +214,19 @@ impl ImportScanner {
             return Some(base);
         }
 
-        // Try .ts
-        let ts = base.with_extension("ts");
+        // Try appending .ts (not replacing extension, since filenames like "plan.controller"
+        // have dots that aren't file extensions)
+        let mut ts_name = base.as_os_str().to_os_string();
+        ts_name.push(".ts");
+        let ts = PathBuf::from(ts_name);
         if ts.exists() {
             return Some(ts);
         }
 
-        // Try .tsx
-        let tsx = base.with_extension("tsx");
+        // Try appending .tsx
+        let mut tsx_name = base.as_os_str().to_os_string();
+        tsx_name.push(".tsx");
+        let tsx = PathBuf::from(tsx_name);
         if tsx.exists() {
             return Some(tsx);
         }
@@ -234,6 +239,87 @@ impl ImportScanner {
 
         None
     }
+}
+
+/// Parsed route extracted from a .routes.ts file
+#[derive(Debug, Clone)]
+pub struct ParsedRoute {
+    pub method: String,
+    pub path: String,
+    pub handler: String,
+}
+
+/// Parse a .routes.ts file to extract route definitions and map handlers to source files.
+///
+/// Returns (routes, handler_source_map) where:
+/// - routes: Vec of (method, path, handler_name)
+/// - handler_source_map: HashMap of handler_name → resolved source file path
+pub fn parse_route_file(
+    route_file_path: &Path,
+    modules_root: &Path,
+) -> Result<(Vec<ParsedRoute>, HashMap<String, PathBuf>)> {
+    let content = fs::read_to_string(route_file_path)
+        .with_context(|| format!("Failed to read route file: {:?}", route_file_path))?;
+
+    let parent_dir = route_file_path.parent().unwrap_or(Path::new("."));
+
+    // 1. Extract imports: `import { handler1, handler2 } from '../controllers/foo.controller'`
+    //    Use (?s) dotall flag so [^}]+ matches across newlines for multi-line imports
+    let import_re = Regex::new(
+        r#"(?s)import\s*\{([^}]+)\}\s*from\s*['"]([^'"]+)['"]"#
+    ).unwrap();
+
+    // Build map: handler_name → import source path (relative)
+    let mut handler_to_import_path: HashMap<String, String> = HashMap::new();
+    for cap in import_re.captures_iter(&content) {
+        let names_str = cap.get(1).map_or("", |m| m.as_str());
+        let import_path = cap.get(2).map_or("", |m| m.as_str());
+
+        // Skip non-controller imports (e.g., forklaunchRouter, schemaValidator, bootstrapper)
+        if !import_path.contains("controller") {
+            continue;
+        }
+
+        for name in names_str.split(',') {
+            let name = name.trim();
+            // Skip `type` imports like `type SomeType`
+            if name.is_empty() || name.starts_with("type ") {
+                continue;
+            }
+            handler_to_import_path.insert(name.to_string(), import_path.to_string());
+        }
+    }
+
+    // Resolve import paths to actual file paths
+    let mut handler_source_map: HashMap<String, PathBuf> = HashMap::new();
+    let scanner = ImportScanner::new(modules_root, &modules_root.join("package.json"));
+    for (handler, import_path) in &handler_to_import_path {
+        if let Some(resolved) = scanner.resolve_local_import(parent_dir, import_path) {
+            handler_source_map.insert(handler.clone(), resolved);
+        }
+    }
+
+    // 2. Extract route registrations:
+    //    `router.get('/:id', getUser)` or `routerName.post('/', createUser)`
+    //    Handles both single-line and multi-line formats
+    let route_re = Regex::new(
+        r#"\.\s*(get|post|put|delete|patch|head|options)\s*\(\s*['"]([^'"]+)['"]\s*,\s*(\w+)"#
+    ).unwrap();
+
+    let mut routes: Vec<ParsedRoute> = Vec::new();
+    for cap in route_re.captures_iter(&content) {
+        let method = cap.get(1).map_or("", |m| m.as_str()).to_uppercase();
+        let path = cap.get(2).map_or("", |m| m.as_str()).to_string();
+        let handler = cap.get(3).map_or("", |m| m.as_str()).to_string();
+
+        routes.push(ParsedRoute {
+            method,
+            path,
+            handler,
+        });
+    }
+
+    Ok((routes, handler_source_map))
 }
 
 #[cfg(test)]
@@ -389,5 +475,76 @@ mod tests {
             ImportScanner::normalize_scoped_package("express"),
             "express"
         );
+    }
+
+    #[test]
+    fn test_parse_route_file_plan() {
+        let route_file = Path::new("../blueprint/billing-stripe/api/routes/plan.routes.ts");
+        let modules_root = Path::new("../blueprint/billing-stripe");
+
+        if !route_file.exists() {
+            eprintln!("Skipping test - route file not found at: {:?}", route_file);
+            return;
+        }
+
+        let result = parse_route_file(route_file, modules_root);
+        assert!(result.is_ok(), "Should parse route file");
+
+        let (routes, handler_sources) = result.unwrap();
+
+        // Should find 5 routes: createPlan, listPlans, getPlan, updatePlan, deletePlan
+        assert_eq!(routes.len(), 5, "Should find 5 routes");
+
+        // Verify methods
+        let methods: Vec<&str> = routes.iter().map(|r| r.method.as_str()).collect();
+        assert!(methods.contains(&"POST"), "Should have POST route");
+        assert!(methods.contains(&"GET"), "Should have GET routes");
+        assert!(methods.contains(&"PUT"), "Should have PUT route");
+        assert!(methods.contains(&"DELETE"), "Should have DELETE route");
+
+        // Verify handlers
+        let handlers: Vec<&str> = routes.iter().map(|r| r.handler.as_str()).collect();
+        assert!(handlers.contains(&"createPlan"), "Should have createPlan handler");
+        assert!(handlers.contains(&"getPlan"), "Should have getPlan handler");
+
+        // Verify handler sources point to controller file
+        assert!(!handler_sources.is_empty(), "Should have handler source mappings");
+        for (_handler, source_path) in &handler_sources {
+            assert!(source_path.exists(), "Source path should exist: {:?}", source_path);
+        }
+
+        println!("=== PARSED ROUTES ===");
+        for route in &routes {
+            println!("  {} {} -> {}", route.method, route.path, route.handler);
+        }
+        println!("=== HANDLER SOURCES ===");
+        for (handler, source) in &handler_sources {
+            println!("  {} -> {:?}", handler, source);
+        }
+    }
+
+    #[test]
+    fn test_parse_route_file_sample_worker() {
+        let route_file = Path::new("../blueprint/sample-worker/api/routes/sampleWorker.routes.ts");
+        let modules_root = Path::new("../blueprint/sample-worker");
+
+        if !route_file.exists() {
+            eprintln!("Skipping test - route file not found at: {:?}", route_file);
+            return;
+        }
+
+        let result = parse_route_file(route_file, modules_root);
+        assert!(result.is_ok(), "Should parse worker route file");
+
+        let (routes, handler_sources) = result.unwrap();
+
+        // Should find 2 routes: sampleWorkerGet, sampleWorkerPost
+        assert_eq!(routes.len(), 2, "Should find 2 routes");
+
+        let handlers: Vec<&str> = routes.iter().map(|r| r.handler.as_str()).collect();
+        assert!(handlers.contains(&"sampleWorkerGet"));
+        assert!(handlers.contains(&"sampleWorkerPost"));
+
+        assert!(!handler_sources.is_empty(), "Should resolve handler sources");
     }
 }
