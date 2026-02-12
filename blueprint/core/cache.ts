@@ -1,11 +1,14 @@
 /**
- * Billing Cache Entry Point
- * Exports only cache service - no entities, no MikroORM discovery
+ * Consolidated Cache Services
+ * Redis-based caching for auth and billing data
+ * Shared across all services to reduce cross-module calls
  */
 
-import type { ResourceLimits } from '@forklaunch/blueprint-core';
+import { ResourceLimits } from './feature-flags';
 
-export interface BillingCacheLike {
+// ─── Common Cache Interface ───────────────────────────────────────────────────
+
+export interface CacheLike {
   readRecord<T>(key: string): Promise<{ value: T }>;
   putRecord<T>(record: {
     key: string;
@@ -16,6 +19,119 @@ export interface BillingCacheLike {
   listKeys(prefix: string): Promise<string[]>;
   deleteBatchRecords(keys: string[]): Promise<void>;
 }
+
+// ─── Auth Cache ───────────────────────────────────────────────────────────────
+
+export interface AuthCacheService {
+  getCachedRoles(userId: string): Promise<Set<string> | null>;
+  setCachedRoles(userId: string, roles: Set<string>): Promise<void>;
+  getCachedPermissions(userId: string): Promise<Set<string> | null>;
+  setCachedPermissions(userId: string, permissions: Set<string>): Promise<void>;
+  deleteCachedRoles(userId: string): Promise<void>;
+  deleteCachedPermissions(userId: string): Promise<void>;
+  deleteAllCachedData(userId: string): Promise<void>;
+  deleteByPrefix(prefix: string): Promise<void>;
+  getCachedOrganizationRoles(organizationId: string): Promise<string[] | null>;
+  setCachedOrganizationRoles(
+    organizationId: string,
+    roles: string[]
+  ): Promise<void>;
+  deleteCachedOrganizationRoles(organizationId: string): Promise<void>;
+}
+
+export function createAuthCacheService(cache: CacheLike): AuthCacheService {
+  const ROLES_CACHE_PREFIX = 'auth:roles:';
+  const PERMISSIONS_CACHE_PREFIX = 'auth:permissions:';
+  const ORG_ROLES_CACHE_PREFIX = 'auth:org-roles:';
+  const TTL = 60 * 60 * 1000; // 1 hour
+
+  return {
+    async getCachedRoles(userId: string) {
+      try {
+        const result = await cache.readRecord<string[]>(
+          `${ROLES_CACHE_PREFIX}${userId}`
+        );
+        return new Set(result.value);
+      } catch {
+        return null;
+      }
+    },
+
+    async setCachedRoles(userId: string, roles: Set<string>) {
+      await cache.putRecord({
+        key: `${ROLES_CACHE_PREFIX}${userId}`,
+        value: Array.from(roles),
+        ttlMilliseconds: TTL
+      });
+    },
+
+    async getCachedPermissions(userId: string) {
+      try {
+        const result = await cache.readRecord<string[]>(
+          `${PERMISSIONS_CACHE_PREFIX}${userId}`
+        );
+        return new Set(result.value);
+      } catch {
+        return null;
+      }
+    },
+
+    async setCachedPermissions(userId: string, permissions: Set<string>) {
+      await cache.putRecord({
+        key: `${PERMISSIONS_CACHE_PREFIX}${userId}`,
+        value: Array.from(permissions),
+        ttlMilliseconds: TTL
+      });
+    },
+
+    async deleteCachedRoles(userId: string) {
+      await cache.deleteRecord(`${ROLES_CACHE_PREFIX}${userId}`);
+    },
+
+    async deleteCachedPermissions(userId: string) {
+      await cache.deleteRecord(`${PERMISSIONS_CACHE_PREFIX}${userId}`);
+    },
+
+    async deleteAllCachedData(userId: string) {
+      await this.deleteCachedRoles(userId);
+      await this.deleteCachedPermissions(userId);
+    },
+
+    async deleteByPrefix(prefix: string) {
+      const keys = await cache.listKeys(prefix);
+      if (keys.length > 0) {
+        await cache.deleteBatchRecords(keys);
+      }
+    },
+
+    async getCachedOrganizationRoles(organizationId: string) {
+      try {
+        const result = await cache.readRecord<string[]>(
+          `${ORG_ROLES_CACHE_PREFIX}${organizationId}`
+        );
+        return result.value;
+      } catch {
+        return null;
+      }
+    },
+
+    async setCachedOrganizationRoles(organizationId: string, roles: string[]) {
+      await cache.putRecord({
+        key: `${ORG_ROLES_CACHE_PREFIX}${organizationId}`,
+        value: roles,
+        ttlMilliseconds: TTL
+      });
+    },
+
+    async deleteCachedOrganizationRoles(organizationId: string) {
+      await cache.deleteRecord(`${ORG_ROLES_CACHE_PREFIX}${organizationId}`);
+    }
+  };
+}
+
+// ─── Billing Cache ────────────────────────────────────────────────────────────
+
+export type BillingCacheLike = CacheLike;
 
 export type SubscriptionCacheData = {
   subscriptionId: string;
@@ -32,9 +148,6 @@ export type PlanCacheData = {
   features: string[];
 };
 
-/**
- * Entitlement cache data - represents cached feature access for a party
- */
 export type EntitlementCacheData = {
   features: string[];
   limits: ResourceLimits;
@@ -43,7 +156,6 @@ export type EntitlementCacheData = {
 };
 
 export type BillingCacheService = {
-  // Subscription caching
   getCachedSubscription: (
     organizationId: string
   ) => Promise<SubscriptionCacheData | null>;
@@ -52,19 +164,13 @@ export type BillingCacheService = {
     data: SubscriptionCacheData
   ) => Promise<void>;
   deleteCachedSubscription: (organizationId: string) => Promise<void>;
-
-  // Plan caching
   getCachedPlan: (planId: string) => Promise<PlanCacheData | null>;
   setCachedPlan: (planId: string, data: PlanCacheData) => Promise<void>;
-
-  // Feature caching (for surfacing logic)
   getCachedFeatures: (organizationId: string) => Promise<Set<string> | null>;
   setCachedFeatures: (
     organizationId: string,
     features: Set<string>
   ) => Promise<void>;
-
-  // Entitlement caching (for surfacing logic)
   getCachedEntitlements: (
     partyKey: string
   ) => Promise<EntitlementCacheData | null>;
@@ -131,8 +237,6 @@ export function createBillingCacheService(
         ttlMilliseconds: TTL
       });
     },
-
-    // Feature caching methods
     async getCachedFeatures(organizationId: string) {
       try {
         const result = await cache.readRecord<string[]>(
@@ -153,8 +257,6 @@ export function createBillingCacheService(
         ttlMilliseconds: TTL
       });
     },
-
-    // Entitlement caching methods
     async getCachedEntitlements(partyKey: string) {
       try {
         const result = await cache.readRecord<EntitlementCacheData>(

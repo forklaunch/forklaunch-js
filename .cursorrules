@@ -1,0 +1,719 @@
+# Forklaunch Platform - Cursor AI Rules
+# Auto-loaded by Cursor for AI assistance
+
+## Critical Import Rules
+
+### ✅ ALWAYS Import from @forklaunch Packages
+```typescript
+// CORRECT - Use framework packages
+import { isRecord, camelCase, hashString } from '@forklaunch/common';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
+import { createCacheKey, TtlCache, TtlCacheRecord } from '@forklaunch/core/cache';
+import { createObjectStoreKey, ObjectStore } from '@forklaunch/core/objectstore';
+import { BaseEntity } from '@forklaunch/core/persistence';
+import { SchemaValidator, string, number, uuid } from '@forklaunch/validator/zod';
+import { forklaunchExpress, handlers } from '@forklaunch/express';
+import { ForklaunchWebSocket, ForklaunchWebSocketServer } from '@forklaunch/ws';
+import { RedisTtlCache } from '@forklaunch/infrastructure-redis';
+import { S3ObjectStore } from '@forklaunch/infrastructure-s3';
+import { TestContainerManager, BlueprintTestHarness } from '@forklaunch/testing';
+```
+
+### ❌ NEVER Import from @modules/core
+```typescript
+// WRONG - Don't do this
+import { isRecord } from '@modules/core';  // NO!
+import { OpenTelemetryCollector } from '@modules/core';  // NO!
+```
+
+## Import Organization (7 Layers)
+
+Always organize imports in this order:
+
+```typescript
+// 1. Node built-ins (with node: prefix)
+import crypto from 'node:crypto';
+import path from 'node:path';
+
+// 2. External dependencies
+import { EntityManager } from '@mikro-orm/core';
+import { injectable } from 'tsyringe';
+
+// 3. Forklaunch framework packages
+import { isRecord } from '@forklaunch/common';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
+import { forklaunchExpress } from '@forklaunch/express';
+import { SchemaValidator } from '@forklaunch/validator/zod';
+
+// 4. Cross-module imports
+import { generateHmacAuthHeaders } from '@forklaunch-platform/iam';
+
+// 5. Local persistence
+import { Deployment } from '../../persistence/entities';
+
+// 6. Local domain
+import { DeploymentService } from '../services/deployment.service';
+
+// 7. Same directory
+import { EncryptionService } from './encryption.service';
+```
+
+## Project Structure
+
+Follow this structure for all modules:
+
+```
+src/modules/<module-name>/
+├── api/                     # HTTP interface
+│   ├── controllers/        # Request handlers
+│   ├── routes/            # Route definitions
+│   ├── middleware/        # Middleware
+│   └── utils/             # API utilities
+├── domain/                 # Business logic
+│   ├── services/          # Core business logic
+│   ├── schemas/           # Validation schemas
+│   ├── types/             # TypeScript types
+│   ├── mappers/           # Entity ↔ DTO transformations
+│   ├── enum/              # Enumerations
+│   └── utils/             # Domain utilities
+├── persistence/            # Data layer
+│   ├── entities/          # Database models
+│   └── seeders/           # Test data
+├── migrations-postgresql/  # Database migrations
+├── websocket/             # WebSocket handlers
+├── registrations.ts       # Dependency injection
+└── server.ts              # Entry point
+```
+
+## Mapper Usage Rules
+
+### ✅ Use Mappers in Controllers
+```typescript
+// api/controllers/deployment.controller.ts
+import { DeploymentMapper } from '../../domain/mappers/deployment.mappers';
+
+export class DeploymentController {
+  async get(req: Request, res: Response) {
+    const deployment = await this.service.findById(req.params.id);
+    // Use mapper for API response
+    return res.json(DeploymentMapper.toDetailDto(deployment));
+  }
+}
+```
+
+### ❌ DON'T Use Mappers in Services
+```typescript
+// domain/services/deployment.service.ts
+export class DeploymentService {
+  // Return entities directly, NOT DTOs
+  async findById(id: string): Promise<Deployment> {
+    return this.em.findOne(Deployment, { id });
+  }
+
+  // Service-to-service calls use entities
+  async process(deploymentId: string) {
+    const deployment = await this.findById(deploymentId);
+    await this.otherService.handle(deployment);  // Pass entity!
+  }
+}
+```
+
+### When to Use Mappers
+- ✅ External API responses (controllers)
+- ✅ Complex transformations
+- ✅ Multiple API versions
+- ❌ Internal service-to-service calls
+- ❌ Simple pass-through data
+- ❌ Single use cases
+
+## CLI Command Usage
+
+### ❌ NEVER Manually Edit Manifest
+```bash
+# WRONG
+vim .forklaunch/manifest.toml
+```
+
+### ✅ ALWAYS Use CLI Commands
+```bash
+# Creating projects
+forklaunch init service billing --database postgresql
+forklaunch init worker email-worker --type bullmq
+forklaunch init library shared-utils
+
+# Modifying projects (ALWAYS use --dry-run first)
+forklaunch change application --runtime bun --dry-run
+forklaunch change application --runtime bun
+
+forklaunch change service my-service --database postgresql --dry-run
+forklaunch change service my-service --database postgresql
+
+# Deployment
+forklaunch deploy --environment staging --region us-east-1
+forklaunch environment create production --region us-east-1
+forklaunch release create --version 1.2.3
+```
+
+## File Naming Conventions
+
+```
+Controllers:  <resource>.controller.ts     (deployment.controller.ts)
+Services:     <resource>.service.ts        (deployment.service.ts)
+Entities:     <resource>.entity.ts         (deployment.entity.ts)
+Schemas:      <resource>.schema.ts         (deployment.schema.ts)
+Types:        <resource>.types.ts          (deployment.types.ts)
+Mappers:      <resource>.mappers.ts        (deployment.mappers.ts)
+Routes:       <resource>.routes.ts         (deployment.routes.ts)
+Tests:        <resource>.test.ts           (deployment.service.test.ts)
+Migrations:   Migration<timestamp>_<desc>.ts
+```
+
+## Route Definition Pattern
+
+```typescript
+import { forklaunchExpress } from '@forklaunch/express';
+import { SchemaValidator, string, uuid } from '@forklaunch/validator/zod';
+
+const validator = SchemaValidator();
+const app = forklaunchExpress(validator, openTelemetryCollector);
+
+app.post('/deployments', {
+  name: 'Create Deployment',
+  summary: 'Creates a new deployment',
+  body: {
+    applicationId: uuid,
+    environmentId: uuid
+  },
+  responses: {
+    201: {
+      id: uuid,
+      status: string,
+      createdAt: string
+    },
+    400: { error: string },
+    401: { error: string }
+  }
+}, async (req, res) => {
+  const deployment = await service.create(req.body);
+  return res.status(201).json(deployment);
+});
+```
+
+## Cache Pattern (TTL-based with Redis)
+
+```typescript
+import { RedisTtlCache } from '@forklaunch/infrastructure-redis';
+import { createCacheKey } from '@forklaunch/core/cache';
+
+// Create cache instance
+const cache = new RedisTtlCache(
+  60000, // Default TTL: 60 seconds
+  openTelemetryCollector,
+  { url: 'redis://localhost:6379' },
+  telemetryOptions
+);
+
+// Create consistent keys with prefixes
+const createUserKey = createCacheKey('user');
+const createSessionKey = createCacheKey('session');
+
+// Store data
+await cache.putRecord({
+  key: createUserKey('123'),
+  value: { name: 'Alice', email: 'alice@example.com' },
+  ttlMilliseconds: 300000 // 5 minutes
+});
+
+// Read data
+const record = await cache.readRecord(createUserKey('123'));
+console.log(record.value); // { name: 'Alice', ... }
+
+// Queue operations (FIFO with Redis lists)
+await cache.enqueueRecord('notifications', { userId: '123', message: 'Welcome!' });
+const notification = await cache.dequeueRecord('notifications');
+
+// Batch operations
+await cache.putBatchRecords([
+  { key: 'user:1', value: { name: 'Alice' }, ttlMilliseconds: 60000 },
+  { key: 'user:2', value: { name: 'Bob' }, ttlMilliseconds: 60000 }
+]);
+const users = await cache.readBatchRecords(['user:1', 'user:2']);
+```
+
+### Cache Usage Guidelines
+- ✅ Use for short-term data (sessions, API responses, rate limiting)
+- ✅ Always set appropriate TTLs
+- ✅ Use `createCacheKey` for consistent key naming
+- ✅ Handle cache misses gracefully (try/catch)
+- ✅ Use batch operations for multiple keys
+- ❌ Don't rely solely on cache - have DB fallback
+- ❌ Don't store large objects (use Object Store instead)
+
+## Object Store Pattern (S3 for Files/Large Data)
+
+```typescript
+import { S3ObjectStore } from '@forklaunch/infrastructure-s3';
+import { createObjectStoreKey } from '@forklaunch/core/objectstore';
+
+// Create object store instance
+const store = new S3ObjectStore(
+  openTelemetryCollector,
+  {
+    bucket: 'my-app-storage',
+    clientConfig: {
+      region: 'us-west-2',
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+      }
+    }
+  },
+  telemetryOptions
+);
+
+// Create consistent keys
+const createDocKey = createObjectStoreKey('document');
+
+// Store object (must have 'key' property)
+await store.putObject({
+  key: createDocKey(['2024', 'report']), // 'document-2024-report'
+  title: 'Q1 Report',
+  content: 'Large document content...',
+  metadata: { author: 'Alice' }
+});
+
+// Read object
+const doc = await store.readObject(createDocKey(['2024', 'report']));
+
+// Stream large files
+const stream = await store.streamDownloadObject('large-file.json');
+stream.pipe(fs.createWriteStream('downloaded.json'));
+
+// Batch operations
+await store.putBatchObjects([
+  { key: 'user/1/avatar', data: '...' },
+  { key: 'user/2/avatar', data: '...' }
+]);
+```
+
+### Object Store Usage Guidelines
+- ✅ Use for large files, documents, binary data
+- ✅ Use hierarchical key structure (users/123/documents/report.pdf)
+- ✅ Stream large files instead of loading into memory
+- ✅ Use batch operations when possible
+- ✅ Type-safe with generics: `readObject<DocumentType>`
+- ❌ Don't use for small, frequently accessed data (use Cache)
+- ❌ Don't load large files into memory
+
+## WebSocket Pattern
+
+```typescript
+import { ForklaunchWebSocketServer, EventSchema } from '@forklaunch/ws';
+import { SchemaValidator } from '@forklaunch/validator/zod';
+import { z } from 'zod';
+
+const validator = SchemaValidator();
+
+// Define event schemas
+const schemas: EventSchema = {
+  clientMessages: z.object({ type: z.string(), payload: z.any() }),
+  serverMessages: z.object({ type: z.string(), data: z.any() }),
+  ping: z.object({ timestamp: z.number() }),
+  pong: z.object({ timestamp: z.number() }),
+  errors: z.object({ code: z.string(), message: z.string() }),
+  closeReason: z.object({ reason: z.string() })
+};
+
+// Create WebSocket server
+const wss = new ForklaunchWebSocketServer(validator, schemas, {
+  port: 8080,
+  path: '/ws'
+});
+
+// Handle connections
+wss.on('connection', (ws, req) => {
+  console.log('Client connected');
+
+  // Type-safe event handling
+  ws.on('message', async (message) => {
+    const validated = schemas.clientMessages.parse(message);
+    // Handle validated message
+  });
+
+  // Send typed messages
+  ws.send({ type: 'welcome', data: { userId: '123' } });
+});
+
+// Client side
+import { ForklaunchWebSocket } from '@forklaunch/ws';
+
+const ws = new ForklaunchWebSocket('ws://localhost:8080/ws', validator, schemas);
+
+ws.on('open', () => {
+  ws.send({ type: 'subscribe', payload: { channel: 'updates' } });
+});
+
+ws.on('message', (data) => {
+  console.log('Received:', data); // Automatically parsed from Buffer
+});
+```
+
+### WebSocket Usage Guidelines
+- ✅ Always define schemas for type safety
+- ✅ Automatic Buffer ↔ Object conversion
+- ✅ Use for real-time updates, chat, notifications
+- ✅ Generate AsyncAPI 3.0 specs with `AsyncApiV3Generator`
+- ❌ Don't send large payloads (use Object Store + notifications)
+- ❌ Don't forget error handling and reconnection logic
+
+## DDD Layer Separation
+
+- **Controllers**: Handle HTTP, use mappers, return responses
+- **Services**: Business logic, return entities, NO mappers
+- **Repositories**: Data access (optional with MikroORM)
+- **Entities**: Database models
+- **Mappers**: Transform entities to DTOs (controllers only)
+
+## Testing Patterns
+
+### Unit Tests (Mock Dependencies)
+```typescript
+import { describe, it, expect, beforeEach, jest } from 'vitest';
+
+describe('DeploymentService', () => {
+  let service: DeploymentService;
+  let mockRepo: jest.Mocked<DeploymentRepository>;
+
+  beforeEach(() => {
+    mockRepo = { findOne: jest.fn() } as any;
+    service = new DeploymentService(mockRepo);
+  });
+
+  it('should find deployment', async () => {
+    mockRepo.findOne.mockResolvedValue({ id: '123' });
+    const result = await service.findById('123');
+    expect(result.id).toBe('123');
+  });
+});
+```
+
+### Integration Tests (TestContainers)
+```typescript
+import { TestContainerManager, BlueprintTestHarness } from '@forklaunch/testing';
+import { RedisTtlCache } from '@forklaunch/infrastructure-redis';
+import { S3ObjectStore } from '@forklaunch/infrastructure-s3';
+
+describe('DeploymentController Integration', () => {
+  let manager: TestContainerManager;
+  let cache: RedisTtlCache;
+  let store: S3ObjectStore;
+
+  beforeAll(async () => {
+    // Start test containers
+    manager = new TestContainerManager();
+    const redisContainer = await manager.startRedis();
+    const s3Container = await manager.startLocalStack();
+
+    // Create test instances
+    cache = new RedisTtlCache(
+      60000,
+      otelCollector,
+      { url: redisContainer.getConnectionUrl() },
+      telemetryOptions
+    );
+
+    store = new S3ObjectStore(
+      otelCollector,
+      {
+        bucket: 'test-bucket',
+        clientConfig: {
+          endpoint: s3Container.getS3Endpoint(),
+          region: 'us-east-1',
+          credentials: { accessKeyId: 'test', secretAccessKey: 'test' },
+          forcePathStyle: true
+        }
+      },
+      telemetryOptions
+    );
+  });
+
+  afterAll(async () => {
+    await manager.stopAll();
+  });
+
+  it('should create deployment with cache', async () => {
+    const response = await request(app)
+      .post('/api/deployments')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ applicationId: 'app-1', environmentId: 'env-1' })
+      .expect(201);
+
+    expect(response.body.data).toHaveProperty('id');
+
+    // Verify cached
+    const cached = await cache.readRecord(`deployment:${response.body.data.id}`);
+    expect(cached.value).toBeDefined();
+  });
+});
+```
+
+### Database Tests with MikroORM
+```typescript
+import { setupTestORM } from '@forklaunch/testing';
+
+describe('User Entity', () => {
+  let em: EntityManager;
+
+  beforeAll(async () => {
+    const orm = await setupTestORM({
+      type: 'postgresql',
+      entities: [User, Organization],
+      dbName: 'test_db'
+    });
+    em = orm.em.fork();
+  });
+
+  it('should create user', async () => {
+    const user = em.create(User, {
+      email: 'test@example.com',
+      name: 'Test User'
+    });
+    await em.persistAndFlush(user);
+
+    const found = await em.findOne(User, { email: 'test@example.com' });
+    expect(found).toBeDefined();
+    expect(found!.name).toBe('Test User');
+  });
+});
+```
+
+### Testing with Available Containers
+- `manager.startPostgres()` - PostgreSQL database
+- `manager.startMySQL()` - MySQL database
+- `manager.startMongoDB()` - MongoDB database
+- `manager.startRedis()` - Redis cache
+- `manager.startLocalStack()` - AWS services (S3, SQS, etc.)
+- `manager.startKafka()` - Kafka message broker
+
+### Test Authentication
+```typescript
+import { TEST_TOKENS } from '@forklaunch/testing';
+
+describe('Protected Endpoint', () => {
+  it('should require authentication', async () => {
+    await request(app)
+      .get('/api/protected')
+      .expect(401);
+  });
+
+  it('should allow authenticated user', async () => {
+    await request(app)
+      .get('/api/protected')
+      .set('Authorization', `Bearer ${TEST_TOKENS.validUser}`)
+      .expect(200);
+  });
+
+  it('should allow admin', async () => {
+    await request(app)
+      .delete('/api/resources/123')
+      .set('Authorization', `Bearer ${TEST_TOKENS.admin}`)
+      .expect(204);
+  });
+});
+```
+
+## Utility Functions (@forklaunch/common)
+
+### String Utilities
+```typescript
+import { camelCase, hashString, safeStringify, safeParse } from '@forklaunch/common';
+
+// Case conversion
+const camel = camelCase('hello_world'); // 'helloWorld'
+
+// Hashing
+const hash = hashString('sensitive-data'); // SHA-256 hash
+
+// Safe JSON operations (never throws)
+const jsonStr = safeStringify({ foo: 'bar', circular: obj });
+const parsed = safeParse('{"valid":"json"}'); // Returns object or undefined
+```
+
+### Object Utilities
+```typescript
+import {
+  deepCloneWithoutUndefined,
+  stripUndefinedProperties,
+  sortObjectKeys
+} from '@forklaunch/common';
+
+// Deep clone without undefined values
+const cleaned = deepCloneWithoutUndefined({ a: 1, b: undefined, c: { d: undefined } });
+// Result: { a: 1, c: {} }
+
+// Strip undefined
+const stripped = stripUndefinedProperties({ a: 1, b: undefined });
+// Result: { a: 1 }
+
+// Sort keys alphabetically
+const sorted = sortObjectKeys({ z: 1, a: 2, m: 3 });
+// Result: { a: 2, m: 3, z: 1 }
+```
+
+### Type Guards
+```typescript
+import {
+  isRecord,
+  isTrue,
+  isNever,
+  isAsyncGenerator,
+  isNodeJsWriteableStream
+} from '@forklaunch/common';
+
+if (isRecord(value)) {
+  // TypeScript knows value is Record<string, unknown>
+}
+
+if (isTrue(condition)) {
+  // Narrow type to true
+}
+```
+
+## CLI Commands Quick Reference
+
+### Project Management
+```bash
+# Initialize projects
+forklaunch init service <name> --database postgresql
+forklaunch init worker <name> --type bullmq
+forklaunch init library <name>
+
+# Modify projects (ALWAYS --dry-run first!)
+forklaunch change application --runtime bun --dry-run
+forklaunch change service <name> --database mysql --dry-run
+
+# Delete projects
+forklaunch delete service <name>
+forklaunch delete worker <name>
+```
+
+### Development Workflow
+```bash
+# Sync artifacts after manifest changes
+forklaunch sync all              # Sync everything
+forklaunch sync service <name>   # Sync specific service
+forklaunch sync worker <name>    # Sync specific worker
+
+# Validate environment variables
+forklaunch environment validate  # Check all .env files
+forklaunch env validate         # Short alias
+
+# Export OpenAPI specs
+forklaunch openapi export --output ./docs/api
+
+# SDK management
+forklaunch sdk mode [lean|full] # Configure SDK generation
+```
+
+### Deployment & Release
+```bash
+# Link to platform
+forklaunch integrate --app <application-id>
+
+# Create release
+forklaunch release create --version 1.2.3
+
+# Deploy to environment
+forklaunch deploy create --environment staging --region us-east-1
+
+# Destroy deployment
+forklaunch deploy destroy --environment staging
+```
+
+### Development Commands
+```bash
+# Local development
+pnpm dev                # Start all services
+pnpm dev:local          # Start with .env.local
+
+# Database migrations
+pnpm migrate:up         # Run migrations
+pnpm migrate:down       # Rollback
+pnpm migrate:create     # Create new migration
+
+# Testing
+pnpm test               # Run tests
+pnpm test:watch         # Watch mode
+```
+
+## Key Principles
+
+1. **Manifest-Driven Development**: Use CLI commands, never edit manifest.toml manually
+2. **Import from Framework**: Always use `@forklaunch` packages, never `@modules/core`
+3. **Mappers at Boundary**: Controllers map to DTOs, services use entities
+4. **Domain-Driven Design**: Separate api, domain, and persistence layers
+5. **Type Safety**: Leverage TypeScript and Zod/TypeBox schemas
+6. **Convention Over Configuration**: Follow naming patterns consistently
+7. **Cache for Speed, Store for Size**: Use Cache for small/temporary data, Object Store for large/permanent data
+8. **Test with Containers**: Use TestContainerManager for integration tests with real services
+
+## Common Mistakes to Avoid
+
+### Architecture & Imports
+❌ Importing from `@modules/core` (use `@forklaunch` packages)
+❌ Using mappers in service layer (only in controllers)
+❌ Manually editing manifest.toml (use CLI commands)
+❌ Skipping `--dry-run` for changes
+❌ Not organizing imports in 7 layers
+❌ Putting business logic in controllers
+❌ Passing DTOs between internal services
+
+### Cache & Storage
+❌ Using Cache for large data (use Object Store instead)
+❌ Using Object Store for small/frequent data (use Cache)
+❌ Not setting TTL on cache records
+❌ Not handling cache misses gracefully
+❌ Loading large files into memory (use streaming)
+❌ Inconsistent key naming (always use createCacheKey/createObjectStoreKey)
+
+### Testing
+❌ Not using TestContainers for integration tests
+❌ Not cleaning up test containers (always use afterAll)
+❌ Mixing unit and integration test patterns
+❌ Not using TEST_TOKENS for auth testing
+
+### WebSocket & Real-time
+❌ Not defining schemas for WebSocket events
+❌ Sending large payloads over WebSocket (use notifications + Object Store)
+❌ Not handling reconnection logic
+
+### CLI Usage
+❌ Running `forklaunch change` without `--dry-run` first
+❌ Not running `forklaunch sync` after manifest changes
+❌ Not validating environment variables with `forklaunch env validate`
+
+## Safe Change Workflow
+
+```bash
+# 1. Commit current state
+git add . && git commit -m "Before change"
+
+# 2. Preview with dry-run
+forklaunch change application --runtime bun --dry-run
+
+# 3. Apply change
+forklaunch change application --runtime bun
+
+# 4. Install and test
+pnpm install
+pnpm test
+pnpm dev
+
+# 5. Commit changes
+git add . && git commit -m "Changed to Bun runtime"
+```
+
+---
+
+For complete documentation, see `.claude/skills/` directory or visit:
+https://forklaunch.com/docs/development

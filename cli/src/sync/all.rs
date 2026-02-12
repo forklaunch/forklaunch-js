@@ -418,6 +418,20 @@ impl CliCommand for SyncAllCommand {
             &mut stdout,
         )?;
 
+        // Generate .env.template files and sync .env.local
+        let modules_path = app_root_path.join(&manifest_data.modules_path);
+        crate::core::env_template::generate_env_templates(
+            &modules_path,
+            &manifest_data,
+            &mut rendered_templates_cache,
+            &mut stdout,
+        )?;
+        crate::core::env_template::sync_env_local_files(
+            &modules_path,
+            &manifest_data,
+            &mut stdout,
+        )?;
+
         // Write the updated manifest back to cache
         rendered_templates_cache.insert(
             manifest_path.to_string_lossy().to_string(),

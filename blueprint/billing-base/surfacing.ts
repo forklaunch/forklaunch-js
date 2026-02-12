@@ -1,7 +1,10 @@
 import { generateHmacAuthHeaders } from '@forklaunch/core/http';
 import { universalSdk } from '@forklaunch/universal-sdk';
 import type { JWTPayload } from 'jose';
-import type { BillingCacheService, SubscriptionCacheData } from './cache';
+import type {
+  BillingCacheService,
+  SubscriptionCacheData
+} from '@forklaunch/blueprint-core';
 import type { BillingSdkClient } from './sdk';
 
 export { generateHmacAuthHeaders };

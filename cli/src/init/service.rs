@@ -312,15 +312,18 @@ pub(crate) fn generate_service_package_json(
         keywords: Some(vec![]),
         license: Some(manifest_data.license.to_string()),
         author: Some(manifest_data.author.to_string()),
-        main: main_override.or_else(|| {
-            if manifest_data.is_iam {
-                Some("dist/index.js".to_string())
-            } else {
-                None
-            }
+        main: main_override.or_else(|| if manifest_data.is_iam || manifest_data.is_billing {
+            Some("./dist/index.js".to_string())
+        } else {
+            None
         }),
-        types: types_override.unwrap_or(None),
+        types: types_override.unwrap_or(if manifest_data.is_iam || manifest_data.is_billing {
+            Some("./dist/index.d.ts".to_string())
+        } else {
+            None
+        }),
         types_versions: None,
+        exports: None,
         scripts: Some(if let Some(scripts) = scripts_override {
             scripts
         } else {
@@ -350,6 +353,10 @@ pub(crate) fn generate_service_package_json(
                     None
                 },
                 start: Some(project_start_server_script(
+                    &manifest_data.runtime.parse()?,
+                    manifest_data.database.parse::<Database>().ok(),
+                )),
+                start_server: Some(project_start_server_script(
                     &manifest_data.runtime.parse()?,
                     manifest_data.database.parse::<Database>().ok(),
                 )),
@@ -800,6 +807,13 @@ impl CliCommand for ServiceCommand {
 
             // Generate mappers if --mappers flag is set, or always for billing/IAM variants
             with_mappers: matches.get_flag("mappers"),
+
+            iam_secret: None,
+
+            // These will be properly generated when initialized
+            generated_password_encryption_secret: String::new(),
+            generated_better_auth_secret: String::new(),
+            generated_hmac_secret: String::new(),
         };
 
         let dryrun = matches.get_flag("dryrun");

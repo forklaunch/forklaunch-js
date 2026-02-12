@@ -517,6 +517,9 @@ impl CliCommand for EjectCommand {
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
+        // Upfront validation — verify manifest exists before proceeding
+        let _ = crate::core::validate::require_manifest(matches)?;
+
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 

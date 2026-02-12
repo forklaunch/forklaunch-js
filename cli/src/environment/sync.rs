@@ -1,18 +1,20 @@
 use std::{collections::HashMap, io::Write, path::Path};
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::{ArgMatches, Command};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 use crate::{
     CliCommand,
+    constants::ERROR_FAILED_TO_PARSE_MANIFEST,
     core::{
         ast::infrastructure::env::find_all_env_vars,
         env::{
             add_env_vars_to_file, find_workspace_root, get_modules_path, get_target_env_file,
             is_env_var_defined,
         },
-        rendered_template::RenderedTemplatesCache,
+        manifest::application::ApplicationManifestData,
+        rendered_template::{RenderedTemplatesCache, write_rendered_templates},
     },
 };
 
@@ -105,6 +107,27 @@ impl CliCommand for SyncCommand {
 
         if !dry_run {
             execute_sync_plan(&sync_plan, &mut stdout)?;
+
+            // Generate .env.template files
+            let manifest_path = workspace_root.join(".forklaunch").join("manifest.toml");
+            let manifest_content = std::fs::read_to_string(&manifest_path)
+                .with_context(|| format!("Failed to read manifest: {}", manifest_path.display()))?;
+            let manifest_data: ApplicationManifestData =
+                toml::from_str(&manifest_content)
+                    .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+            let mut env_template_cache = RenderedTemplatesCache::new();
+            crate::core::env_template::generate_env_templates(
+                &modules_path,
+                &manifest_data,
+                &mut env_template_cache,
+                &mut stdout,
+            )?;
+            let env_templates: Vec<_> = env_template_cache
+                .drain()
+                .map(|(_, template)| template)
+                .collect();
+            write_rendered_templates(&env_templates, false, &mut stdout)?;
+
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
             writeln!(stdout, "\nEnvironment sync completed!")?;
             stdout.reset()?;

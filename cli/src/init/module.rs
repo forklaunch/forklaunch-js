@@ -253,6 +253,13 @@ impl CliCommand for ModuleCommand {
 
             // Default to false for module initialization, will be set by CLI flag
             with_mappers: false,
+
+            iam_secret: None,
+
+            // These will be properly generated when initialized
+            generated_password_encryption_secret: String::new(),
+            generated_better_auth_secret: String::new(),
+            generated_hmac_secret: String::new(),
         };
         let manifest_data = add_project_definition_to_manifest(
             ProjectType::Service,

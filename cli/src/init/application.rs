@@ -22,7 +22,7 @@ use crate::{
         Database, ERROR_FAILED_TO_CREATE_DATABASE_EXPORT_INDEX_TS,
         ERROR_FAILED_TO_CREATE_GITIGNORE, ERROR_FAILED_TO_CREATE_LICENSE,
         ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE, ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE,
-        ERROR_FAILED_TO_SETUP_IAM, Formatter, HttpFramework, License, Linter, Module, ModulesPath,
+        Formatter, HttpFramework, License, Linter, Module, ModulesPath,
         Runtime, TestFramework, Validator, get_core_module_description,
         get_monitoring_module_description, get_service_module_cache,
         get_service_module_description, get_service_module_name,
@@ -41,7 +41,7 @@ use crate::{
         format::format_code,
         gitignore::generate_gitignore,
         husky::create_or_merge_husky_pre_commit,
-        iam::generate_iam_keys,
+        iam::generate_iam_secret,
         license::generate_license,
         manifest::{
             ManifestData, ProjectEntry, ProjectType, ResourceInventory,
@@ -985,6 +985,19 @@ impl CliCommand for ApplicationCommand {
 
                 // Default to false for application initialization, will be set by CLI flag
                 with_mappers: false,
+
+                iam_secret: if template_dir.module_id == Some(Module::BaseIam)
+                    || template_dir.module_id == Some(Module::BetterAuthIam)
+                {
+                    Some(generate_iam_secret())
+                } else {
+                    None
+                },
+
+                // These will be properly generated when initialized
+                generated_password_encryption_secret: String::new(),
+                generated_better_auth_secret: String::new(),
+                generated_hmac_secret: String::new(),
             };
 
             if service_data.service_name == "client-sdk" {
@@ -1160,6 +1173,14 @@ impl CliCommand for ApplicationCommand {
                     _ => None,
                 },
             )?);
+
+            if let Some(secret) = &service_data.iam_secret {
+                rendered_templates.push(RenderedTemplate {
+                    path: Path::new(&application_path).join(".env.local"),
+                    content: format!("PASSWORD_ENCRYPTION_SECRET={}\n", secret),
+                    context: None,
+                });
+            }
         }
 
         let docker_compose_path = if let Some(docker_compose_path) = &data.docker_compose_path {
@@ -1217,12 +1238,7 @@ impl CliCommand for ApplicationCommand {
             );
         }
 
-        if additional_projects_names.contains(&"iam".to_string()) {
-            rendered_templates.extend(
-                generate_iam_keys(&Path::new(&application_path))
-                    .with_context(|| ERROR_FAILED_TO_SETUP_IAM)?,
-            );
-        }
+
 
         create_forklaunch_dir(
             &Path::new(&origin_path).to_string_lossy().to_string(),

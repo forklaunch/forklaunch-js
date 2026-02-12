@@ -1,11 +1,5 @@
 import { SqlBaseEntity } from '@forklaunch/blueprint-core';
-import {
-  Collection,
-  Entity,
-  OneToMany,
-  Property,
-  Unique
-} from '@mikro-orm/core';
+import { Collection, Entity, OneToMany, Property } from '@mikro-orm/core';
 import { OrganizationStatus } from '../../domain/enum/organizationStatus.enum';
 import type { User } from './user.entity';
 
@@ -28,7 +22,6 @@ export class Organization extends SqlBaseEntity {
   logoUrl?: string;
 
   @Property()
-  @Unique()
   subscription!: string;
 
   @Property()
