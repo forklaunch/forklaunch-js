@@ -79,6 +79,17 @@ impl ImportScanner {
         }
     }
 
+    /// Normalize "@scope/name/subpath" to "@scope/name" for package.json lookup
+    fn normalize_scoped_package(import_path: &str) -> String {
+        if import_path.starts_with('@') {
+            let parts: Vec<&str> = import_path.split('/').collect();
+            if parts.len() >= 2 {
+                return format!("{}/{}", parts[0], parts[1]);
+            }
+        }
+        import_path.to_string()
+    }
+
     fn load_dependencies(package_json_path: &Path) -> Result<HashMap<String, String>> {
         let content = fs::read_to_string(package_json_path)?;
         let json: serde_json::Value = serde_json::from_str(&content)?;
@@ -135,29 +146,35 @@ impl ImportScanner {
                     }
                 }
             } else {
-                // NPM / Library import
-                // Filter out standard node modules (fs, path, etc)?
-                // For now, check if it's in package.json
-                if let Some(version) = self.dependencies.get(&import) {
-                    children.push(CodeNode {
-                        name: import.clone(),
-                        node_type: "npm".to_string(),
-                        version: Some(version.clone()),
-                        children: None,
-                        path: None,
-                    });
-                } else if import.starts_with("@") {
-                    // Scoped package not in direct deps (transitive?), still show
-                    children.push(CodeNode {
-                        name: import.clone(),
-                        node_type: "npm".to_string(),
-                        version: Some("unknown".to_string()),
-                        children: None,
-                        path: None,
-                    });
-                }
+                // NPM / Library import — normalize scoped subpaths and capture ALL non-relative imports
+                let pkg_name = Self::normalize_scoped_package(&import);
+                let version = self
+                    .dependencies
+                    .get(&pkg_name)
+                    .or_else(|| self.dependencies.get(&import))
+                    .cloned();
+                children.push(CodeNode {
+                    name: pkg_name,
+                    node_type: "npm".to_string(),
+                    version: version.or_else(|| Some("unknown".to_string())),
+                    children: None,
+                    path: None,
+                });
             }
         }
+
+        // Deduplicate npm children by name
+        let mut seen = HashSet::new();
+        let children: Vec<CodeNode> = children
+            .into_iter()
+            .filter(|c| {
+                if c.node_type == "npm" {
+                    seen.insert(c.name.clone())
+                } else {
+                    true
+                }
+            })
+            .collect();
 
         self.visited.remove(file_path); // Allow visiting again in other branches? Actually DAG is better.
         // If we want a Tree, we duplicate nodes. If we want a Graph, we reference ID.
@@ -336,13 +353,41 @@ mod tests {
             import { handlers } from '@forklaunch/blueprint-core';
             import { ci, tokens } from '../../bootstrapper';
             import type { SomeType } from './types';
+            import { something } from '@forklaunch-platform/iam/utils';
+            import Stripe from 'stripe';
         "#;
 
         let imports = scanner.extract_imports(code);
 
-        assert_eq!(imports.len(), 3);
+        assert_eq!(imports.len(), 5);
         assert!(imports.contains(&"@forklaunch/blueprint-core".to_string()));
         assert!(imports.contains(&"../../bootstrapper".to_string()));
         assert!(imports.contains(&"./types".to_string()));
+        assert!(imports.contains(&"@forklaunch-platform/iam/utils".to_string()));
+        assert!(imports.contains(&"stripe".to_string()));
+    }
+
+    #[test]
+    fn test_normalize_scoped_package() {
+        // Scoped with subpath
+        assert_eq!(
+            ImportScanner::normalize_scoped_package("@forklaunch-platform/iam/utils"),
+            "@forklaunch-platform/iam"
+        );
+        // Scoped without subpath
+        assert_eq!(
+            ImportScanner::normalize_scoped_package("@forklaunch/core"),
+            "@forklaunch/core"
+        );
+        // Non-scoped package
+        assert_eq!(
+            ImportScanner::normalize_scoped_package("stripe"),
+            "stripe"
+        );
+        // Non-scoped with subpath (shouldn't happen in practice but handled)
+        assert_eq!(
+            ImportScanner::normalize_scoped_package("express"),
+            "express"
+        );
     }
 }

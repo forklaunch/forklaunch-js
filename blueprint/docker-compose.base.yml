@@ -208,7 +208,7 @@ services:
       dockerfile: ./Dockerfile.${RUNTIME}.dev
     environment:
       NODE_ENV: development
-      PORT: 8000
+      PORT: 8001
       DB_NAME: forklaunch-dev
 
       DB_HOST: postgres
@@ -238,16 +238,24 @@ services:
       DOCS_PATH: /docs
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
       OTEL_SERVICE_NAME: forklaunch-iam
+
+      # Better Auth OAuth configuration
+      BETTER_AUTH_URL: http://localhost:8001
+      BETTER_AUTH_BASE_PATH: /api/auth
+      CORS_ORIGINS: http://localhost:3001
+      # OAuth credentials (set these in .env file or replace ${} with actual values)
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
     depends_on:
       - postgres
       - redis
     ports:
-      - 8000:8000
+      - 8001:8001
     networks:
       - forklaunch-network
     working_dir: /app/iam
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
       interval: 30s
       timeout: 10s
       retries: 3

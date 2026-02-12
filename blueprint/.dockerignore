@@ -5,9 +5,17 @@
 **/yarn-error.log*
 **/.pnpm-debug.log*
 
-# Environment files
+# Environment files - exclude ALL .env files to prevent overriding Docker environment variables
+**/.env
+**/.env.*
 **/.env.local
 **/.env.*.local
+**/.env.development
+**/.env.development.local
+**/.env.test
+**/.env.test.local
+**/.env.production
+**/.env.production.local
 
 # Build outputs
 **/dist/

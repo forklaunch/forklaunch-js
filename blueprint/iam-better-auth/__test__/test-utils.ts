@@ -27,9 +27,6 @@ export const setupTestDatabase = async (): Promise<TestSetupResult> => {
     migrationsPath: path.join(__dirname, '../migrations'),
     customEnvVars: {
       PASSWORD_ENCRYPTION_SECRET: getEnvVar('PASSWORD_ENCRYPTION_SECRET'),
-      PASSWORD_ENCRYPTION_SECRET_PATH: getEnvVar(
-        'PASSWORD_ENCRYPTION_SECRET_PATH'
-      ),
       CORS_ORIGINS: getEnvVar('CORS_ORIGINS')
     }
   });

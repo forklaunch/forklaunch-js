@@ -18,6 +18,8 @@ use crate::core::rendered_template::RenderedTemplatesCache;
 struct ServiceDependency {
     /// The name of the service being imported from (e.g., "billing")
     service_name: String,
+    /// The type of dependency (e.g., "network" for SDK client imports)
+    dependency_type: String,
 }
 
 struct SdkImportVisitor {
@@ -68,7 +70,10 @@ impl<'a> Visit<'a> for SdkImportVisitor {
                     // Check for SdkClient pattern (case insensitive for the suffix)
                     if imported_name.ends_with("SdkClient") {
                         if let Some(service_name) = self.extract_service_from_import(source) {
-                            self.dependencies.push(ServiceDependency { service_name });
+                            self.dependencies.push(ServiceDependency {
+                                service_name,
+                                dependency_type: "network".to_string(),
+                            });
                         }
                     }
                 }
@@ -110,12 +115,12 @@ fn extract_sdk_dependencies_from_source(source_code: &str) -> Result<Vec<Service
 }
 
 /// Find all SDK client dependencies for all services/workers in the modules path.
-/// Returns a map of service_name -> Vec<service names it depends on>
+/// Returns a map of service_name -> Vec<(dependency_name, dependency_type)>
 pub fn find_all_service_dependencies(
     modules_path: &Path,
     rendered_templates_cache: &RenderedTemplatesCache,
-) -> Result<HashMap<String, Vec<String>>> {
-    let mut all_deps: HashMap<String, Vec<String>> = HashMap::new();
+) -> Result<HashMap<String, Vec<(String, String)>>> {
+    let mut all_deps: HashMap<String, Vec<(String, String)>> = HashMap::new();
 
     if !modules_path.exists() {
         return Ok(all_deps);
@@ -153,17 +158,17 @@ pub fn find_all_service_dependencies(
                         all_deps
                             .entry(service.clone())
                             .or_insert_with(Vec::new)
-                            .push(dep.service_name);
+                            .push((dep.service_name, dep.dependency_type));
                     }
                 }
             }
         }
     }
 
-    // Deduplicate dependencies for each service
+    // Deduplicate dependencies for each service (by service name only)
     for deps in all_deps.values_mut() {
-        deps.sort();
-        deps.dedup();
+        deps.sort_by(|a, b| a.0.cmp(&b.0));
+        deps.dedup_by(|a, b| a.0 == b.0);
     }
 
     Ok(all_deps)
@@ -185,8 +190,8 @@ mod tests {
         let deps = extract_sdk_dependencies_from_source(source).unwrap();
 
         assert_eq!(deps.len(), 2);
-        assert!(deps.iter().any(|d| d.service_name == "billing"));
-        assert!(deps.iter().any(|d| d.service_name == "iam"));
+        assert!(deps.iter().any(|d| d.service_name == "billing" && d.dependency_type == "network"));
+        assert!(deps.iter().any(|d| d.service_name == "iam" && d.dependency_type == "network"));
     }
 
     #[test]

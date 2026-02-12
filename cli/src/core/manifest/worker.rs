@@ -1,6 +1,7 @@
 use convert_case::{Case, Casing};
 use ramhorns::Content;
 use serde::{Deserialize, Serialize};
+use base64::{Engine as _, engine::general_purpose::STANDARD};
 
 use super::{
     InitializableManifestConfig, InitializableManifestConfigMetadata, ProjectManifestConfig,
@@ -15,6 +16,13 @@ use crate::{
         },
     },
 };
+
+/// Generate a random base64-encoded secret of specified length
+fn generate_random_secret(byte_length: usize) -> String {
+    let mut bytes = vec![0u8; byte_length];
+    getrandom::getrandom(&mut bytes).expect("Failed to generate random bytes");
+    STANDARD.encode(&bytes)
+}
 
 config_struct!(
     #[derive(Debug, Content, Serialize, Clone)]
@@ -89,6 +97,14 @@ config_struct!(
 
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) with_mappers: bool,
+
+        // Generated secrets - each instantiation gets unique random values
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) generated_password_encryption_secret: String,
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) generated_better_auth_secret: String,
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) generated_hmac_secret: String,
     }
 );
 
@@ -209,6 +225,12 @@ impl InitializableManifestConfig for WorkerManifestData {
 
             // Default to false, will be set by CLI flag
             with_mappers: false,
+
+            // Generate unique random secrets for each worker/environment
+            generated_password_encryption_secret: generate_random_secret(32), // 32 bytes = 256 bits
+            generated_better_auth_secret: generate_random_secret(32),
+            generated_hmac_secret: generate_random_secret(32),
+
             ..self.clone()
         }
     }

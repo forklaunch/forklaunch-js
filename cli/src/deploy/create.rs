@@ -1,4 +1,4 @@
-use std::{fs::read_to_string, io::Write};
+use std::io::Write;
 
 use anyhow::{Context, Result, bail};
 use base64::{Engine as _, engine::general_purpose};
@@ -10,12 +10,8 @@ use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 use crate::{
     CliCommand,
-    constants::{ERROR_FAILED_TO_SEND_REQUEST, PLATFORM_UI_URL, get_platform_management_api_url},
-    core::{
-        base_path::{RequiredLocation, find_app_root_path},
-        command::command,
-        manifest::application::ApplicationManifestData,
-    },
+    constants::{ERROR_FAILED_TO_SEND_REQUEST, get_platform_management_api_url, get_platform_ui_url},
+    core::command::command,
 };
 
 #[derive(Debug, Serialize)]
@@ -196,6 +192,11 @@ impl CliCommand for CreateCommand {
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
+        // Upfront validation
+        let _token = crate::core::validate::require_auth()?;
+        let (_app_root, manifest) = crate::core::validate::require_manifest(matches)?;
+        let application_id = crate::core::validate::require_integration(&manifest)?;
+
         let release_version = matches
             .get_one::<String>("release")
             .ok_or_else(|| anyhow::anyhow!("Release version is required"))?;
@@ -210,25 +211,6 @@ impl CliCommand for CreateCommand {
             .ok_or_else(|| anyhow::anyhow!("Region is required"))?;
 
         let wait = !matches.get_flag("no-wait");
-
-        let (app_root, _) = find_app_root_path(matches, RequiredLocation::Application)?;
-        let manifest_path = app_root.join(".forklaunch").join("manifest.toml");
-
-        let manifest_content = read_to_string(&manifest_path)
-            .with_context(|| format!("Failed to read manifest at {:?}", manifest_path))?;
-
-        let manifest: ApplicationManifestData =
-            toml::from_str(&manifest_content).with_context(|| "Failed to parse manifest.toml")?;
-
-        let application_id = manifest
-            .platform_application_id
-            .as_ref()
-            .ok_or_else(|| {
-                anyhow::anyhow!(
-                    "Application not integrated with platform.\nRun: forklaunch integrate --app <app-id>"
-                )
-            })?
-            .clone();
 
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)).set_bold(true))?;
         writeln!(
@@ -298,7 +280,7 @@ impl CliCommand for CreateCommand {
                     writeln!(
                         stdout,
                         "  {}/apps/{}/deployments/{}",
-                        PLATFORM_UI_URL, application_id, deployment.id
+                        get_platform_ui_url(), application_id, deployment.id
                     )?;
                 }
                 break;

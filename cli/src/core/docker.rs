@@ -5,7 +5,6 @@ use std::{
 };
 
 use anyhow::{Context, Result};
-use base64::{Engine, engine::general_purpose::STANDARD};
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use serde_yml::{Value, from_str, from_value, to_string};
@@ -1501,30 +1500,15 @@ fn create_base_service(
 }
 
 fn add_iam_environment_variables_to_docker_compose(
-    app_name: &str,
+    _app_name: &str,
     service_name: &str,
     port_number: i32,
     projects: Vec<ProjectEntry>,
     docker_compose: &DockerCompose,
     environment: &mut IndexMap<String, String>,
+    hmac_secret: &str,
 ) -> Result<()> {
-    let mut secret_bytes = Vec::new();
-    secret_bytes.extend_from_slice(
-        Uuid::new_v5(
-            &Uuid::NAMESPACE_DNS,
-            format!("{}-hmac-1", app_name).as_bytes(),
-        )
-        .as_bytes(),
-    );
-    secret_bytes.extend_from_slice(
-        Uuid::new_v5(
-            &Uuid::NAMESPACE_DNS,
-            format!("{}-hmac-2", app_name).as_bytes(),
-        )
-        .as_bytes(),
-    );
-    let hmac_secret = STANDARD.encode(&secret_bytes);
-    environment.insert("HMAC_SECRET_KEY".to_string(), hmac_secret);
+    environment.insert("HMAC_SECRET_KEY".to_string(), hmac_secret.to_string());
 
     let iam_project = projects.iter().find(|project| project.name == "iam");
     let iam_project_variant = iam_project
@@ -1590,14 +1574,18 @@ pub(crate) fn add_service_definition_to_docker_compose(
 
     if manifest_data.is_iam {
         environment.insert(
-            "PASSWORD_ENCRYPTION_PUBLIC_KEY_PATH".to_string(),
-            "./public.pem".to_string(),
+            "PASSWORD_ENCRYPTION_SECRET".to_string(),
+            manifest_data.generated_password_encryption_secret.clone(),
         );
     }
     if manifest_data.is_better_auth {
         environment.insert(
-            "PASSWORD_ENCRYPTION_SECRET_PATH".to_string(),
-            "./private.pem".to_string(),
+            "PASSWORD_ENCRYPTION_SECRET".to_string(),
+            manifest_data.generated_password_encryption_secret.clone(),
+        );
+        environment.insert(
+            "BETTER_AUTH_SECRET".to_string(),
+            manifest_data.generated_better_auth_secret.clone(),
         );
         environment.insert("BETTER_AUTH_BASE_PATH".to_string(), "/api/auth".to_string());
         environment.insert(
@@ -1624,6 +1612,7 @@ pub(crate) fn add_service_definition_to_docker_compose(
             manifest_data.projects.clone(),
             &docker_compose,
             &mut environment,
+            &manifest_data.generated_hmac_secret,
         )?;
     }
 
@@ -1799,6 +1788,7 @@ pub(crate) fn add_worker_definition_to_docker_compose(
             manifest_data.projects.clone(),
             &docker_compose,
             &mut environment,
+            &manifest_data.generated_hmac_secret,
         )?;
     }
 

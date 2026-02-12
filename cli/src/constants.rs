@@ -2,20 +2,60 @@ use std::path::Path;
 
 use crate::{choice, core::choices::Choice};
 
-// pub(crate) const DEFAULT_PLATFORM_MANAGEMENT_API_URL: &str = "https://api.forklaunch.com";
-pub(crate) const DEFAULT_PLATFORM_MANAGEMENT_API_URL: &str = "http://localhost:8004";
-pub(crate) const DEFAULT_IAM_API_URL: &str = "http://localhost:8001";
-pub(crate) const PLATFORM_UI_URL: &str = "https://forklaunch.com";
+// --- Environment Detection ---------------------------------------------------
+// If the binary is running from target/debug or target/release, use dev URLs.
+// Otherwise (installed binary), use prod URLs.
+// All URLs can be overridden via environment variables.
+
+const DEV_PLATFORM_MANAGEMENT_API_URL: &str = "http://localhost:8004";
+const DEV_IAM_API_URL: &str = "http://localhost:8001";
+const DEV_PLATFORM_UI_URL: &str = "http://localhost:3001";
+
+const PROD_PLATFORM_MANAGEMENT_API_URL: &str = "https://platform.forklaunch.com";
+const PROD_IAM_API_URL: &str = "https://iam.forklaunch.com";
+const PROD_PLATFORM_UI_URL: &str = "https://forklaunch.com";
+
+fn is_dev_build() -> bool {
+    std::env::current_exe()
+        .ok()
+        .and_then(|p| p.to_str().map(|s| s.to_string()))
+        .map(|path| path.contains("/target/debug/") || path.contains("/target/release/"))
+        .unwrap_or(false)
+}
 
 pub(crate) const RELEASE_MANIFEST_SCHEMA_VERSION: &str = "1.0.0";
 
 pub(crate) fn get_platform_management_api_url() -> String {
-    std::env::var("FORKLAUNCH_PLATFORM_MANAGEMENT_API_URL")
-        .unwrap_or_else(|_| DEFAULT_PLATFORM_MANAGEMENT_API_URL.to_string())
+    std::env::var("FORKLAUNCH_PLATFORM_MANAGEMENT_API_URL").unwrap_or_else(|_| {
+        if is_dev_build() {
+            DEV_PLATFORM_MANAGEMENT_API_URL
+        } else {
+            PROD_PLATFORM_MANAGEMENT_API_URL
+        }
+        .to_string()
+    })
 }
 
 pub(crate) fn get_iam_api_url() -> String {
-    std::env::var("FORKLAUNCH_IAM_API_URL").unwrap_or_else(|_| DEFAULT_IAM_API_URL.to_string())
+    std::env::var("FORKLAUNCH_IAM_API_URL").unwrap_or_else(|_| {
+        if is_dev_build() {
+            DEV_IAM_API_URL
+        } else {
+            PROD_IAM_API_URL
+        }
+        .to_string()
+    })
+}
+
+pub(crate) fn get_platform_ui_url() -> String {
+    std::env::var("FORKLAUNCH_PLATFORM_UI_URL").unwrap_or_else(|_| {
+        if is_dev_build() {
+            DEV_PLATFORM_UI_URL
+        } else {
+            PROD_PLATFORM_UI_URL
+        }
+        .to_string()
+    })
 }
 
 choice! {
@@ -387,8 +427,6 @@ pub(crate) const ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON: &str =
     "Failed to add project metadata to package.json.";
 pub(crate) const ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE: &str =
     "Failed to add project metadata to pnpm-workspace.yaml.";
-pub(crate) const ERROR_FAILED_TO_SETUP_IAM: &str =
-    "Failed to create private and public keys needed for iam service.";
 pub(crate) const ERROR_UNSUPPORTED_DATABASE: &str =
     "Unsupported database. Failed to create base entity.";
 pub(crate) const ERROR_DATABASE_INFORMATION: &str = "Database information not found, please ensure your service defines a database in your manifest.";

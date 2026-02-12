@@ -11,10 +11,8 @@ use crate::{
     CliCommand,
     constants::{ERROR_FAILED_TO_SEND_REQUEST, get_platform_management_api_url},
     core::{
-        base_path::{RequiredLocation, find_app_root_path},
         command::command,
         manifest::application::ApplicationManifestData,
-        token::get_token,
     },
 };
 
@@ -60,16 +58,15 @@ impl CliCommand for IntegrateCommand {
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
+        // Upfront validation
+        let token = crate::core::validate::require_auth()?;
+        let (app_root, _manifest) = crate::core::validate::require_manifest(matches)?;
+
         // Get application ID from args
         let application_id = matches
             .get_one::<String>("app")
             .ok_or_else(|| anyhow::anyhow!("Application ID is required"))?;
 
-        // Get token
-        let token = get_token()?;
-
-        // Find application root
-        let (app_root, _) = find_app_root_path(matches, RequiredLocation::Application)?;
         let manifest_path = app_root.join(".forklaunch").join("manifest.toml");
 
         // Validate application exists on platform

@@ -7,9 +7,7 @@ use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use crate::{
     CliCommand,
     core::{
-        base_path::{RequiredLocation, find_app_root_path},
         command::command,
-        manifest::application::ApplicationManifestData,
         openapi_export::export_all_services,
     },
 };
@@ -44,14 +42,8 @@ impl CliCommand for ExportCommand {
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let (app_root, _) = find_app_root_path(matches, RequiredLocation::Application)?;
-        let manifest_path = app_root.join(".forklaunch").join("manifest.toml");
-
-        let manifest_content = std::fs::read_to_string(&manifest_path)
-            .with_context(|| format!("Failed to read manifest at {:?}", manifest_path))?;
-
-        let manifest: ApplicationManifestData =
-            toml::from_str(&manifest_content).with_context(|| "Failed to parse manifest.toml")?;
+        // Upfront validation
+        let (app_root, manifest) = crate::core::validate::require_manifest(matches)?;
 
         let output_dir = matches.get_one::<String>("output").unwrap();
         let output_path = app_root.join(output_dir);

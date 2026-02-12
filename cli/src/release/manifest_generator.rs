@@ -165,6 +165,13 @@ pub(crate) struct ServiceDefinition {
     pub dockerfile: Option<String>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub(crate) struct DependencyDefinition {
+    pub name: String,
+    #[serde(rename = "type")]
+    pub dependency_type: String,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(untagged)]
 pub(crate) enum ServiceConfigEnum {
@@ -183,7 +190,7 @@ pub(crate) struct ServiceConfig {
     #[serde(rename = "openApiSpec", skip_serializing_if = "Option::is_none")]
     pub open_api_spec: Option<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub dependencies: Option<Vec<String>>,
+    pub dependencies: Option<Vec<DependencyDefinition>>,
     #[serde(
         rename = "runtimeDependencies",
         skip_serializing_if = "Option::is_none"
@@ -321,7 +328,7 @@ pub(crate) fn generate_release_manifest(
         String,
         crate::core::ast::infrastructure::worker_config::WorkerConfig,
     >,
-    service_dependencies: &std::collections::HashMap<String, Vec<String>>,
+    service_dependencies: &std::collections::HashMap<String, Vec<(String, String)>>,
 ) -> Result<ReleaseManifest> {
     let timestamp = chrono::Utc::now().to_rfc3339();
 
@@ -330,7 +337,15 @@ pub(crate) fn generate_release_manifest(
         if project.r#type == ProjectType::Service {
             let open_api_spec = openapi_specs.get(&project.name).cloned();
             let runtime_deps = project_runtime_deps.get(&project.name).cloned();
-            let deps = service_dependencies.get(&project.name).cloned();
+            let deps = service_dependencies.get(&project.name).map(|dep_tuples| {
+                dep_tuples
+                    .iter()
+                    .map(|(name, dep_type)| DependencyDefinition {
+                        name: name.clone(),
+                        dependency_type: dep_type.clone(),
+                    })
+                    .collect::<Vec<_>>()
+            });
             let integrations = project_integrations.get(&project.name).map(|integrations| {
                 integrations
                     .iter()
@@ -415,7 +430,15 @@ pub(crate) fn generate_release_manifest(
             });
         } else if project.r#type == ProjectType::Worker {
             let runtime_deps = project_runtime_deps.get(&project.name).cloned();
-            let deps = service_dependencies.get(&project.name).cloned();
+            let deps = service_dependencies.get(&project.name).map(|dep_tuples| {
+                dep_tuples
+                    .iter()
+                    .map(|(name, dep_type)| DependencyDefinition {
+                        name: name.clone(),
+                        dependency_type: dep_type.clone(),
+                    })
+                    .collect::<Vec<_>>()
+            });
             let integrations = project_integrations.get(&project.name).map(|integrations| {
                 integrations
                     .iter()

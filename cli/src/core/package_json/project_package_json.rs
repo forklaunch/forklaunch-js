@@ -8,6 +8,16 @@ use serde_json::Value;
 
 use crate::constants::Database;
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub(crate) struct PackageExport {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) types: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) default: Option<String>,
+}
+
+pub(crate) type PackageExportsMap = HashMap<String, PackageExport>;
+
 #[derive(Debug)]
 struct ProjectDependenciesWithProjectName {
     project_dependencies_value: Value,
@@ -718,6 +728,8 @@ pub(crate) struct ProjectPackageJson {
     #[serde(rename = "typesVersions", skip_serializing_if = "Option::is_none")]
     pub(crate) types_versions: Option<HashMap<String, HashMap<String, Vec<String>>>>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) exports: Option<PackageExportsMap>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) scripts: Option<ProjectScripts>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) dependencies: Option<ProjectDependencies>,
@@ -759,6 +771,7 @@ impl<'de> Deserialize<'de> for ProjectPackageJson {
                     main: None,
                     types: None,
                     types_versions: None,
+                    exports: None,
                     scripts: None,
                     dependencies: None,
                     dev_dependencies: None,
@@ -815,6 +828,11 @@ impl<'de> Deserialize<'de> for ProjectPackageJson {
                         }
                         "typesVersions" => {
                             package.types_versions = Some(
+                                serde_json::from_value(value).map_err(serde::de::Error::custom)?,
+                            )
+                        }
+                        "exports" => {
+                            package.exports = Some(
                                 serde_json::from_value(value).map_err(serde::de::Error::custom)?,
                             )
                         }
