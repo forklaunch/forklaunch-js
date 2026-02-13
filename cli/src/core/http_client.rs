@@ -138,12 +138,6 @@ pub fn patch(url: &str, body: Value) -> Result<Response> {
 }
 
 /// Extract the path component from a full URL (e.g. "https://host:port/path?q" -> "/path?q")
-/// Extract the router-relative path from a URL for HMAC signing.
-///
-/// ForkLaunch routers are mounted at a base path (e.g., `/releases`), and
-/// Express's `req.path` returns the path relative to the router mount point.
-/// So for URL `http://host:8004/releases/internal`, the HMAC sign path is
-/// `/internal` (stripping the first path segment `/releases`).
 fn extract_url_path(url: &str) -> Result<String> {
     // Find the start of the path after scheme://host(:port)
     let after_scheme = url
@@ -157,15 +151,7 @@ fn extract_url_path(url: &str) -> Result<String> {
     if path_start >= url.len() {
         return Ok("/".to_string());
     }
-    let full_path = &url[path_start..];
-    // Strip the first path segment (router mount point) for HMAC signing.
-    // e.g., "/releases/internal" -> "/internal", "/deployments/abc" -> "/abc"
-    if let Some(second_slash) = full_path[1..].find('/') {
-        Ok(full_path[1 + second_slash..].to_string())
-    } else {
-        // Path is just "/{segment}" with no sub-path → route path is "/"
-        Ok("/".to_string())
-    }
+    Ok(url[path_start..].to_string())
 }
 
 /// Makes an HMAC-authenticated HTTP request. No retry/re-login logic since HMAC secrets are static.
