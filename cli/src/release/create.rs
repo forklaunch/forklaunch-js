@@ -34,10 +34,10 @@ use crate::{
         docker::{DockerCompose, find_docker_compose_path},
         env::{find_workspace_root, get_modules_path},
         env_scope::determine_env_var_scopes,
+        hmac::AuthMode,
         manifest::{ProjectType, application::ApplicationManifestData},
         openapi_export::export_all_services,
         rendered_template::RenderedTemplatesCache,
-        token::get_token,
     },
 };
 
@@ -106,7 +106,7 @@ impl CliCommand for CreateCommand {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
         // Upfront validation
-        let _token = crate::core::validate::require_auth()?;
+        let auth_mode = crate::core::validate::resolve_auth()?;
         let (app_root, manifest) = crate::core::validate::require_manifest(matches)?;
         let application_id = crate::core::validate::require_integration(&manifest)?;
 
@@ -591,7 +591,7 @@ impl CliCommand for CreateCommand {
             stdout.reset()?;
 
             let upload_response =
-                super::s3_upload::get_presigned_upload_url(&application_id, version)?;
+                super::s3_upload::get_presigned_upload_url(&application_id, version, &auth_mode)?;
 
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
             writeln!(stdout, " [OK]")?;
@@ -658,7 +658,7 @@ impl CliCommand for CreateCommand {
             stdout.flush()?;
             stdout.reset()?;
 
-            upload_release(&application_id, release_manifest)?;
+            upload_release(&application_id, release_manifest, &auth_mode)?;
 
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
             writeln!(stdout, " [OK]")?;
@@ -696,21 +696,28 @@ impl CliCommand for CreateCommand {
     }
 }
 
-fn upload_release(application_id: &str, manifest: ReleaseManifest) -> Result<()> {
-    let _token = get_token()?;
-
+fn upload_release(
+    application_id: &str,
+    manifest: ReleaseManifest,
+    auth_mode: &AuthMode,
+) -> Result<()> {
     let request_body = CreateReleaseRequest {
         application_id: application_id.to_string(),
         manifest,
         released_by: None, // TODO: Get from token
     };
 
-    let url = format!("{}/releases", get_platform_management_api_url());
+    let url = if auth_mode.is_hmac() {
+        format!("{}/releases/internal", get_platform_management_api_url())
+    } else {
+        format!("{}/releases", get_platform_management_api_url())
+    };
 
     use crate::core::http_client;
 
-    let response = http_client::post(&url, serde_json::to_value(&request_body)?)
-        .with_context(|| "Failed to create release")?;
+    let response =
+        http_client::post_with_auth(auth_mode, &url, serde_json::to_value(&request_body)?)
+            .with_context(|| "Failed to create release")?;
 
     let status = response.status();
     let response_body = response.text().unwrap_or_else(|_| "{}".to_string());
