@@ -30,15 +30,14 @@ use crate::{
             runtime_deps::{find_all_runtime_deps, get_unique_resource_types},
             service_dependencies::find_all_service_dependencies,
         },
-        base_path::{RequiredLocation, find_app_root_path},
         command::command,
         docker::{DockerCompose, find_docker_compose_path},
         env::{find_workspace_root, get_modules_path},
         env_scope::determine_env_var_scopes,
+        hmac::AuthMode,
         manifest::{ProjectType, application::ApplicationManifestData},
         openapi_export::export_all_services,
         rendered_template::RenderedTemplatesCache,
-        token::get_token,
     },
 };
 
@@ -106,6 +105,11 @@ impl CliCommand for CreateCommand {
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
+        // Upfront validation
+        let auth_mode = crate::core::validate::resolve_auth()?;
+        let (app_root, manifest) = crate::core::validate::require_manifest(matches)?;
+        let application_id = crate::core::validate::require_integration(&manifest)?;
+
         // Get version
         let version = matches
             .get_one::<String>("release_version")
@@ -115,16 +119,8 @@ impl CliCommand for CreateCommand {
         let local_mode = matches.get_flag("local");
         let skip_sync = matches.get_flag("skip-sync");
 
-        // Find application root
-        let (app_root, _) = find_app_root_path(matches, RequiredLocation::Application)?;
         let manifest_path = app_root.join(".forklaunch").join("manifest.toml");
-
-        // Read manifest
-        let manifest_content = read_to_string(&manifest_path)
-            .with_context(|| format!("Failed to read manifest at {:?}", manifest_path))?;
-
-        let mut manifest: ApplicationManifestData =
-            toml::from_str(&manifest_content).with_context(|| "Failed to parse manifest.toml")?;
+        let mut manifest = manifest;
 
         // Step 0: Sync projects with manifest (unless skipped)
         if !skip_sync {
@@ -181,17 +177,6 @@ impl CliCommand for CreateCommand {
             stdout.reset()?;
             writeln!(stdout)?;
         }
-
-        // Check if integrated with platform
-        let application_id = manifest
-            .platform_application_id
-            .as_ref()
-            .ok_or_else(|| {
-                anyhow::anyhow!(
-                    "Application not integrated with platform.\nRun: forklaunch integrate --app <app-id>"
-                )
-            })?
-            .clone();
 
         // Skip git repository check if using local mode
         if !local_mode && manifest.git_repository.is_none() {
@@ -400,6 +385,50 @@ impl CliCommand for CreateCommand {
             }
         }
 
+        // Fallback: infer service/worker URL component from env var name
+        // For _URL vars not already in env_var_components, check if the name
+        // (minus _URL, converted to kebab-case) matches a project Service or Worker
+        {
+            let project_types: HashMap<String, ProjectType> = manifest
+                .projects
+                .iter()
+                .map(|p| (p.name.clone(), p.r#type.clone()))
+                .collect();
+
+            for scoped_var in &scoped_env_vars {
+                if env_var_components.contains_key(&scoped_var.name) {
+                    continue;
+                }
+
+                let upper = scoped_var.name.to_ascii_uppercase();
+                if !upper.ends_with("_URL") {
+                    continue;
+                }
+
+                // BILLING_URL -> billing, PLATFORM_MANAGEMENT_URL -> platform-management
+                let stripped = upper.trim_end_matches("_URL");
+                let kebab = stripped.to_ascii_lowercase().replace('_', "-");
+
+                if let Some(project_type) = project_types.get(&kebab) {
+                    let component_type = match project_type {
+                        ProjectType::Service => EnvironmentVariableComponentType::Service,
+                        ProjectType::Worker => EnvironmentVariableComponentType::Worker,
+                        _ => continue,
+                    };
+                    env_var_components.insert(
+                        scoped_var.name.clone(),
+                        (
+                            component_type,
+                            EnvironmentVariableComponentProperty::Url,
+                            Some(kebab),
+                            None,
+                            None,
+                        ),
+                    );
+                }
+            }
+        }
+
         // Only keep application-level variables if they match the allowed criteria
         scoped_env_vars.retain(|v| {
             if v.scope != crate::core::env_scope::EnvironmentVariableScope::Application {
@@ -562,7 +591,7 @@ impl CliCommand for CreateCommand {
             stdout.reset()?;
 
             let upload_response =
-                super::s3_upload::get_presigned_upload_url(&application_id, version)?;
+                super::s3_upload::get_presigned_upload_url(&application_id, version, &auth_mode)?;
 
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
             writeln!(stdout, " [OK]")?;
@@ -629,7 +658,7 @@ impl CliCommand for CreateCommand {
             stdout.flush()?;
             stdout.reset()?;
 
-            upload_release(&application_id, release_manifest)?;
+            upload_release(&application_id, release_manifest, &auth_mode)?;
 
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
             writeln!(stdout, " [OK]")?;
@@ -667,21 +696,28 @@ impl CliCommand for CreateCommand {
     }
 }
 
-fn upload_release(application_id: &str, manifest: ReleaseManifest) -> Result<()> {
-    let _token = get_token()?;
-
+fn upload_release(
+    application_id: &str,
+    manifest: ReleaseManifest,
+    auth_mode: &AuthMode,
+) -> Result<()> {
     let request_body = CreateReleaseRequest {
         application_id: application_id.to_string(),
         manifest,
         released_by: None, // TODO: Get from token
     };
 
-    let url = format!("{}/releases", get_platform_management_api_url());
+    let url = if auth_mode.is_hmac() {
+        format!("{}/releases/internal", get_platform_management_api_url())
+    } else {
+        format!("{}/releases", get_platform_management_api_url())
+    };
 
     use crate::core::http_client;
 
-    let response = http_client::post(&url, serde_json::to_value(&request_body)?)
-        .with_context(|| "Failed to create release")?;
+    let response =
+        http_client::post_with_auth(auth_mode, &url, serde_json::to_value(&request_body)?)
+            .with_context(|| "Failed to create release")?;
 
     let status = response.status();
     let response_body = response.text().unwrap_or_else(|_| "{}".to_string());
@@ -1389,7 +1425,6 @@ fn should_passthrough(key: &str, value: &str) -> bool {
 const CLI_GENERATED_KEY_VARS: &[&str] = &[
     "HMAC_SECRET_KEY",
     "PASSWORD_ENCRYPTION_SECRET",
-    "INTERNAL_HMAC_SECRET",
 ];
 
 fn is_cli_generated_key_var(key_upper: &str) -> bool {

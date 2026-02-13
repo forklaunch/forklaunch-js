@@ -798,6 +798,13 @@ export class {pascal_case_name}EventRecord extends {mongo_prefix}SqlBaseEntity {
     );
 
     // 5. Update package.json scripts to add worker scripts
+    use crate::core::package_json::package_json_constants::{
+        project_start_server_script, project_start_worker_script, WORKER_BULLMQ_VERSION,
+        WORKER_DATABASE_VERSION, WORKER_INTERFACES_VERSION, WORKER_KAFKA_VERSION,
+        WORKER_REDIS_VERSION,
+    };
+
+    let database = manifest_data.database.parse::<Database>().ok();
     let scripts = project_package_json.scripts.as_mut().unwrap();
     scripts.dev_worker = Some(match runtime {
         crate::constants::Runtime::Node => {
@@ -807,16 +814,10 @@ export class {pascal_case_name}EventRecord extends {mongo_prefix}SqlBaseEntity {
             "bun --watch ./worker.ts | pino-pretty".to_string()
         }
     });
-    scripts.start_worker = Some(match runtime {
-        crate::constants::Runtime::Node => "node ./dist/worker.js".to_string(),
-        crate::constants::Runtime::Bun => "bun run ./dist/worker.js".to_string(),
-    });
+    scripts.start_server = Some(project_start_server_script(runtime, database));
+    scripts.start_worker = Some(project_start_worker_script(runtime, database));
 
     // 6. Add worker implementation dependency
-    use crate::core::package_json::package_json_constants::{
-        WORKER_BULLMQ_VERSION, WORKER_DATABASE_VERSION, WORKER_INTERFACES_VERSION,
-        WORKER_KAFKA_VERSION, WORKER_REDIS_VERSION,
-    };
     let deps = project_package_json.dependencies.as_mut().unwrap();
     deps.forklaunch_interfaces_worker = Some(WORKER_INTERFACES_VERSION.to_string());
     match worker_type {

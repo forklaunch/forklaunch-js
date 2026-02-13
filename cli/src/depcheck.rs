@@ -12,12 +12,7 @@ use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 use crate::{
     CliCommand,
-    constants::{ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST},
-    core::{
-        base_path::{RequiredLocation, find_app_root_path},
-        command::command,
-        manifest::application::ApplicationManifestData,
-    },
+    core::command::command,
 };
 
 struct ProjectDependencyVersion {
@@ -52,13 +47,8 @@ impl CliCommand for DepcheckCommand {
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let (app_root_path, _) = find_app_root_path(matches, RequiredLocation::Application)?;
-        let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
-
-        let manifest_data: ApplicationManifestData = toml::from_str(
-            &read_to_string(&manifest_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
-        )
-        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+        // Upfront validation
+        let (app_root_path, manifest_data) = crate::core::validate::require_manifest(matches)?;
 
         manifest_data.project_peer_topology.iter().try_for_each(
             |(group_name, group_projects)| -> Result<()> {

@@ -1,4 +1,4 @@
-use std::{fs::read_to_string, io::Write};
+use std::io::Write;
 
 use anyhow::{Context, Result, bail};
 use base64::{Engine as _, engine::general_purpose};
@@ -10,12 +10,8 @@ use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 use crate::{
     CliCommand,
-    constants::{ERROR_FAILED_TO_SEND_REQUEST, PLATFORM_UI_URL, get_platform_management_api_url},
-    core::{
-        base_path::{RequiredLocation, find_app_root_path},
-        command::command,
-        manifest::application::ApplicationManifestData,
-    },
+    constants::{ERROR_FAILED_TO_SEND_REQUEST, get_platform_management_api_url, get_platform_ui_url},
+    core::command::command,
 };
 
 #[derive(Debug, Serialize)]
@@ -196,6 +192,11 @@ impl CliCommand for CreateCommand {
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
+        // Upfront validation
+        let auth_mode = crate::core::validate::resolve_auth()?;
+        let (_app_root, manifest) = crate::core::validate::require_manifest(matches)?;
+        let application_id = crate::core::validate::require_integration(&manifest)?;
+
         let release_version = matches
             .get_one::<String>("release")
             .ok_or_else(|| anyhow::anyhow!("Release version is required"))?;
@@ -210,25 +211,6 @@ impl CliCommand for CreateCommand {
             .ok_or_else(|| anyhow::anyhow!("Region is required"))?;
 
         let wait = !matches.get_flag("no-wait");
-
-        let (app_root, _) = find_app_root_path(matches, RequiredLocation::Application)?;
-        let manifest_path = app_root.join(".forklaunch").join("manifest.toml");
-
-        let manifest_content = read_to_string(&manifest_path)
-            .with_context(|| format!("Failed to read manifest at {:?}", manifest_path))?;
-
-        let manifest: ApplicationManifestData =
-            toml::from_str(&manifest_content).with_context(|| "Failed to parse manifest.toml")?;
-
-        let application_id = manifest
-            .platform_application_id
-            .as_ref()
-            .ok_or_else(|| {
-                anyhow::anyhow!(
-                    "Application not integrated with platform.\nRun: forklaunch integrate --app <app-id>"
-                )
-            })?
-            .clone();
 
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)).set_bold(true))?;
         writeln!(
@@ -252,7 +234,11 @@ impl CliCommand for CreateCommand {
             ),
         };
 
-        let url = format!("{}/deployments", get_platform_management_api_url());
+        let url = if auth_mode.is_hmac() {
+            format!("{}/deployments/internal", get_platform_management_api_url())
+        } else {
+            format!("{}/deployments", get_platform_management_api_url())
+        };
 
         use crate::core::http_client;
 
@@ -265,8 +251,9 @@ impl CliCommand for CreateCommand {
             stdout.flush()?;
             stdout.reset()?;
 
-            let response = http_client::post(&url, serde_json::to_value(&request_body)?)
-                .with_context(|| ERROR_FAILED_TO_SEND_REQUEST)?;
+            let response =
+                http_client::post_with_auth(&auth_mode, &url, serde_json::to_value(&request_body)?)
+                    .with_context(|| ERROR_FAILED_TO_SEND_REQUEST)?;
 
             let status = response.status();
 
@@ -286,7 +273,7 @@ impl CliCommand for CreateCommand {
                 if wait {
                     writeln!(stdout)?;
                     crate::deploy::utils::stream_deployment_status(
-                        "", // Token not needed - http_client handles auth
+                        &auth_mode,
                         &deployment.id,
                         &mut stdout,
                     )?;
@@ -298,7 +285,7 @@ impl CliCommand for CreateCommand {
                     writeln!(
                         stdout,
                         "  {}/apps/{}/deployments/{}",
-                        PLATFORM_UI_URL, application_id, deployment.id
+                        get_platform_ui_url(), application_id, deployment.id
                     )?;
                 }
                 break;
@@ -319,6 +306,41 @@ impl CliCommand for CreateCommand {
                         bail!(
                             "Deployment failed after {} retries. Please check your environment variable configuration and try again.",
                             MAX_RETRIES
+                        );
+                    }
+
+                    // In HMAC mode (CI/CD), bail immediately - no interactive prompts
+                    if auth_mode.is_hmac() {
+                        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
+                        writeln!(stdout, " [ERROR]")?;
+                        stdout.reset()?;
+
+                        writeln!(stdout)?;
+                        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
+                        writeln!(
+                            stdout,
+                            "[ERROR] Deployment blocked: {}",
+                            blocked_error.message
+                        )?;
+                        stdout.reset()?;
+
+                        for detail in &blocked_error.details {
+                            writeln!(
+                                stdout,
+                                "  {} '{}': missing keys: {}",
+                                detail.component_type,
+                                detail.name,
+                                detail
+                                    .missing_keys
+                                    .iter()
+                                    .map(|k| k.name.as_str())
+                                    .collect::<Vec<_>>()
+                                    .join(", ")
+                            )?;
+                        }
+
+                        bail!(
+                            "Deployment blocked due to missing environment variables. Set them via the platform UI or API before retrying."
                         );
                     }
 
@@ -470,9 +492,12 @@ impl CliCommand for CreateCommand {
                             stdout.flush()?;
                             stdout.reset()?;
 
-                            let update_response =
-                                http_client::put(&update_url, serde_json::to_value(&update_body)?)
-                                    .with_context(|| "Failed to save environment variables")?;
+                            let update_response = http_client::put_with_auth(
+                                &auth_mode,
+                                &update_url,
+                                serde_json::to_value(&update_body)?,
+                            )
+                            .with_context(|| "Failed to save environment variables")?;
 
                             if !update_response.status().is_success() {
                                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;

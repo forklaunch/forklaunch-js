@@ -1,6 +1,6 @@
 import { generateHmacAuthHeaders } from '@forklaunch/core/http';
 import { universalSdk } from '@forklaunch/universal-sdk';
-import type { AuthCacheService } from './cache';
+import type { AuthCacheService } from '@forklaunch/blueprint-core';
 import type { IamSdkClient } from './sdk';
 
 export { generateHmacAuthHeaders } from '@forklaunch/core/http';

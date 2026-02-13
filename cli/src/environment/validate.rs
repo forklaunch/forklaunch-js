@@ -8,10 +8,8 @@ use crate::{
     CliCommand,
     core::{
         ast::infrastructure::env::{EnvVarUsage, find_all_env_vars},
-        base_path::{RequiredLocation, find_app_root_path},
         env::{find_workspace_root, get_modules_path, is_env_var_defined},
         env_scope::{EnvironmentVariableScope, ScopedEnvVar, determine_env_var_scopes},
-        manifest::application::ApplicationManifestData,
         rendered_template::RenderedTemplatesCache,
     },
 };
@@ -35,12 +33,14 @@ impl CliCommand for ValidateCommand {
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
+        // Upfront validation
+        let (app_root, manifest) = crate::core::validate::require_manifest(matches)?;
+
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
         writeln!(stdout, "Validating environment variables...")?;
         stdout.reset()?;
 
-        let current_dir = std::env::current_dir()?;
-        let workspace_root = find_workspace_root(&current_dir)?;
+        let workspace_root = find_workspace_root(&app_root)?;
         let modules_path = get_modules_path(&workspace_root)?;
 
         writeln!(stdout, "Workspace: {}", workspace_root.display())?;
@@ -60,11 +60,6 @@ impl CliCommand for ValidateCommand {
         for project_name in project_env_vars.keys() {
             writeln!(stdout, "  - {}", project_name)?;
         }
-
-        let (app_root, _) = find_app_root_path(matches, RequiredLocation::Application)?;
-        let manifest_path = app_root.join(".forklaunch").join("manifest.toml");
-        let manifest_content = std::fs::read_to_string(&manifest_path)?;
-        let manifest: ApplicationManifestData = toml::from_str(&manifest_content)?;
 
         let scoped_env_vars = determine_env_var_scopes(&project_env_vars, &manifest)?;
 

@@ -13,16 +13,6 @@
   "license": "MIT",
   "author": "Forklift Technologies, Inc.",
   "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./sdk": {
-      "types": "./dist/sdk.d.ts",
-      "default": "./dist/sdk.js"
-    }
-  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {

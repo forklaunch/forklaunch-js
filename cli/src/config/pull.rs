@@ -41,6 +41,9 @@ impl CliCommand for PullCommand {
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
+        // Upfront validation
+        let _token = crate::core::validate::require_auth()?;
+
         use crate::core::http_client;
 
         let id = unwrap_id(matches)?;

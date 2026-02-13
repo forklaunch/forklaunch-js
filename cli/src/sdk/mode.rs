@@ -4,16 +4,14 @@ use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use serde_json::{from_str as json_from_str, to_string_pretty};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
-use toml::from_str;
 
 use crate::{
     CliCommand,
     constants::{
-        ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_PARSE_PACKAGE_JSON,
-        ERROR_FAILED_TO_READ_MANIFEST, ERROR_FAILED_TO_READ_PACKAGE_JSON, SdkModeType,
+        ERROR_FAILED_TO_PARSE_PACKAGE_JSON,
+        ERROR_FAILED_TO_READ_PACKAGE_JSON, SdkModeType,
     },
     core::{
-        base_path::{RequiredLocation, find_app_root_path},
         command::command,
         manifest::application::ApplicationManifestData,
         package_json::project_package_json::ProjectPackageJson,
@@ -167,13 +165,8 @@ impl CliCommand for ModeCommand {
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let (app_root_path, _) = find_app_root_path(matches, RequiredLocation::Application)?;
-        let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
-
-        let existing_manifest_data = from_str::<ApplicationManifestData>(
-            &read_to_string(&manifest_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
-        )
-        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+        // Upfront validation
+        let (app_root_path, existing_manifest_data) = crate::core::validate::require_manifest(matches)?;
 
         let mode_type = matches.get_one::<String>("type");
         let dryrun = matches.get_flag("dryrun");

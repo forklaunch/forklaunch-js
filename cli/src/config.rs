@@ -26,6 +26,7 @@ impl ConfigCommand {
 impl CliCommand for ConfigCommand {
     fn command(&self) -> Command {
         command("config", "Get or set application configuration")
+            .subcommand_required(true)
             .subcommand(self.pull.command())
             .subcommand(self.push.command())
     }

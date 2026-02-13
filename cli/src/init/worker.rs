@@ -331,6 +331,7 @@ pub(crate) fn generate_worker_package_json(
         main: main_override,
         types: types_override.unwrap_or(None),
         types_versions: None,
+        exports: None,
         scripts: Some(if let Some(scripts) = scripts_override {
             scripts
         } else {
@@ -903,6 +904,11 @@ impl CliCommand for WorkerCommand {
             },
             is_type_needed: true,
             with_mappers: matches.get_flag("mappers"),
+
+            // These will be properly generated when initialized
+            generated_password_encryption_secret: String::new(),
+            generated_better_auth_secret: String::new(),
+            generated_hmac_secret: String::new(),
         };
 
         let dryrun = matches.get_flag("dryrun");
