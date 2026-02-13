@@ -1,4 +1,4 @@
-use std::{collections::HashMap, path::{Path, PathBuf}};
+use std::{collections::HashMap, path::Path};
 
 use anyhow::Result;
 use convert_case::{Case, Casing};
@@ -9,8 +9,8 @@ use crate::{
     constants::RELEASE_MANIFEST_SCHEMA_VERSION,
     core::{
         library_scanner::{
-            CodeNode, LibraryDefinition, parse_route_file, scan_project_libraries,
-            scan_route_topology,
+            CodeNode, ImportScanner, LibraryDefinition, parse_route_file,
+            scan_project_libraries,
         },
         manifest::{ProjectType, ResourceInventory, application::ApplicationManifestData},
         sync::detection::detect_routers_from_service,
@@ -242,8 +242,6 @@ pub(crate) struct ControllerDefinition {
     pub name: String,
     pub path: String,
     pub routes: Vec<RouteDefinition>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub topology: Option<CodeNode>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -335,6 +333,12 @@ pub(crate) fn generate_release_manifest(
 ) -> Result<ReleaseManifest> {
     let timestamp = chrono::Utc::now().to_rfc3339();
 
+    // Create a single ImportScanner for all topology scans — its result_cache
+    // persists across services/workers so shared imports are scanned only once.
+    let modules_root = app_root.join(&manifest.modules_path);
+    let package_json_path = app_root.join("package.json");
+    let mut import_scanner = ImportScanner::with_app_root(&modules_root, &package_json_path, &manifest.app_name, app_root);
+
     let mut services = Vec::new();
     for project in &manifest.projects {
         if project.r#type == ProjectType::Service {
@@ -363,14 +367,9 @@ pub(crate) fn generate_release_manifest(
 
             // Scan for controllers, routes, and their dependencies
             let service_path = app_root.join(&manifest.modules_path).join(&project.name);
-            let modules_root = app_root.join(&manifest.modules_path);
-            let package_json_path = app_root.join("package.json");
             let controllers = if service_path.join("api").join("routes").exists() {
                 if let Ok(routers) = detect_routers_from_service(&service_path) {
                     if !routers.is_empty() {
-                        // Cache topology scans per unique source file to avoid redundant work
-                        let mut topology_cache: HashMap<PathBuf, Option<CodeNode>> = HashMap::new();
-
                         Some(
                             routers
                                 .into_iter()
@@ -394,18 +393,7 @@ pub(crate) fn generate_release_manifest(
                                             let topology = handler_sources
                                                 .get(&parsed.handler)
                                                 .and_then(|source_path| {
-                                                    // Use cached topology or scan and cache
-                                                    topology_cache
-                                                        .entry(source_path.clone())
-                                                        .or_insert_with(|| {
-                                                            scan_route_topology(
-                                                                source_path,
-                                                                &modules_root,
-                                                                &package_json_path,
-                                                            )
-                                                            .ok()
-                                                        })
-                                                        .clone()
+                                                    import_scanner.scan(source_path).ok()
                                                 });
 
                                             RouteDefinition {
@@ -421,23 +409,11 @@ pub(crate) fn generate_release_manifest(
                                         })
                                         .collect();
 
-                                    // Controller-level topology: scan the main controller file
-                                    let controller_topology = scan_route_topology(
-                                        &service_path.join("api").join("controllers").join(format!(
-                                            "{}.controller.ts",
-                                            router_name.to_case(Case::Camel)
-                                        )),
-                                        &modules_root,
-                                        &package_json_path,
-                                    )
-                                    .ok();
-
                                     ControllerDefinition {
                                         id: router_name.clone(),
                                         name: router_name.clone(),
                                         path: format!("/{}", router_name),
                                         routes,
-                                        topology: controller_topology,
                                     }
                                 })
                                 .collect(),
@@ -512,13 +488,9 @@ pub(crate) fn generate_release_manifest(
             let open_api_spec = openapi_specs.get(&project.name).cloned();
 
             let worker_path = app_root.join(&manifest.modules_path).join(&project.name);
-            let w_modules_root = app_root.join(&manifest.modules_path);
-            let w_package_json_path = app_root.join("package.json");
             let controllers = if worker_path.join("api").join("routes").exists() {
                 if let Ok(routers) = detect_routers_from_service(&worker_path) {
                     if !routers.is_empty() {
-                        let mut topology_cache: HashMap<PathBuf, Option<CodeNode>> = HashMap::new();
-
                         Some(
                             routers
                                 .into_iter()
@@ -530,7 +502,7 @@ pub(crate) fn generate_release_manifest(
 
                                     let (parsed_routes, handler_sources) = parse_route_file(
                                         &route_file,
-                                        &w_modules_root,
+                                        &modules_root,
                                     ).unwrap_or_default();
 
                                     let routes: Vec<RouteDefinition> = parsed_routes
@@ -539,17 +511,7 @@ pub(crate) fn generate_release_manifest(
                                             let topology = handler_sources
                                                 .get(&parsed.handler)
                                                 .and_then(|source_path| {
-                                                    topology_cache
-                                                        .entry(source_path.clone())
-                                                        .or_insert_with(|| {
-                                                            scan_route_topology(
-                                                                source_path,
-                                                                &w_modules_root,
-                                                                &w_package_json_path,
-                                                            )
-                                                            .ok()
-                                                        })
-                                                        .clone()
+                                                    import_scanner.scan(source_path).ok()
                                                 });
 
                                             RouteDefinition {
@@ -565,22 +527,11 @@ pub(crate) fn generate_release_manifest(
                                         })
                                         .collect();
 
-                                    let controller_topology = scan_route_topology(
-                                        &worker_path.join("api").join("controllers").join(format!(
-                                            "{}.controller.ts",
-                                            router_name.to_case(Case::Camel)
-                                        )),
-                                        &w_modules_root,
-                                        &w_package_json_path,
-                                    )
-                                    .ok();
-
                                     ControllerDefinition {
                                         id: router_name.clone(),
                                         name: router_name.clone(),
                                         path: format!("/{}", router_name),
                                         routes,
-                                        topology: controller_topology,
                                     }
                                 })
                                 .collect(),
@@ -845,44 +796,124 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_controller_definition_has_topology_field() {
-        // This test verifies that ControllerDefinition has the topology field
-        // and that it can be serialized with CodeNode
-
-        let controller = ControllerDefinition {
-            id: "test".to_string(),
-            name: "test".to_string(),
-            path: "/test".to_string(),
-            routes: vec![],
+    fn test_route_definition_has_topology_with_versions() {
+        // Verify that RouteDefinition carries per-route topology with npm version info
+        let route = RouteDefinition {
+            id: "get-users".to_string(),
+            method: "GET".to_string(),
+            path: "/users".to_string(),
+            handler: "getUsers".to_string(),
+            middleware: None,
+            schema: None,
+            auth: None,
             topology: Some(CodeNode {
-                name: "test-controller".to_string(),
+                name: "user.controller".to_string(),
                 node_type: "local".to_string(),
                 version: None,
                 children: Some(vec![
                     CodeNode {
                         name: "@forklaunch/core".to_string(),
                         node_type: "npm".to_string(),
-                        version: Some("1.0.0".to_string()),
+                        version: Some("^0.6.5".to_string()),
                         children: None,
                         path: None,
-                    }
+                        target_service: None,
+                    },
+                    CodeNode {
+                        name: "stripe".to_string(),
+                        node_type: "npm".to_string(),
+                        version: Some("^17.7.0".to_string()),
+                        children: None,
+                        path: None,
+                        target_service: None,
+                    },
+                    CodeNode {
+                        name: "user.service".to_string(),
+                        node_type: "local".to_string(),
+                        version: None,
+                        children: Some(vec![
+                            CodeNode {
+                                name: "@mikro-orm/core".to_string(),
+                                node_type: "npm".to_string(),
+                                version: Some("^6.5.0".to_string()),
+                                children: None,
+                                path: None,
+                                target_service: None,
+                            },
+                        ]),
+                        path: Some("domain/services/user.service.ts".to_string()),
+                        target_service: None,
+                    },
                 ]),
-                path: Some("api/controllers/test.controller.ts".to_string()),
+                path: Some("api/controllers/user.controller.ts".to_string()),
+                target_service: None,
             }),
         };
 
-        // Verify it serializes correctly
-        let json = serde_json::to_string_pretty(&controller);
-        assert!(json.is_ok(), "Controller with topology should serialize");
+        let json = serde_json::to_string_pretty(&route);
+        assert!(json.is_ok(), "Route with topology should serialize");
 
         let json_str = json.unwrap();
-        println!("=== CONTROLLER WITH TOPOLOGY JSON ===");
-        println!("{}", json_str);
 
-        // Verify topology field is in JSON
+        // Verify route-level topology is present
         assert!(json_str.contains("\"topology\""), "JSON should contain topology field");
-        assert!(json_str.contains("\"@forklaunch/core\""), "JSON should contain npm dependency");
-        assert!(json_str.contains("\"type\": \"npm\""), "JSON should have npm type");
         assert!(json_str.contains("\"children\""), "JSON should have children array");
+
+        // Verify npm dependencies have versions
+        assert!(json_str.contains("\"@forklaunch/core\""), "Should contain npm dependency");
+        assert!(json_str.contains("\"^0.6.5\""), "Should contain version for @forklaunch/core");
+        assert!(json_str.contains("\"stripe\""), "Should contain stripe dependency");
+        assert!(json_str.contains("\"^17.7.0\""), "Should contain version for stripe");
+
+        // Verify local children also have npm deps with versions
+        assert!(json_str.contains("\"@mikro-orm/core\""), "Should contain nested npm dep");
+        assert!(json_str.contains("\"^6.5.0\""), "Should contain version for nested dep");
+
+        // Verify local nodes have paths
+        assert!(json_str.contains("\"domain/services/user.service.ts\""), "Should have local path");
+    }
+
+    #[test]
+    fn test_controller_definition_no_topology() {
+        // Verify that ControllerDefinition does NOT have a topology field
+        let controller = ControllerDefinition {
+            id: "test".to_string(),
+            name: "test".to_string(),
+            path: "/test".to_string(),
+            routes: vec![RouteDefinition {
+                id: "get-test".to_string(),
+                method: "GET".to_string(),
+                path: "/".to_string(),
+                handler: "getTest".to_string(),
+                middleware: None,
+                schema: None,
+                auth: None,
+                topology: Some(CodeNode {
+                    name: "test.controller".to_string(),
+                    node_type: "local".to_string(),
+                    version: None,
+                    children: None,
+                    path: Some("api/controllers/test.controller.ts".to_string()),
+                    target_service: None,
+                }),
+            }],
+        };
+
+        let json = serde_json::to_string_pretty(&controller);
+        assert!(json.is_ok(), "Controller should serialize");
+
+        let json_str = json.unwrap();
+
+        // Controller itself should NOT have a top-level topology field
+        // Parse as JSON and check the top-level keys
+        let parsed: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+        let obj = parsed.as_object().unwrap();
+        assert!(!obj.contains_key("topology"), "Controller should not have top-level topology");
+        assert!(obj.contains_key("routes"), "Controller should have routes");
+
+        // But routes inside should still have topology
+        let routes = obj.get("routes").unwrap().as_array().unwrap();
+        let first_route = routes[0].as_object().unwrap();
+        assert!(first_route.contains_key("topology"), "Route should have topology");
     }
 }

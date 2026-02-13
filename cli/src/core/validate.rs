@@ -4,12 +4,22 @@ use anyhow::{Context, Result, anyhow};
 use clap::ArgMatches;
 
 use super::base_path::{RequiredLocation, find_app_root_path};
+use super::hmac::AuthMode;
 use super::manifest::application::ApplicationManifestData;
 use super::token::get_token;
 
 /// Validates user is authenticated. Returns the auth token.
 pub(crate) fn require_auth() -> Result<String> {
     get_token()
+}
+
+/// Resolves auth mode: HMAC if env var is set, else JWT (validating token exists).
+pub(crate) fn resolve_auth() -> Result<AuthMode> {
+    let mode = AuthMode::detect();
+    if matches!(mode, AuthMode::Jwt) {
+        get_token()?; // validate JWT exists
+    }
+    Ok(mode)
 }
 
 /// Validates manifest exists and parses it. Returns (app_root, manifest).

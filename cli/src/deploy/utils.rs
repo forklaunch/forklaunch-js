@@ -4,6 +4,8 @@ use anyhow::{Context, Result, bail};
 use serde::Deserialize;
 use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
 
+use crate::core::hmac::AuthMode;
+
 #[derive(Debug, Deserialize)]
 pub(crate) struct DeploymentStatus {
     #[allow(dead_code)]
@@ -24,22 +26,30 @@ pub(crate) struct DeploymentEndpoints {
 }
 
 pub(crate) fn stream_deployment_status(
-    _token: &str, // Kept for API compatibility but unused - http_client handles auth
+    auth_mode: &AuthMode,
     deployment_id: &str,
     stdout: &mut StandardStream,
 ) -> Result<()> {
     use crate::core::http_client;
 
-    let url = format!(
-        "{}/deployments/{}",
-        crate::constants::get_platform_management_api_url(),
-        deployment_id
-    );
+    let url = if auth_mode.is_hmac() {
+        format!(
+            "{}/internal/deployments/{}",
+            crate::constants::get_platform_management_api_url(),
+            deployment_id
+        )
+    } else {
+        format!(
+            "{}/deployments/{}",
+            crate::constants::get_platform_management_api_url(),
+            deployment_id
+        )
+    };
     let mut last_phase: Option<String> = None;
 
     loop {
         // Polling deployment status
-        let response = http_client::get(&url)?;
+        let response = http_client::get_with_auth(auth_mode, &url)?;
 
         if !response.status().is_success() {
             let response_text = response

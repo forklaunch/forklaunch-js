@@ -7,7 +7,7 @@ use reqwest::{blocking::Client, header};
 use serde::Deserialize;
 use tar::Builder;
 
-use crate::constants::get_platform_management_api_url;
+use crate::{constants::get_platform_management_api_url, core::hmac::AuthMode};
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct UploadUrlResponse {
@@ -73,6 +73,7 @@ pub(crate) fn create_app_tarball(app_root: &Path, output_path: &Path) -> Result<
 pub(crate) fn get_presigned_upload_url(
     application_id: &str,
     version: &str,
+    auth_mode: &AuthMode,
 ) -> Result<UploadUrlResponse> {
     use crate::core::http_client;
 
@@ -83,7 +84,7 @@ pub(crate) fn get_presigned_upload_url(
         "version": version
     });
 
-    let response = http_client::post(&url, request_body)
+    let response = http_client::post_with_auth(auth_mode, &url, request_body)
         .with_context(|| "Failed to request upload URL from platform")?;
 
     let status = response.status();

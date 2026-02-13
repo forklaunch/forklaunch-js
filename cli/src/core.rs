@@ -11,6 +11,7 @@ pub(crate) mod env_scope;
 pub(crate) mod env_template;
 pub(crate) mod format;
 pub(crate) mod gitignore;
+pub(crate) mod hmac;
 pub(crate) mod http_client;
 pub(crate) mod husky;
 pub(crate) mod iam;

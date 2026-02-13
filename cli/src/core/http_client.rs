@@ -8,6 +8,7 @@ use reqwest::{
 use serde_json::Value;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
+use super::hmac::{AuthMode, generate_hmac_auth_header};
 use super::token::{get_token, get_token_path};
 
 /// Makes an authenticated HTTP request with automatic token refresh and retry logic
@@ -134,4 +135,136 @@ pub fn delete(url: &str) -> Result<Response> {
 #[allow(dead_code)]
 pub fn patch(url: &str, body: Value) -> Result<Response> {
     make_authenticated_request(Method::PATCH, url, Some(body))
+}
+
+/// Extract the path component from a full URL (e.g. "https://host:port/path?q" -> "/path?q")
+/// Extract the router-relative path from a URL for HMAC signing.
+///
+/// ForkLaunch routers are mounted at a base path (e.g., `/releases`), and
+/// Express's `req.path` returns the path relative to the router mount point.
+/// So for URL `http://host:8004/releases/internal`, the HMAC sign path is
+/// `/internal` (stripping the first path segment `/releases`).
+fn extract_url_path(url: &str) -> Result<String> {
+    // Find the start of the path after scheme://host(:port)
+    let after_scheme = url
+        .find("://")
+        .map(|i| i + 3)
+        .ok_or_else(|| anyhow::anyhow!("Invalid URL: no scheme found in '{}'", url))?;
+    let path_start = url[after_scheme..]
+        .find('/')
+        .map(|i| after_scheme + i)
+        .unwrap_or(url.len());
+    if path_start >= url.len() {
+        return Ok("/".to_string());
+    }
+    let full_path = &url[path_start..];
+    // Strip the first path segment (router mount point) for HMAC signing.
+    // e.g., "/releases/internal" -> "/internal", "/deployments/abc" -> "/abc"
+    if let Some(second_slash) = full_path[1..].find('/') {
+        Ok(full_path[1 + second_slash..].to_string())
+    } else {
+        // Path is just "/{segment}" with no sub-path → route path is "/"
+        Ok("/".to_string())
+    }
+}
+
+/// Makes an HMAC-authenticated HTTP request. No retry/re-login logic since HMAC secrets are static.
+fn make_hmac_request(
+    secret_key: &str,
+    method: Method,
+    url: &str,
+    body: Option<Value>,
+) -> Result<Response> {
+    let path = extract_url_path(url)?;
+    let auth_header = generate_hmac_auth_header(
+        secret_key,
+        method.as_str(),
+        &path,
+        body.as_ref(),
+    )?;
+
+    let client = Client::new();
+    let mut request = client
+        .request(method, url)
+        .header("Authorization", auth_header)
+        .header("Accept", "application/json");
+
+    if let Some(json_body) = body {
+        request = request.json(&json_body);
+    }
+
+    Ok(request.send()?)
+}
+
+/// POST with auth mode dispatch (JWT or HMAC)
+pub fn post_with_auth(auth_mode: &AuthMode, url: &str, body: Value) -> Result<Response> {
+    match auth_mode {
+        AuthMode::Jwt => post(url, body),
+        AuthMode::Hmac { secret_key } => {
+            make_hmac_request(secret_key, Method::POST, url, Some(body))
+        }
+    }
+}
+
+/// GET with auth mode dispatch (JWT or HMAC)
+pub fn get_with_auth(auth_mode: &AuthMode, url: &str) -> Result<Response> {
+    match auth_mode {
+        AuthMode::Jwt => get(url),
+        AuthMode::Hmac { secret_key } => make_hmac_request(secret_key, Method::GET, url, None),
+    }
+}
+
+/// PUT with auth mode dispatch (JWT or HMAC)
+pub fn put_with_auth(auth_mode: &AuthMode, url: &str, body: Value) -> Result<Response> {
+    match auth_mode {
+        AuthMode::Jwt => put(url, body),
+        AuthMode::Hmac { secret_key } => {
+            make_hmac_request(secret_key, Method::PUT, url, Some(body))
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_extract_url_path_basic() {
+        assert_eq!(
+            extract_url_path("https://api.example.com/releases").unwrap(),
+            "/releases"
+        );
+    }
+
+    #[test]
+    fn test_extract_url_path_with_port() {
+        assert_eq!(
+            extract_url_path("https://api.example.com:8080/releases/internal").unwrap(),
+            "/releases/internal"
+        );
+    }
+
+    #[test]
+    fn test_extract_url_path_with_query() {
+        assert_eq!(
+            extract_url_path("https://api.example.com/deployments/123?status=true").unwrap(),
+            "/deployments/123?status=true"
+        );
+    }
+
+    #[test]
+    fn test_extract_url_path_no_path() {
+        assert_eq!(
+            extract_url_path("https://api.example.com").unwrap(),
+            "/"
+        );
+    }
+
+    #[test]
+    fn test_extract_url_path_root() {
+        assert_eq!(
+            extract_url_path("https://api.example.com/").unwrap(),
+            "/"
+        );
+    }
 }

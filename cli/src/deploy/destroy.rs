@@ -73,7 +73,7 @@ impl CliCommand for DestroyCommand {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
         // Upfront validation
-        let token = crate::core::validate::require_auth()?;
+        let auth_mode = crate::core::validate::resolve_auth()?;
         let (_app_root, manifest) = crate::core::validate::require_manifest(matches)?;
         let application_id = crate::core::validate::require_integration(&manifest)?;
 
@@ -135,8 +135,9 @@ impl CliCommand for DestroyCommand {
 
         use crate::core::http_client;
 
-        let response = http_client::post(&url, serde_json::to_value(&request_body)?)
-            .with_context(|| ERROR_FAILED_TO_SEND_REQUEST)?;
+        let response =
+            http_client::post_with_auth(&auth_mode, &url, serde_json::to_value(&request_body)?)
+                .with_context(|| ERROR_FAILED_TO_SEND_REQUEST)?;
 
         let status = response.status();
 
@@ -153,7 +154,7 @@ impl CliCommand for DestroyCommand {
             if wait {
                 writeln!(stdout)?;
                 crate::deploy::utils::stream_deployment_status(
-                    &token,
+                    &auth_mode,
                     &deployment.id,
                     &mut stdout,
                 )?;
