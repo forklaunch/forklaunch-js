@@ -1,40 +1,96 @@
 ---
-title: Adding Projects
+title: Adding Services and Workers
 category: Guides
-description: Learn how to add projects to your ForkLaunch application.
+description: Learn how to add services and workers to your ForkLaunch application.
 ---
 
-## Overview
+# Overview
 
-The cornerstone of `ForkLaunch` is its modular project system. This approach:
-- Keeps code organized and maintainable
-- Reduces cognitive load
-- Provides flexibility for infrastructure decisions
+**Projects** are the building blocks of your ForkLaunch application. They represent different types of components that work together to form a complete system. Each project type serves a specific purpose and can be added to your application using the `forklaunch init` command.
 
-## Available Projects
+## Quickstart
 
-### Core Projects
-- **Modules**: Pre-built services/workers/libraries that help you bootstrap your application
-- **Services**: Host HTTP APIs and web applications
-- **Workers**: Run asynchronous tasks using event-driven architecture
-- **Libraries**: Share common code and business logic
+### Modules
+Preconfigured, production-ready services that provide common functionality:
 
-### Project Building Blocks
-- **Routers**: Add RCSIDES stack to existing services/workers
-  - Routes
-  - Controllers
-  - Services
-  - Interfaces
-  - Mappers
-  - Entities
-  - Seeders
+```bash
+# Interactive mode
+forklaunch init module
 
-### Coming Soon
-- **Agents**: Optimized for AI-driven workflows
+# Add billing module
+forklaunch init module billing --module billing-stripe --database postgresql
 
-## Feature Requests
+# Add IAM module
+forklaunch init module auth --module iam-base --database postgresql
+forklaunch init module auth --module iam-better-auth --database postgresql
+```
 
-Have an idea for a new project type? We welcome feature requests! Please submit them to our [GitHub Issues](https://github.com/forklaunch/forklaunch-js/issues).
+### Services
+Self-contained API services that handle specific business domains:
+
+```bash
+# Basic service
+forklaunch init service users --database postgresql
+
+# Service with Redis cache
+forklaunch init service products --database postgresql --infrastructure redis
+
+# Service with multiple infrastructure
+forklaunch init service files --database postgresql --infrastructure redis s3
+```
+
+### Workers
+Background processes for asynchronous job processing:
+
+```bash
+# Database worker
+forklaunch init worker email-processor --type database --database postgresql
+
+# Redis worker
+forklaunch init worker notification-worker --type redis
+
+# BullMQ worker
+forklaunch init worker scheduled-jobs --type bullmq
+
+# Kafka worker
+forklaunch init worker analytics-consumer --type kafka
+```
+
+### Libraries
+Shared code and utilities used across services and workers:
+
+```bash
+# Basic library
+forklaunch init library utils
+
+# Library with description
+forklaunch init library validation --description "Input validation utilities"
+```
+
+### Routers
+Add new routes and controllers to existing services:
+
+```bash
+# Basic router
+forklaunch init router products
+
+# Router with infrastructure
+forklaunch init router orders --path ./commerce-service --infrastructure redis
+```
+
+### Definitions
+
+| Concept | Definition | What It Does | Common Examples |
+|----------|-------------|---------------|------------------|
+| **Module** | A **preconfigured, production-ready service** that provides common functionality out of the box. | It serves as a plug-and-play solution for standard features (like authentication or billing), with best practices and integrations already built in — saving you from building these from scratch. | - A **billing module** with Stripe integration for payments and subscriptions.<br>- An **IAM module** for user authentication, authorization, and session management.<br>- An **email module** for transactional emails and notifications. |
+| **Service** | A **self-contained API component** that handles synchronous requests for a specific business domain. | It runs continuously as an HTTP server and responds to requests in real-time — from users, other services, or front-end apps. Often paired with a worker to offload heavy or async tasks. | - An **API service** that handles user logins and profiles.<br>- A **billing service** that manages payments.<br>- A **data ingestion service** that collects and processes data. |
+| **Worker** | A **background process** that handles asynchronous tasks for a specific business domain. | It processes jobs from a queue or schedule, performing work that doesn't need immediate responses — often handling heavier workloads, scheduled tasks, or work offloaded from a paired service. | - Sending emails after a signup.<br>- Generating daily reports.<br>- Processing large datasets.<br>- Cleaning up logs or cache files. |
+| **Library** | A **shared collection of code**, utilities, or models used across services and workers. | Provides reusable logic (like validation, database models, or helper functions) that multiple parts of the system can import. | - **Core library** with shared models and validation schemas.<br>- **Auth library** with JWT and session utilities.<br>- **Utils library** for formatting, logging, or constants. |
+| **Router** | A **set of routes and controllers** that extends an existing service with new endpoints. | It adds new API routes and their handling logic to a service without creating a separate service — allowing you to organize and grow your service's functionality modularly. | - A **products router** in an e-commerce service to manage product CRUD operations.<br>- An **orders router** to handle order processing and tracking.<br>- An **analytics router** to expose reporting endpoints. |
+
+**Note:** Services and workers share architecture; they are designed to work together as needed.
+
+
 
 ## Next Steps
 
