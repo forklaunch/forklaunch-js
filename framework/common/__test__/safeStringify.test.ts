@@ -4,11 +4,31 @@ import { safeStringify } from '../src/safeStringify';
 
 describe('safeStringify', () => {
   it('should handle primitive types', () => {
-    expect(safeStringify('test')).toBe('test');
+    expect(safeStringify('test')).toBe('"test"');
     expect(safeStringify(123)).toBe('123');
     expect(safeStringify(true)).toBe('true');
     expect(safeStringify(null)).toBe('null');
     expect(safeStringify(undefined)).toBe('undefined');
+  });
+
+  it('should properly JSON-encode strings to prevent type confusion', () => {
+    // Strings should be JSON-encoded with quotes
+    expect(safeStringify('hello')).toBe('"hello"');
+    expect(safeStringify('123')).toBe('"123"');
+    expect(safeStringify('')).toBe('""');
+    
+    // Type safety: string "123" should differ from number 123
+    expect(safeStringify('123')).not.toBe(safeStringify(123));
+    expect(safeStringify('123')).toBe('"123"');  // String with quotes
+    expect(safeStringify(123)).toBe('123');      // Number without quotes
+    
+    // Special characters should be escaped
+    expect(safeStringify('hello "world"')).toBe('"hello \\"world\\""');
+    expect(safeStringify('line1\nline2')).toBe('"line1\\nline2"');
+    
+    // Verify JSON semantics are preserved
+    expect(safeStringify('test')).toBe(JSON.stringify('test'));
+    expect(safeStringify('hello world')).toBe(JSON.stringify('hello world'));
   });
 
   it('should handle Error objects', () => {

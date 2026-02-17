@@ -25,10 +25,6 @@
  * ```
  */
 export function safeStringify(arg: unknown): string {
-  if (typeof arg === 'string') {
-    return arg;
-  }
-
   // Handle null/undefined
   if (arg == null) {
     return String(arg);
