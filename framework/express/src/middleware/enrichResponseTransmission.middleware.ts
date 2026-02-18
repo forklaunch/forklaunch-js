@@ -1,4 +1,3 @@
-import { safeStringify } from '@forklaunch/common';
 import {
   enrichExpressLikeSend,
   ForklaunchSendableData,
@@ -8,6 +7,26 @@ import { AnySchemaValidator } from '@forklaunch/validator';
 import { NextFunction } from 'express';
 import { ParsedQs } from 'qs';
 import { MiddlewareRequest, MiddlewareResponse } from '../types/express.types';
+
+/**
+ * Convert a value to a string for use in HTTP headers.
+ * Unlike safeStringify, this does NOT JSON-encode primitive strings.
+ * 
+ * @param value - The value to convert
+ * @returns A string representation suitable for HTTP headers
+ */
+function toHeaderValue(value: unknown): string {
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+  if (value == null) {
+    return String(value);
+  }
+  return JSON.stringify(value);
+}
 
 /**
  * Middleware to enrich the response transmission by intercepting and parsing responses before they are sent.
@@ -142,9 +161,9 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
   res.setHeader = function (name: string, value: unknown | unknown[]) {
     let stringifiedValue;
     if (Array.isArray(value)) {
-      stringifiedValue = value.map((v) => safeStringify(v)).join('\n');
+      stringifiedValue = value.map((v) => toHeaderValue(v)).join('\n');
     } else {
-      stringifiedValue = safeStringify(value);
+      stringifiedValue = toHeaderValue(value);
     }
     return originalSetHeader.call(this, name, stringifiedValue);
   };
