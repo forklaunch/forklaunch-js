@@ -1,4 +1,35 @@
 /**
+ * Converts a value to a plain string representation without JSON encoding.
+ * Used for form data, query parameters, and HTTP headers where primitives
+ * should be converted directly rather than JSON-serialized.
+ *
+ * @param value - The value to convert
+ * @returns A plain string representation
+ *
+ * @example
+ * ```typescript
+ * toPlainString('hello');        // 'hello' (not '"hello"')
+ * toPlainString(123);            // '123'
+ * toPlainString(true);           // 'true'
+ * toPlainString(null);           // 'null'
+ * toPlainString({ a: 1 });       // '{"a":1}' (objects are JSON-stringified)
+ * toPlainString([1, 2]);         // '[1,2]' (arrays are JSON-stringified)
+ * ```
+ */
+export function toPlainString(value: unknown): string {
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+  if (value == null) {
+    return String(value);
+  }
+  return JSON.stringify(value);
+}
+
+/**
  * Safely stringifies any JavaScript value, handling special cases like:
  * - Error objects
  * - BigInt

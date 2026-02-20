@@ -1,7 +1,8 @@
 import {
   openApiCompliantPath,
   safeParse,
-  safeStringify
+  safeStringify,
+  toPlainString
 } from '@forklaunch/common';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
@@ -17,26 +18,6 @@ import {
   ResponseType,
   SdkPathMap
 } from './types/sdk.types';
-
-/**
- * Convert a value to a string for use in form data or query parameters.
- * Unlike safeStringify, this does NOT JSON-encode primitive strings.
- * 
- * @param value - The value to convert
- * @returns A string representation suitable for form/query params
- */
-function toFormValue(value: unknown): string {
-  if (typeof value === 'string') {
-    return value;
-  }
-  if (typeof value === 'number' || typeof value === 'boolean') {
-    return String(value);
-  }
-  if (value == null) {
-    return String(value);
-  }
-  return JSON.stringify(value);
-}
 
 /**
  * A class representing the Forklaunch SDK.
@@ -222,11 +203,11 @@ export class UniversalSdk {
                   key,
                   item instanceof Blob || item instanceof File
                     ? item
-                    : toFormValue(item)
+                    : toPlainString(item)
                 );
               }
             } else {
-              formData.append(key, toFormValue(value));
+              formData.append(key, toPlainString(value));
             }
           }
         }
@@ -236,7 +217,7 @@ export class UniversalSdk {
         parsedBody = new URLSearchParams(
           Object.entries(body.urlEncodedForm).map(([key, value]) => [
             key,
-            toFormValue(value)
+            toPlainString(value)
           ])
         );
       } else {
@@ -246,7 +227,7 @@ export class UniversalSdk {
 
     if (query) {
       const queryString = new URLSearchParams(
-        Object.entries(query).map(([key, value]) => [key, toFormValue(value)])
+        Object.entries(query).map(([key, value]) => [key, toPlainString(value)])
       ).toString();
       url += queryString ? `?${queryString}` : '';
     }
