@@ -13,13 +13,13 @@ importers:
         version: 1.2.18
       '@forklaunch/core':
         specifier: ^1.5.2
-        version: 1.5.2(socks@2.8.7)
+        version: 1.5.2
       '@forklaunch/express':
         specifier: ^1.2.32
-        version: 1.2.32(jose@6.2.3)(socks@2.8.7)(zod@4.4.3)
+        version: 1.2.32(jose@6.2.3)(zod@4.4.3)
       '@forklaunch/hyper-express':
         specifier: ^1.2.32
-        version: 1.2.32(express@5.2.1)(socks@2.8.7)
+        version: 1.2.32(express@5.2.1)
       '@forklaunch/universal-sdk':
         specifier: ^1.2.18
         version: 1.2.18
@@ -98,19 +98,19 @@ importers:
         version: 1.2.18
       '@forklaunch/core':
         specifier: ^1.5.2
-        version: 1.5.2(socks@2.8.7)
+        version: 1.5.2
       '@forklaunch/express':
         specifier: ^1.2.32
-        version: 1.2.32(jose@6.2.3)(socks@2.8.7)(zod@4.4.3)
+        version: 1.2.32(jose@6.2.3)(zod@4.4.3)
       '@forklaunch/hyper-express':
         specifier: ^1.2.32
-        version: 1.2.32(express@5.2.1)(socks@2.8.7)
+        version: 1.2.32(express@5.2.1)
       '@forklaunch/implementation-billing-base':
         specifier: workspace:*
         version: link:../implementations/billing/base
       '@forklaunch/infrastructure-redis':
         specifier: ^1.4.4
-        version: 1.4.4(@opentelemetry/api@1.9.1)(socks@2.8.7)
+        version: 1.4.4(@opentelemetry/api@1.9.1)
       '@forklaunch/interfaces-billing':
         specifier: workspace:*
         version: link:../interfaces/billing
@@ -125,7 +125,7 @@ importers:
         version: 7.0.15(@mikro-orm/core@7.0.15)
       '@mikro-orm/mongodb':
         specifier: 7.0.15
-        version: 7.0.15(@mikro-orm/core@7.0.15)(socks@2.8.7)
+        version: 7.0.15(@mikro-orm/core@7.0.15)
       '@mikro-orm/mysql':
         specifier: 7.0.15
         version: 7.0.15(@mikro-orm/core@7.0.15)(@types/node@25.7.0)
@@ -219,19 +219,19 @@ importers:
         version: 1.2.18
       '@forklaunch/core':
         specifier: ^1.5.2
-        version: 1.5.2(socks@2.8.7)
+        version: 1.5.2
       '@forklaunch/express':
         specifier: ^1.2.32
-        version: 1.2.32(jose@6.2.3)(socks@2.8.7)(zod@4.4.3)
+        version: 1.2.32(jose@6.2.3)(zod@4.4.3)
       '@forklaunch/hyper-express':
         specifier: ^1.2.32
-        version: 1.2.32(express@5.2.1)(socks@2.8.7)
+        version: 1.2.32(express@5.2.1)
       '@forklaunch/implementation-billing-stripe':
         specifier: workspace:*
         version: link:../implementations/billing/stripe
       '@forklaunch/infrastructure-redis':
         specifier: ^1.4.4
-        version: 1.4.4(@opentelemetry/api@1.9.1)(socks@2.8.7)
+        version: 1.4.4(@opentelemetry/api@1.9.1)
       '@forklaunch/interfaces-billing':
         specifier: workspace:*
         version: link:../interfaces/billing
@@ -246,7 +246,7 @@ importers:
         version: 7.0.15(@mikro-orm/core@7.0.15)
       '@mikro-orm/mongodb':
         specifier: 7.0.15
-        version: 7.0.15(@mikro-orm/core@7.0.15)(socks@2.8.7)
+        version: 7.0.15(@mikro-orm/core@7.0.15)
       '@mikro-orm/mysql':
         specifier: 7.0.15
         version: 7.0.15(@mikro-orm/core@7.0.15)(@types/node@25.7.0)
@@ -334,13 +334,13 @@ importers:
         version: 1.2.18
       '@forklaunch/core':
         specifier: ^1.5.2
-        version: 1.5.2(socks@2.8.7)
+        version: 1.5.2
       '@forklaunch/express':
         specifier: ^1.2.32
-        version: 1.2.32(jose@6.2.3)(socks@2.8.7)(zod@4.4.3)
+        version: 1.2.32(jose@6.2.3)(zod@4.4.3)
       '@forklaunch/hyper-express':
         specifier: ^1.2.32
-        version: 1.2.32(express@5.2.1)(socks@2.8.7)
+        version: 1.2.32(express@5.2.1)
       '@forklaunch/validator':
         specifier: ^1.2.18
         version: 1.2.18
@@ -349,7 +349,7 @@ importers:
         version: 7.0.15
       '@mikro-orm/mongodb':
         specifier: 7.0.15
-        version: 7.0.15(@mikro-orm/core@7.0.15)(socks@2.8.7)
+        version: 7.0.15(@mikro-orm/core@7.0.15)
       '@sinclair/typebox':
         specifier: ^0.34.49
         version: 0.34.49
@@ -373,6 +373,133 @@ importers:
         specifier: 7.0.0-dev.20260511.1
         version: 7.0.0-dev.20260511.1
 
+  ecommerce-stripe:
+    dependencies:
+      '@forklaunch/blueprint-core':
+        specifier: workspace:*
+        version: link:../core
+      '@forklaunch/blueprint-iam-base':
+        specifier: workspace:*
+        version: link:../iam-base
+      '@forklaunch/blueprint-monitoring':
+        specifier: workspace:*
+        version: link:../monitoring
+      '@forklaunch/common':
+        specifier: ^1.2.18
+        version: 1.2.18
+      '@forklaunch/core':
+        specifier: ^1.5.2
+        version: 1.5.2
+      '@forklaunch/express':
+        specifier: ^1.2.32
+        version: 1.2.32(jose@6.2.3)(zod@4.4.3)
+      '@forklaunch/hyper-express':
+        specifier: ^1.2.32
+        version: 1.2.32(express@5.2.1)
+      '@forklaunch/implementation-ecommerce-base':
+        specifier: workspace:*
+        version: link:../implementations/ecommerce/base
+      '@forklaunch/implementation-ecommerce-stripe':
+        specifier: workspace:*
+        version: link:../implementations/ecommerce/stripe
+      '@forklaunch/infrastructure-redis':
+        specifier: ^1.4.4
+        version: 1.4.4(@opentelemetry/api@1.9.1)
+      '@forklaunch/interfaces-ecommerce':
+        specifier: workspace:*
+        version: link:../interfaces/ecommerce
+      '@forklaunch/validator':
+        specifier: ^1.2.18
+        version: 1.2.18
+      '@mikro-orm/core':
+        specifier: 7.0.15
+        version: 7.0.15
+      '@mikro-orm/migrations':
+        specifier: 7.0.15
+        version: 7.0.15(@mikro-orm/core@7.0.15)
+      '@mikro-orm/mongodb':
+        specifier: 7.0.15
+        version: 7.0.15(@mikro-orm/core@7.0.15)
+      '@mikro-orm/mysql':
+        specifier: 7.0.15
+        version: 7.0.15(@mikro-orm/core@7.0.15)(@types/node@25.7.0)
+      '@mikro-orm/postgresql':
+        specifier: 7.0.15
+        version: 7.0.15(@mikro-orm/core@7.0.15)
+      '@mikro-orm/seeder':
+        specifier: 7.0.15
+        version: 7.0.15(@mikro-orm/core@7.0.15)
+      '@mikro-orm/sqlite':
+        specifier: 7.0.15
+        version: 7.0.15(@mikro-orm/core@7.0.15)
+      '@sinclair/typebox':
+        specifier: ^0.34.49
+        version: 0.34.49
+      ajv:
+        specifier: ^8.20.0
+        version: 8.20.0
+      dotenv:
+        specifier: ^17.4.2
+        version: 17.4.2
+      jose:
+        specifier: ^6.2.3
+        version: 6.2.3
+      pino:
+        specifier: ^10.3.1
+        version: 10.3.1
+      stripe:
+        specifier: ^22.1.1
+        version: 22.1.1(@types/node@25.7.0)
+      uuid:
+        specifier: ^14.0.0
+        version: 14.0.0
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@forklaunch/testing':
+        specifier: ^1.2.18
+        version: 1.2.18(vitest@4.1.6(@opentelemetry/api@1.9.1)(@types/node@25.7.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@25.7.0)(esbuild@0.27.7)(tsx@4.21.0)(yaml@2.9.0)))
+      '@mikro-orm/cli':
+        specifier: 7.0.15
+        version: 7.0.15
+      '@types/express':
+        specifier: ^5.0.6
+        version: 5.0.6
+      '@types/express-serve-static-core':
+        specifier: ^5.1.1
+        version: 5.1.1
+      '@types/qs':
+        specifier: ^6.15.1
+        version: 6.15.1
+      '@types/uuid':
+        specifier: ^11.0.0
+        version: 11.0.0
+      '@typescript/native-preview':
+        specifier: 7.0.0-dev.20260511.1
+        version: 7.0.0-dev.20260511.1
+      depcheck:
+        specifier: ^1.4.7
+        version: 1.4.7
+      ioredis:
+        specifier: ^5.10.1
+        version: 5.10.1
+      prettier:
+        specifier: ^3.8.3
+        version: 3.8.3
+      testcontainers:
+        specifier: ^11.14.0
+        version: 11.14.0
+      ts-node:
+        specifier: ^10.9.2
+        version: 10.9.2(@types/node@25.7.0)(typescript@6.0.3)
+      typedoc:
+        specifier: ^0.28.19
+        version: 0.28.19(typescript@6.0.3)
+      vitest:
+        specifier: ^4.1.6
+        version: 4.1.6(@opentelemetry/api@1.9.1)(@types/node@25.7.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@25.7.0)(esbuild@0.27.7)(tsx@4.21.0)(yaml@2.9.0))
+
   iam-base:
     dependencies:
       '@forklaunch/blueprint-core':
@@ -383,7 +510,7 @@ importers:
         version: link:../monitoring
       '@forklaunch/core':
         specifier: ^1.5.2
-        version: 1.5.2(socks@2.8.7)
+        version: 1.5.2
       '@forklaunch/hyper-express-fork':
         specifier: ^6.17.35
         version: 6.17.35
@@ -404,7 +531,7 @@ importers:
         version: 7.0.15(@mikro-orm/core@7.0.15)
       '@mikro-orm/mongodb':
         specifier: 7.0.15
-        version: 7.0.15(@mikro-orm/core@7.0.15)(socks@2.8.7)
+        version: 7.0.15(@mikro-orm/core@7.0.15)
       '@mikro-orm/mysql':
         specifier: 7.0.15
         version: 7.0.15(@mikro-orm/core@7.0.15)(@types/node@25.7.0)
@@ -480,7 +607,7 @@ importers:
     dependencies:
       '@forklaunch/better-auth-mikro-orm-fork':
         specifier: ^0.5.3
-        version: 0.5.3(@mikro-orm/core@7.0.15)(better-auth@1.6.10(@opentelemetry/api@1.9.1)(better-sqlite3@12.9.0)(mongodb@7.2.0(socks@2.8.7))(mysql2@3.22.3(@types/node@25.7.0))(pg@8.20.0)(vitest@4.1.6(@opentelemetry/api@1.9.1)(@types/node@25.7.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@25.7.0)(esbuild@0.27.7)(tsx@4.21.0)(yaml@2.9.0))))
+        version: 0.5.3(@mikro-orm/core@7.0.15)(better-auth@1.6.10(@opentelemetry/api@1.9.1)(better-sqlite3@12.9.0)(mongodb@7.2.0)(mysql2@3.22.3(@types/node@25.7.0))(pg@8.20.0)(vitest@4.1.6(@opentelemetry/api@1.9.1)(@types/node@25.7.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@25.7.0)(esbuild@0.27.7)(tsx@4.21.0)(yaml@2.9.0))))
       '@forklaunch/blueprint-core':
         specifier: workspace:*
         version: link:../core
@@ -492,7 +619,7 @@ importers:
         version: link:../monitoring
       '@forklaunch/core':
         specifier: ^1.5.2
-        version: 1.5.2(socks@2.8.7)
+        version: 1.5.2
       '@forklaunch/implementation-iam-base':
         specifier: workspace:*
         version: link:../implementations/iam/base
@@ -507,7 +634,7 @@ importers:
         version: 7.0.15(@mikro-orm/core@7.0.15)
       '@mikro-orm/mongodb':
         specifier: 7.0.15
-        version: 7.0.15(@mikro-orm/core@7.0.15)(socks@2.8.7)
+        version: 7.0.15(@mikro-orm/core@7.0.15)
       '@mikro-orm/mysql':
         specifier: 7.0.15
         version: 7.0.15(@mikro-orm/core@7.0.15)(@types/node@25.7.0)
@@ -528,7 +655,7 @@ importers:
         version: 0.34.49
       better-auth:
         specifier: ^1.6.10
-        version: 1.6.10(@opentelemetry/api@1.9.1)(better-sqlite3@12.9.0)(mongodb@7.2.0(socks@2.8.7))(mysql2@3.22.3(@types/node@25.7.0))(pg@8.20.0)(vitest@4.1.6(@opentelemetry/api@1.9.1)(@types/node@25.7.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@25.7.0)(esbuild@0.27.7)(tsx@4.21.0)(yaml@2.9.0)))
+        version: 1.6.10(@opentelemetry/api@1.9.1)(better-sqlite3@12.9.0)(mongodb@7.2.0)(mysql2@3.22.3(@types/node@25.7.0))(pg@8.20.0)(vitest@4.1.6(@opentelemetry/api@1.9.1)(@types/node@25.7.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@25.7.0)(esbuild@0.27.7)(tsx@4.21.0)(yaml@2.9.0)))
       dotenv:
         specifier: ^17.4.2
         version: 17.4.2
@@ -589,7 +716,7 @@ importers:
         version: 1.2.18
       '@forklaunch/core':
         specifier: ^1.5.2
-        version: 1.5.2(socks@2.8.7)
+        version: 1.5.2
       '@forklaunch/interfaces-billing':
         specifier: workspace:*
         version: link:../../../interfaces/billing
@@ -632,13 +759,151 @@ importers:
         version: 1.2.18
       '@forklaunch/core':
         specifier: ^1.5.2
-        version: 1.5.2(socks@2.8.7)
+        version: 1.5.2
       '@forklaunch/implementation-billing-base':
         specifier: workspace:*
         version: link:../base
       '@forklaunch/interfaces-billing':
         specifier: workspace:*
         version: link:../../../interfaces/billing
+      '@forklaunch/internal':
+        specifier: ^1.2.18
+        version: 1.2.18
+      '@forklaunch/validator':
+        specifier: ^1.2.18
+        version: 1.2.18
+      '@mikro-orm/core':
+        specifier: 7.0.15
+        version: 7.0.15
+      '@sinclair/typebox':
+        specifier: ^0.34.49
+        version: 0.34.49
+      ajv:
+        specifier: ^8.20.0
+        version: 8.20.0
+      stripe:
+        specifier: ^22.1.1
+        version: 22.1.1(@types/node@25.7.0)
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@typescript/native-preview':
+        specifier: 7.0.0-dev.20260511.1
+        version: 7.0.0-dev.20260511.1
+      depcheck:
+        specifier: ^1.4.7
+        version: 1.4.7
+      prettier:
+        specifier: ^3.8.3
+        version: 3.8.3
+      typedoc:
+        specifier: ^0.28.19
+        version: 0.28.19(typescript@6.0.3)
+
+  implementations/ecommerce/base:
+    dependencies:
+      '@forklaunch/common':
+        specifier: ^1.2.18
+        version: 1.2.18
+      '@forklaunch/core':
+        specifier: ^1.5.2
+        version: 1.5.2
+      '@forklaunch/interfaces-ecommerce':
+        specifier: workspace:*
+        version: link:../../../interfaces/ecommerce
+      '@forklaunch/internal':
+        specifier: ^1.2.18
+        version: 1.2.18
+      '@forklaunch/validator':
+        specifier: ^1.2.18
+        version: 1.2.18
+      '@mikro-orm/core':
+        specifier: 7.0.15
+        version: 7.0.15
+      '@sinclair/typebox':
+        specifier: ^0.34.49
+        version: 0.34.49
+      ajv:
+        specifier: ^8.20.0
+        version: 8.20.0
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@typescript/native-preview':
+        specifier: 7.0.0-dev.20260511.1
+        version: 7.0.0-dev.20260511.1
+      depcheck:
+        specifier: ^1.4.7
+        version: 1.4.7
+      prettier:
+        specifier: ^3.8.3
+        version: 3.8.3
+      typedoc:
+        specifier: ^0.28.19
+        version: 0.28.19(typescript@6.0.3)
+
+  implementations/ecommerce/paypal:
+    dependencies:
+      '@forklaunch/common':
+        specifier: ^1.2.18
+        version: 1.2.18
+      '@forklaunch/core':
+        specifier: ^1.5.2
+        version: 1.5.2
+      '@forklaunch/implementation-ecommerce-base':
+        specifier: workspace:*
+        version: link:../base
+      '@forklaunch/interfaces-ecommerce':
+        specifier: workspace:*
+        version: link:../../../interfaces/ecommerce
+      '@forklaunch/internal':
+        specifier: ^1.2.18
+        version: 1.2.18
+      '@forklaunch/validator':
+        specifier: ^1.2.18
+        version: 1.2.18
+      '@mikro-orm/core':
+        specifier: 7.0.15
+        version: 7.0.15
+      '@sinclair/typebox':
+        specifier: ^0.34.49
+        version: 0.34.49
+      ajv:
+        specifier: ^8.20.0
+        version: 8.20.0
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@typescript/native-preview':
+        specifier: 7.0.0-dev.20260511.1
+        version: 7.0.0-dev.20260511.1
+      depcheck:
+        specifier: ^1.4.7
+        version: 1.4.7
+      prettier:
+        specifier: ^3.8.3
+        version: 3.8.3
+      typedoc:
+        specifier: ^0.28.19
+        version: 0.28.19(typescript@6.0.3)
+
+  implementations/ecommerce/stripe:
+    dependencies:
+      '@forklaunch/common':
+        specifier: ^1.2.18
+        version: 1.2.18
+      '@forklaunch/core':
+        specifier: ^1.5.2
+        version: 1.5.2
+      '@forklaunch/implementation-ecommerce-base':
+        specifier: workspace:*
+        version: link:../base
+      '@forklaunch/interfaces-ecommerce':
+        specifier: workspace:*
+        version: link:../../../interfaces/ecommerce
       '@forklaunch/internal':
         specifier: ^1.2.18
         version: 1.2.18
@@ -681,7 +946,7 @@ importers:
         version: 1.2.18
       '@forklaunch/core':
         specifier: ^1.5.2
-        version: 1.5.2(socks@2.8.7)
+        version: 1.5.2
       '@forklaunch/interfaces-iam':
         specifier: workspace:*
         version: link:../../../interfaces/iam
@@ -724,7 +989,7 @@ importers:
     dependencies:
       '@forklaunch/core':
         specifier: ^1.5.2
-        version: 1.5.2(socks@2.8.7)
+        version: 1.5.2
       '@forklaunch/interfaces-worker':
         specifier: workspace:*
         version: link:../../../interfaces/worker
@@ -764,7 +1029,7 @@ importers:
     dependencies:
       '@forklaunch/core':
         specifier: ^1.5.2
-        version: 1.5.2(socks@2.8.7)
+        version: 1.5.2
       '@forklaunch/interfaces-worker':
         specifier: workspace:*
         version: link:../../../interfaces/worker
@@ -804,7 +1069,7 @@ importers:
     dependencies:
       '@forklaunch/core':
         specifier: ^1.5.2
-        version: 1.5.2(socks@2.8.7)
+        version: 1.5.2
       '@forklaunch/interfaces-worker':
         specifier: workspace:*
         version: link:../../../interfaces/worker
@@ -844,7 +1109,7 @@ importers:
     dependencies:
       '@forklaunch/core':
         specifier: ^1.5.2
-        version: 1.5.2(socks@2.8.7)
+        version: 1.5.2
       '@forklaunch/interfaces-worker':
         specifier: workspace:*
         version: link:../../../interfaces/worker
@@ -878,6 +1143,28 @@ importers:
         version: 8.59.3(eslint@10.3.0)(typescript@6.0.3)
 
   interfaces/billing:
+    dependencies:
+      '@forklaunch/common':
+        specifier: ^1.2.18
+        version: 1.2.18
+      '@mikro-orm/core':
+        specifier: 7.0.15
+        version: 7.0.15
+    devDependencies:
+      '@typescript/native-preview':
+        specifier: 7.0.0-dev.20260511.1
+        version: 7.0.0-dev.20260511.1
+      depcheck:
+        specifier: ^1.4.7
+        version: 1.4.7
+      prettier:
+        specifier: ^3.8.3
+        version: 3.8.3
+      typedoc:
+        specifier: ^0.28.19
+        version: 0.28.19(typescript@6.0.3)
+
+  interfaces/ecommerce:
     dependencies:
       '@forklaunch/common':
         specifier: ^1.2.18
@@ -946,7 +1233,7 @@ importers:
     dependencies:
       '@forklaunch/core':
         specifier: ^1.5.2
-        version: 1.5.2(socks@2.8.7)
+        version: 1.5.2
 
   sample-worker:
     dependencies:
@@ -958,7 +1245,7 @@ importers:
         version: link:../monitoring
       '@forklaunch/core':
         specifier: ^1.5.2
-        version: 1.5.2(socks@2.8.7)
+        version: 1.5.2
       '@forklaunch/implementation-worker-bullmq':
         specifier: workspace:*
         version: link:../implementations/worker/bullmq
@@ -973,10 +1260,10 @@ importers:
         version: link:../implementations/worker/redis
       '@forklaunch/infrastructure-redis':
         specifier: ^1.4.4
-        version: 1.4.4(@opentelemetry/api@1.9.1)(socks@2.8.7)
+        version: 1.4.4(@opentelemetry/api@1.9.1)
       '@forklaunch/infrastructure-s3':
         specifier: ^1.4.4
-        version: 1.4.4(socks@2.8.7)
+        version: 1.4.4
       '@forklaunch/interfaces-worker':
         specifier: workspace:*
         version: link:../interfaces/worker
@@ -997,7 +1284,7 @@ importers:
         version: 7.0.15(@mikro-orm/core@7.0.15)
       '@mikro-orm/mongodb':
         specifier: 7.0.15
-        version: 7.0.15(@mikro-orm/core@7.0.15)(socks@2.8.7)
+        version: 7.0.15(@mikro-orm/core@7.0.15)
       '@mikro-orm/mssql':
         specifier: 7.0.15
         version: 7.0.15(@azure/core-client@1.10.1)(@mikro-orm/core@7.0.15)
@@ -1601,24 +1888,28 @@ packages:
     engines: {node: '>=14.21.3'}
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
 
   '@biomejs/cli-linux-arm64@2.4.15':
     resolution: {integrity: sha512-owaAMZD/T4LrD0ELNCk0Km3qrRHuM0X6EAyVE1FSqGY0rbLoiDLrO4Us2tllm6cAeB2Ioa9C2C08NZPdr8+0Ug==}
     engines: {node: '>=14.21.3'}
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
 
   '@biomejs/cli-linux-x64-musl@2.4.15':
     resolution: {integrity: sha512-CNq/9W38SYSH023lfcQ4KKU8K0YX8T//FZUhcgtMMRABDojx5XsMV7jlweAvGSl389wJQB29Qo6Zb/a+jdvt+w==}
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [linux]
+    libc: [musl]
 
   '@biomejs/cli-linux-x64@2.4.15':
     resolution: {integrity: sha512-0jj7THz12GbUOLmMibktK6DZjqz2zV64KFxyBtcFTKPiiOIY0a7vns1elpO1dERvxpsZ5ik0oFfz0oGwFde1+g==}
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
 
   '@biomejs/cli-win32-arm64@2.4.15':
     resolution: {integrity: sha512-ouhkYdlhp/1GghEJPdWwD/Vi3gQ1nFxuSpMolWsbq3Lsq3QUR4jl6UdhhscdCugKU5vOEuMiJhvKj66O0OCq+w==}
@@ -2604,48 +2895,56 @@ packages:
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
 
   '@oxlint/binding-linux-arm64-musl@1.64.0':
     resolution: {integrity: sha512-00QQ0h0Y7u0G69BgiH3+ky2aaq/QvkDL6DYok8htIuJHxybiux5aQ8jwmg8qIk9wha6UagUP2BAwAzbemcJbpg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
 
   '@oxlint/binding-linux-ppc64-gnu@1.64.0':
     resolution: {integrity: sha512-2GaimTV6EMW+s5HS0An3oGbQme3BgHswvfVdGk3EB57Xe9+/gyT+Qd7lNVzb3rtir52vbIPzXfaYArzs5b5zcw==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [ppc64]
     os: [linux]
+    libc: [glibc]
 
   '@oxlint/binding-linux-riscv64-gnu@1.64.0':
     resolution: {integrity: sha512-H46AtFb9wypjoVwGdlxrm0DsD809NGmtiK9HiyPKTxkSte2YjhC4S+00rOIrwCaxcyPiGid3Y3OMXp5KMAkGZw==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [riscv64]
     os: [linux]
+    libc: [glibc]
 
   '@oxlint/binding-linux-riscv64-musl@1.64.0':
     resolution: {integrity: sha512-HEgsidjjvvyzdg82icYkuFCf7REDV7B9JFwbIMbVwrKLBY0MrXX+bku3POn/hduZ2yW91IyVDUMq0Bf02KwXQw==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [riscv64]
     os: [linux]
+    libc: [musl]
 
   '@oxlint/binding-linux-s390x-gnu@1.64.0':
     resolution: {integrity: sha512-Axvm8qryotmKN00P5w4JapaSjvP2LOSbdbBJiX+2SuHd3QzhW7TUc8skqgw+ahQZ5DmzEYeHCqauvW8f32Ns6Q==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [s390x]
     os: [linux]
+    libc: [glibc]
 
   '@oxlint/binding-linux-x64-gnu@1.64.0':
     resolution: {integrity: sha512-cR60vSd7+m+KRZ3GQGfDxWwahW5RMXg0qlGvAluZr0fTUYvw0H9N9AXAF/M/PMqgytyqvVNmBAkJG9l7U30Y1g==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
 
   '@oxlint/binding-linux-x64-musl@1.64.0':
     resolution: {integrity: sha512-2u/aPZ9pEg7HnvZPDsHxUGNnrpr4qaHi+mCgLgpt+LYRzPrS4Px4wPfkIdRdr2GvKnaYyt+XSlto0Vm5sbStTg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [linux]
+    libc: [musl]
 
   '@oxlint/binding-openharmony-arm64@1.64.0':
     resolution: {integrity: sha512-kfhkGfCdoXLSxEkrhDlJrvBYajGmq+ma4EMc53dsOWTq+rIBOlI0vTBmpZNnM5oH2LY/K/w1HAK+UQEgjgpVUg==}
@@ -2783,36 +3082,42 @@ packages:
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
 
   '@rolldown/binding-linux-arm64-musl@1.0.0-rc.12':
     resolution: {integrity: sha512-V6/wZztnBqlx5hJQqNWwFdxIKN0m38p8Jas+VoSfgH54HSj9tKTt1dZvG6JRHcjh6D7TvrJPWFGaY9UBVOaWPw==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
 
   '@rolldown/binding-linux-ppc64-gnu@1.0.0-rc.12':
     resolution: {integrity: sha512-AP3E9BpcUYliZCxa3w5Kwj9OtEVDYK6sVoUzy4vTOJsjPOgdaJZKFmN4oOlX0Wp0RPV2ETfmIra9x1xuayFB7g==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [ppc64]
     os: [linux]
+    libc: [glibc]
 
   '@rolldown/binding-linux-s390x-gnu@1.0.0-rc.12':
     resolution: {integrity: sha512-nWwpvUSPkoFmZo0kQazZYOrT7J5DGOJ/+QHHzjvNlooDZED8oH82Yg67HvehPPLAg5fUff7TfWFHQS8IV1n3og==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [s390x]
     os: [linux]
+    libc: [glibc]
 
   '@rolldown/binding-linux-x64-gnu@1.0.0-rc.12':
     resolution: {integrity: sha512-RNrafz5bcwRy+O9e6P8Z/OCAJW/A+qtBczIqVYwTs14pf4iV1/+eKEjdOUta93q2TsT/FI0XYDP3TCky38LMAg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
 
   '@rolldown/binding-linux-x64-musl@1.0.0-rc.12':
     resolution: {integrity: sha512-Jpw/0iwoKWx3LJ2rc1yjFrj+T7iHZn2JDg1Yny1ma0luviFS4mhAIcd1LFNxK3EYu3DHWCps0ydXQ5i/rrJ2ig==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [linux]
+    libc: [musl]
 
   '@rolldown/binding-openharmony-arm64@1.0.0-rc.12':
     resolution: {integrity: sha512-vRugONE4yMfVn0+7lUKdKvN4D5YusEiPilaoO2sgUWpCvrncvWgPMzK00ZFFJuiPgLwgFNP5eSiUlv2tfc+lpA==}
@@ -2874,66 +3179,79 @@ packages:
     resolution: {integrity: sha512-DV6fJoxEYWJOvaZIsok7KrYl0tPvga5OZ2yvKHNNYyk/2roMLqQAbGhr78EQ5YhHpnhLKJD3S1WFusAkmUuV5g==}
     cpu: [arm]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-arm-musleabihf@4.60.3':
     resolution: {integrity: sha512-mQKoJAzvuOs6F+TZybQO4GOTSMUu7v0WdxEk24krQ/uUxXoPTtHjuaUuPmFhtBcM4K0ons8nrE3JyhTuCFtT/w==}
     cpu: [arm]
     os: [linux]
+    libc: [musl]
 
   '@rollup/rollup-linux-arm64-gnu@4.60.3':
     resolution: {integrity: sha512-Whjj2qoiJ6+OOJMGptTYazaJvjOJm+iKHpXQM1P3LzGjt7Ff++Tp7nH4N8J/BUA7R9IHfDyx4DJIflifwnbmIA==}
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-arm64-musl@4.60.3':
     resolution: {integrity: sha512-4YTNHKqGng5+yiZt3mg77nmyuCfmNfX4fPmyUapBcIk+BdwSwmCWGXOUxhXbBEkFHtoN5boLj/5NON+u5QC9tg==}
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
 
   '@rollup/rollup-linux-loong64-gnu@4.60.3':
     resolution: {integrity: sha512-SU3kNlhkpI4UqlUc2VXPGK9o886ZsSeGfMAX2ba2b8DKmMXq4AL7KUrkSWVbb7koVqx41Yczx6dx5PNargIrEA==}
     cpu: [loong64]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-loong64-musl@4.60.3':
     resolution: {integrity: sha512-6lDLl5h4TXpB1mTf2rQWnAk/LcXrx9vBfu/DT5TIPhvMhRWaZ5MxkIc8u4lJAmBo6klTe1ywXIUHFjylW505sg==}
     cpu: [loong64]
     os: [linux]
+    libc: [musl]
 
   '@rollup/rollup-linux-ppc64-gnu@4.60.3':
     resolution: {integrity: sha512-BMo8bOw8evlup/8G+cj5xWtPyp93xPdyoSN16Zy90Q2QZ0ZYRhCt6ZJSwbrRzG9HApFabjwj2p25TUPDWrhzqQ==}
     cpu: [ppc64]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-ppc64-musl@4.60.3':
     resolution: {integrity: sha512-E0L8X1dZN1/Rph+5VPF6Xj2G7JJvMACVXtamTJIDrVI44Y3K+G8gQaMEAavbqCGTa16InptiVrX6eM6pmJ+7qA==}
     cpu: [ppc64]
     os: [linux]
+    libc: [musl]
 
   '@rollup/rollup-linux-riscv64-gnu@4.60.3':
     resolution: {integrity: sha512-oZJ/WHaVfHUiRAtmTAeo3DcevNsVvH8mbvodjZy7D5QKvCefO371SiKRpxoDcCxB3PTRTLayWBkvmDQKTcX/sw==}
     cpu: [riscv64]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-riscv64-musl@4.60.3':
     resolution: {integrity: sha512-Dhbyh7j9FybM3YaTgaHmVALwA8AkUwTPccyCQ79TG9AJUsMQqgN1DDEZNr4+QUfwiWvLDumW5vdwzoeUF+TNxQ==}
     cpu: [riscv64]
     os: [linux]
+    libc: [musl]
 
   '@rollup/rollup-linux-s390x-gnu@4.60.3':
     resolution: {integrity: sha512-cJd1X5XhHHlltkaypz1UcWLA8AcoIi1aWhsvaWDskD1oz2eKCypnqvTQ8ykMNI0RSmm7NkTdSqSSD7zM0xa6Ig==}
     cpu: [s390x]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-x64-gnu@4.60.3':
     resolution: {integrity: sha512-DAZDBHQfG2oQuhY7mc6I3/qB4LU2fQCjRvxbDwd/Jdvb9fypP4IJ4qmtu6lNjes6B531AI8cg1aKC2di97bUxA==}
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-x64-musl@4.60.3':
     resolution: {integrity: sha512-cRxsE8c13mZOh3vP+wLDxpQBRrOHDIGOWyDL93Sy0Ga8y515fBcC2pjUfFwUe5T7tqvTvWbCpg1URM/AXdWIXA==}
     cpu: [x64]
     os: [linux]
+    libc: [musl]
 
   '@rollup/rollup-openbsd-x64@4.60.3':
     resolution: {integrity: sha512-QaWcIgRxqEdQdhJqW4DJctsH6HCmo5vHxY0krHSX4jMtOqfzC+dqDGuHM87bu4H8JBeibWx7jFz+h6/4C8wA5Q==}
@@ -3578,41 +3896,49 @@ packages:
     resolution: {integrity: sha512-34gw7PjDGB9JgePJEmhEqBhWvCiiWCuXsL9hYphDF7crW7UgI05gyBAi6MF58uGcMOiOqSJ2ybEeCvHcq0BCmQ==}
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
 
   '@unrs/resolver-binding-linux-arm64-musl@1.11.1':
     resolution: {integrity: sha512-RyMIx6Uf53hhOtJDIamSbTskA99sPHS96wxVE/bJtePJJtpdKGXO1wY90oRdXuYOGOTuqjT8ACccMc4K6QmT3w==}
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
 
   '@unrs/resolver-binding-linux-ppc64-gnu@1.11.1':
     resolution: {integrity: sha512-D8Vae74A4/a+mZH0FbOkFJL9DSK2R6TFPC9M+jCWYia/q2einCubX10pecpDiTmkJVUH+y8K3BZClycD8nCShA==}
     cpu: [ppc64]
     os: [linux]
+    libc: [glibc]
 
   '@unrs/resolver-binding-linux-riscv64-gnu@1.11.1':
     resolution: {integrity: sha512-frxL4OrzOWVVsOc96+V3aqTIQl1O2TjgExV4EKgRY09AJ9leZpEg8Ak9phadbuX0BA4k8U5qtvMSQQGGmaJqcQ==}
     cpu: [riscv64]
     os: [linux]
+    libc: [glibc]
 
   '@unrs/resolver-binding-linux-riscv64-musl@1.11.1':
     resolution: {integrity: sha512-mJ5vuDaIZ+l/acv01sHoXfpnyrNKOk/3aDoEdLO/Xtn9HuZlDD6jKxHlkN8ZhWyLJsRBxfv9GYM2utQ1SChKew==}
     cpu: [riscv64]
     os: [linux]
+    libc: [musl]
 
   '@unrs/resolver-binding-linux-s390x-gnu@1.11.1':
     resolution: {integrity: sha512-kELo8ebBVtb9sA7rMe1Cph4QHreByhaZ2QEADd9NzIQsYNQpt9UkM9iqr2lhGr5afh885d/cB5QeTXSbZHTYPg==}
     cpu: [s390x]
     os: [linux]
+    libc: [glibc]
 
   '@unrs/resolver-binding-linux-x64-gnu@1.11.1':
     resolution: {integrity: sha512-C3ZAHugKgovV5YvAMsxhq0gtXuwESUKc5MhEtjBpLoHPLYM+iuwSj3lflFwK3DPm68660rZ7G8BMcwSro7hD5w==}
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
 
   '@unrs/resolver-binding-linux-x64-musl@1.11.1':
     resolution: {integrity: sha512-rV0YSoyhK2nZ4vEswT/QwqzqQXw5I6CjoaYMOX0TqBlWhojUf8P94mvI7nuJTeaCkkds3QE4+zS8Ko+GdXuZtA==}
     cpu: [x64]
     os: [linux]
+    libc: [musl]
 
   '@unrs/resolver-binding-wasm32-wasi@1.11.1':
     resolution: {integrity: sha512-5u4RkfxJm+Ng7IWgkzi3qrFOvLvQYnPBmjmZQ8+szTK/b31fQCnleNl1GgEt7nIsZRIf5PLhPwT0WM+q45x/UQ==}
@@ -5652,24 +5978,28 @@ packages:
     engines: {node: '>= 12.0.0'}
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
 
   lightningcss-linux-arm64-musl@1.32.0:
     resolution: {integrity: sha512-UpQkoenr4UJEzgVIYpI80lDFvRmPVg6oqboNHfoH4CQIfNA+HOrZ7Mo7KZP02dC6LjghPQJeBsvXhJod/wnIBg==}
     engines: {node: '>= 12.0.0'}
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
 
   lightningcss-linux-x64-gnu@1.32.0:
     resolution: {integrity: sha512-V7Qr52IhZmdKPVr+Vtw8o+WLsQJYCTd8loIfpDaMRWGUZfBOYEJeyJIkqGIDMZPwPx24pUMfwSxxI8phr/MbOA==}
     engines: {node: '>= 12.0.0'}
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
 
   lightningcss-linux-x64-musl@1.32.0:
     resolution: {integrity: sha512-bYcLp+Vb0awsiXg/80uCRezCYHNg1/l3mt0gzHnWV9XP1W5sKa5/TCdGWaR/zBM2PeF/HbsQv/j2URNOiVuxWg==}
     engines: {node: '>= 12.0.0'}
     cpu: [x64]
     os: [linux]
+    libc: [musl]
 
   lightningcss-win32-arm64-msvc@1.32.0:
     resolution: {integrity: sha512-8SbC8BR40pS6baCM8sbtYDSwEVQd4JlFTOlaD3gWGHfThTcABnNDBda6eTZeqbofalIJhFx0qKzgHJmcPTnGdw==}
@@ -6771,14 +7101,6 @@ packages:
     resolution: {integrity: sha512-stxByr12oeeOyY2BlviTNQlYV5xOj47GirPr4yA1hE9JCtxfQN0+tVbkxwCtYDQWhEKWFHsEK48ORg5jrouCAg==}
     engines: {node: '>=20'}
 
-  smart-buffer@4.2.0:
-    resolution: {integrity: sha512-94hK0Hh8rPqQl2xXc3HsaBoOXKV20MToPkcXvwbISWLEs+64sBq5kFgn2kJDHb1Pry9yrP0dxrCI9RRci7RXKg==}
-    engines: {node: '>= 6.0.0', npm: '>= 3.0.0'}
-
-  socks@2.8.7:
-    resolution: {integrity: sha512-HLpt+uLy/pxB+bum/9DzAgiKS8CX1EvbWxI4zlmgGCExImLdiad2iCwXT5Z4c9c3Eq8rP2318mPW2c+QbtjK8A==}
-    engines: {node: '>= 10.0.0', npm: '>= 3.0.0'}
-
   sonic-boom@4.2.1:
     resolution: {integrity: sha512-w6AxtubXa2wTXAUsZMMWERrsIRAdrK0Sc+FUytWvYAhBJLyuI4llrMIC1DtlNSdI99EI86KZum2MMq3EAZlF9Q==}
 
@@ -7279,7 +7601,7 @@ packages:
     hasBin: true
 
   uWebSockets.js@https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/cfc9a40d8132a34881813cec3d5f8e3a185b3ce3:
-    resolution: {tarball: https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/cfc9a40d8132a34881813cec3d5f8e3a185b3ce3}
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/cfc9a40d8132a34881813cec3d5f8e3a185b3ce3}
     version: 20.52.0
 
   uc.micro@2.1.0:
@@ -8497,12 +8819,12 @@ snapshots:
       '@better-auth/core': 1.6.10(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.1)(better-call@1.3.5(zod@4.4.3))(jose@6.2.3)(kysely@0.28.17)(nanostores@1.3.0)
       '@better-auth/utils': 0.4.0
 
-  '@better-auth/mongo-adapter@1.6.10(@better-auth/core@1.6.10(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.1)(better-call@1.3.5(zod@4.4.3))(jose@6.2.3)(kysely@0.28.17)(nanostores@1.3.0))(@better-auth/utils@0.4.0)(mongodb@7.2.0(socks@2.8.7))':
+  '@better-auth/mongo-adapter@1.6.10(@better-auth/core@1.6.10(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.1)(better-call@1.3.5(zod@4.4.3))(jose@6.2.3)(kysely@0.28.17)(nanostores@1.3.0))(@better-auth/utils@0.4.0)(mongodb@7.2.0)':
     dependencies:
       '@better-auth/core': 1.6.10(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.1)(better-call@1.3.5(zod@4.4.3))(jose@6.2.3)(kysely@0.28.17)(nanostores@1.3.0)
       '@better-auth/utils': 0.4.0
     optionalDependencies:
-      mongodb: 7.2.0(socks@2.8.7)
+      mongodb: 7.2.0
 
   '@better-auth/prisma-adapter@1.6.10(@better-auth/core@1.6.10(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.1)(better-call@1.3.5(zod@4.4.3))(jose@6.2.3)(kysely@0.28.17)(nanostores@1.3.0))(@better-auth/utils@0.4.0)':
     dependencies:
@@ -8833,22 +9155,22 @@ snapshots:
       '@eslint/core': 1.2.1
       levn: 0.4.1
 
-  '@forklaunch/better-auth-mikro-orm-fork@0.5.3(@mikro-orm/core@7.0.15)(better-auth@1.6.10(@opentelemetry/api@1.9.1)(better-sqlite3@12.9.0)(mongodb@7.2.0(socks@2.8.7))(mysql2@3.22.3(@types/node@25.7.0))(pg@8.20.0)(vitest@4.1.6(@opentelemetry/api@1.9.1)(@types/node@25.7.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@25.7.0)(esbuild@0.27.7)(tsx@4.21.0)(yaml@2.9.0))))':
+  '@forklaunch/better-auth-mikro-orm-fork@0.5.3(@mikro-orm/core@7.0.15)(better-auth@1.6.10(@opentelemetry/api@1.9.1)(better-sqlite3@12.9.0)(mongodb@7.2.0)(mysql2@3.22.3(@types/node@25.7.0))(pg@8.20.0)(vitest@4.1.6(@opentelemetry/api@1.9.1)(@types/node@25.7.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@25.7.0)(esbuild@0.27.7)(tsx@4.21.0)(yaml@2.9.0))))':
     dependencies:
       '@mikro-orm/core': 7.0.15
-      better-auth: 1.6.10(@opentelemetry/api@1.9.1)(better-sqlite3@12.9.0)(mongodb@7.2.0(socks@2.8.7))(mysql2@3.22.3(@types/node@25.7.0))(pg@8.20.0)(vitest@4.1.6(@opentelemetry/api@1.9.1)(@types/node@25.7.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@25.7.0)(esbuild@0.27.7)(tsx@4.21.0)(yaml@2.9.0)))
+      better-auth: 1.6.10(@opentelemetry/api@1.9.1)(better-sqlite3@12.9.0)(mongodb@7.2.0)(mysql2@3.22.3(@types/node@25.7.0))(pg@8.20.0)(vitest@4.1.6(@opentelemetry/api@1.9.1)(@types/node@25.7.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@25.7.0)(esbuild@0.27.7)(tsx@4.21.0)(yaml@2.9.0)))
       dset: 3.1.4
 
   '@forklaunch/common@1.2.18': {}
 
-  '@forklaunch/core@1.5.2(socks@2.8.7)':
+  '@forklaunch/core@1.5.2':
     dependencies:
       '@asyncapi/parser': 3.6.0
       '@forklaunch/common': 1.2.18
       '@forklaunch/opentelemetry-instrumentation-hyper-express': 0.0.5(@opentelemetry/api@1.9.1)
       '@forklaunch/validator': 1.2.18
       '@mikro-orm/core': 7.0.15
-      '@mikro-orm/mongodb': 7.0.15(@mikro-orm/core@7.0.15)(socks@2.8.7)
+      '@mikro-orm/mongodb': 7.0.15(@mikro-orm/core@7.0.15)
       '@opentelemetry/api': 1.9.1
       '@opentelemetry/api-logs': 0.217.0
       '@opentelemetry/exporter-logs-otlp-http': 0.217.0(@opentelemetry/api@1.9.1)
@@ -8892,10 +9214,10 @@ snapshots:
       - supports-color
       - sury
 
-  '@forklaunch/express@1.2.32(jose@6.2.3)(socks@2.8.7)(zod@4.4.3)':
+  '@forklaunch/express@1.2.32(jose@6.2.3)(zod@4.4.3)':
     dependencies:
       '@forklaunch/common': 1.2.18
-      '@forklaunch/core': 1.5.2(socks@2.8.7)
+      '@forklaunch/core': 1.5.2
       '@forklaunch/validator': 1.2.18
       '@modelcontextprotocol/sdk': 1.29.0(zod@4.4.3)
       '@scalar/express-api-reference': 0.9.14
@@ -8942,13 +9264,13 @@ snapshots:
       typed-emitter: 2.1.0
       uWebSockets.js: https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/cfc9a40d8132a34881813cec3d5f8e3a185b3ce3
 
-  '@forklaunch/hyper-express@1.2.32(express@5.2.1)(socks@2.8.7)':
+  '@forklaunch/hyper-express@1.2.32(express@5.2.1)':
     dependencies:
       '@forklaunch/common': 1.2.18
-      '@forklaunch/core': 1.5.2(socks@2.8.7)
+      '@forklaunch/core': 1.5.2
       '@forklaunch/hyper-express-fork': 6.17.35
       '@forklaunch/validator': 1.2.18
-      '@forklaunch/ws': 1.2.32(socks@2.8.7)
+      '@forklaunch/ws': 1.2.32
       '@scalar/express-api-reference': 0.9.14
       cors: 2.8.6
       live-directory: 3.0.3
@@ -8978,10 +9300,10 @@ snapshots:
       - sury
       - utf-8-validate
 
-  '@forklaunch/infrastructure-redis@1.4.4(@opentelemetry/api@1.9.1)(socks@2.8.7)':
+  '@forklaunch/infrastructure-redis@1.4.4(@opentelemetry/api@1.9.1)':
     dependencies:
       '@forklaunch/common': 1.2.18
-      '@forklaunch/core': 1.5.2(socks@2.8.7)
+      '@forklaunch/core': 1.5.2
       redis: 5.12.1(@opentelemetry/api@1.9.1)
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
@@ -9002,11 +9324,11 @@ snapshots:
       - supports-color
       - sury
 
-  '@forklaunch/infrastructure-s3@1.4.4(socks@2.8.7)':
+  '@forklaunch/infrastructure-s3@1.4.4':
     dependencies:
       '@aws-sdk/client-s3': 3.1045.0
       '@forklaunch/common': 1.2.18
-      '@forklaunch/core': 1.5.2(socks@2.8.7)
+      '@forklaunch/core': 1.5.2
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
       - '@cfworker/json-schema'
@@ -9070,11 +9392,11 @@ snapshots:
       ts-deepmerge: 7.0.3
       zod: 4.4.3
 
-  '@forklaunch/ws@1.2.32(socks@2.8.7)':
+  '@forklaunch/ws@1.2.32':
     dependencies:
       '@asyncapi/parser': 3.6.0
       '@forklaunch/common': 1.2.18
-      '@forklaunch/core': 1.5.2(socks@2.8.7)
+      '@forklaunch/core': 1.5.2
       '@forklaunch/validator': 1.2.18
       '@types/ws': 8.18.1
       ws: 8.20.0
@@ -9474,10 +9796,10 @@ snapshots:
       '@mikro-orm/core': 7.0.15
       '@mikro-orm/sql': 7.0.15(@mikro-orm/core@7.0.15)
 
-  '@mikro-orm/mongodb@7.0.15(@mikro-orm/core@7.0.15)(socks@2.8.7)':
+  '@mikro-orm/mongodb@7.0.15(@mikro-orm/core@7.0.15)':
     dependencies:
       '@mikro-orm/core': 7.0.15
-      mongodb: 7.2.0(socks@2.8.7)
+      mongodb: 7.2.0
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
       - '@mongodb-js/zstd'
@@ -11294,13 +11616,13 @@ snapshots:
     dependencies:
       tweetnacl: 0.14.5
 
-  better-auth@1.6.10(@opentelemetry/api@1.9.1)(better-sqlite3@12.9.0)(mongodb@7.2.0(socks@2.8.7))(mysql2@3.22.3(@types/node@25.7.0))(pg@8.20.0)(vitest@4.1.6(@opentelemetry/api@1.9.1)(@types/node@25.7.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@25.7.0)(esbuild@0.27.7)(tsx@4.21.0)(yaml@2.9.0))):
+  better-auth@1.6.10(@opentelemetry/api@1.9.1)(better-sqlite3@12.9.0)(mongodb@7.2.0)(mysql2@3.22.3(@types/node@25.7.0))(pg@8.20.0)(vitest@4.1.6(@opentelemetry/api@1.9.1)(@types/node@25.7.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@25.7.0)(esbuild@0.27.7)(tsx@4.21.0)(yaml@2.9.0))):
     dependencies:
       '@better-auth/core': 1.6.10(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.1)(better-call@1.3.5(zod@4.4.3))(jose@6.2.3)(kysely@0.28.17)(nanostores@1.3.0)
       '@better-auth/drizzle-adapter': 1.6.10(@better-auth/core@1.6.10(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.1)(better-call@1.3.5(zod@4.4.3))(jose@6.2.3)(kysely@0.28.17)(nanostores@1.3.0))(@better-auth/utils@0.4.0)
       '@better-auth/kysely-adapter': 1.6.10(@better-auth/core@1.6.10(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.1)(better-call@1.3.5(zod@4.4.3))(jose@6.2.3)(kysely@0.28.17)(nanostores@1.3.0))(@better-auth/utils@0.4.0)(kysely@0.28.17)
       '@better-auth/memory-adapter': 1.6.10(@better-auth/core@1.6.10(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.1)(better-call@1.3.5(zod@4.4.3))(jose@6.2.3)(kysely@0.28.17)(nanostores@1.3.0))(@better-auth/utils@0.4.0)
-      '@better-auth/mongo-adapter': 1.6.10(@better-auth/core@1.6.10(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.1)(better-call@1.3.5(zod@4.4.3))(jose@6.2.3)(kysely@0.28.17)(nanostores@1.3.0))(@better-auth/utils@0.4.0)(mongodb@7.2.0(socks@2.8.7))
+      '@better-auth/mongo-adapter': 1.6.10(@better-auth/core@1.6.10(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.1)(better-call@1.3.5(zod@4.4.3))(jose@6.2.3)(kysely@0.28.17)(nanostores@1.3.0))(@better-auth/utils@0.4.0)(mongodb@7.2.0)
       '@better-auth/prisma-adapter': 1.6.10(@better-auth/core@1.6.10(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.1)(better-call@1.3.5(zod@4.4.3))(jose@6.2.3)(kysely@0.28.17)(nanostores@1.3.0))(@better-auth/utils@0.4.0)
       '@better-auth/telemetry': 1.6.10(@better-auth/core@1.6.10(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.1)(better-call@1.3.5(zod@4.4.3))(jose@6.2.3)(kysely@0.28.17)(nanostores@1.3.0))(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)
       '@better-auth/utils': 0.4.0
@@ -11315,7 +11637,7 @@ snapshots:
       zod: 4.4.3
     optionalDependencies:
       better-sqlite3: 12.9.0
-      mongodb: 7.2.0(socks@2.8.7)
+      mongodb: 7.2.0
       mysql2: 3.22.3(@types/node@25.7.0)
       pg: 8.20.0
       vitest: 4.1.6(@opentelemetry/api@1.9.1)(@types/node@25.7.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@25.7.0)(esbuild@0.27.7)(tsx@4.21.0)(yaml@2.9.0))
@@ -13541,13 +13863,11 @@ snapshots:
       '@types/whatwg-url': 13.0.0
       whatwg-url: 14.2.0
 
-  mongodb@7.2.0(socks@2.8.7):
+  mongodb@7.2.0:
     dependencies:
       '@mongodb-js/saslprep': 1.4.11
       bson: 7.2.0
       mongodb-connection-string-url: 7.0.1
-    optionalDependencies:
-      socks: 2.8.7
 
   mri@1.2.0: {}
 
@@ -14496,15 +14816,6 @@ snapshots:
     dependencies:
       ansi-styles: 6.2.3
       is-fullwidth-code-point: 5.1.0
-
-  smart-buffer@4.2.0:
-    optional: true
-
-  socks@2.8.7:
-    dependencies:
-      ip-address: 10.2.0
-      smart-buffer: 4.2.0
-    optional: true
 
   sonic-boom@4.2.1:
     dependencies:

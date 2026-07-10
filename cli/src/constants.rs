@@ -334,6 +334,11 @@ choice! {
             id: "iam-better-auth",
             description: Some("better auth implementation for iam"),
             exclusive_files: Some(&["iam-better-auth"])
+        },
+        StripeEcommerce = Choice {
+            id: "ecommerce-stripe",
+            description: Some("stripe ecommerce implementation (catalog, cart, orders, payments, subscriptions)"),
+            exclusive_files: Some(&["ecommerce-stripe"])
         }
     }
 
@@ -513,6 +518,7 @@ pub(crate) fn get_service_module_name(service_type: &Module) -> String {
     match service_type {
         Module::BaseBilling | Module::StripeBilling => "billing".to_string(),
         Module::BaseIam | Module::BetterAuthIam => "iam".to_string(),
+        Module::StripeEcommerce => "ecommerce".to_string(),
     }
 }
 
@@ -524,6 +530,7 @@ pub(crate) fn get_service_module_description(name: &str, service_type: &Module) 
         match service_type {
             Module::BaseBilling | Module::StripeBilling => "billing service APIs",
             Module::BaseIam | Module::BetterAuthIam => "identity and access management APIs",
+            Module::StripeEcommerce => "ecommerce service APIs",
         }
     )
 }

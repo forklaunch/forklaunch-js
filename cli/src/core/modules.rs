@@ -16,10 +16,16 @@ pub(crate) enum BillingConfig {
     StripeBilling,
 }
 
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) enum EcommerceConfig {
+    StripeEcommerce,
+}
+
 #[derive(Debug, PartialEq, Eq, Default)]
 pub(crate) struct ModuleConfig {
     pub(crate) iam: Option<IamConfig>,
     pub(crate) billing: Option<BillingConfig>,
+    pub(crate) ecommerce: Option<EcommerceConfig>,
 }
 
 pub(crate) fn validate_modules(
@@ -41,6 +47,9 @@ pub(crate) fn validate_modules(
             }
             Module::StripeBilling => {
                 global_module_config.billing = Some(BillingConfig::StripeBilling);
+            }
+            Module::StripeEcommerce => {
+                global_module_config.ecommerce = Some(EcommerceConfig::StripeEcommerce);
             }
         }
 
