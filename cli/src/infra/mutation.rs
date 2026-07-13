@@ -13,9 +13,12 @@ use crate::{
     deploy::utils::stream_deployment_status,
 };
 
-use super::types::{
-    DeployResourceRequest, DeployResourceResponse, PatchResourceRequest, ResourceConfig,
-    ResourceDetailResponse,
+use super::{
+    resource_resolver::encode_resource_id_for_url,
+    types::{
+        DeployResourceRequest, DeployResourceResponse, PatchResourceRequest, ResourceConfig,
+        ResourceDetailResponse,
+    },
 };
 
 /// Everything a mutating `fl infra` subcommand (`resize`, `config-set`) needs to
@@ -87,11 +90,15 @@ fn print_config_diff(stdout: &mut StandardStream, current: &ResourceConfig, requ
     macro_rules! diff_field {
         ($label:expr, $cur:expr, $req:expr) => {
             if let Some(new_value) = &$req {
+                let cur_display = $cur
+                    .as_ref()
+                    .map(|v| format!("{:?}", v))
+                    .unwrap_or_else(|| "unset".to_string());
                 writeln!(
                     stdout,
-                    "    {:<24} {:?} -> {:?}",
+                    "    {:<24} {} -> {:?}",
                     $label,
-                    $cur.as_ref().map(|v| format!("{:?}", v)).unwrap_or_else(|| "unset".to_string()),
+                    cur_display,
                     new_value
                 )?;
             }
@@ -203,7 +210,7 @@ fn deploy_resource(
     let url = format!(
         "{}/platform-resources/{}/deploy",
         get_resource_management_api_url(),
-        resource_id
+        encode_resource_id_for_url(resource_id)
     );
 
     let body = DeployResourceRequest {
@@ -247,7 +254,7 @@ fn patch_resource(
     let url = format!(
         "{}/platform-resources/{}",
         get_resource_management_api_url(),
-        resource_id
+        encode_resource_id_for_url(resource_id)
     );
 
     let body = PatchResourceRequest {

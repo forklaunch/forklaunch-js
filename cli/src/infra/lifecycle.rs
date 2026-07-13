@@ -5,7 +5,7 @@ use crate::{
     core::{hmac::AuthMode, http_client::post_with_auth},
 };
 
-use super::types::MessageResponse;
+use super::{resource_resolver::encode_resource_id_for_url, types::MessageResponse};
 
 /// `POST /:id/stop` and `POST /:id/delete` both take no request body and return a
 /// synchronous `{message: string}` — no `deploymentId`, no polling. Shared by
@@ -18,7 +18,7 @@ pub(crate) fn call_lifecycle_action(
     let url = format!(
         "{}/platform-resources/{}/{}",
         get_resource_management_api_url(),
-        resource_id,
+        encode_resource_id_for_url(resource_id),
         action
     );
 

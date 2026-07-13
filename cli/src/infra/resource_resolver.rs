@@ -1,4 +1,5 @@
 use anyhow::{Context, Result, anyhow, bail};
+use percent_encoding::{AsciiSet, CONTROLS, utf8_percent_encode};
 
 use crate::{
     constants::get_resource_management_api_url,
@@ -6,6 +7,34 @@ use crate::{
 };
 
 use super::types::{ResourceDetailResponse, ResourceListItem};
+
+/// Characters that must be escaped in a URL path segment. Letters, digits, and the
+/// unreserved punctuation used by UUIDs (`-`, `_`, `.`, `~`) are left untouched, so
+/// normal platform-resolved ids are byte-for-byte unchanged. Only characters that
+/// would otherwise restructure the request (`/`, `?`, `#`, `%`, whitespace, etc.)
+/// get encoded.
+const PATH_SEGMENT: &AsciiSet = &CONTROLS
+    .add(b' ')
+    .add(b'"')
+    .add(b'#')
+    .add(b'%')
+    .add(b'/')
+    .add(b'<')
+    .add(b'>')
+    .add(b'?')
+    .add(b'`')
+    .add(b'{')
+    .add(b'}');
+
+/// Percent-encodes a resource id before it's interpolated into a URL path segment.
+/// Every `.../platform-resources/{resource_id}...` URL must go through this — the id
+/// can come from the platform (always a clean UUID, effectively a no-op here) or
+/// from the user-supplied `--resource-id` escape hatch, which is unvalidated input
+/// and must not be trusted as URL structure (a value containing `/`, `?`, `#`, or
+/// `..` should stay opaque data, not alter the request path).
+pub(crate) fn encode_resource_id_for_url(resource_id: &str) -> String {
+    utf8_percent_encode(resource_id, PATH_SEGMENT).to_string()
+}
 
 /// `fl infra` is JWT/session-only in v1 — resource-management's routes have no HMAC
 /// support (`AccessLevel` forbids RBAC on `internal`-only routes, so adding it would
@@ -77,7 +106,7 @@ pub(crate) fn fetch_resource_detail(
     let url = format!(
         "{}/platform-resources/{}",
         get_resource_management_api_url(),
-        resource_id
+        encode_resource_id_for_url(resource_id)
     );
 
     let response =
@@ -241,5 +270,26 @@ mod tests {
         // string itself should not also be accepted as a CLI-facing token, to avoid
         // two spellings meaning the same thing.
         assert!(resource_type_to_integration_type("messagequeue").is_err());
+    }
+
+    #[test]
+    fn encode_resource_id_is_a_no_op_for_a_normal_uuid() {
+        let uuid = "550e8400-e29b-41d4-a716-446655440000";
+        assert_eq!(encode_resource_id_for_url(uuid), uuid);
+    }
+
+    #[test]
+    fn encode_resource_id_escapes_path_separator() {
+        assert_eq!(
+            encode_resource_id_for_url("abc/../secret"),
+            "abc%2F..%2Fsecret"
+        );
+    }
+
+    #[test]
+    fn encode_resource_id_escapes_query_and_fragment_markers() {
+        let encoded = encode_resource_id_for_url("id?environment=prod#frag");
+        assert!(!encoded.contains('?'));
+        assert!(!encoded.contains('#'));
     }
 }
