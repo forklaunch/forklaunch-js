@@ -12,12 +12,14 @@ const DEV_OBSERVABILITY_API_URL: &str = "http://localhost:8007";
 const DEV_IAM_API_URL: &str = "http://localhost:8001";
 const DEV_BILLING_API_URL: &str = "http://localhost:8000";
 const DEV_PLATFORM_UI_URL: &str = "http://localhost:5173";
+const DEV_RESOURCE_MANAGEMENT_API_URL: &str = "http://localhost:8005";
 
 const PROD_PLATFORM_MANAGEMENT_API_URL: &str = "https://platform-management.forklaunch.com";
 const PROD_OBSERVABILITY_API_URL: &str = "https://observability-api.forklaunch.com";
 const PROD_IAM_API_URL: &str = "https://iam.forklaunch.com";
 const PROD_BILLING_API_URL: &str = "https://billing.forklaunch.com";
 const PROD_PLATFORM_UI_URL: &str = "https://forklaunch.com";
+const PROD_RESOURCE_MANAGEMENT_API_URL: &str = "https://resource-management.forklaunch.com";
 
 pub(crate) fn is_dev_build() -> bool {
     std::env::current_exe()
@@ -90,6 +92,17 @@ pub(crate) fn get_platform_ui_url() -> String {
             DEV_PLATFORM_UI_URL
         } else {
             PROD_PLATFORM_UI_URL
+        }
+        .to_string()
+    })
+}
+
+pub(crate) fn get_resource_management_api_url() -> String {
+    std::env::var("FORKLAUNCH_RESOURCE_MANAGEMENT_API_URL").unwrap_or_else(|_| {
+        if is_dev_build() {
+            DEV_RESOURCE_MANAGEMENT_API_URL
+        } else {
+            PROD_RESOURCE_MANAGEMENT_API_URL
         }
         .to_string()
     })

@@ -57,13 +57,21 @@ fn try_authenticated_request(
     let mut request = client
         .request(method, url)
         .header("Authorization", format!("Bearer {}", token))
-        .header("Accept", "application/json");
+        .header("Accept", "application/json")
+        .header("User-Agent", user_agent());
 
     if let Some(json_body) = body {
         request = request.json(&json_body);
     }
 
     Ok(request.send()?)
+}
+
+/// Identifies this CLI as the caller in platform request logs — lets the platform
+/// distinguish CLI-originated mutations (e.g. `fl infra resize`) from dashboard-UI
+/// or other callers of the same endpoints.
+fn user_agent() -> String {
+    format!("forklaunch-cli/{}", env!("CARGO_PKG_VERSION"))
 }
 
 /// Handles authentication failure by refreshing token or triggering re-login
@@ -107,6 +115,11 @@ pub fn post(url: &str, body: Value) -> Result<Response> {
 /// Helper to make a PUT request with authentication
 pub fn put(url: &str, body: Value) -> Result<Response> {
     make_authenticated_request(Method::PUT, url, Some(body))
+}
+
+/// Helper to make a PATCH request with authentication
+pub fn patch(url: &str, body: Value) -> Result<Response> {
+    make_authenticated_request(Method::PATCH, url, Some(body))
 }
 
 /// Extract the path component from a full URL (e.g. "https://host:port/path?q" -> "/path?q")
@@ -159,7 +172,8 @@ fn make_hmac_request_with_sign_path(
     let mut request = client
         .request(method, url)
         .header("Authorization", auth_header)
-        .header("Accept", "application/json");
+        .header("Accept", "application/json")
+        .header("User-Agent", user_agent());
 
     if let Some(json_body) = body {
         request = request.json(&json_body);
@@ -212,6 +226,16 @@ pub fn put_with_auth(auth_mode: &AuthMode, url: &str, body: Value) -> Result<Res
         AuthMode::Jwt => put(url, body),
         AuthMode::Hmac { secret_key } => {
             make_hmac_request(secret_key, Method::PUT, url, Some(body))
+        }
+    }
+}
+
+/// PATCH with auth mode dispatch (JWT or HMAC)
+pub fn patch_with_auth(auth_mode: &AuthMode, url: &str, body: Value) -> Result<Response> {
+    match auth_mode {
+        AuthMode::Jwt => patch(url, body),
+        AuthMode::Hmac { secret_key } => {
+            make_hmac_request(secret_key, Method::PATCH, url, Some(body))
         }
     }
 }
