@@ -120,6 +120,12 @@ pub(crate) struct DeployResourceResponse {
     pub(crate) deployment_id: String,
 }
 
+/// `POST /:id/stop` and `POST /:id/delete` both respond with this synchronous shape.
+#[derive(Debug, Deserialize)]
+pub(crate) struct MessageResponse {
+    pub(crate) message: String,
+}
+
 #[derive(Debug, Serialize)]
 pub(crate) struct PatchResourceRequest {
     #[serde(
