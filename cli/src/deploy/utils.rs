@@ -109,8 +109,11 @@ pub(crate) fn stream_deployment_status(
     Ok(())
 }
 
-fn display_phase_update(phase: &str, stdout: &mut StandardStream) -> Result<()> {
-    let message = match phase {
+/// Maps a deployment phase string to a human-readable message. Unrecognized phases
+/// (e.g. new resource-modify phases like "modifying_database") fall back to the raw
+/// phase string rather than panicking or dropping the update silently.
+fn phase_message(phase: &str) -> &str {
+    match phase {
         "validating" => "  Validating configuration...",
         "provisioning_database" => "  Provisioning database (RDS PostgreSQL db.t3.micro)...",
         "provisioning_cache" => "  Provisioning cache (ElastiCache Redis)...",
@@ -125,7 +128,28 @@ fn display_phase_update(phase: &str, stdout: &mut StandardStream) -> Result<()> 
         "destroying_cache" => "  Destroying cache...",
         "destroying_database" => "  Destroying database...",
         _ => phase,
-    };
-    log_info!(stdout, "{}", message);
+    }
+}
+
+fn display_phase_update(phase: &str, stdout: &mut StandardStream) -> Result<()> {
+    log_info!(stdout, "{}", phase_message(phase));
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn known_phase_maps_to_human_message() {
+        assert_eq!(phase_message("validating"), "  Validating configuration...");
+    }
+
+    #[test]
+    fn unrecognized_phase_falls_back_to_raw_string() {
+        // Locks in the defensive fallback: a resource-modify deployment emitting a
+        // phase name not in this match (e.g. "modifying_database") must not panic
+        // or print nothing — it should surface the raw phase string.
+        assert_eq!(phase_message("modifying_database"), "modifying_database");
+    }
 }

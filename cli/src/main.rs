@@ -10,6 +10,7 @@ use depcheck::DepcheckCommand;
 use deploy::DeployCommand;
 use eject::EjectCommand;
 use environment::EnvironmentCommand;
+use infra::InfraCommand;
 use init::InitCommand;
 use integrate::IntegrateCommand;
 use login::LoginCommand;
@@ -36,6 +37,7 @@ mod depcheck;
 mod deploy;
 mod eject;
 mod environment;
+mod infra;
 mod init;
 mod integrate;
 mod login;
@@ -67,6 +69,7 @@ fn main() -> Result<()> {
     let deploy = DeployCommand::new();
     let eject = EjectCommand::new();
     let environment = EnvironmentCommand::new();
+    let infra = InfraCommand::new();
     let integrate = IntegrateCommand::new();
     let login = LoginCommand::new();
     let logout = LogoutCommand::new();
@@ -93,6 +96,7 @@ fn main() -> Result<()> {
         .subcommand(context.command())
         .subcommand(deploy.command())
         .subcommand(environment.command())
+        .subcommand(infra.command())
         .subcommand(integrate.command())
         .subcommand(openapi.command())
         .subcommand(release.command())
@@ -121,6 +125,7 @@ fn main() -> Result<()> {
         Some(("deploy", sub_matches)) => deploy.handler(sub_matches),
         Some(("eject", sub_matches)) => eject.handler(sub_matches),
         Some(("environment", sub_matches)) => environment.handler(sub_matches),
+        Some(("infra", sub_matches)) => infra.handler(sub_matches),
         Some(("integrate", sub_matches)) => integrate.handler(sub_matches),
         Some(("openapi", sub_matches)) => openapi.handler(sub_matches),
         Some(("release", sub_matches)) => release.handler(sub_matches),
