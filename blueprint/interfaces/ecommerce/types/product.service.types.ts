@@ -39,10 +39,29 @@ export type UpdateProductDto = Partial<CreateProductDto> & IdDto;
 
 export type ProductDto = CreateProductDto & IdDto & Partial<RecordTimingDto>;
 
+/**
+ * Catalog search/filter (ECOM-03). `ids` narrows to specific products,
+ * everything else is optional and additive. Price/stock/option filters are
+ * variant-level under the hood (Product itself carries no price) — a
+ * product matches if at least one of its variants satisfies them.
+ */
+export type ProductSearchDto = Partial<IdsDto> & {
+  /** Case-insensitive partial match against the product title. */
+  title?: string;
+  minPriceCents?: number;
+  maxPriceCents?: number;
+  /** True: at least one variant has stock > 0. */
+  inStock?: boolean;
+  /** Both must be set together — e.g. optionName 'Color', optionValue 'Black'. */
+  optionName?: string;
+  optionValue?: string;
+};
+
 export type ProductServiceParameters = {
   CreateProductDto: CreateProductDto;
   UpdateProductDto: UpdateProductDto;
   ProductDto: ProductDto;
   IdDto: IdDto;
   IdsDto: IdsDto;
+  SearchDto: ProductSearchDto;
 };

@@ -1,4 +1,4 @@
-import { IdDto, IdsDto } from '@forklaunch/common';
+import { IdDto } from '@forklaunch/common';
 import {
   evaluateTelemetryOptions,
   MetricsDefinition,
@@ -8,6 +8,7 @@ import {
 import { ProductService } from '@forklaunch/interfaces-ecommerce/interfaces';
 import {
   CreateProductDto,
+  ProductSearchDto,
   UpdateProductDto
 } from '@forklaunch/interfaces-ecommerce/types';
 import { AnySchemaValidator } from '@forklaunch/validator';
@@ -55,21 +56,34 @@ export class BaseProductService<
         };
   }
 
+  /**
+   * Product-level half of catalog search/filter (ECOM-03): `ids` and
+   * `title`. Price/stock/option-value filters are variant-level and are
+   * resolved one layer up, at the deployable app's controller — this
+   * service only knows about Product, not Variant/Inventory — which then
+   * narrows to a candidate `ids` set before calling this.
+   */
   async listProducts(
-    idsDto?: IdsDto,
+    searchDto?: ProductSearchDto,
     em?: EntityManager
   ): Promise<MapperDomains['ProductMapper'][]> {
     if (this.evaluatedTelemetryOptions.logging) {
-      this.openTelemetryCollector.info('Listing products', idsDto);
+      this.openTelemetryCollector.info('Listing products', searchDto);
+    }
+
+    const where: Record<string, unknown> = {};
+    if (searchDto?.ids?.length) {
+      where.id = { $in: searchDto.ids };
+    }
+    if (searchDto?.title) {
+      where.title = { $ilike: `%${searchDto.title}%` };
     }
 
     return Promise.all(
       (
         await (em ?? this.em).findAll(
           this.mappers.ProductMapper.entity as typeof Product,
-          {
-            where: idsDto?.ids?.length ? { id: { $in: idsDto.ids } } : undefined
-          }
+          { where: Object.keys(where).length ? where : undefined }
         )
       ).map((product) =>
         this.mappers.ProductMapper.toDto(

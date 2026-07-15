@@ -1,8 +1,10 @@
 import {
   array,
+  boolean,
   handlers,
   IdSchema,
-  IdsSchema,
+  number,
+  optional,
   schemaValidator,
   string
 } from '../../schema';
@@ -15,7 +17,19 @@ import {
 
 const openTelemetryCollector = ci.resolve(tokens.OtelCollector);
 const serviceFactory = ci.scopedResolver(tokens.ProductService);
+const variantServiceFactory = ci.scopedResolver(tokens.VariantService);
+const inventoryServiceFactory = ci.scopedResolver(tokens.InventoryService);
 const HMAC_SECRET_KEY = ci.resolve(tokens.HMAC_SECRET_KEY);
+
+const ProductSearchQuerySchema = {
+  ids: optional(array(string)),
+  title: optional(string),
+  minPriceCents: optional(number),
+  maxPriceCents: optional(number),
+  inStock: optional(boolean),
+  optionName: optional(string),
+  optionValue: optional(string)
+};
 
 export const createProduct = handlers.post(
   schemaValidator,
@@ -101,18 +115,91 @@ export const deleteProduct = handlers.delete(
   }
 );
 
+/**
+ * Catalog search/filter (ECOM-03). `ids`/`title` are product-level and
+ * resolved directly by the product service. `minPriceCents`/`maxPriceCents`/
+ * `inStock`/`optionName`+`optionValue` are variant-level — Product itself
+ * carries no price — so they're resolved here by narrowing variants first,
+ * then constraining the product query to the productIds that survive.
+ */
 export const listProducts = handlers.get(
   schemaValidator,
   '/',
   {
     name: 'List Products',
     access: 'internal',
-    summary: 'List products',
+    summary: 'List/search products, optionally filtered by title, price, stock, or a variant option value',
     auth: { hmac: { secretKeys: { default: HMAC_SECRET_KEY } } },
-    query: IdsSchema,
+    query: ProductSearchQuerySchema,
     responses: { 200: array(ProductMapper.schema) }
   },
   async (req, res) => {
-    res.status(200).json(await serviceFactory().listProducts(req.query));
+    const {
+      ids,
+      title,
+      minPriceCents,
+      maxPriceCents,
+      inStock,
+      optionName,
+      optionValue
+    } = req.query;
+
+    const hasVariantLevelFilter =
+      minPriceCents != null ||
+      maxPriceCents != null ||
+      inStock != null ||
+      (optionName != null && optionValue != null);
+
+    let productIds = ids;
+
+    if (hasVariantLevelFilter) {
+      let candidateVariants = await variantServiceFactory().listVariants();
+
+      if (minPriceCents != null) {
+        candidateVariants = candidateVariants.filter(
+          (v) => v.priceCents >= minPriceCents
+        );
+      }
+      if (maxPriceCents != null) {
+        candidateVariants = candidateVariants.filter(
+          (v) => v.priceCents <= maxPriceCents
+        );
+      }
+      if (optionName != null && optionValue != null) {
+        candidateVariants = candidateVariants.filter(
+          (v) => v.optionValues?.[optionName] === optionValue
+        );
+      }
+      if (inStock) {
+        const stockChecks = await Promise.all(
+          candidateVariants.map(async (v) => {
+            try {
+              const inventory = await inventoryServiceFactory().getInventory({
+                variantId: v.id
+              });
+              return inventory.stock > 0;
+            } catch {
+              // No inventory record yet — treat as out of stock, not an error.
+              return false;
+            }
+          })
+        );
+        candidateVariants = candidateVariants.filter((_, i) => stockChecks[i]);
+      }
+
+      const candidateProductIds = [
+        ...new Set(candidateVariants.map((v) => v.productId))
+      ];
+      productIds = ids?.length
+        ? ids.filter((id) => candidateProductIds.includes(id))
+        : candidateProductIds;
+    }
+
+    res.status(200).json(
+      await serviceFactory().listProducts({
+        ...(productIds ? { ids: productIds } : {}),
+        ...(title ? { title } : {})
+      })
+    );
   }
 );
