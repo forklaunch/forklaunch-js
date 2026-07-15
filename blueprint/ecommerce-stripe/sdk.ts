@@ -4,6 +4,7 @@ import {
   addCartItem,
   adjustStock,
   checkStock,
+  checkout,
   clearCart,
   createCart,
   createOrder,
@@ -70,6 +71,9 @@ export type EcommerceSdk = {
     listOrders: typeof listOrders;
     transitionOrder: typeof transitionOrder;
   };
+  checkout: {
+    checkout: typeof checkout;
+  };
   payment: {
     createPayment: typeof createPayment;
     getPayment: typeof getPayment;
@@ -120,6 +124,9 @@ export const ecommerceSdkClient = {
     getOrder,
     listOrders,
     transitionOrder
+  },
+  checkout: {
+    checkout
   },
   payment: {
     createPayment,
