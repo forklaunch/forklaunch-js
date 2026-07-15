@@ -7,7 +7,11 @@ import {
 } from './schema';
 import { Metrics, metrics } from '@forklaunch/blueprint-monitoring';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { wrapEmWithTenantContext } from '@forklaunch/core/persistence';
+import {
+  FieldEncryptor,
+  wrapEmWithTenantContext
+} from '@forklaunch/core/persistence';
+import { RedisTtlCache } from '@forklaunch/infrastructure-redis';
 import {
   createConfigInjector,
   getEnvVar,
@@ -172,6 +176,11 @@ const environmentConfig = configInjector.chain({
     lifetime: Lifetime.Singleton,
     type: string,
     value: getEnvVar('PAYPAL_BASE_URL')
+  },
+  REDIS_URL: {
+    lifetime: Lifetime.Singleton,
+    type: string,
+    value: getEnvVar('REDIS_URL')
   }
 });
 
@@ -191,6 +200,25 @@ const runtimeDependencies = environmentConfig.chain({
         clientSecret: PAYPAL_CLIENT_SECRET,
         baseUrl: PAYPAL_BASE_URL
       })
+  },
+  /**
+   * Cart's fast/temporary-state layer (ECOM-06's original design) — a
+   * read-through cache in front of Postgres, which stays the source of
+   * truth. 30 minutes matches a typical shopping-session/abandonment
+   * window: long enough to serve an active session from cache, short
+   * enough to self-evict abandoned carts rather than accumulate forever.
+   */
+  TtlCache: {
+    lifetime: Lifetime.Singleton,
+    type: RedisTtlCache,
+    factory: ({ REDIS_URL, OtelCollector, OTEL_LEVEL, ENCRYPTION_KEY }) =>
+      new RedisTtlCache(
+        30 * 60 * 1000,
+        OtelCollector,
+        { url: REDIS_URL },
+        { enabled: true, level: OTEL_LEVEL || 'info' },
+        { encryptor: new FieldEncryptor(ENCRYPTION_KEY) }
+      )
   },
   Orm: {
     lifetime: Lifetime.Singleton,
@@ -269,14 +297,15 @@ const serviceDependencies = runtimeDependencies.chain({
   CartService: {
     lifetime: Lifetime.Scoped,
     type: BaseCartService<SchemaValidator, CartMapperTypes, CartDtoTypes>,
-    factory: ({ EntityManager, OtelCollector }, context, resolve) =>
+    factory: ({ EntityManager, OtelCollector, TtlCache }, context, resolve) =>
       new BaseCartService(
         context.entityManagerOptions
           ? resolve('EntityManager', context)
           : EntityManager,
         OtelCollector,
         schemaValidator,
-        { CartMapper, CreateCartMapper, UpdateCartMapper }
+        { CartMapper, CreateCartMapper, UpdateCartMapper },
+        { cache: TtlCache }
       )
   },
   OrderService: {
