@@ -225,6 +225,7 @@ impl CliCommand for ModuleCommand {
 
             is_better_auth: module.clone() == Module::BetterAuthIam,
             is_stripe: module.clone() == Module::StripeBilling,
+            is_ecommerce: module.clone() == Module::StripeEcommerce,
 
             is_iam_configured: manifest_data.projects.iter().any(|project_entry| {
                 if project_entry.name == "iam" {

@@ -938,6 +938,7 @@ impl CliCommand for ApplicationCommand {
 
                 is_better_auth: template_dir.module_id == Some(Module::BetterAuthIam),
                 is_stripe: template_dir.module_id == Some(Module::StripeBilling),
+                is_ecommerce: template_dir.module_id == Some(Module::StripeEcommerce),
 
                 is_iam_configured: data.projects.iter().any(|project_entry| {
                     if project_entry.name == "iam" {

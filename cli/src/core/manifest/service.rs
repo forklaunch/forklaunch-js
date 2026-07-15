@@ -77,6 +77,8 @@ config_struct!(
         pub(crate) is_better_auth: bool,
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) is_stripe: bool,
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) is_ecommerce: bool,
 
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) is_iam_configured: bool,
