@@ -28,7 +28,8 @@
     "migrate:up": "NODE_OPTIONS='--import=tsx' mikro-orm migration:up",
     "prepack": "pnpm run build",
     "start": "DOTENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' node dist/server.js",
-    "test": "vitest --passWithNoTests"
+    "test": "vitest --passWithNoTests",
+    "worker": "pnpm tsx watch worker.ts"
   },
   "dependencies": {
     "@forklaunch/blueprint-core": "workspace:*",
@@ -41,8 +42,10 @@
     "@forklaunch/implementation-ecommerce-base": "workspace:*",
     "@forklaunch/implementation-ecommerce-paypal": "workspace:*",
     "@forklaunch/implementation-ecommerce-stripe": "workspace:*",
+    "@forklaunch/implementation-worker-redis": "workspace:*",
     "@forklaunch/infrastructure-redis": "^1.4.4",
     "@forklaunch/interfaces-ecommerce": "workspace:*",
+    "@forklaunch/interfaces-worker": "workspace:*",
     "@forklaunch/validator": "^1.2.18",
     "@mikro-orm/core": "7.0.15",
     "@mikro-orm/migrations": "7.0.15",

@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import {
   array,
   enum_,
@@ -16,6 +17,7 @@ import {
 
 const openTelemetryCollector = ci.resolve(tokens.OtelCollector);
 const serviceFactory = ci.scopedResolver(tokens.OrderService);
+const orderEventProducerFactory = ci.scopedResolver(tokens.OrderEventProducer);
 const HMAC_SECRET_KEY = ci.resolve(tokens.HMAC_SECRET_KEY);
 
 export const createOrder = handlers.post(
@@ -68,8 +70,9 @@ export const listOrders = handlers.get(
 
 /**
  * The state-machine transition endpoint (ECOM-08/12) — rejects illegal
- * transitions with a 400. Each successful transition is the event-emission
- * boundary the worker reacts to (wired at bootstrapper/worker level).
+ * transitions with a 400. Each successful transition enqueues an
+ * OrderEventRecord — the actual event-emission boundary worker.ts consumes,
+ * previously just a comment here rather than real code.
  */
 export const transitionOrder = handlers.put(
   schemaValidator,
@@ -84,13 +87,28 @@ export const transitionOrder = handlers.put(
     responses: { 200: OrderMapper.schema, 400: string }
   },
   async (req, res) => {
+    const before = await serviceFactory().getOrder({ id: req.params.id });
     try {
-      res.status(200).json(
-        await serviceFactory().transitionOrder({
-          id: req.params.id,
-          to: req.body.to
-        })
-      );
+      const updated = await serviceFactory().transitionOrder({
+        id: req.params.id,
+        to: req.body.to
+      });
+
+      const now = new Date();
+      await orderEventProducerFactory().enqueueJob({
+        id: randomUUID(),
+        orderId: updated.id,
+        fromStatus: before.status,
+        toStatus: updated.status,
+        items: updated.items,
+        processed: false,
+        retryCount: 0,
+        retentionAnonymizedAt: null,
+        createdAt: now,
+        updatedAt: now
+      });
+
+      res.status(200).json(updated);
     } catch (error) {
       openTelemetryCollector.warn('Illegal order transition', error);
       res
