@@ -22,6 +22,10 @@ import {
   BaseVariantService
 } from '@forklaunch/implementation-ecommerce-base/services';
 import { StripePaymentService } from '@forklaunch/implementation-ecommerce-stripe/services';
+import {
+  PaypalClient,
+  PaypalPaymentService
+} from '@forklaunch/implementation-ecommerce-paypal/services';
 import { ForkOptions } from '@mikro-orm/core';
 import { EntityManager, MikroORM } from '@mikro-orm/postgresql';
 import Stripe from 'stripe';
@@ -153,6 +157,21 @@ const environmentConfig = configInjector.chain({
     lifetime: Lifetime.Singleton,
     type: string,
     value: getEnvVar('ENCRYPTION_KEY')
+  },
+  PAYPAL_CLIENT_ID: {
+    lifetime: Lifetime.Singleton,
+    type: string,
+    value: getEnvVar('PAYPAL_CLIENT_ID')
+  },
+  PAYPAL_CLIENT_SECRET: {
+    lifetime: Lifetime.Singleton,
+    type: string,
+    value: getEnvVar('PAYPAL_CLIENT_SECRET')
+  },
+  PAYPAL_BASE_URL: {
+    lifetime: Lifetime.Singleton,
+    type: string,
+    value: getEnvVar('PAYPAL_BASE_URL')
   }
 });
 
@@ -162,6 +181,16 @@ const runtimeDependencies = environmentConfig.chain({
     lifetime: Lifetime.Singleton,
     type: Stripe,
     factory: ({ STRIPE_API_KEY }) => new Stripe(STRIPE_API_KEY)
+  },
+  PaypalClient: {
+    lifetime: Lifetime.Singleton,
+    type: PaypalClient,
+    factory: ({ PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_BASE_URL }) =>
+      new PaypalClient({
+        clientId: PAYPAL_CLIENT_ID,
+        clientSecret: PAYPAL_CLIENT_SECRET,
+        baseUrl: PAYPAL_BASE_URL
+      })
   },
   Orm: {
     lifetime: Lifetime.Singleton,
@@ -304,6 +333,45 @@ const serviceDependencies = runtimeDependencies.chain({
         OtelCollector,
         schemaValidator,
         { PaymentMapper, CreatePaymentMapper }
+      )
+  },
+  /**
+   * Separate token from PaymentService (Stripe, the default) rather than
+   * replacing it — this is the "one socket, many providers" seam: callers
+   * pick a provider per-request (see payment.controller.ts), neither
+   * provider is removed to add the other.
+   */
+  PaypalPaymentService: {
+    lifetime: Lifetime.Scoped,
+    type: PaypalPaymentService<
+      SchemaValidator,
+      PaymentMapperTypes,
+      PaymentDtoTypes
+    >,
+    factory: (
+      { PaypalClient: paypalClientInstance, EntityManager, OtelCollector },
+      context,
+      resolve
+    ) =>
+      new PaypalPaymentService(
+        paypalClientInstance,
+        context.entityManagerOptions
+          ? resolve('EntityManager', context)
+          : EntityManager,
+        OtelCollector,
+        schemaValidator,
+        // Same runtime shape as Stripe's mappers (toEntity only reads
+        // `.id` off the 3rd arg) — PaypalPaymentMappers narrows the type
+        // to PaypalOrder; the cast bridges the two provider-specific
+        // static types over one shared runtime mapper object, same as
+        // StripePaymentService does internally for its own 3rd-arg type.
+        { PaymentMapper, CreatePaymentMapper } as unknown as ConstructorParameters<
+          typeof PaypalPaymentService<
+            SchemaValidator,
+            PaymentMapperTypes,
+            PaymentDtoTypes
+          >
+        >[4]
       )
   }
 });
