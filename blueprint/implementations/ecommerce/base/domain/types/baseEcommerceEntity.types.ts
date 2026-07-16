@@ -1,9 +1,11 @@
 import {
   Cart,
+  GiftCard,
   Inventory,
   Order,
   Payment,
   Product,
+  PromoCode,
   Review,
   Subscription,
   Variant
@@ -62,4 +64,17 @@ export type BaseReviewEntities = {
   ReviewMapper: { '~entity': (typeof Review)['~entity'] };
   CreateReviewMapper: { '~entity': (typeof Review)['~entity'] };
   UpdateReviewMapper: { '~entity': (typeof Review)['~entity'] };
+};
+
+// promo code entity types
+export type BasePromoCodeEntities = {
+  PromoCodeMapper: { '~entity': (typeof PromoCode)['~entity'] };
+  CreatePromoCodeMapper: { '~entity': (typeof PromoCode)['~entity'] };
+  UpdatePromoCodeMapper: { '~entity': (typeof PromoCode)['~entity'] };
+};
+
+// gift card entity types
+export type BaseGiftCardEntities = {
+  GiftCardMapper: { '~entity': (typeof GiftCard)['~entity'] };
+  CreateGiftCardMapper: { '~entity': (typeof GiftCard)['~entity'] };
 };

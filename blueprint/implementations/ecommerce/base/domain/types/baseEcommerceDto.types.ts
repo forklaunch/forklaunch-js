@@ -1,23 +1,28 @@
 import {
   CartDto,
   CreateCartDto,
+  CreateGiftCardDto,
   CreateInventoryDto,
   CreateOrderDto,
   CreateProductDto,
+  CreatePromoCodeDto,
   CreateReviewDto,
   CreateVariantDto,
+  GiftCardDto,
   InventoryDto,
   CreatePaymentDto,
   CreateSubscriptionDto,
   OrderDto,
   PaymentDto,
   ProductDto,
+  PromoCodeDto,
   ReviewDto,
   SubscriptionDto,
   UpdateCartDto,
   UpdateInventoryDto,
   UpdateOrderDto,
   UpdateProductDto,
+  UpdatePromoCodeDto,
   UpdateReviewDto,
   UpdateSubscriptionDto,
   UpdateVariantDto,
@@ -77,4 +82,17 @@ export type BaseReviewDtos = {
   ReviewMapper: ReviewDto;
   CreateReviewMapper: CreateReviewDto;
   UpdateReviewMapper: UpdateReviewDto;
+};
+
+// promo code dto types
+export type BasePromoCodeDtos = {
+  PromoCodeMapper: PromoCodeDto;
+  CreatePromoCodeMapper: CreatePromoCodeDto;
+  UpdatePromoCodeMapper: UpdatePromoCodeDto;
+};
+
+// gift card dto types
+export type BaseGiftCardDtos = {
+  GiftCardMapper: GiftCardDto;
+  CreateGiftCardMapper: CreateGiftCardDto;
 };

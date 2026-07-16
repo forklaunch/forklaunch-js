@@ -2,10 +2,12 @@ import { SchemaValidator, schemaValidator } from '../../schema';
 import { mapServiceSchemas } from '@forklaunch/core/mappers';
 import {
   BaseCartServiceSchemas,
+  BaseGiftCardServiceSchemas,
   BaseInventoryServiceSchemas,
   BaseOrderServiceSchemas,
   BasePaymentServiceSchemas,
   BaseProductServiceSchemas,
+  BasePromoCodeServiceSchemas,
   BaseReviewServiceSchemas,
   BaseSubscriptionServiceSchemas,
   BaseVariantServiceSchemas
@@ -16,10 +18,12 @@ import {
 const schemas = mapServiceSchemas(
   {
     CartSchemas: BaseCartServiceSchemas<SchemaValidator>,
+    GiftCardSchemas: BaseGiftCardServiceSchemas<SchemaValidator>,
     InventorySchemas: BaseInventoryServiceSchemas<SchemaValidator>,
     OrderSchemas: BaseOrderServiceSchemas<SchemaValidator>,
     PaymentSchemas: BasePaymentServiceSchemas<SchemaValidator>,
     ProductSchemas: BaseProductServiceSchemas<SchemaValidator>,
+    PromoCodeSchemas: BasePromoCodeServiceSchemas<SchemaValidator>,
     ReviewSchemas: BaseReviewServiceSchemas<SchemaValidator>,
     SubscriptionSchemas: BaseSubscriptionServiceSchemas<SchemaValidator>,
     VariantSchemas: BaseVariantServiceSchemas<SchemaValidator>
@@ -32,10 +36,12 @@ const schemas = mapServiceSchemas(
 
 export const {
   CartSchemas,
+  GiftCardSchemas,
   InventorySchemas,
   OrderSchemas,
   PaymentSchemas,
   ProductSchemas,
+  PromoCodeSchemas,
   ReviewSchemas,
   SubscriptionSchemas,
   VariantSchemas

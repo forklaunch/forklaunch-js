@@ -2,10 +2,12 @@ import { SchemaValidator } from '../../schema';
 import { Schema } from '@forklaunch/validator';
 import {
   Cart,
+  GiftCard,
   Inventory,
   Order,
   Payment,
   Product,
+  PromoCode,
   Review,
   Subscription,
   Variant
@@ -27,6 +29,12 @@ import {
   ProductMapper,
   UpdateProductMapper
 } from '../mappers/product.mappers';
+import { CreateGiftCardMapper, GiftCardMapper } from '../mappers/giftCard.mappers';
+import {
+  CreatePromoCodeMapper,
+  PromoCodeMapper,
+  UpdatePromoCodeMapper
+} from '../mappers/promoCode.mappers';
 import {
   CreateReviewMapper,
   ReviewMapper,
@@ -147,4 +155,32 @@ export type ReviewDtoTypes = {
   ReviewMapper: Schema<typeof ReviewMapper.schema, SchemaValidator>;
   CreateReviewMapper: Schema<typeof CreateReviewMapper.schema, SchemaValidator>;
   UpdateReviewMapper: Schema<typeof UpdateReviewMapper.schema, SchemaValidator>;
+};
+
+// promo code
+export type PromoCodeMapperTypes = {
+  PromoCodeMapper: typeof PromoCode;
+  CreatePromoCodeMapper: typeof PromoCode;
+  UpdatePromoCodeMapper: typeof PromoCode;
+};
+export type PromoCodeDtoTypes = {
+  PromoCodeMapper: Schema<typeof PromoCodeMapper.schema, SchemaValidator>;
+  CreatePromoCodeMapper: Schema<
+    typeof CreatePromoCodeMapper.schema,
+    SchemaValidator
+  >;
+  UpdatePromoCodeMapper: Schema<
+    typeof UpdatePromoCodeMapper.schema,
+    SchemaValidator
+  >;
+};
+
+// gift card (no update mapper — balance only changes via atomic redemption)
+export type GiftCardMapperTypes = {
+  GiftCardMapper: typeof GiftCard;
+  CreateGiftCardMapper: typeof GiftCard;
+};
+export type GiftCardDtoTypes = {
+  GiftCardMapper: Schema<typeof GiftCardMapper.schema, SchemaValidator>;
+  CreateGiftCardMapper: Schema<typeof CreateGiftCardMapper.schema, SchemaValidator>;
 };

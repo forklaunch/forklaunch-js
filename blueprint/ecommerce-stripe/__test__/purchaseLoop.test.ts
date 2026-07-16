@@ -142,9 +142,11 @@ describe('Purchase Loop E2E Test with PostgreSQL Container', () => {
         country: 'US'
       },
       subtotalCents: 5000,
+      discountCents: 0,
       taxCents: 400,
       taxBreakdown: [{ jurisdiction: 'CA', taxCents: 400 }],
       shippingCents: 0,
+      giftCardCents: 0,
       totalCents: 5400
     };
     const orderResponse = expectOk(

@@ -25,18 +25,28 @@ import {
   listProducts,
   listVariants,
   listVariantsByProduct,
+  createGiftCard,
+  createPromoCode,
   createReview,
   createSubscription,
+  deletePromoCode,
   deleteReview,
   deleteSubscription,
+  getGiftCard,
+  getPromoCode,
   getReview,
   getSubscription,
+  listGiftCards,
+  listPromoCodes,
   listReviews,
   listReviewsByProduct,
   listSubscriptions,
+  redeemGiftCard,
+  redeemPromoCode,
   removeCartItem,
   transitionOrder,
   updateProduct,
+  updatePromoCode,
   updateReview,
   updateSubscription,
   updateVariant
@@ -99,6 +109,20 @@ export type EcommerceSdk = {
     updateReview: typeof updateReview;
     deleteReview: typeof deleteReview;
   };
+  promoCode: {
+    createPromoCode: typeof createPromoCode;
+    getPromoCode: typeof getPromoCode;
+    listPromoCodes: typeof listPromoCodes;
+    updatePromoCode: typeof updatePromoCode;
+    deletePromoCode: typeof deletePromoCode;
+    redeemPromoCode: typeof redeemPromoCode;
+  };
+  giftCard: {
+    createGiftCard: typeof createGiftCard;
+    getGiftCard: typeof getGiftCard;
+    listGiftCards: typeof listGiftCards;
+    redeemGiftCard: typeof redeemGiftCard;
+  };
   catalogImport: {
     importCatalog: typeof importCatalog;
   };
@@ -160,6 +184,20 @@ export const ecommerceSdkClient = {
     listReviewsByProduct,
     updateReview,
     deleteReview
+  },
+  promoCode: {
+    createPromoCode,
+    getPromoCode,
+    listPromoCodes,
+    updatePromoCode,
+    deletePromoCode,
+    redeemPromoCode
+  },
+  giftCard: {
+    createGiftCard,
+    getGiftCard,
+    listGiftCards,
+    redeemGiftCard
   },
   catalogImport: {
     importCatalog

@@ -19,9 +19,11 @@ import {
 } from '@forklaunch/core/services';
 import {
   BaseCartService,
+  BaseGiftCardService,
   BaseInventoryService,
   BaseOrderService,
   BaseProductService,
+  BasePromoCodeService,
   BaseReviewService,
   BaseSubscriptionService,
   BaseVariantService
@@ -69,6 +71,12 @@ import {
   ProductMapper,
   UpdateProductMapper
 } from './domain/mappers/product.mappers';
+import { CreateGiftCardMapper, GiftCardMapper } from './domain/mappers/giftCard.mappers';
+import {
+  CreatePromoCodeMapper,
+  PromoCodeMapper,
+  UpdatePromoCodeMapper
+} from './domain/mappers/promoCode.mappers';
 import {
   CreateReviewMapper,
   ReviewMapper,
@@ -87,6 +95,8 @@ import {
 import {
   CartDtoTypes,
   CartMapperTypes,
+  GiftCardDtoTypes,
+  GiftCardMapperTypes,
   InventoryDtoTypes,
   InventoryMapperTypes,
   OrderDtoTypes,
@@ -95,6 +105,8 @@ import {
   PaymentMapperTypes,
   ProductDtoTypes,
   ProductMapperTypes,
+  PromoCodeDtoTypes,
+  PromoCodeMapperTypes,
   ReviewDtoTypes,
   ReviewMapperTypes,
   SubscriptionDtoTypes,
@@ -395,6 +407,47 @@ const serviceDependencies = runtimeDependencies.chain({
           ReviewMapper,
           CreateReviewMapper,
           UpdateReviewMapper
+        }
+      )
+  },
+  PromoCodeService: {
+    lifetime: Lifetime.Scoped,
+    type: BasePromoCodeService<
+      SchemaValidator,
+      PromoCodeMapperTypes,
+      PromoCodeDtoTypes
+    >,
+    factory: ({ EntityManager, OtelCollector }, context, resolve) =>
+      new BasePromoCodeService(
+        context.entityManagerOptions
+          ? resolve('EntityManager', context)
+          : EntityManager,
+        OtelCollector,
+        schemaValidator,
+        {
+          PromoCodeMapper,
+          CreatePromoCodeMapper,
+          UpdatePromoCodeMapper
+        }
+      )
+  },
+  GiftCardService: {
+    lifetime: Lifetime.Scoped,
+    type: BaseGiftCardService<
+      SchemaValidator,
+      GiftCardMapperTypes,
+      GiftCardDtoTypes
+    >,
+    factory: ({ EntityManager, OtelCollector }, context, resolve) =>
+      new BaseGiftCardService(
+        context.entityManagerOptions
+          ? resolve('EntityManager', context)
+          : EntityManager,
+        OtelCollector,
+        schemaValidator,
+        {
+          GiftCardMapper,
+          CreateGiftCardMapper
         }
       )
   },

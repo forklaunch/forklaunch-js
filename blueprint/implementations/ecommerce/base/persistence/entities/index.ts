@@ -81,9 +81,11 @@ export const Order = defineComplianceEntity({
     items: fp.json<OrderItemDto[]>().compliance('none'),
     shippingAddress: fp.json<ShippingAddressDto>().compliance('pii'),
     subtotalCents: fp.integer().compliance('none'),
+    discountCents: fp.integer().compliance('none'),
     taxCents: fp.integer().compliance('none'),
     taxBreakdown: fp.json<TaxLineDto[]>().compliance('none'),
     shippingCents: fp.integer().compliance('none'),
+    giftCardCents: fp.integer().compliance('none'),
     totalCents: fp.integer().compliance('none')
   }
 });
@@ -127,5 +129,31 @@ export const Review = defineComplianceEntity({
     body: fp.string().compliance('none'),
     media: fp.json<ReviewMediaDto[]>().nullable().compliance('none'),
     status: fp.string().compliance('none')
+  }
+});
+
+export const PromoCode = defineComplianceEntity({
+  name: 'PromoCode',
+  properties: {
+    id: fp.string().primary().compliance('none'),
+    code: fp.string().unique().compliance('none'),
+    type: fp.string().compliance('none'),
+    value: fp.integer().compliance('none'),
+    maxRedemptions: fp.integer().nullable().compliance('none'),
+    minSubtotalCents: fp.integer().nullable().compliance('none'),
+    expiresAt: fp.datetime().nullable().compliance('none'),
+    timesRedeemed: fp.integer().compliance('none'),
+    active: fp.boolean().compliance('none')
+  }
+});
+
+export const GiftCard = defineComplianceEntity({
+  name: 'GiftCard',
+  properties: {
+    id: fp.string().primary().compliance('none'),
+    code: fp.string().unique().compliance('none'),
+    initialCents: fp.integer().compliance('none'),
+    currency: fp.string().compliance('none'),
+    balanceCents: fp.integer().compliance('none')
   }
 });

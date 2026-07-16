@@ -44,9 +44,11 @@ export const CreateOrderSchema = {
   items: array(OrderItemSchema),
   shippingAddress: ShippingAddressSchema,
   subtotalCents: number,
+  discountCents: number,
   taxCents: number,
   taxBreakdown: array(TaxLineSchema),
   shippingCents: number,
+  giftCardCents: number,
   totalCents: number
 };
 
@@ -62,9 +64,11 @@ export const OrderSchema = ({ uuidId }: { uuidId: boolean }) => ({
   items: array(OrderItemSchema),
   shippingAddress: ShippingAddressSchema,
   subtotalCents: number,
+  discountCents: number,
   taxCents: number,
   taxBreakdown: array(TaxLineSchema),
   shippingCents: number,
+  giftCardCents: number,
   totalCents: number,
   createdAt: optional(date),
   updatedAt: optional(date)

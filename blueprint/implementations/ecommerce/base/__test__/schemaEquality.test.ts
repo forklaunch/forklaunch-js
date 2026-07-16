@@ -352,10 +352,12 @@ describe('schema equality', () => {
             items: sampleOrderItems,
             shippingAddress: sampleShippingAddress,
             subtotalCents: 3998,
+            discountCents: 400,
             taxCents: 320,
             taxBreakdown: sampleTaxBreakdown,
             shippingCents: 500,
-            totalCents: 4818
+            giftCardCents: 1000,
+            totalCents: 3818
           }
         )
       )
@@ -380,10 +382,12 @@ describe('schema equality', () => {
           items: sampleOrderItems,
           shippingAddress: sampleShippingAddress,
           subtotalCents: 3998,
+          discountCents: 400,
           taxCents: 320,
           taxBreakdown: sampleTaxBreakdown,
           shippingCents: 500,
-          totalCents: 4818
+          giftCardCents: 1000,
+          totalCents: 3818
         })
       )
     ).toBeTruthy();

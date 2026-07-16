@@ -17,9 +17,11 @@ export const CreateOrderMapper = requestMapper({
         items: dto.items,
         shippingAddress: dto.shippingAddress,
         subtotalCents: dto.subtotalCents,
+        discountCents: dto.discountCents,
         taxCents: dto.taxCents,
         taxBreakdown: dto.taxBreakdown,
         shippingCents: dto.shippingCents,
+        giftCardCents: dto.giftCardCents,
         totalCents: dto.totalCents
       });
     }

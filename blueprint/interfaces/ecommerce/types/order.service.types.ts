@@ -42,9 +42,14 @@ export type CreateOrderDto = Partial<IdDto> & {
   items: OrderItemDto[];
   shippingAddress: ShippingAddressDto;
   subtotalCents: number;
+  /** Promo-code discount, applied before tax. 0 when no code was used. */
+  discountCents: number;
   taxCents: number;
   taxBreakdown: TaxLineDto[];
   shippingCents: number;
+  /** Gift-card amount applied against the final total (tender, not a
+   *  pre-tax discount). 0 when no gift card was used. */
+  giftCardCents: number;
   totalCents: number;
 };
 
