@@ -12,6 +12,7 @@ import { inventoryRouter } from './api/routes/inventory.routes';
 import { orderRouter } from './api/routes/order.routes';
 import { paymentRouter } from './api/routes/payment.routes';
 import { productRouter } from './api/routes/product.routes';
+import { reviewRouter } from './api/routes/review.routes';
 import { subscriptionRouter } from './api/routes/subscription.routes';
 import { variantRouter } from './api/routes/variant.routes';
 import { webhookRouter } from './api/routes/webhook.routes';
@@ -55,6 +56,7 @@ app.use(checkoutRouter);
 app.use(orderRouter);
 app.use(paymentRouter);
 app.use(subscriptionRouter);
+app.use(reviewRouter);
 app.use(webhookRouter);
 app.use(catalogImportRouter);
 

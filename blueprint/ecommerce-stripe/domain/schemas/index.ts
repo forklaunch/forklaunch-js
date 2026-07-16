@@ -6,6 +6,7 @@ import {
   BaseOrderServiceSchemas,
   BasePaymentServiceSchemas,
   BaseProductServiceSchemas,
+  BaseReviewServiceSchemas,
   BaseSubscriptionServiceSchemas,
   BaseVariantServiceSchemas
 } from '@forklaunch/implementation-ecommerce-base/schemas';
@@ -19,6 +20,7 @@ const schemas = mapServiceSchemas(
     OrderSchemas: BaseOrderServiceSchemas<SchemaValidator>,
     PaymentSchemas: BasePaymentServiceSchemas<SchemaValidator>,
     ProductSchemas: BaseProductServiceSchemas<SchemaValidator>,
+    ReviewSchemas: BaseReviewServiceSchemas<SchemaValidator>,
     SubscriptionSchemas: BaseSubscriptionServiceSchemas<SchemaValidator>,
     VariantSchemas: BaseVariantServiceSchemas<SchemaValidator>
   },
@@ -34,6 +36,7 @@ export const {
   OrderSchemas,
   PaymentSchemas,
   ProductSchemas,
+  ReviewSchemas,
   SubscriptionSchemas,
   VariantSchemas
 } = schemas;

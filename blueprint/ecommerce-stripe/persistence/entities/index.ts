@@ -4,5 +4,6 @@ export { Order } from './order.entity';
 export { OrderEventRecord } from './orderEvent.entity';
 export { Payment } from './payment.entity';
 export { Product } from './product.entity';
+export { Review } from './review.entity';
 export { Subscription } from './subscription.entity';
 export { Variant } from './variant.entity';

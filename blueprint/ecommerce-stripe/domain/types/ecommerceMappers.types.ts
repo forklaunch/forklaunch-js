@@ -6,6 +6,7 @@ import {
   Order,
   Payment,
   Product,
+  Review,
   Subscription,
   Variant
 } from '../../persistence/entities';
@@ -26,6 +27,11 @@ import {
   ProductMapper,
   UpdateProductMapper
 } from '../mappers/product.mappers';
+import {
+  CreateReviewMapper,
+  ReviewMapper,
+  UpdateReviewMapper
+} from '../mappers/review.mappers';
 import {
   CreateSubscriptionMapper,
   SubscriptionMapper,
@@ -129,4 +135,16 @@ export type SubscriptionDtoTypes = {
     typeof UpdateSubscriptionMapper.schema,
     SchemaValidator
   >;
+};
+
+// review
+export type ReviewMapperTypes = {
+  ReviewMapper: typeof Review;
+  CreateReviewMapper: typeof Review;
+  UpdateReviewMapper: typeof Review;
+};
+export type ReviewDtoTypes = {
+  ReviewMapper: Schema<typeof ReviewMapper.schema, SchemaValidator>;
+  CreateReviewMapper: Schema<typeof CreateReviewMapper.schema, SchemaValidator>;
+  UpdateReviewMapper: Schema<typeof UpdateReviewMapper.schema, SchemaValidator>;
 };

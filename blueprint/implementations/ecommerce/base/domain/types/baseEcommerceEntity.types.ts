@@ -4,6 +4,7 @@ import {
   Order,
   Payment,
   Product,
+  Review,
   Subscription,
   Variant
 } from '../../persistence/entities';
@@ -54,4 +55,11 @@ export type BaseSubscriptionEntities = {
   SubscriptionMapper: { '~entity': (typeof Subscription)['~entity'] };
   CreateSubscriptionMapper: { '~entity': (typeof Subscription)['~entity'] };
   UpdateSubscriptionMapper: { '~entity': (typeof Subscription)['~entity'] };
+};
+
+// review entity types
+export type BaseReviewEntities = {
+  ReviewMapper: { '~entity': (typeof Review)['~entity'] };
+  CreateReviewMapper: { '~entity': (typeof Review)['~entity'] };
+  UpdateReviewMapper: { '~entity': (typeof Review)['~entity'] };
 };

@@ -4,6 +4,7 @@ import {
   OrderItemDto,
   ProductImage,
   ProductOption,
+  ReviewMediaDto,
   ShippingAddressDto,
   SubscriptionItemDto,
   TaxLineDto
@@ -112,5 +113,19 @@ export const Payment = defineComplianceEntity({
     // compliance('none') is appropriate; raw card data is never stored here
     // (Stripe/PayPal hold it — see commerce-security convention).
     providerRef: fp.string().nullable().unique().compliance('none')
+  }
+});
+
+export const Review = defineComplianceEntity({
+  name: 'Review',
+  properties: {
+    id: fp.string().primary().compliance('none'),
+    productId: fp.string().compliance('none'),
+    orderId: fp.string().nullable().compliance('none'),
+    rating: fp.integer().compliance('none'),
+    title: fp.string().nullable().compliance('none'),
+    body: fp.string().compliance('none'),
+    media: fp.json<ReviewMediaDto[]>().nullable().compliance('none'),
+    status: fp.string().compliance('none')
   }
 });

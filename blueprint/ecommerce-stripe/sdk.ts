@@ -25,13 +25,19 @@ import {
   listProducts,
   listVariants,
   listVariantsByProduct,
+  createReview,
   createSubscription,
+  deleteReview,
   deleteSubscription,
+  getReview,
   getSubscription,
+  listReviews,
+  listReviewsByProduct,
   listSubscriptions,
   removeCartItem,
   transitionOrder,
   updateProduct,
+  updateReview,
   updateSubscription,
   updateVariant
 } from './api/controllers';
@@ -84,6 +90,14 @@ export type EcommerceSdk = {
     listSubscriptions: typeof listSubscriptions;
     updateSubscription: typeof updateSubscription;
     deleteSubscription: typeof deleteSubscription;
+  };
+  review: {
+    createReview: typeof createReview;
+    getReview: typeof getReview;
+    listReviews: typeof listReviews;
+    listReviewsByProduct: typeof listReviewsByProduct;
+    updateReview: typeof updateReview;
+    deleteReview: typeof deleteReview;
   };
   catalogImport: {
     importCatalog: typeof importCatalog;
@@ -138,6 +152,14 @@ export const ecommerceSdkClient = {
     listSubscriptions,
     updateSubscription,
     deleteSubscription
+  },
+  review: {
+    createReview,
+    getReview,
+    listReviews,
+    listReviewsByProduct,
+    updateReview,
+    deleteReview
   },
   catalogImport: {
     importCatalog

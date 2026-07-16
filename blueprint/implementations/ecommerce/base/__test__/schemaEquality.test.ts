@@ -10,9 +10,11 @@ import {
   InventoryDto,
   OrderDto,
   OrderStatus,
+  CreateReviewDto,
   CreateSubscriptionDto,
   PaymentDto,
   ProductDto,
+  ReviewDto,
   SubscriptionDto,
   UpdateCartDto,
   UpdateInventoryDto,
@@ -93,6 +95,14 @@ import {
   SubscriptionSchema as TypeboxSubscriptionSchema
 } from '../domain/schemas/typebox/subscription.schema';
 import {
+  CreateReviewSchema as ZodCreateReviewSchema,
+  ReviewSchema as ZodReviewSchema
+} from '../domain/schemas/zod/review.schema';
+import {
+  CreateReviewSchema as TypeboxCreateReviewSchema,
+  ReviewSchema as TypeboxReviewSchema
+} from '../domain/schemas/typebox/review.schema';
+import {
   CreateInventorySchema as ZodCreateInventorySchema
 } from '../domain/schemas/zod/inventory.schema';
 import {
@@ -142,6 +152,9 @@ const typeboxOrderSchema = TypeboxOrderSchema({ uuidId: false });
 
 const zodSubscriptionSchema = ZodSubscriptionSchema({ uuidId: false });
 const typeboxSubscriptionSchema = TypeboxSubscriptionSchema({ uuidId: false });
+
+const zodReviewSchema = ZodReviewSchema({ uuidId: false });
+const typeboxReviewSchema = TypeboxReviewSchema({ uuidId: false });
 
 const sampleCartItems = [{ variantId: 'var-1', quantity: 2 }];
 const sampleOrderItems = [
@@ -437,6 +450,40 @@ describe('schema equality', () => {
             providerSubRef: 'sub_123'
           }
         )
+      )
+    ).toBeTruthy();
+  });
+
+  it('should be equal for review', () => {
+    expect(
+      isTrue(
+        testSchemaEquality<CreateReviewDto>()(
+          ZodCreateReviewSchema,
+          TypeboxCreateReviewSchema,
+          {
+            productId: 'prod-1',
+            orderId: 'order-1',
+            rating: 5,
+            title: 'Great product',
+            body: 'Really happy with this.',
+            media: [{ url: 'https://example.com/photo.jpg' }]
+          }
+        )
+      )
+    ).toBeTruthy();
+
+    expect(
+      isTrue(
+        testSchemaEquality<ReviewDto>()(zodReviewSchema, typeboxReviewSchema, {
+          id: 'test',
+          productId: 'prod-1',
+          orderId: 'order-1',
+          rating: 5,
+          title: 'Great product',
+          body: 'Really happy with this.',
+          media: [{ url: 'https://example.com/photo.jpg' }],
+          status: 'pending'
+        })
       )
     ).toBeTruthy();
   });

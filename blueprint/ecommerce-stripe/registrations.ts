@@ -22,6 +22,7 @@ import {
   BaseInventoryService,
   BaseOrderService,
   BaseProductService,
+  BaseReviewService,
   BaseSubscriptionService,
   BaseVariantService
 } from '@forklaunch/implementation-ecommerce-base/services';
@@ -69,6 +70,11 @@ import {
   UpdateProductMapper
 } from './domain/mappers/product.mappers';
 import {
+  CreateReviewMapper,
+  ReviewMapper,
+  UpdateReviewMapper
+} from './domain/mappers/review.mappers';
+import {
   CreateSubscriptionMapper,
   SubscriptionMapper,
   UpdateSubscriptionMapper
@@ -89,6 +95,8 @@ import {
   PaymentMapperTypes,
   ProductDtoTypes,
   ProductMapperTypes,
+  ReviewDtoTypes,
+  ReviewMapperTypes,
   SubscriptionDtoTypes,
   SubscriptionMapperTypes,
   VariantDtoTypes,
@@ -370,6 +378,23 @@ const serviceDependencies = runtimeDependencies.chain({
           SubscriptionMapper,
           CreateSubscriptionMapper,
           UpdateSubscriptionMapper
+        }
+      )
+  },
+  ReviewService: {
+    lifetime: Lifetime.Scoped,
+    type: BaseReviewService<SchemaValidator, ReviewMapperTypes, ReviewDtoTypes>,
+    factory: ({ EntityManager, OtelCollector }, context, resolve) =>
+      new BaseReviewService(
+        context.entityManagerOptions
+          ? resolve('EntityManager', context)
+          : EntityManager,
+        OtelCollector,
+        schemaValidator,
+        {
+          ReviewMapper,
+          CreateReviewMapper,
+          UpdateReviewMapper
         }
       )
   },

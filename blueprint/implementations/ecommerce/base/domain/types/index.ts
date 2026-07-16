@@ -5,5 +5,6 @@ export * from './inventory.mapper.types';
 export * from './order.mapper.types';
 export * from './payment.mapper.types';
 export * from './product.mapper.types';
+export * from './review.mapper.types';
 export * from './subscription.mapper.types';
 export * from './variant.mapper.types';

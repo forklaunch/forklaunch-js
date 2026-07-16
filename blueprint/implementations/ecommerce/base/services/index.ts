@@ -3,6 +3,7 @@ export * from './inventory.service';
 export * from './order.service';
 export * from './payment.service';
 export * from './product.service';
+export * from './review.service';
 export * from './subscription.service';
 export * from './variant.service';
 

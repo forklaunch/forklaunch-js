@@ -5,6 +5,7 @@ export * from './inventory.controller';
 export * from './order.controller';
 export * from './payment.controller';
 export * from './product.controller';
+export * from './review.controller';
 export * from './subscription.controller';
 export * from './variant.controller';
 export * from './webhook.controller';

@@ -4,6 +4,7 @@ import {
   CreateInventoryDto,
   CreateOrderDto,
   CreateProductDto,
+  CreateReviewDto,
   CreateVariantDto,
   InventoryDto,
   CreatePaymentDto,
@@ -11,11 +12,13 @@ import {
   OrderDto,
   PaymentDto,
   ProductDto,
+  ReviewDto,
   SubscriptionDto,
   UpdateCartDto,
   UpdateInventoryDto,
   UpdateOrderDto,
   UpdateProductDto,
+  UpdateReviewDto,
   UpdateSubscriptionDto,
   UpdateVariantDto,
   VariantDto
@@ -67,4 +70,11 @@ export type BaseSubscriptionDtos = {
   SubscriptionMapper: SubscriptionDto;
   CreateSubscriptionMapper: CreateSubscriptionDto;
   UpdateSubscriptionMapper: UpdateSubscriptionDto;
+};
+
+// review dto types
+export type BaseReviewDtos = {
+  ReviewMapper: ReviewDto;
+  CreateReviewMapper: CreateReviewDto;
+  UpdateReviewMapper: UpdateReviewDto;
 };
