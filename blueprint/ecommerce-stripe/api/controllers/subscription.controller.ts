@@ -60,7 +60,13 @@ export const listSubscriptions = handlers.get(
     responses: { 200: array(SubscriptionMapper.schema) }
   },
   async (req, res) => {
-    res.status(200).json(await serviceFactory().listSubscriptions(req.query));
+    res
+      .status(200)
+      .json(
+        await serviceFactory().listSubscriptions(
+          req.query.ids ? (req.query as { ids: string[] }) : undefined
+        )
+      );
   }
 );
 

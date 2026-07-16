@@ -111,6 +111,12 @@ export const listVariants = handlers.get(
     responses: { 200: array(VariantMapper.schema) }
   },
   async (req, res) => {
-    res.status(200).json(await serviceFactory().listVariants(req.query));
+    res
+      .status(200)
+      .json(
+        await serviceFactory().listVariants(
+          req.query.ids ? (req.query as { ids: string[] }) : undefined
+        )
+      );
   }
 );

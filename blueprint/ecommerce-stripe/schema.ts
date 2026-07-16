@@ -8,6 +8,7 @@
  */
 import {
   array,
+  optional,
   SchemaValidator as SchemaValidatorFactory,
   string
 } from '@forklaunch/validator/zod';
@@ -34,4 +35,10 @@ export const schemaValidator = SchemaValidatorFactory();
 export type SchemaValidator = ReturnType<typeof SchemaValidatorFactory>;
 
 export const IdSchema = { id: string };
-export const IdsSchema = { ids: array(string) };
+// Optional — every "list all" endpoint (Review, Subscription, PromoCode,
+// GiftCard, ...) uses this as its query type, and "list everything, no
+// filter" is the common case. Without `optional()` here, calling any of
+// those endpoints with no `ids` query param always 400s — this was a real,
+// pre-existing bug affecting every list-all endpoint in the module, not
+// something specific to one feature.
+export const IdsSchema = { ids: optional(array(string)) };

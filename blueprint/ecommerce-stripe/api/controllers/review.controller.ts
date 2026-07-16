@@ -60,7 +60,13 @@ export const listReviews = handlers.get(
     responses: { 200: array(ReviewMapper.schema) }
   },
   async (req, res) => {
-    res.status(200).json(await serviceFactory().listReviews(req.query));
+    res
+      .status(200)
+      .json(
+        await serviceFactory().listReviews(
+          req.query.ids ? (req.query as { ids: string[] }) : undefined
+        )
+      );
   }
 );
 

@@ -64,7 +64,13 @@ export const listOrders = handlers.get(
     responses: { 200: array(OrderMapper.schema) }
   },
   async (req, res) => {
-    res.status(200).json(await serviceFactory().listOrders(req.query));
+    res
+      .status(200)
+      .json(
+        await serviceFactory().listOrders(
+          req.query.ids ? (req.query as { ids: string[] }) : undefined
+        )
+      );
   }
 );
 
