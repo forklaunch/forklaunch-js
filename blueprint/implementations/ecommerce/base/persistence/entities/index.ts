@@ -4,7 +4,9 @@ import {
   OrderItemDto,
   ProductImage,
   ProductOption,
-  SubscriptionItemDto
+  ShippingAddressDto,
+  SubscriptionItemDto,
+  TaxLineDto
 } from '@forklaunch/interfaces-ecommerce/types';
 
 /**
@@ -76,8 +78,11 @@ export const Order = defineComplianceEntity({
     customerId: fp.string().nullable().compliance('none'),
     status: fp.string().compliance('none'),
     items: fp.json<OrderItemDto[]>().compliance('none'),
+    shippingAddress: fp.json<ShippingAddressDto>().compliance('pii'),
     subtotalCents: fp.integer().compliance('none'),
     taxCents: fp.integer().compliance('none'),
+    taxBreakdown: fp.json<TaxLineDto[]>().compliance('none'),
+    shippingCents: fp.integer().compliance('none'),
     totalCents: fp.integer().compliance('none')
   }
 });

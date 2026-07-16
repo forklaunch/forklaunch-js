@@ -23,11 +23,29 @@ const OrderItemSchema = {
   unitPriceCents: number
 };
 
+const ShippingAddressSchema = {
+  name: string,
+  line1: string,
+  line2: optional(string),
+  city: string,
+  state: string,
+  postalCode: string,
+  country: string
+};
+
+const TaxLineSchema = {
+  jurisdiction: string,
+  taxCents: number
+};
+
 export const CreateOrderSchema = {
   customerId: optional(string),
   items: array(OrderItemSchema),
+  shippingAddress: ShippingAddressSchema,
   subtotalCents: number,
   taxCents: number,
+  taxBreakdown: array(TaxLineSchema),
+  shippingCents: number,
   totalCents: number
 };
 
@@ -41,8 +59,11 @@ export const OrderSchema = ({ uuidId }: { uuidId: boolean }) => ({
   customerId: optional(string),
   status: enum_(OrderStatusEnum),
   items: array(OrderItemSchema),
+  shippingAddress: ShippingAddressSchema,
   subtotalCents: number,
   taxCents: number,
+  taxBreakdown: array(TaxLineSchema),
+  shippingCents: number,
   totalCents: number,
   createdAt: optional(date),
   updatedAt: optional(date)

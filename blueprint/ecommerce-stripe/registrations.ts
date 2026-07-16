@@ -39,6 +39,8 @@ import {
   WorkerProcessFunction
 } from '@forklaunch/interfaces-worker/types';
 import { OrderEventRecord } from './persistence/entities/orderEvent.entity';
+import { StripeTaxService } from './domain/services/tax.service';
+import { FlatRateShippingService } from './domain/services/shipping.service';
 import { ForkOptions } from '@mikro-orm/core';
 import { EntityManager, MikroORM } from '@mikro-orm/postgresql';
 import Stripe from 'stripe';
@@ -218,6 +220,17 @@ const runtimeDependencies = environmentConfig.chain({
         clientSecret: PAYPAL_CLIENT_SECRET,
         baseUrl: PAYPAL_BASE_URL
       })
+  },
+  TaxService: {
+    lifetime: Lifetime.Singleton,
+    type: StripeTaxService,
+    factory: ({ StripeClient, OtelCollector }) =>
+      new StripeTaxService(StripeClient, OtelCollector)
+  },
+  ShippingService: {
+    lifetime: Lifetime.Singleton,
+    type: FlatRateShippingService,
+    factory: () => new FlatRateShippingService()
   },
   /**
    * Cart's fast/temporary-state layer (ECOM-06's original design) — a

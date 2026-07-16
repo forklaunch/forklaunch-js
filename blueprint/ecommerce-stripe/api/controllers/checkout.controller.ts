@@ -1,4 +1,4 @@
-import { handlers, schemaValidator, string } from '../../schema';
+import { handlers, optional, schemaValidator, string } from '../../schema';
 import { OrderMapper } from '../../domain/mappers/order.mappers';
 import { ci, tokens } from '../../bootstrapper';
 
@@ -7,15 +7,26 @@ const cartServiceFactory = ci.scopedResolver(tokens.CartService);
 const variantServiceFactory = ci.scopedResolver(tokens.VariantService);
 const inventoryServiceFactory = ci.scopedResolver(tokens.InventoryService);
 const orderServiceFactory = ci.scopedResolver(tokens.OrderService);
+const taxServiceFactory = ci.scopedResolver(tokens.TaxService);
+const shippingServiceFactory = ci.scopedResolver(tokens.ShippingService);
 const HMAC_SECRET_KEY = ci.resolve(tokens.HMAC_SECRET_KEY);
+
+const ShippingAddressSchema = {
+  name: string,
+  line1: string,
+  line2: optional(string),
+  city: string,
+  state: string,
+  postalCode: string,
+  country: string
+};
 
 /**
  * The unified checkout orchestration (ECOM-09): cart -> order in one call,
  * with stock validated up front so a customer never pays for something
- * that's not actually there. Tax and promo/discount are deliberately
- * injected seams, not built here — this endpoint is where they'd plug in
- * (see the taxCents/discount comments below), matching the ticket's own
- * "injected via seams" framing rather than building ECOM-11/ECOM-18 now.
+ * that's not actually there. Tax (Stripe Tax) and shipping (flat-rate) are
+ * both real, not stubs — a shipping address is required because both need
+ * one. Promo/discount (ECOM-11) is still a deliberate seam, not built here.
  */
 export const checkout = handlers.post(
   schemaValidator,
@@ -25,7 +36,7 @@ export const checkout = handlers.post(
     access: 'internal',
     summary: 'Convert a cart into an order, validating stock first',
     auth: { hmac: { secretKeys: { default: HMAC_SECRET_KEY } } },
-    body: { cartId: string },
+    body: { cartId: string, shippingAddress: ShippingAddressSchema },
     responses: {
       200: OrderMapper.schema,
       400: string
@@ -81,19 +92,38 @@ export const checkout = handlers.post(
       (sum, item) => sum + item.quantity * item.unitPriceCents,
       0
     );
-    // Seam for ECOM-18 (tax) — a real TaxService would compute this from
-    // the order + a shipping address, neither of which the cart carries
-    // yet. Zero, not omitted, so the total is never silently wrong.
-    const taxCents = 0;
+
+    const [taxResult, shippingResult] = await Promise.all([
+      taxServiceFactory().calculate({
+        lineItemCents: orderItems.map(
+          (item) => item.quantity * item.unitPriceCents
+        ),
+        shippingAddress: req.body.shippingAddress
+      }),
+      shippingServiceFactory().calculate({
+        shippingAddress: req.body.shippingAddress,
+        subtotalCents
+      })
+    ]);
+    if (taxResult.estimated) {
+      openTelemetryCollector.warn(
+        'Order tax is a flat estimate — Stripe Tax was unreachable',
+        { cartId: cart.id }
+      );
+    }
     // Seam for ECOM-11 (promo/discount) — would validate-and-apply a code
     // here, adjusting subtotalCents before totalCents is computed.
-    const totalCents = subtotalCents + taxCents;
+    const totalCents =
+      subtotalCents + taxResult.taxCents + shippingResult.shippingCents;
 
     const order = await orderServiceFactory().createOrder({
       customerId: cart.customerId,
       items: orderItems,
+      shippingAddress: req.body.shippingAddress,
       subtotalCents,
-      taxCents,
+      taxCents: taxResult.taxCents,
+      taxBreakdown: taxResult.breakdown,
+      shippingCents: shippingResult.shippingCents,
       totalCents
     });
 

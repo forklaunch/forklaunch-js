@@ -147,6 +147,15 @@ const sampleCartItems = [{ variantId: 'var-1', quantity: 2 }];
 const sampleOrderItems = [
   { variantId: 'var-1', quantity: 2, unitPriceCents: 1999 }
 ];
+const sampleShippingAddress = {
+  name: 'Jane Doe',
+  line1: '123 Main St',
+  city: 'Springfield',
+  state: 'IL',
+  postalCode: '62704',
+  country: 'US'
+};
+const sampleTaxBreakdown = [{ jurisdiction: 'IL', taxCents: 320 }];
 
 describe('schema equality', () => {
   it('should be equal for product', () => {
@@ -328,9 +337,12 @@ describe('schema equality', () => {
           {
             customerId: 'cust-1',
             items: sampleOrderItems,
+            shippingAddress: sampleShippingAddress,
             subtotalCents: 3998,
             taxCents: 320,
-            totalCents: 4318
+            taxBreakdown: sampleTaxBreakdown,
+            shippingCents: 500,
+            totalCents: 4818
           }
         )
       )
@@ -353,9 +365,12 @@ describe('schema equality', () => {
           customerId: 'cust-1',
           status: OrderStatus.PENDING,
           items: sampleOrderItems,
+          shippingAddress: sampleShippingAddress,
           subtotalCents: 3998,
           taxCents: 320,
-          totalCents: 4318
+          taxBreakdown: sampleTaxBreakdown,
+          shippingCents: 500,
+          totalCents: 4818
         })
       )
     ).toBeTruthy();

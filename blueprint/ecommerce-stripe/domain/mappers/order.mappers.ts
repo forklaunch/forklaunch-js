@@ -15,8 +15,11 @@ export const CreateOrderMapper = requestMapper({
         customerId: dto.customerId ?? null,
         status: OrderStatus.PENDING,
         items: dto.items,
+        shippingAddress: dto.shippingAddress,
         subtotalCents: dto.subtotalCents,
         taxCents: dto.taxCents,
+        taxBreakdown: dto.taxBreakdown,
+        shippingCents: dto.shippingCents,
         totalCents: dto.totalCents
       });
     }

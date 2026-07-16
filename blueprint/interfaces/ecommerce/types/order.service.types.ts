@@ -18,11 +18,33 @@ export type OrderItemDto = {
   unitPriceCents: number;
 };
 
+/** Ship-to address — required to compute both tax (jurisdiction) and
+ *  shipping cost (rate zone) for a real, non-stubbed checkout. */
+export type ShippingAddressDto = {
+  name: string;
+  line1: string;
+  line2?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+};
+
+/** Per-jurisdiction tax line, persisted for reconciliation/filing —
+ *  not just the total, per the tax-compliance guide's audit-trail rule. */
+export type TaxLineDto = {
+  jurisdiction: string;
+  taxCents: number;
+};
+
 export type CreateOrderDto = Partial<IdDto> & {
   customerId?: string;
   items: OrderItemDto[];
+  shippingAddress: ShippingAddressDto;
   subtotalCents: number;
   taxCents: number;
+  taxBreakdown: TaxLineDto[];
+  shippingCents: number;
   totalCents: number;
 };
 

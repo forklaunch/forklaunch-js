@@ -133,8 +133,18 @@ describe('Purchase Loop E2E Test with PostgreSQL Container', () => {
     const createOrderBody = {
       customerId: 'e2e-customer-1',
       items: [{ variantId, quantity: 2, unitPriceCents: 2500 }],
+      shippingAddress: {
+        name: 'E2E Customer',
+        line1: '123 Test St',
+        city: 'Testville',
+        state: 'CA',
+        postalCode: '90001',
+        country: 'US'
+      },
       subtotalCents: 5000,
       taxCents: 400,
+      taxBreakdown: [{ jurisdiction: 'CA', taxCents: 400 }],
+      shippingCents: 0,
       totalCents: 5400
     };
     const orderResponse = expectOk(
