@@ -1,1 +1,1 @@
-export { EcommerceSdkClient } from './sdk';
+export type { EcommerceSdkClient } from './sdk';
