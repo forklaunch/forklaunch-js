@@ -1,4 +1,8 @@
-use std::{fs, io::Write, path::Path};
+use std::{
+    fs,
+    io::Write,
+    path::{Path, PathBuf},
+};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
@@ -139,7 +143,19 @@ impl CliCommand for AuditCommand {
             .collect();
 
         // Collect route data from OpenAPI spec (if available)
-        let routes = collect_routes_from_openapi(&app_root, modules_path);
+        let (routes, specs_found) = collect_routes_from_openapi(&app_root, modules_path);
+        if !specs_found {
+            // Write to stderr so stdout stays parseable for --json / --output
+            let mut stderr = StandardStream::stderr(ColorChoice::Always);
+            log_warn!(
+                stderr,
+                "No OpenAPI specs found — route access levels were NOT audited."
+            );
+            log_info!(
+                stderr,
+                "Run `forklaunch openapi export` and re-run the audit to include routes."
+            );
+        }
 
         // Build the local report
         let report = ComplianceReport {
@@ -190,7 +206,7 @@ impl CliCommand for AuditCommand {
 
         // Pretty terminal output
         print_header(&mut stdout)?;
-        print_summary(&mut stdout, &report)?;
+        print_summary(&mut stdout, &report, specs_found)?;
 
         match &platform_response {
             Ok(resp) => {
@@ -303,7 +319,11 @@ fn print_header(out: &mut StandardStream) -> Result<()> {
     Ok(())
 }
 
-fn print_summary(out: &mut StandardStream, report: &ComplianceReport) -> Result<()> {
+fn print_summary(
+    out: &mut StandardStream,
+    report: &ComplianceReport,
+    specs_found: bool,
+) -> Result<()> {
     writeln!(out)?;
     out.set_color(ColorSpec::new().set_fg(Some(Color::White)).set_bold(true))?;
     write!(out, "  Generated: ")?;
@@ -318,7 +338,17 @@ fn print_summary(out: &mut StandardStream, report: &ComplianceReport) -> Result<
     out.set_color(ColorSpec::new().set_fg(Some(Color::White)).set_bold(true))?;
     write!(out, "  Routes:    ")?;
     out.reset()?;
-    writeln!(out, "{}", report.routes.len())?;
+    if specs_found {
+        writeln!(out, "{}", report.routes.len())?;
+    } else {
+        write!(out, "{}", report.routes.len())?;
+        out.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+        writeln!(
+            out,
+            " (no OpenAPI specs found — run `forklaunch openapi export`)"
+        )?;
+        out.reset()?;
+    }
 
     out.set_color(ColorSpec::new().set_fg(Some(Color::White)).set_bold(true))?;
     write!(out, "  Secrets:   ")?;
@@ -722,37 +752,41 @@ struct PlatformFinding {
 // ---------------------------------------------------------------------------
 
 /// Attempt to read routes from generated OpenAPI specs.
-/// Returns an empty vec if no specs are found.
-fn collect_routes_from_openapi(app_root: &Path, modules_path: &str) -> Vec<RouteReport> {
+/// Returns the routes and whether any spec files were found at all.
+fn collect_routes_from_openapi(app_root: &Path, modules_path: &str) -> (Vec<RouteReport>, bool) {
     let mut routes = Vec::new();
+    let mut specs_found = false;
 
-    // OpenAPI specs are typically generated in each service's directory
-    let openapi_patterns = [
+    let mut spec_paths: Vec<PathBuf> = vec![
         app_root.join("openapi.json"),
         app_root.join("docs").join("openapi.json"),
     ];
 
-    // Search in <modules_path>/*/openapi.json (e.g., src/modules or modules)
-    if let Ok(entries) = fs::read_dir(app_root.join(modules_path)) {
+    // Specs written by `forklaunch openapi export` (default output directory):
+    // .forklaunch/openapi/<service>/openapi.json
+    if let Ok(entries) = fs::read_dir(app_root.join(".forklaunch").join("openapi")) {
         for entry in entries.flatten() {
-            let spec_path = entry.path().join("openapi.json");
-            if spec_path.exists() {
-                if let Ok(spec_routes) = parse_openapi_routes(&spec_path) {
-                    routes.extend(spec_routes);
-                }
-            }
+            spec_paths.push(entry.path().join("openapi.json"));
         }
     }
 
-    for pattern in &openapi_patterns {
-        if pattern.exists() {
-            if let Ok(spec_routes) = parse_openapi_routes(pattern) {
+    // Search in <modules_path>/*/openapi.json (e.g., src/modules or modules)
+    if let Ok(entries) = fs::read_dir(app_root.join(modules_path)) {
+        for entry in entries.flatten() {
+            spec_paths.push(entry.path().join("openapi.json"));
+        }
+    }
+
+    for spec_path in &spec_paths {
+        if spec_path.exists() {
+            specs_found = true;
+            if let Ok(spec_routes) = parse_openapi_routes(spec_path) {
                 routes.extend(spec_routes);
             }
         }
     }
 
-    routes
+    (routes, specs_found)
 }
 
 fn parse_openapi_routes(path: &Path) -> Result<Vec<RouteReport>> {
