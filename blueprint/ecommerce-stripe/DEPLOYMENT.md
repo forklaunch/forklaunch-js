@@ -69,8 +69,21 @@ pick per-request — neither provider replaces the other.
 - Catalog search/filtering — title, price range, in-stock, option-value —
   in addition to fetching by ID
 - A unified checkout endpoint (`POST /checkout`) — cart to order in one
-  call, stock validated first, instead of separate create-order and
-  take-payment steps
+  call, stock validated first, real tax and shipping cost included (see
+  below), instead of separate create-order and take-payment steps
+- Real tax at checkout via **Stripe Tax**, with a flagged flat-rate
+  fallback (never a silent $0) if Stripe Tax is unreachable
+- Real shipping cost at checkout — flat/table-rate (free above a
+  configurable threshold, otherwise a domestic/international flat rate) —
+  not live carrier rates yet, see below
+- **Promo codes** — percent, fixed, or free-shipping discounts, with usage
+  limits, minimum-subtotal gates, and expiry; redemption is atomic (safe
+  under concurrent checkouts)
+- **Gift cards** — redeemed as a tender against the final total, partial
+  redemption supported, balance decrement is atomic
+- **Product reviews** — ratings, a moderation queue (new reviews start
+  pending, never auto-published), verified-buyer badge when tied to a real
+  order
 - A background worker (run separately: `pnpm run worker`) that reacts to
   order status transitions over Redis and adjusts inventory (paid ->
   decrement, cancelled-from-paid -> restock)
@@ -80,9 +93,15 @@ pick per-request — neither provider replaces the other.
 
 ## What this service does not include yet
 
-- No shipping, invoicing, or email/notification side effects — the
-  background worker above only adjusts inventory today
-- No tax or promotion/discount calculation at checkout — both are wired as
-  explicit seams (tax defaults to 0), not yet implemented
+- No real shipping labels, live carrier rates, or tracking — checkout has
+  a real flat-rate cost, but nothing buys a label or talks to a carrier
+- No invoicing or email/notification side effects — the background worker
+  above only adjusts inventory today
+- No returns flow — no RMA state machine, no self-service return/exchange
+- No dunning (failed-payment retry) or payment/payout reconciliation
+- No customer accounts — `customerId` is a bare reference today, no saved
+  profile, addresses, or payment methods
+- No subscriptions billing engine — the data model exists, but nothing
+  turns a recurring cycle into a real order yet
 - No customer or historical order migration — only the product catalog
   loads through `/catalog-import` today
