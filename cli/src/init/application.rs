@@ -567,7 +567,8 @@ impl CliCommand for ApplicationCommand {
         let mut global_module_config = ModuleConfig {
             iam: None,
             billing: None,
-        };
+            ecommerce: None,
+            };
         let mut modules: Vec<Module> = if matches.get_many::<String>("modules").is_none()
             && std::io::stdin().is_terminal()
         {
@@ -576,7 +577,8 @@ impl CliCommand for ApplicationCommand {
                 global_module_config = ModuleConfig {
                     iam: None,
                     billing: None,
-                };
+                    ecommerce: None,
+                    };
                 modules_to_test = prompt_comma_separated_list(
                     &mut line_editor,
                     "modules",
@@ -613,6 +615,7 @@ impl CliCommand for ApplicationCommand {
             match module {
                 Module::BaseIam | Module::BetterAuthIam => 0,
                 Module::BaseBilling | Module::StripeBilling => 1,
+                Module::StripeEcommerce => 2,
             }
         });
 
