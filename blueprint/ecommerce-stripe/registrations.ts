@@ -19,7 +19,6 @@ import {
 } from '@forklaunch/core/services';
 import { ForkOptions } from '@mikro-orm/core';
 import { EntityManager, MikroORM } from '@mikro-orm/postgresql';
-import Stripe from 'stripe';
 import mikroOrmOptionsConfig from './mikro-orm.config';
 
 //! defines the configuration schema for the application
@@ -74,16 +73,6 @@ const environmentConfig = configInjector.chain({
     type: string,
     value: getEnvVar('OTEL_EXPORTER_OTLP_ENDPOINT')
   },
-  STRIPE_API_KEY: {
-    lifetime: Lifetime.Singleton,
-    type: string,
-    value: getEnvVar('STRIPE_API_KEY')
-  },
-  STRIPE_WEBHOOK_SECRET: {
-    lifetime: Lifetime.Singleton,
-    type: string,
-    value: getEnvVar('STRIPE_WEBHOOK_SECRET')
-  },
   HMAC_SECRET_KEY: {
     lifetime: Lifetime.Singleton,
     type: string,
@@ -98,21 +87,6 @@ const environmentConfig = configInjector.chain({
     lifetime: Lifetime.Singleton,
     type: string,
     value: getEnvVar('ENCRYPTION_KEY')
-  },
-  PAYPAL_CLIENT_ID: {
-    lifetime: Lifetime.Singleton,
-    type: string,
-    value: getEnvVar('PAYPAL_CLIENT_ID')
-  },
-  PAYPAL_CLIENT_SECRET: {
-    lifetime: Lifetime.Singleton,
-    type: string,
-    value: getEnvVar('PAYPAL_CLIENT_SECRET')
-  },
-  PAYPAL_BASE_URL: {
-    lifetime: Lifetime.Singleton,
-    type: string,
-    value: getEnvVar('PAYPAL_BASE_URL')
   },
   REDIS_URL: {
     lifetime: Lifetime.Singleton,
@@ -133,11 +107,6 @@ const environmentConfig = configInjector.chain({
 //! -> runtimeDependencies), so every intermediate PR stays independently
 //! buildable rather than referencing services that don't exist yet.
 const runtimeDependencies = environmentConfig.chain({
-  StripeClient: {
-    lifetime: Lifetime.Singleton,
-    type: Stripe,
-    factory: ({ STRIPE_API_KEY }) => new Stripe(STRIPE_API_KEY)
-  },
   /**
    * Cart's fast/temporary-state layer (ECOM-06's original design) — a
    * read-through cache in front of Postgres, which stays the source of
