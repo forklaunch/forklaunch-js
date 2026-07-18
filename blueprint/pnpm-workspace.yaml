@@ -7,20 +7,27 @@ packages:
 - monitoring
 - billing-base
 - billing-stripe
+- ecommerce-stripe
 - iam-base
 - iam-better-auth
 - sample-worker
 - interfaces/billing
+- interfaces/ecommerce
 - interfaces/iam
 - interfaces/worker
 - implementations/billing/base
 - implementations/billing/stripe
+- implementations/ecommerce/base
+- implementations/ecommerce/stripe
+- implementations/ecommerce/paypal
 - implementations/iam/base
 - implementations/worker/bullmq
 - implementations/worker/database
 - implementations/worker/kafka
 - implementations/worker/redis
 - universal-sdk
+
+blockExoticSubdeps: false
 
 allowBuilds:
   "@scarf/scarf": true

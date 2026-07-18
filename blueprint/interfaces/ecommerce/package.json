@@ -1,0 +1,55 @@
+{
+  "name": "@forklaunch/interfaces-ecommerce",
+  "version": "1.0.0",
+  "description": "Ecommerce interfaces for forklaunch",
+  "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
+  "bugs": {
+    "url": "https://github.com/forklaunch/forklaunch-js/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/forklaunch/forklaunch-js.git"
+  },
+  "license": "MIT",
+  "author": "Forklift Technologies, Inc.",
+  "exports": {
+    "./interfaces": {
+      "types": "./lib/interfaces/index.d.ts",
+      "import": "./lib/interfaces/index.mjs",
+      "require": "./lib/interfaces/index.js",
+      "default": "./lib/interfaces/index.js"
+    },
+    "./types": {
+      "types": "./lib/types/index.d.ts",
+      "import": "./lib/types/index.mjs",
+      "require": "./lib/types/index.js",
+      "default": "./lib/types/index.js"
+    }
+  },
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib/**"
+  ],
+  "scripts": {
+    "build": "tsgo --noEmit && tsup interfaces/index.ts types/index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean && if [ -f eject-package.bash ]; then pnpm package:eject; fi",
+    "clean": "rm -rf lib tsconfig.tsbuildinfo pnpm.lock.yaml node_modules",
+    "docs": "typedoc --out docs *",
+    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
+    "lint": "eslint . -c eslint.config.mjs",
+    "lint:fix": "eslint . -c eslint.config.mjs --fix",
+    "package:eject": "./eject-package.bash",
+    "prepack": "pnpm run build",
+    "publish:package": "./publish-package.bash",
+    "test": "vitest --passWithNoTests"
+  },
+  "dependencies": {
+    "@forklaunch/common": "^1.2.18",
+    "@mikro-orm/core": "7.0.15"
+  },
+  "devDependencies": {
+    "@typescript/native-preview": "7.0.0-dev.20260511.1",
+    "depcheck": "^1.4.7",
+    "prettier": "^3.8.3",
+    "typedoc": "^0.28.19"
+  }
+}

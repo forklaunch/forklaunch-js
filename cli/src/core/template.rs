@@ -203,5 +203,16 @@ pub(crate) fn get_routers_from_standard_package(package: Module) -> Option<Vec<S
             String::from("role"),
             String::from("user"),
         ]),
+        Module::StripeEcommerce => Some(vec![
+            String::from("product"),
+            String::from("variant"),
+            String::from("inventory"),
+            String::from("cart"),
+            String::from("order"),
+            String::from("payment"),
+            String::from("subscription"),
+            String::from("webhook"),
+            String::from("catalogImport"),
+        ]),
     }
 }
