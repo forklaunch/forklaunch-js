@@ -115,7 +115,7 @@ impl CliCommand for AuditCommand {
         let entities: Vec<EntityReport> = entity_names
             .into_iter()
             .map(|name| {
-                let field_reports: Vec<FieldReport> = field_classifications
+                let mut field_reports: Vec<FieldReport> = field_classifications
                     .get(&name)
                     .map(|fields| {
                         fields
@@ -129,6 +129,9 @@ impl CliCommand for AuditCommand {
                             .collect()
                     })
                     .unwrap_or_default();
+                // `field_classifications` is a HashMap, so its fields iterate in a non-deterministic
+                // order — sort by name so the report (and `--json`) is byte-stable for the same code.
+                field_reports.sort_by(|a, b| a.name.cmp(&b.name));
                 let retention =
                     retention_policies.get(&name).map(|r| RetentionReport {
                         duration: r.duration.clone(),
