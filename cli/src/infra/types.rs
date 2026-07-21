@@ -22,6 +22,11 @@ pub(crate) struct ResourceListItem {
     pub(crate) endpoint: Option<String>,
 }
 
+#[derive(Debug, Deserialize)]
+pub(crate) struct ApplicationResourcesResponse {
+    pub(crate) resources: Vec<ResourceListItem>,
+}
+
 /// `manifestConfig` shape — `ResourceConfigSchema` on the platform. All fields optional;
 /// covers both "resize" (instanceClass/allocatedStorage/nodeType/...) and "config-set"
 /// (engine/multiAZ/queueType/...) use cases, since the platform makes no distinction.
