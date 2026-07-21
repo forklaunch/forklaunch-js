@@ -6,7 +6,7 @@ use crate::{
     core::{hmac::AuthMode, http_client::get_with_auth, manifest::application::ApplicationManifestData},
 };
 
-use super::types::{ResourceDetailResponse, ResourceListItem};
+use super::types::{ApplicationResourcesResponse, ResourceDetailResponse, ResourceListItem};
 
 /// Characters that must be escaped in a URL path segment. Letters, digits, and the
 /// unreserved punctuation used by UUIDs (`-`, `_`, `.`, `~`) are left untouched, so
@@ -90,9 +90,10 @@ pub(crate) fn fetch_application_resources(
         bail!("resource-management API returned {} — {}", status, body);
     }
 
-    response
+    let parsed: ApplicationResourcesResponse = response
         .json()
-        .with_context(|| "Failed to parse resource list response")
+        .with_context(|| "Failed to parse resource list response")?;
+    Ok(parsed.resources)
 }
 
 /// Fetches the full detail (including `manifestConfig`) for a resolved resource id.
