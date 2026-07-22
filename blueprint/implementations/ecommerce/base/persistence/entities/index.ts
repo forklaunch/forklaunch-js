@@ -1,5 +1,6 @@
 import { defineComplianceEntity, fp } from '@forklaunch/core/persistence';
 import {
+  CartItemDto,
   ProductImage,
   ProductOption
 } from '@forklaunch/interfaces-ecommerce/types';
@@ -45,6 +46,18 @@ export const Variant = defineComplianceEntity({
     priceCents: fp.integer().compliance('none'),
     compareAtPriceCents: fp.integer().nullable().compliance('none'),
     requiresShipping: fp.boolean().compliance('none')
+  }
+});
+
+export const Cart = defineComplianceEntity({
+  name: 'Cart',
+  properties: {
+    id: fp.string().primary().compliance('none'),
+    // Reference id only (no customer PII lives on this entity) — matches
+    // billing's CheckoutSession.customerId precedent (compliance('none')).
+    customerId: fp.string().nullable().compliance('none'),
+    status: fp.string().compliance('none'),
+    items: fp.json<CartItemDto[]>().compliance('none')
   }
 });
 
