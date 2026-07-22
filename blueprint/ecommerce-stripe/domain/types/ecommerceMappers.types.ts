@@ -1,6 +1,11 @@
 import { SchemaValidator } from '../../schema';
 import { Schema } from '@forklaunch/validator';
-import { Inventory, Product, Variant } from '../../persistence/entities';
+import { Cart, Inventory, Product, Variant } from '../../persistence/entities';
+import {
+  CartMapper,
+  CreateCartMapper,
+  UpdateCartMapper
+} from '../mappers/cart.mappers';
 import {
   CreateInventoryMapper,
   InventoryMapper,
@@ -70,6 +75,19 @@ export type InventoryDtoTypes = {
     SchemaValidator
   >;
 };
+
+// cart
+export type CartMapperTypes = {
+  CartMapper: typeof Cart;
+  CreateCartMapper: typeof Cart;
+  UpdateCartMapper: typeof Cart;
+};
+export type CartDtoTypes = {
+  CartMapper: Schema<typeof CartMapper.schema, SchemaValidator>;
+  CreateCartMapper: Schema<typeof CreateCartMapper.schema, SchemaValidator>;
+  UpdateCartMapper: Schema<typeof UpdateCartMapper.schema, SchemaValidator>;
+};
+
 
 // TS2883 workaround. The dependency container infers through the Base*Service
 // generics, and without at least one of these mapper types nameable here, tsc
