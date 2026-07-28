@@ -7,7 +7,6 @@ import {
   schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
-import { IdsDto } from '@forklaunch/common';
 import { getCachedJwks } from '@forklaunch/core/http';
 import { jwtVerify } from 'jose';
 import { ci, tokens } from '../../bootstrapper';
@@ -177,7 +176,7 @@ export const getBatchUsers = handlers.get(
         organization: {
           id: req.session.organizationId
         }
-      } as IdsDto)
+      })
     );
   }
 );

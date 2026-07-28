@@ -191,7 +191,7 @@ describe('User Routes E2E Tests with PostgreSQL Container', () => {
         {
           ids: [user1Id, user2Id],
           organization: { id: org1Id }
-        } as Parameters<typeof UserService.getBatchUsers>[0],
+        },
         em
       );
 
