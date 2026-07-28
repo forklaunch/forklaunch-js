@@ -240,7 +240,7 @@ fn print_traces(traces: &[TraceEntry]) -> Result<()> {
         let service = truncate(trace.service_name.as_deref().unwrap_or(MISSING), 20);
         let route = truncate(trace.route.as_deref().unwrap_or(MISSING), 30);
         let status = trace.status.as_deref().unwrap_or(MISSING);
-        let duration = format!("{}ms", trace.duration_ms);
+        let duration = format!("{:.0}ms", trace.duration_ms);
         let start_time = trace
             .start_time
             .get(..19)
@@ -299,7 +299,7 @@ fn print_trace_detail(response: &TraceDetailResponse) -> Result<()> {
             .unwrap_or(false);
         let color = if is_error {
             Color::Red
-        } else if span.duration_ms > 1000 {
+        } else if span.duration_ms > 1000.0 {
             Color::Yellow
         } else {
             Color::Green
@@ -312,7 +312,7 @@ fn print_trace_detail(response: &TraceDetailResponse) -> Result<()> {
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::White)))?;
         writeln!(
             stdout,
-            "  ({}, {}ms)",
+            "  ({}, {:.2}ms)",
             span.service_name.as_deref().unwrap_or(MISSING),
             span.duration_ms
         )?;
@@ -399,7 +399,10 @@ struct TraceEntry {
     service_name: Option<String>,
     #[serde(default)]
     route: Option<String>,
-    duration_ms: u64,
+    /// Fractional: the server computes this as (endNano-startNano)/1e6 with no
+    /// rounding, so it is not an integer in general. `u64` rejected every float
+    /// value serde saw — including whole ones like `12.0`.
+    duration_ms: f64,
     #[serde(default)]
     status: Option<String>,
     start_time: String,
@@ -425,7 +428,10 @@ struct Span {
     #[serde(default)]
     service_name: Option<String>,
     start_time: String,
-    duration_ms: u64,
+    /// Fractional: the server computes this as (endNano-startNano)/1e6 with no
+    /// rounding, so it is not an integer in general. `u64` rejected every float
+    /// value serde saw — including whole ones like `12.0`.
+    duration_ms: f64,
     #[serde(default)]
     attributes: HashMap<String, serde_json::Value>,
 }
@@ -460,7 +466,7 @@ mod tests {
             name: name.to_string(),
             service_name: Some("svc".to_string()),
             start_time: "2024-01-15T10:00:00Z".to_string(),
-            duration_ms: 100,
+            duration_ms: 100.0,
             attributes: HashMap::new(),
         }
     }
@@ -571,8 +577,28 @@ mod tests {
         }"#;
         let entry: TraceEntry = serde_json::from_str(json).unwrap();
         assert_eq!(entry.trace_id, "abc123");
-        assert_eq!(entry.duration_ms, 42);
+        assert_eq!(entry.duration_ms, 42.0);
         assert_eq!(entry.route.as_deref(), Some("/health"));
+    }
+
+    /// Regression: the server computes durations as
+    /// `(endNano - startNano) / 1_000_000` with no rounding
+    /// (traces.service.ts durationFromNano), so `durationMs` is fractional in
+    /// general. `u64` rejected every float — including whole ones like `12.0`
+    /// — which broke `observe traces <trace-id>` entirely.
+    #[test]
+    fn fractional_durations_deserialize() {
+        let span: Span = serde_json::from_str(
+            r#"{"spanId":"s1","name":"http.request","startTime":"2024-01-15T10:00:00Z","durationMs":55.45556640625}"#,
+        )
+        .unwrap();
+        assert!((span.duration_ms - 55.45556640625).abs() < f64::EPSILON);
+
+        let entry: TraceEntry = serde_json::from_str(
+            r#"{"traceId":"t1","startTime":"2024-01-15T10:00:00Z","durationMs":12.0}"#,
+        )
+        .unwrap();
+        assert!((entry.duration_ms - 12.0).abs() < f64::EPSILON);
     }
 
     /// Regression: `route`, `serviceName` and `status` are `.optional()`
