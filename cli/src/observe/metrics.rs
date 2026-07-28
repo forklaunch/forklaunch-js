@@ -161,12 +161,26 @@ fn fetch_all_application_metrics(
     let mut merged = ApplicationMonitoringResponse::default();
     let mut latency = LatencyMetric::default();
     let mut any_latency = false;
+    let mut succeeded = false;
+    let mut first_err: Option<anyhow::Error> = None;
 
     for chart_type in ["requestRate", "errorRate", "latencyP50", "latencyP95", "latencyP99"] {
         let r = match fetch_application_metrics(application_id, environment, time_range, chart_type)
         {
-            Ok(r) => r,
-            Err(_) => continue,
+            Ok(r) => {
+                succeeded = true;
+                r
+            }
+            Err(e) => {
+                // Degrade one metric to "-" rather than losing the command —
+                // but never swallow a total failure (auth rejected, API down),
+                // which must still surface as an error instead of a table of
+                // dashes and a zero exit code.
+                if first_err.is_none() {
+                    first_err = Some(e);
+                }
+                continue;
+            }
         };
         match chart_type {
             "requestRate" => merged.request_rate = r.request_rate,
@@ -189,6 +203,12 @@ fn fetch_all_application_metrics(
                 any_latency |= latency.p99.is_some();
             }
             _ => {}
+        }
+    }
+
+    if !succeeded {
+        if let Some(e) = first_err {
+            return Err(e);
         }
     }
 
