@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 use crate::{
-    CliCommand,
     constants::get_observability_api_url,
     core::{
         command::command,
@@ -14,6 +13,7 @@ use crate::{
         http_client::{get_with_auth, post_with_auth},
         validate::{require_integration, require_manifest},
     },
+    CliCommand,
 };
 
 // ── Top-level command ─────────────────────────────────────────────────────────
@@ -89,16 +89,14 @@ impl CliCommand for MetricsCommand {
         };
 
         if let Some(q) = query {
-            let response =
-                fetch_promql(&q, &environment, &application_id, &time_range)?;
+            let response = fetch_promql(&q, &environment, &application_id, &time_range)?;
             if json_output {
                 println!("{}", serde_json::to_string_pretty(&response)?);
             } else {
                 print_promql(&response)?;
             }
         } else {
-            let response =
-                fetch_application_metrics(&application_id, &environment, &time_range)?;
+            let response = fetch_application_metrics(&application_id, &environment, &time_range)?;
             if json_output {
                 println!("{}", serde_json::to_string_pretty(&response)?);
             } else {
@@ -160,8 +158,8 @@ fn fetch_promql(
     });
 
     let auth_mode = AuthMode::detect();
-    let response =
-        post_with_auth(&auth_mode, &url, body).with_context(|| "Failed to reach observability API")?;
+    let response = post_with_auth(&auth_mode, &url, body)
+        .with_context(|| "Failed to reach observability API")?;
 
     if !response.status().is_success() {
         let status = response.status();
@@ -242,6 +240,19 @@ fn print_metrics(response: &ApplicationMonitoringResponse) -> Result<()> {
     Ok(())
 }
 
+/// Fallback unit for a metric the API sent as a bare number. The API's own
+/// unit map (monitoring controller) is the source of these strings; without
+/// them every row would render its unit column as "-".
+fn default_unit(name: &str) -> Option<&'static str> {
+    match name {
+        "Request Rate" => Some("req/s"),
+        "Error Rate" => Some("%"),
+        "Uptime" => Some("%"),
+        n if n.starts_with("Latency") => Some("ms"),
+        _ => None,
+    }
+}
+
 fn print_metric_row(out: &mut StandardStream, name: &str, metric: &MetricValue) -> Result<()> {
     let available = metric.available.unwrap_or(true);
     let value_str = if available {
@@ -252,7 +263,11 @@ fn print_metric_row(out: &mut StandardStream, name: &str, metric: &MetricValue) 
     } else {
         "unavailable".to_string()
     };
-    let unit_str = metric.unit.as_deref().unwrap_or("-");
+    let unit_str = metric
+        .unit
+        .as_deref()
+        .or_else(|| default_unit(name))
+        .unwrap_or("-");
 
     if !available {
         out.set_color(ColorSpec::new().set_fg(Some(Color::White)))?;
@@ -308,15 +323,56 @@ fn print_promql(response: &PromQLResponse) -> Result<()> {
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct MetricValue {
-    #[serde(default)]
     value: Option<f64>,
-    #[serde(default)]
     unit: Option<String>,
-    #[serde(default)]
     available: Option<bool>,
+}
+
+/// The observability API sends these metrics as bare JSON numbers —
+/// `"requestRate": 12.5` (see `ApplicationMonitoringSchema`, which types
+/// `requestRate`/`errorRate`/`uptime` as `number`). Earlier CLI versions
+/// assumed an object (`{value, unit, available}`), which made every
+/// `observe metrics` call fail with `invalid type: integer, expected struct
+/// MetricValue`. Accept both shapes so the CLI survives either side changing.
+impl<'de> Deserialize<'de> for MetricValue {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(untagged)]
+        enum Raw {
+            Scalar(f64),
+            Object {
+                #[serde(default)]
+                value: Option<f64>,
+                #[serde(default)]
+                unit: Option<String>,
+                #[serde(default)]
+                available: Option<bool>,
+            },
+        }
+
+        Ok(match Raw::deserialize(deserializer)? {
+            Raw::Scalar(value) => MetricValue {
+                value: Some(value),
+                unit: None,
+                available: None,
+            },
+            Raw::Object {
+                value,
+                unit,
+                available,
+            } => MetricValue {
+                value,
+                unit,
+                available,
+            },
+        })
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -455,5 +511,43 @@ mod tests {
         let resp: ApplicationMonitoringResponse = serde_json::from_str(json).unwrap();
         assert_eq!(resp.request_rate.value, Some(10.0));
         assert!(resp.latency.is_some());
+    }
+
+    /// Regression — the shape the API ACTUALLY returns
+    /// (`ApplicationMonitoringSchema`: `requestRate`/`errorRate`/`uptime` are
+    /// plain `number`, latency is `{p50,p95,p99,avg}`). This previously failed
+    /// with `invalid type: integer 0, expected struct MetricValue`.
+    #[test]
+    fn application_monitoring_response_deserializes_scalar_metrics() {
+        let json = r#"{
+            "requestRate": 0,
+            "requestRateTrend": "—",
+            "latency": {"p50": 10.0, "p95": 50.0, "p99": 100.0, "avg": 22.0},
+            "latencyTrend": "—",
+            "errorRate": 0.5,
+            "errorRateTrend": "+1.2%",
+            "successRatePercent": 99.5,
+            "available": true,
+            "uptime": 99.9
+        }"#;
+        let resp: ApplicationMonitoringResponse = serde_json::from_str(json).unwrap();
+        assert_eq!(resp.request_rate.value, Some(0.0));
+        assert_eq!(resp.error_rate.value, Some(0.5));
+        assert_eq!(resp.uptime.value, Some(99.9));
+        assert_eq!(resp.latency.as_ref().and_then(|l| l.p95), Some(50.0));
+    }
+
+    #[test]
+    fn metric_value_accepts_bare_number() {
+        let mv: MetricValue = serde_json::from_str("0").unwrap();
+        assert_eq!(mv.value, Some(0.0));
+        assert!(mv.unit.is_none());
+    }
+
+    #[test]
+    fn default_unit_fills_in_when_api_omits_it() {
+        assert_eq!(default_unit("Request Rate"), Some("req/s"));
+        assert_eq!(default_unit("Latency p95"), Some("ms"));
+        assert_eq!(default_unit("Something Else"), None);
     }
 }

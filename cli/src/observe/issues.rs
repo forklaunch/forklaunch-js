@@ -126,7 +126,7 @@ fn list_issues(matches: &ArgMatches) -> Result<()> {
     let status = matches.get_one::<String>("status").cloned();
     let json_output = matches.get_flag("json");
 
-    let response = fetch_issues(
+    let issues = fetch_issues(
         &application_id,
         &environment,
         severity.as_deref(),
@@ -134,9 +134,9 @@ fn list_issues(matches: &ArgMatches) -> Result<()> {
     )?;
 
     if json_output {
-        println!("{}", serde_json::to_string_pretty(&response)?);
+        println!("{}", serde_json::to_string_pretty(&issues)?);
     } else {
-        print_issues(&response.issues)?;
+        print_issues(&issues)?;
     }
 
     Ok(())
@@ -147,7 +147,7 @@ fn fetch_issues(
     environment: &str,
     severity: Option<&str>,
     status: Option<&str>,
-) -> Result<IssuesResponse> {
+) -> Result<Vec<Issue>> {
     let api_url = get_observability_api_url();
     let mut url = format!(
         "{}/issues?appId={}&env={}",
@@ -387,13 +387,13 @@ struct Issue {
     resolved_by: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-struct IssuesResponse {
-    issues: Vec<Issue>,
-    #[serde(default)]
-    total: Option<u64>,
-}
+// NOTE: there is deliberately no `IssuesResponse` wrapper type. The list
+// endpoint (`listIssues`) declares `200: schemaValidator.array(IssueSchema)`
+// and responds with a bare JSON array. The previous wrapper struct
+// (`{issues, total}`) never matched, so every call failed with
+// `invalid length 0, expected struct IssuesResponse with 2 elements`.
+// If pagination/total is added server-side, reintroduce a wrapper here and
+// update `fetch_issues` at the same time.
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -549,19 +549,26 @@ mod tests {
         assert!(issue.service_name.is_none());
     }
 
+    /// The list endpoint responds with a bare JSON array, not an object.
+    /// Shape mirrors `listIssues` (`200: schemaValidator.array(IssueSchema)`).
     #[test]
-    fn issues_response_deserializes() {
-        let json = r#"{
-            "issues": [
-                {"id": "iss-001", "severity": "ALERT"},
-                {"id": "iss-002", "severity": "INCIDENT"}
-            ],
-            "total": 2
-        }"#;
+    fn issues_list_deserializes_bare_array() {
+        let json = r#"[
+            {"id": "iss-001", "severity": "ALERT"},
+            {"id": "iss-002", "severity": "INCIDENT"}
+        ]"#;
 
-        let response: IssuesResponse = serde_json::from_str(json).unwrap();
-        assert_eq!(response.issues.len(), 2);
-        assert_eq!(response.total, Some(2));
+        let issues: Vec<Issue> = serde_json::from_str(json).unwrap();
+        assert_eq!(issues.len(), 2);
+        assert_eq!(issues[0].id, "iss-001");
+    }
+
+    /// Regression: an empty catalog returns `[]`. The old wrapper struct made
+    /// this fail with `invalid length 0, expected struct ... with 2 elements`.
+    #[test]
+    fn issues_list_deserializes_empty_array() {
+        let issues: Vec<Issue> = serde_json::from_str("[]").unwrap();
+        assert!(issues.is_empty());
     }
 
     #[test]
