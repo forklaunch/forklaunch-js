@@ -76,8 +76,7 @@ export class RlsEventSubscriber implements EventSubscriber {
     em: Pick<EntityManager, 'getFilterParams'>
   ): string | undefined {
     const params = em.getFilterParams(TENANT_FILTER_NAME) as
-      | { tenantId?: string }
-      | undefined;
+      { tenantId?: string } | undefined;
     return params?.tenantId;
   }
 }
