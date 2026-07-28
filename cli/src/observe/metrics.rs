@@ -345,6 +345,11 @@ impl<'de> Deserialize<'de> for MetricValue {
         #[derive(Deserialize)]
         #[serde(untagged)]
         enum Raw {
+            // An explicitly null metric renders as "-" rather than failing the
+            // whole command. The schema types these as required numbers, but
+            // trusting that assumption is what caused this bug in the first
+            // place.
+            Null,
             Scalar(f64),
             Object {
                 #[serde(default)]
@@ -357,6 +362,7 @@ impl<'de> Deserialize<'de> for MetricValue {
         }
 
         Ok(match Raw::deserialize(deserializer)? {
+            Raw::Null => MetricValue::default(),
             Raw::Scalar(value) => MetricValue {
                 value: Some(value),
                 unit: None,
@@ -550,4 +556,26 @@ mod tests {
         assert_eq!(default_unit("Latency p95"), Some("ms"));
         assert_eq!(default_unit("Something Else"), None);
     }
+    /// A metric explicitly sent as `null` should render as "-", not abort the
+    /// command. Schema says these are required numbers; this guards the case
+    /// where reality disagrees (which is the whole reason this PR exists).
+    #[test]
+    fn metric_value_accepts_null() {
+        let mv: MetricValue = serde_json::from_str("null").unwrap();
+        assert!(mv.value.is_none());
+
+        let resp: ApplicationMonitoringResponse =
+            serde_json::from_str(r#"{"requestRate": null, "errorRate": 1, "uptime": 2}"#).unwrap();
+        assert!(resp.request_rate.value.is_none());
+        assert_eq!(resp.error_rate.value, Some(1.0));
+    }
+
+    /// A metric key absent entirely falls back to the struct default.
+    #[test]
+    fn application_monitoring_response_tolerates_missing_metrics() {
+        let resp: ApplicationMonitoringResponse = serde_json::from_str("{}").unwrap();
+        assert!(resp.request_rate.value.is_none());
+        assert!(resp.latency.is_none());
+    }
+
 }
