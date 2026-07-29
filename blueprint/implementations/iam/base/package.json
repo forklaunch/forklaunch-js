@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/implementation-iam-base",
-  "version": "1.0.26",
+  "version": "1.0.27",
   "description": "IAM basic implementation for forklaunch",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -53,16 +53,16 @@
     "@forklaunch/interfaces-iam": "workspace:*",
     "@forklaunch/internal": "^1.2.18",
     "@forklaunch/validator": "^1.2.18",
-    "@mikro-orm/core": "7.0.15",
-    "@sinclair/typebox": "^0.34.49",
+    "@mikro-orm/core": "7.1.8",
+    "@sinclair/typebox": "^0.34.52",
     "ajv": "^8.20.0",
-    "uuid": "^14.0.0",
+    "uuid": "^14.0.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@typescript/native-preview": "7.0.0-dev.20260511.1",
+    "@typescript/native-preview": "7.0.0-dev.20260707.2",
     "depcheck": "^1.4.7",
-    "prettier": "^3.8.3",
-    "typedoc": "^0.28.19"
+    "prettier": "^3.9.6",
+    "typedoc": "^0.28.20"
   }
 }
