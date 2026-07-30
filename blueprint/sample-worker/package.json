@@ -40,15 +40,15 @@
   "dependencies": {
     "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
-    "@forklaunch/core": "^1.5.2",
+    "@forklaunch/core": "^1.5.6",
     "@forklaunch/implementation-worker-bullmq": "workspace:*",
     "@forklaunch/implementation-worker-database": "workspace:*",
     "@forklaunch/implementation-worker-kafka": "workspace:*",
     "@forklaunch/implementation-worker-redis": "workspace:*",
-    "@forklaunch/infrastructure-redis": "^1.4.4",
-    "@forklaunch/infrastructure-s3": "^1.4.4",
+    "@forklaunch/infrastructure-redis": "^1.4.6",
+    "@forklaunch/infrastructure-s3": "^1.4.6",
     "@forklaunch/interfaces-worker": "workspace:*",
-    "@forklaunch/universal-sdk": "^1.2.18",
+    "@forklaunch/universal-sdk": "^1.2.20",
     "@mikro-orm/core": "7.1.8",
     "@mikro-orm/libsql": "7.1.8",
     "@mikro-orm/mariadb": "7.1.8",
@@ -71,7 +71,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@forklaunch/testing": "^1.2.18",
+    "@forklaunch/testing": "^1.2.21",
     "@mikro-orm/cli": "7.1.8",
     "@types/express": "^5.0.6",
     "@types/express-serve-static-core": "^5.1.2",
@@ -92,5 +92,8 @@
       "./mikro-orm.config.ts",
       "./dist/mikro-orm.config.js"
     ]
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

@@ -30,13 +30,31 @@
       "import": "./lib/domain/types/index.mjs",
       "require": "./lib/domain/types/index.js",
       "default": "./lib/domain/types/index.js"
+    },
+    "./schemas/*": {
+      "types": "./lib/domain/schemas/*.d.ts",
+      "import": "./lib/domain/schemas/*.mjs",
+      "require": "./lib/domain/schemas/*.js",
+      "default": "./lib/domain/schemas/*.js"
+    },
+    "./services/*": {
+      "types": "./lib/services/*.d.ts",
+      "import": "./lib/services/*.mjs",
+      "require": "./lib/services/*.js",
+      "default": "./lib/services/*.js"
+    },
+    "./types/*": {
+      "types": "./lib/domain/types/*.d.ts",
+      "import": "./lib/domain/types/*.mjs",
+      "require": "./lib/domain/types/*.js",
+      "default": "./lib/domain/types/*.js"
     }
   },
   "files": [
     "lib/**"
   ],
   "scripts": {
-    "build": "tsgo --noEmit && tsup domain/schemas/index.ts services/index.ts domain/types/index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean && if [ -f eject-package.bash ]; then pnpm package:eject; fi",
+    "build": "tsgo --noEmit && tsup domain/schemas/index.ts services/index.ts domain/types/index.ts --format cjs,esm --no-splitting --tsconfig tsconfig.json --out-dir lib --clean && tsgo -p tsconfig.build.json --emitDeclarationOnly && if [ -f eject-package.bash ]; then pnpm package:eject; fi",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
@@ -48,11 +66,11 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "^1.2.18",
-    "@forklaunch/core": "^1.5.2",
+    "@forklaunch/common": "^1.2.20",
+    "@forklaunch/core": "^1.5.6",
     "@forklaunch/interfaces-ecommerce": "workspace:*",
-    "@forklaunch/internal": "^1.2.18",
-    "@forklaunch/validator": "^1.2.18",
+    "@forklaunch/internal": "^1.2.20",
+    "@forklaunch/validator": "^1.2.20",
     "@mikro-orm/core": "7.1.8",
     "@sinclair/typebox": "^0.34.52",
     "ajv": "^8.20.0",
@@ -63,5 +81,8 @@
     "depcheck": "^1.4.7",
     "prettier": "^3.9.6",
     "typedoc": "^0.28.20"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

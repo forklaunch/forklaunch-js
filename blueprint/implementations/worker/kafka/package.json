@@ -36,13 +36,37 @@
       "import": "./lib/domain/types/index.mjs",
       "require": "./lib/domain/types/index.js",
       "default": "./lib/domain/types/index.js"
+    },
+    "./consumers/*": {
+      "types": "./lib/consumers/*.d.ts",
+      "import": "./lib/consumers/*.mjs",
+      "require": "./lib/consumers/*.js",
+      "default": "./lib/consumers/*.js"
+    },
+    "./producers/*": {
+      "types": "./lib/producers/*.d.ts",
+      "import": "./lib/producers/*.mjs",
+      "require": "./lib/producers/*.js",
+      "default": "./lib/producers/*.js"
+    },
+    "./schemas/*": {
+      "types": "./lib/domain/schemas/*.d.ts",
+      "import": "./lib/domain/schemas/*.mjs",
+      "require": "./lib/domain/schemas/*.js",
+      "default": "./lib/domain/schemas/*.js"
+    },
+    "./types/*": {
+      "types": "./lib/domain/types/*.d.ts",
+      "import": "./lib/domain/types/*.mjs",
+      "require": "./lib/domain/types/*.js",
+      "default": "./lib/domain/types/*.js"
     }
   },
   "files": [
     "lib/**"
   ],
   "scripts": {
-    "build": "tsgo --noEmit && tsup producers/index.ts consumers/index.ts domain/schemas/index.ts domain/types/index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean && if [ -f eject-package.bash ]; then pnpm package:eject; fi",
+    "build": "tsgo --noEmit && tsup producers/index.ts consumers/index.ts domain/schemas/index.ts domain/types/index.ts --format cjs,esm --no-splitting --tsconfig tsconfig.json --out-dir lib --clean && tsgo -p tsconfig.build.json --emitDeclarationOnly && if [ -f eject-package.bash ]; then pnpm package:eject; fi",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
@@ -54,9 +78,9 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/core": "^1.5.2",
+    "@forklaunch/core": "^1.5.6",
     "@forklaunch/interfaces-worker": "workspace:*",
-    "@forklaunch/internal": "^1.2.18",
+    "@forklaunch/internal": "^1.2.20",
     "@sinclair/typebox": "^0.34.52",
     "kafkajs": "^2.2.4",
     "zod": "^4.4.3"
@@ -68,5 +92,8 @@
     "prettier": "^3.9.6",
     "typedoc": "^0.28.20",
     "typescript-eslint": "^8.65.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
