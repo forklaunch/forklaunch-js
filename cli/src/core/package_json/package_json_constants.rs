@@ -240,31 +240,31 @@ pub(crate) const EXPRESS_VERSION: &str = "~1.2.34";
 // @forklaunch/hyper-express
 pub(crate) const HYPER_EXPRESS_VERSION: &str = "~1.2.34";
 // @forklaunch/implementation-billing-base
-pub(crate) const BILLING_BASE_VERSION: &str = "~1.0.27";
+pub(crate) const BILLING_BASE_VERSION: &str = "~1.0.28";
 // @forklaunch/implementation-billing-stripe
-pub(crate) const BILLING_STRIPE_VERSION: &str = "~1.1.27";
+pub(crate) const BILLING_STRIPE_VERSION: &str = "~1.1.28";
 // @forklaunch/implementation-iam-base
-pub(crate) const IAM_BASE_VERSION: &str = "~1.0.27";
+pub(crate) const IAM_BASE_VERSION: &str = "~1.0.28";
 // @forklaunch/implementation-worker-bullmq
-pub(crate) const WORKER_BULLMQ_VERSION: &str = "~1.0.28";
+pub(crate) const WORKER_BULLMQ_VERSION: &str = "~1.0.29";
 // @forklaunch/implementation-worker-redis
-pub(crate) const WORKER_REDIS_VERSION: &str = "~1.0.28";
+pub(crate) const WORKER_REDIS_VERSION: &str = "~1.0.29";
 // @forklaunch/implementation-worker-database
-pub(crate) const WORKER_DATABASE_VERSION: &str = "~1.0.28";
+pub(crate) const WORKER_DATABASE_VERSION: &str = "~1.0.29";
 // @forklaunch/implementation-worker-kafka
-pub(crate) const WORKER_KAFKA_VERSION: &str = "~1.0.28";
+pub(crate) const WORKER_KAFKA_VERSION: &str = "~1.0.29";
 // @forklaunch/infrastructure-redis
 pub(crate) const INFRASTRUCTURE_REDIS_VERSION: &str = "~1.4.6";
 // @forklaunch/infrastructure-s3
 pub(crate) const INFRASTRUCTURE_S3_VERSION: &str = "~1.4.6";
 // @forklaunch/interfaces-billing
-pub(crate) const BILLING_INTERFACES_VERSION: &str = "~1.0.26";
+pub(crate) const BILLING_INTERFACES_VERSION: &str = "~1.0.28";
 // @forklaunch/interfaces-iam
-pub(crate) const IAM_INTERFACES_VERSION: &str = "~1.0.26";
+pub(crate) const IAM_INTERFACES_VERSION: &str = "~1.0.27";
 // @forklaunch/interfaces-worker
-pub(crate) const WORKER_INTERFACES_VERSION: &str = "~1.0.26";
+pub(crate) const WORKER_INTERFACES_VERSION: &str = "~1.0.27";
 // @forklaunch/internal
-pub(crate) const INTERNAL_VERSION: &str = "~1.2.20";
+pub(crate) const INTERNAL_VERSION: &str = "~1.2.22";
 // @forklaunch/testing
 pub(crate) const TESTING_VERSION: &str = "~1.2.21";
 // @forklaunch/universal-sdk
