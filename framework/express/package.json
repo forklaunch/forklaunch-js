@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/express",
-  "version": "1.2.35",
+  "version": "1.2.36",
   "description": "Forklaunch framework for express.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -18,6 +18,12 @@
       "import": "./lib/index.mjs",
       "require": "./lib/index.js",
       "default": "./lib/index.js"
+    },
+    "./*": {
+      "types": "./lib/*.d.ts",
+      "import": "./lib/*.mjs",
+      "require": "./lib/*.js",
+      "default": "./lib/*.js"
     }
   },
   "types": "lib/index.d.ts",
