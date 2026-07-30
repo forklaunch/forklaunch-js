@@ -87,13 +87,13 @@
     "typedoc": "^0.28.20",
     "typescript-eslint": "^8.65.0"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "mikro-orm": {
     "config_paths": [
       "./mikro-orm.config.ts",
       "./dist/mikro-orm.config.js"
     ]
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

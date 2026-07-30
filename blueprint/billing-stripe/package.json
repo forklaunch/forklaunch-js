@@ -81,13 +81,13 @@
     "typedoc": "^0.28.20",
     "vitest": "^4.1.10"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "mikro-orm": {
     "configPaths": [
       "./mikro-orm.config.ts",
       "./dist/mikro-orm.config.js"
     ]
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }
