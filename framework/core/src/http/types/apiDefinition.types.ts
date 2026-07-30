@@ -391,8 +391,7 @@ export interface ForklaunchResponse<
 
   /** Response schema, compiled */
   responseSchemas:
-    | ResponseCompiledSchema
-    | Record<string, ResponseCompiledSchema>;
+    ResponseCompiledSchema | Record<string, ResponseCompiledSchema>;
 
   /** Whether the metric has been recorded */
   metricRecorded: boolean;
@@ -546,15 +545,17 @@ type ResolvedForklaunchResponseBase<
 > = unknown extends BaseResponse
   ? ForklaunchResponse<BaseResponse, ResBodyMap, ResHeaders, LocalsObj, Version>
   : (string extends Version ? unknown : { version?: Version }) & {
-      [K in
-        | keyof BaseResponse
-        | keyof ForklaunchResponse<
-            BaseResponse,
-            ResBodyMap,
-            ResHeaders,
-            LocalsObj,
-            Version
-          >]: K extends keyof ForklaunchResponse<
+      [
+        K in
+          | keyof BaseResponse
+          | keyof ForklaunchResponse<
+              BaseResponse,
+              ResBodyMap,
+              ResHeaders,
+              LocalsObj,
+              Version
+            >
+      ]: K extends keyof ForklaunchResponse<
         BaseResponse,
         ResBodyMap,
         ResHeaders,
@@ -761,7 +762,9 @@ export type MapVersionedReqsSchema<
   SV extends AnySchemaValidator,
   VersionedReqs extends VersionSchema<SV, Method>
 > = {
-  [K in keyof VersionedReqs]: (VersionedReqs[K]['requestHeaders'] extends HeadersObject<SV>
+  [
+    K in keyof VersionedReqs
+  ]: (VersionedReqs[K]['requestHeaders'] extends HeadersObject<SV>
     ? {
         requestHeaders: MapReqHeadersSchema<
           SV,
@@ -789,7 +792,9 @@ export type MapVersionedRespsSchema<
   SV extends AnySchemaValidator,
   VersionedResps extends VersionSchema<SV, Method>
 > = {
-  [K in keyof VersionedResps]: (VersionedResps[K]['responseHeaders'] extends HeadersObject<SV>
+  [
+    K in keyof VersionedResps
+  ]: (VersionedResps[K]['responseHeaders'] extends HeadersObject<SV>
     ? {
         responseHeaders: MapResHeadersSchema<
           SV,
