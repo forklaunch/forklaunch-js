@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/infrastructure-s3",
-  "version": "1.4.6",
+  "version": "1.4.7",
   "description": "S3 infrastructure for ForkLaunch components.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -41,8 +41,8 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1098.0",
-    "@forklaunch/common": "workspace:*",
-    "@forklaunch/core": "workspace:*"
+    "@forklaunch/common": "workspace:^",
+    "@forklaunch/core": "workspace:^"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

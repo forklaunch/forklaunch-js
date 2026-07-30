@@ -32,9 +32,9 @@
     "worker": "pnpm tsx watch worker.ts"
   },
   "dependencies": {
-    "@forklaunch/blueprint-core": "workspace:*",
-    "@forklaunch/blueprint-iam-base": "workspace:*",
-    "@forklaunch/blueprint-monitoring": "workspace:*",
+    "@forklaunch/blueprint-core": "workspace:^",
+    "@forklaunch/blueprint-iam-base": "workspace:^",
+    "@forklaunch/blueprint-monitoring": "workspace:^",
     "@forklaunch/common": "^1.2.20",
     "@forklaunch/core": "^1.5.6",
     "@forklaunch/express": "^1.2.34",

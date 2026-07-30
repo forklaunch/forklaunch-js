@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/universal-sdk",
-  "version": "1.2.20",
+  "version": "1.2.21",
   "description": "Cross runtime fetch library for forklaunch router sdks",
   "keywords": [
     "fetch",
@@ -42,7 +42,7 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "workspace:*",
+    "@forklaunch/common": "workspace:^",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1"
   },

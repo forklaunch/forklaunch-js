@@ -88,13 +88,13 @@ importers:
   billing-base:
     dependencies:
       '@forklaunch/blueprint-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
       '@forklaunch/blueprint-iam-base':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../iam-base
       '@forklaunch/blueprint-monitoring':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../monitoring
       '@forklaunch/common':
         specifier: ^1.2.20
@@ -109,13 +109,13 @@ importers:
         specifier: ^1.2.34
         version: 1.2.34(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(express@5.2.1)
       '@forklaunch/implementation-billing-base':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../implementations/billing/base
       '@forklaunch/infrastructure-redis':
         specifier: ^1.4.6
         version: 1.4.6(@opentelemetry/api@1.9.1)(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/interfaces-billing':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../interfaces/billing
       '@forklaunch/validator':
         specifier: ^1.2.20
@@ -209,13 +209,13 @@ importers:
   billing-stripe:
     dependencies:
       '@forklaunch/blueprint-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
       '@forklaunch/blueprint-iam-base':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../iam-base
       '@forklaunch/blueprint-monitoring':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../monitoring
       '@forklaunch/common':
         specifier: ^1.2.20
@@ -230,13 +230,13 @@ importers:
         specifier: ^1.2.34
         version: 1.2.34(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(express@5.2.1)
       '@forklaunch/implementation-billing-stripe':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../implementations/billing/stripe
       '@forklaunch/infrastructure-redis':
         specifier: ^1.4.6
         version: 1.4.6(@opentelemetry/api@1.9.1)(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/interfaces-billing':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../interfaces/billing
       '@forklaunch/validator':
         specifier: ^1.2.20
@@ -379,13 +379,13 @@ importers:
   ecommerce-stripe:
     dependencies:
       '@forklaunch/blueprint-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
       '@forklaunch/blueprint-iam-base':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../iam-base
       '@forklaunch/blueprint-monitoring':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../monitoring
       '@forklaunch/common':
         specifier: ^1.2.20
@@ -497,10 +497,10 @@ importers:
   iam-base:
     dependencies:
       '@forklaunch/blueprint-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
       '@forklaunch/blueprint-monitoring':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../monitoring
       '@forklaunch/core':
         specifier: ^1.5.6
@@ -509,10 +509,10 @@ importers:
         specifier: ^6.17.35
         version: 6.17.35
       '@forklaunch/implementation-iam-base':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../implementations/iam/base
       '@forklaunch/interfaces-iam':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../interfaces/iam
       '@forklaunch/validator':
         specifier: ^1.2.20
@@ -603,22 +603,22 @@ importers:
         specifier: ^0.5.3
         version: 0.5.3(@mikro-orm/core@7.1.8)(better-auth@1.6.25(@opentelemetry/api@1.9.1)(better-sqlite3@12.11.1)(mongodb@7.5.0)(mysql2@3.23.1(@types/node@26.1.2))(pg@8.22.0)(vitest@4.1.10(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.1.2)(esbuild@0.27.7)(tsx@4.23.1)(yaml@2.9.0))))
       '@forklaunch/blueprint-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
       '@forklaunch/blueprint-iam-base':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../iam-base
       '@forklaunch/blueprint-monitoring':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../monitoring
       '@forklaunch/core':
         specifier: ^1.5.6
         version: 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/implementation-iam-base':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../implementations/iam/base
       '@forklaunch/interfaces-iam':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../interfaces/iam
       '@mikro-orm/core':
         specifier: 7.1.8
@@ -712,7 +712,7 @@ importers:
         specifier: ^1.5.6
         version: 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/interfaces-billing':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../interfaces/billing
       '@forklaunch/internal':
         specifier: ^1.2.20
@@ -755,10 +755,10 @@ importers:
         specifier: ^1.5.6
         version: 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/implementation-billing-base':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../base
       '@forklaunch/interfaces-billing':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../interfaces/billing
       '@forklaunch/internal':
         specifier: ^1.2.20
@@ -804,7 +804,7 @@ importers:
         specifier: ^1.5.6
         version: 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/interfaces-ecommerce':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../interfaces/ecommerce
       '@forklaunch/internal':
         specifier: ^1.2.20
@@ -847,7 +847,7 @@ importers:
         specifier: ^1.5.6
         version: 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/interfaces-iam':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../interfaces/iam
       '@forklaunch/internal':
         specifier: ^1.2.20
@@ -890,7 +890,7 @@ importers:
         specifier: ^1.5.6
         version: 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/interfaces-worker':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../interfaces/worker
       '@forklaunch/internal':
         specifier: ^1.2.20
@@ -930,7 +930,7 @@ importers:
         specifier: ^1.5.6
         version: 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/interfaces-worker':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../interfaces/worker
       '@forklaunch/internal':
         specifier: ^1.2.20
@@ -970,7 +970,7 @@ importers:
         specifier: ^1.5.6
         version: 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/interfaces-worker':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../interfaces/worker
       '@forklaunch/internal':
         specifier: ^1.2.20
@@ -1010,7 +1010,7 @@ importers:
         specifier: ^1.5.6
         version: 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/interfaces-worker':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../interfaces/worker
       '@forklaunch/internal':
         specifier: ^1.2.20
@@ -1141,25 +1141,25 @@ importers:
   sample-worker:
     dependencies:
       '@forklaunch/blueprint-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
       '@forklaunch/blueprint-monitoring':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../monitoring
       '@forklaunch/core':
         specifier: ^1.5.6
         version: 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/implementation-worker-bullmq':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../implementations/worker/bullmq
       '@forklaunch/implementation-worker-database':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../implementations/worker/database
       '@forklaunch/implementation-worker-kafka':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../implementations/worker/kafka
       '@forklaunch/implementation-worker-redis':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../implementations/worker/redis
       '@forklaunch/infrastructure-redis':
         specifier: ^1.4.6
@@ -1168,7 +1168,7 @@ importers:
         specifier: ^1.4.6
         version: 1.4.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/interfaces-worker':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../interfaces/worker
       '@forklaunch/universal-sdk':
         specifier: ^1.2.20

@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/validator",
-  "version": "1.2.20",
+  "version": "1.2.21",
   "description": "Schema validator for ForkLaunch components.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -70,7 +70,7 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "workspace:*",
+    "@forklaunch/common": "workspace:^",
     "@sinclair/typebox": "^0.34.52",
     "ts-deepmerge": "^8.0.0",
     "zod": "^4.4.3"
