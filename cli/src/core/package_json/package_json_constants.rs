@@ -45,7 +45,7 @@ pub(crate) const SORT_PACKAGE_JSON_VERSION: &str = "^3.0.0";
 // tsx
 pub(crate) const TSX_VERSION: &str = "^4.23.1";
 // typescript
-pub(crate) const TYPESCRIPT_VERSION: &str = "^npm:@typescript/typescript6@^6.0.2";
+pub(crate) const TYPESCRIPT_VERSION: &str = "npm:@typescript/typescript6@^6.0.2";
 
 // Application package.json scripts constants
 pub(crate) const APP_DEV_SCRIPT: &str = "docker compose up";

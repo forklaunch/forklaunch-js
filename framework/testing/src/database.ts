@@ -70,7 +70,7 @@ function getDatabasePort(type: DatabaseType): number {
  */
 export async function setupTestORM(
   config: MikroOrmTestConfig
-): Promise<MikroORM> {
+): Promise<AnyMikroORM> {
   const {
     mikroOrmConfig,
     databaseType,

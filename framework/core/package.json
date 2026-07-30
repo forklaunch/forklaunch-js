@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/core",
-  "version": "1.5.8",
+  "version": "1.5.9",
   "description": "forklaunch-js core package. Contains useful building blocks.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -68,10 +68,7 @@
       "default": "./lib/ws/index.js"
     },
     "./*": {
-      "types": "./lib/*.d.ts",
-      "import": "./lib/*.mjs",
-      "require": "./lib/*.js",
-      "default": "./lib/*.js"
+      "types": "./lib/*.d.ts"
     }
   },
   "types": "lib/index.d.ts",

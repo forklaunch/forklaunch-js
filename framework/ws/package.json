@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/ws",
-  "version": "1.2.36",
+  "version": "1.2.37",
   "description": "Typed framework for ws, by ForkLaunch.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -20,10 +20,7 @@
       "default": "./lib/index.js"
     },
     "./*": {
-      "types": "./lib/*.d.ts",
-      "import": "./lib/*.mjs",
-      "require": "./lib/*.js",
-      "default": "./lib/*.js"
+      "types": "./lib/*.d.ts"
     }
   },
   "types": "lib/index.d.ts",

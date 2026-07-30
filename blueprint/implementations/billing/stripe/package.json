@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/implementation-billing-stripe",
-  "version": "1.1.28",
+  "version": "1.1.29",
   "description": "Stripe implementation for forklaunch billing",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -38,28 +38,16 @@
       "default": "./lib/domain/types/index.js"
     },
     "./enum/*": {
-      "types": "./lib/domain/enum/*.d.ts",
-      "import": "./lib/domain/enum/*.mjs",
-      "require": "./lib/domain/enum/*.js",
-      "default": "./lib/domain/enum/*.js"
+      "types": "./lib/domain/enum/*.d.ts"
     },
     "./schemas/*": {
-      "types": "./lib/domain/schemas/*.d.ts",
-      "import": "./lib/domain/schemas/*.mjs",
-      "require": "./lib/domain/schemas/*.js",
-      "default": "./lib/domain/schemas/*.js"
+      "types": "./lib/domain/schemas/*.d.ts"
     },
     "./services/*": {
-      "types": "./lib/services/*.d.ts",
-      "import": "./lib/services/*.mjs",
-      "require": "./lib/services/*.js",
-      "default": "./lib/services/*.js"
+      "types": "./lib/services/*.d.ts"
     },
     "./types/*": {
-      "types": "./lib/domain/types/*.d.ts",
-      "import": "./lib/domain/types/*.mjs",
-      "require": "./lib/domain/types/*.js",
-      "default": "./lib/domain/types/*.js"
+      "types": "./lib/domain/types/*.d.ts"
     }
   },
   "files": [

@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/implementation-ecommerce-base",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Ecommerce basic implementation for forklaunch",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -32,22 +32,13 @@
       "default": "./lib/domain/types/index.js"
     },
     "./schemas/*": {
-      "types": "./lib/domain/schemas/*.d.ts",
-      "import": "./lib/domain/schemas/*.mjs",
-      "require": "./lib/domain/schemas/*.js",
-      "default": "./lib/domain/schemas/*.js"
+      "types": "./lib/domain/schemas/*.d.ts"
     },
     "./services/*": {
-      "types": "./lib/services/*.d.ts",
-      "import": "./lib/services/*.mjs",
-      "require": "./lib/services/*.js",
-      "default": "./lib/services/*.js"
+      "types": "./lib/services/*.d.ts"
     },
     "./types/*": {
-      "types": "./lib/domain/types/*.d.ts",
-      "import": "./lib/domain/types/*.mjs",
-      "require": "./lib/domain/types/*.js",
-      "default": "./lib/domain/types/*.js"
+      "types": "./lib/domain/types/*.d.ts"
     }
   },
   "files": [

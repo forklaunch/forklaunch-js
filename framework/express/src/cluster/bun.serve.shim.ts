@@ -1421,13 +1421,26 @@ export function serveExpress(
       };
       abort.signal.addEventListener('abort', onAbort);
 
+      // client disconnects surface on the fetch request signal; forward them
+      // so writer/responsePromise are released
+      const onClientAbort = () => abort.abort();
+      if (request.signal.aborted) {
+        abort.abort();
+      } else {
+        request.signal.addEventListener('abort', onClientAbort, {
+          once: true
+        });
+      }
+
       res.once('finish', cleanup);
       res.once('close', cleanup);
       res.once('finish', () => {
         abort.signal.removeEventListener('abort', onAbort);
+        request.signal.removeEventListener('abort', onClientAbort);
       });
       res.once('close', () => {
         abort.signal.removeEventListener('abort', onAbort);
+        request.signal.removeEventListener('abort', onClientAbort);
       });
 
       try {

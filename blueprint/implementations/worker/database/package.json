@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/implementation-worker-database",
-  "version": "1.0.29",
+  "version": "1.0.30",
   "description": "Database implementation for forklaunch workers",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -38,28 +38,16 @@
       "default": "./lib/domain/types/index.js"
     },
     "./consumers/*": {
-      "types": "./lib/consumers/*.d.ts",
-      "import": "./lib/consumers/*.mjs",
-      "require": "./lib/consumers/*.js",
-      "default": "./lib/consumers/*.js"
+      "types": "./lib/consumers/*.d.ts"
     },
     "./producers/*": {
-      "types": "./lib/producers/*.d.ts",
-      "import": "./lib/producers/*.mjs",
-      "require": "./lib/producers/*.js",
-      "default": "./lib/producers/*.js"
+      "types": "./lib/producers/*.d.ts"
     },
     "./schemas/*": {
-      "types": "./lib/domain/schemas/*.d.ts",
-      "import": "./lib/domain/schemas/*.mjs",
-      "require": "./lib/domain/schemas/*.js",
-      "default": "./lib/domain/schemas/*.js"
+      "types": "./lib/domain/schemas/*.d.ts"
     },
     "./types/*": {
-      "types": "./lib/domain/types/*.d.ts",
-      "import": "./lib/domain/types/*.mjs",
-      "require": "./lib/domain/types/*.js",
-      "default": "./lib/domain/types/*.js"
+      "types": "./lib/domain/types/*.d.ts"
     }
   },
   "files": [

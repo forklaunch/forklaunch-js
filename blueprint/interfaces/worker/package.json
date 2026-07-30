@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/interfaces-worker",
-  "version": "1.0.27",
+  "version": "1.0.28",
   "description": "Worker interfaces for forklaunch",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -26,16 +26,10 @@
       "default": "./lib/types/index.js"
     },
     "./interfaces/*": {
-      "types": "./lib/interfaces/*.d.ts",
-      "import": "./lib/interfaces/*.mjs",
-      "require": "./lib/interfaces/*.js",
-      "default": "./lib/interfaces/*.js"
+      "types": "./lib/interfaces/*.d.ts"
     },
     "./types/*": {
-      "types": "./lib/types/*.d.ts",
-      "import": "./lib/types/*.mjs",
-      "require": "./lib/types/*.js",
-      "default": "./lib/types/*.js"
+      "types": "./lib/types/*.d.ts"
     }
   },
   "files": [

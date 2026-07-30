@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/infrastructure-s3",
-  "version": "1.4.8",
+  "version": "1.4.9",
   "description": "S3 infrastructure for ForkLaunch components.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -20,10 +20,7 @@
       "default": "./lib/index.js"
     },
     "./*": {
-      "types": "./lib/*.d.ts",
-      "import": "./lib/*.mjs",
-      "require": "./lib/*.js",
-      "default": "./lib/*.js"
+      "types": "./lib/*.d.ts"
     }
   },
   "types": "lib/index.d.ts",
