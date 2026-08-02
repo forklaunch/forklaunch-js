@@ -99,6 +99,17 @@ export interface ForklaunchBaseRequest<
  * @template ReqQuery - A type for the request query, defaulting to ParsedQs.
  * @template Headers - A type for the request headers, defaulting to IncomingHttpHeaders.
  */
+/**
+ * First-party session claims the platform understands. Multi-tenant
+ * scaffolds read `organizationId` to scope the tenant filter, so it is
+ * typed here rather than cast at every call site. Applications extend the
+ * session further via their `SessionSchema` type parameter.
+ */
+export interface ForklaunchBaseSession {
+  /** Active organization (tenant) for the authenticated session. */
+  organizationId?: string;
+}
+
 export interface ForklaunchRequest<
   SV extends AnySchemaValidator,
   P extends ParamsDictionary,
@@ -153,7 +164,7 @@ export interface ForklaunchRequest<
   openTelemetryCollector?: OpenTelemetryCollector<MetricsDefinition>;
 
   /** Session */
-  session: JWTPayload & SessionSchema;
+  session: JWTPayload & ForklaunchBaseSession & SessionSchema;
 
   /** Parsed versions */
   _parsedVersions: string[] | number;
@@ -930,7 +941,7 @@ export type ExpressLikeAuthMapper<
   SessionSchema extends Record<string, unknown>,
   BaseRequest
 > = (
-  payload: JWTPayload & SessionSchema,
+  payload: JWTPayload & ForklaunchBaseSession & SessionSchema,
   req?: ResolvedForklaunchRequest<
     SV,
     P,
