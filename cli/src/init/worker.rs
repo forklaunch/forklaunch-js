@@ -824,6 +824,7 @@ impl CliCommand for WorkerCommand {
             // Worker-specific fields
             worker_name: worker_name.clone(),
             camel_case_name: worker_name.to_case(Case::Camel),
+            snake_case_name: worker_name.to_case(Case::Snake),
             pascal_case_name: worker_name.to_case(Case::Pascal),
             kebab_case_name: worker_name.to_case(Case::Kebab),
             title_case_name: worker_name.to_case(Case::Title),
