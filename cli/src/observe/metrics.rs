@@ -308,15 +308,65 @@ fn print_promql(response: &PromQLResponse) -> Result<()> {
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct MetricValue {
-    #[serde(default)]
     value: Option<f64>,
-    #[serde(default)]
     unit: Option<String>,
-    #[serde(default)]
     available: Option<bool>,
+}
+
+/// The monitoring endpoint is not consistent about this shape. Some responses
+/// carry the full object (`{"value": 9.47, "unit": "req/s"}`) and others carry
+/// a bare number (`9.47`). A derived `Deserialize` only accepts the object, so
+/// any response using the scalar form failed the whole request:
+///
+/// ```text
+/// Error: Failed to parse metrics response
+///   invalid type: floating point `9.47`, expected struct MetricValue
+/// ```
+///
+/// Accept both, plus an explicit `null`, so one field's shape can't take down
+/// the entire command. `available` is deliberately left `None` for the scalar
+/// form — `render` already treats absent as available via `unwrap_or(true)`.
+impl<'de> Deserialize<'de> for MetricValue {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        struct Fields {
+            #[serde(default)]
+            value: Option<f64>,
+            #[serde(default)]
+            unit: Option<String>,
+            #[serde(default)]
+            available: Option<bool>,
+        }
+
+        #[derive(Deserialize)]
+        #[serde(untagged)]
+        enum Repr {
+            Scalar(f64),
+            Fields(Fields),
+            Null,
+        }
+
+        Ok(match Repr::deserialize(deserializer)? {
+            Repr::Scalar(value) => MetricValue {
+                value: Some(value),
+                unit: None,
+                available: None,
+            },
+            Repr::Fields(fields) => MetricValue {
+                value: fields.value,
+                unit: fields.unit,
+                available: fields.available,
+            },
+            Repr::Null => MetricValue::default(),
+        })
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -401,6 +451,43 @@ mod tests {
         assert!(mv.value.is_none());
         assert!(mv.unit.is_none());
         assert!(mv.available.is_none());
+    }
+
+    #[test]
+    fn metric_value_accepts_bare_scalar() {
+        // The monitoring endpoint returns a bare number for some time ranges.
+        // Previously this failed with:
+        //   invalid type: floating point `9.47`, expected struct MetricValue
+        let mv: MetricValue = serde_json::from_str("9.47").unwrap();
+        assert_eq!(mv.value, Some(9.47));
+        assert!(mv.unit.is_none());
+        // Left None so `render` falls back to available-by-default.
+        assert!(mv.available.is_none());
+    }
+
+    #[test]
+    fn metric_value_accepts_null() {
+        let mv: MetricValue = serde_json::from_str("null").unwrap();
+        assert!(mv.value.is_none());
+        assert!(mv.available.is_none());
+    }
+
+    #[test]
+    fn application_monitoring_response_mixes_scalar_and_object_shapes() {
+        // Regression for `observe metrics --time-range 24h`, which failed at
+        // "line 1 column 19" — the first scalar-shaped field in the payload.
+        let json = r#"{
+            "requestRate": 9.47,
+            "errorRate": {"value": 0.0, "unit": "%", "available": true},
+            "latency": {"p50": 10.0, "p95": 50.0, "p99": 100.0, "unit": "ms"},
+            "uptime": null
+        }"#;
+        let resp: ApplicationMonitoringResponse = serde_json::from_str(json).unwrap();
+        assert_eq!(resp.request_rate.value, Some(9.47));
+        assert_eq!(resp.error_rate.value, Some(0.0));
+        assert_eq!(resp.error_rate.unit.as_deref(), Some("%"));
+        assert_eq!(resp.latency.as_ref().and_then(|l| l.p95), Some(50.0));
+        assert!(resp.uptime.value.is_none());
     }
 
     #[test]
