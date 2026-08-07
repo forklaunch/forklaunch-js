@@ -8,17 +8,68 @@
 
 use std::{
     fs::{create_dir_all, write},
+    io::IsTerminal,
     path::{Path, PathBuf},
 };
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgMatches, Command};
+use dialoguer::{Select, theme::ColorfulTheme};
 use include_dir::{Dir, DirEntry, File, include_dir};
 
 use crate::{CliCommand, core::command::command};
 
 /// The ForkLaunch skill/context pack, vendored from `.claude/skills` and embedded in the binary.
 static SKILLS: Dir<'static> = include_dir!("$CARGO_MANIFEST_DIR/assets/forklaunch-skills");
+
+/// Supported coding agents: `(id, display name, where the pack lands)`.
+///
+/// The display names are what a non-technical user sees in the picker, so they name the product
+/// rather than the flag value, and each one states the file it writes.
+const AGENTS: [(&str, &str, &str); 5] = [
+    ("claude", "Claude Code", ".claude/skills/"),
+    ("codex", "Codex", "AGENTS.md"),
+    ("cursor", "Cursor", ".cursor/rules/forklaunch.mdc"),
+    ("windsurf", "Windsurf", ".windsurf/rules/forklaunch.md"),
+    ("generic", "Something else / not sure", "AGENTS.md"),
+];
+
+/// Used when `--agent` is omitted and we cannot prompt (CI, a spawned agent, a piped shell).
+const DEFAULT_AGENT: &str = "claude";
+
+/// Resolve the target agent, asking the user when `--agent` was not supplied.
+///
+/// Only prompts on a TTY. `fl context` is routinely invoked by scripts and by coding agents
+/// themselves, and dialoguer reads EOF instantly on a dead stdin — so a non-interactive run keeps
+/// the historical `claude` default instead of failing. Unlike the required values in `prompt.rs`,
+/// this one has a sane default, so there is nothing to bail over.
+fn resolve_agent(matches: &ArgMatches) -> Result<String> {
+    if let Some(agent) = matches.get_one::<String>("agent") {
+        return Ok(agent.clone());
+    }
+    if !std::io::stdin().is_terminal() {
+        return Ok(DEFAULT_AGENT.to_string());
+    }
+
+    let items: Vec<String> = AGENTS
+        .iter()
+        .map(|(_, label, dest)| format!("{label}  →  {dest}"))
+        .collect();
+    // Derive the highlighted row from DEFAULT_AGENT so reordering AGENTS can't make the
+    // interactive default disagree with the non-interactive one.
+    let default_index = AGENTS
+        .iter()
+        .position(|(id, _, _)| *id == DEFAULT_AGENT)
+        .unwrap_or(0);
+    let selection = Select::with_theme(&ColorfulTheme::default())
+        .with_prompt("Which coding agent are you using?")
+        .items(&items)
+        .default(default_index)
+        .interact()
+        .context("Failed to read the coding agent selection")?;
+
+    Ok(AGENTS[selection].0.to_string())
+}
 
 pub(crate) struct ContextCommand;
 
@@ -39,9 +90,16 @@ impl CliCommand for ContextCommand {
             Arg::new("agent")
                 .short('a')
                 .long("agent")
-                .help("Target coding agent — determines where the context files are written")
-                .value_parser(["claude", "cursor", "windsurf", "codex", "generic"])
-                .default_value("claude"),
+                .help(
+                    "Target coding agent — determines where the context files are written. \
+                     Omit it to be asked interactively (defaults to claude when not on a TTY)",
+                )
+                .value_parser(
+                    AGENTS
+                        .iter()
+                        .map(|(id, _, _)| *id)
+                        .collect::<Vec<&'static str>>(),
+                ),
         )
         .arg(
             Arg::new("path")
@@ -52,10 +110,8 @@ impl CliCommand for ContextCommand {
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
-        let agent = matches
-            .get_one::<String>("agent")
-            .map(String::as_str)
-            .unwrap_or("claude");
+        let agent = resolve_agent(matches)?;
+        let agent = agent.as_str();
         let out = match matches.get_one::<String>("path") {
             Some(p) => PathBuf::from(p),
             None => std::env::current_dir().context("could not resolve the current directory")?,
