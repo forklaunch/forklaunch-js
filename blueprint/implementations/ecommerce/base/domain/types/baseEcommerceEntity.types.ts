@@ -1,4 +1,10 @@
-import { Cart, Inventory, Product, Variant } from '../../persistence/entities';
+import {
+  Cart,
+  Inventory,
+  Order,
+  Product,
+  Variant
+} from '../../persistence/entities';
 
 // product entity types
 export type BaseProductEntities = {
@@ -28,3 +34,10 @@ export type BaseCartEntities = {
   UpdateCartMapper: { '~entity': (typeof Cart)['~entity'] };
 };
 
+
+// order entity types
+export type BaseOrderEntities = {
+  OrderMapper: { '~entity': (typeof Order)['~entity'] };
+  CreateOrderMapper: { '~entity': (typeof Order)['~entity'] };
+  UpdateOrderMapper: { '~entity': (typeof Order)['~entity'] };
+};
