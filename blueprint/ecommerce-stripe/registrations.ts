@@ -21,16 +21,21 @@ import {
   BaseCartService,
   BaseInventoryService,
   BaseOrderService,
-  BasePaymentService,
   BaseProductService,
   BaseVariantService
 } from '@forklaunch/implementation-ecommerce-base/services';
+import {
+  PaypalClient,
+  PaypalPaymentService
+} from '@forklaunch/implementation-ecommerce-paypal/services';
+import { StripePaymentService } from '@forklaunch/implementation-ecommerce-stripe/services';
 import { RedisWorkerProducer } from '@forklaunch/implementation-worker-redis/producers';
 import { RedisWorkerSchemas } from '@forklaunch/implementation-worker-redis/schemas';
 import { RedisWorkerOptions } from '@forklaunch/implementation-worker-redis/types';
 import { OrderEventRecord } from './persistence/entities/orderEvent.entity';
 import { ForkOptions } from '@mikro-orm/core';
 import { EntityManager, MikroORM } from '@mikro-orm/postgresql';
+import Stripe from 'stripe';
 import {
   CartMapper,
   CreateCartMapper,
@@ -132,6 +137,11 @@ const environmentConfig = configInjector.chain({
     type: string,
     value: getEnvVar('OTEL_EXPORTER_OTLP_ENDPOINT')
   },
+  STRIPE_API_KEY: {
+    lifetime: Lifetime.Singleton,
+    type: string,
+    value: getEnvVar('STRIPE_API_KEY')
+  },
   HMAC_SECRET_KEY: {
     lifetime: Lifetime.Singleton,
     type: string,
@@ -146,6 +156,21 @@ const environmentConfig = configInjector.chain({
     lifetime: Lifetime.Singleton,
     type: string,
     value: getEnvVar('ENCRYPTION_KEY')
+  },
+  PAYPAL_CLIENT_ID: {
+    lifetime: Lifetime.Singleton,
+    type: string,
+    value: getEnvVar('PAYPAL_CLIENT_ID')
+  },
+  PAYPAL_CLIENT_SECRET: {
+    lifetime: Lifetime.Singleton,
+    type: string,
+    value: getEnvVar('PAYPAL_CLIENT_SECRET')
+  },
+  PAYPAL_BASE_URL: {
+    lifetime: Lifetime.Singleton,
+    type: string,
+    value: getEnvVar('PAYPAL_BASE_URL')
   },
   REDIS_URL: {
     lifetime: Lifetime.Singleton,
@@ -163,6 +188,21 @@ const environmentConfig = configInjector.chain({
 //! entity-specific services. Same multi-step chain pattern this file uses
 //! above: configInjector -> environmentConfig -> runtimeDependencies.
 const runtimeDependencies = environmentConfig.chain({
+  StripeClient: {
+    lifetime: Lifetime.Singleton,
+    type: Stripe,
+    factory: ({ STRIPE_API_KEY }) => new Stripe(STRIPE_API_KEY)
+  },
+  PaypalClient: {
+    lifetime: Lifetime.Singleton,
+    type: PaypalClient,
+    factory: ({ PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_BASE_URL }) =>
+      new PaypalClient({
+        clientId: PAYPAL_CLIENT_ID,
+        clientSecret: PAYPAL_CLIENT_SECRET,
+        baseUrl: PAYPAL_BASE_URL
+      })
+  },
   /**
    * Cart's fast/temporary-state layer: a read-through cache in front of
    * Postgres, which stays the source of truth. 30 minutes matches a typical
@@ -292,62 +332,74 @@ const serviceDependencies = runtimeDependencies.chain({
         { OrderMapper, CreateOrderMapper, UpdateOrderMapper }
       )
   },
-  /**
-   * BasePaymentService directly for now, matching the CartService/
-   * OrderService/ProductService/VariantService/InventoryService pattern
-   * above — no provider-specific behavior is needed to typecheck/persist a
-   * payment record yet. PaymentService and PaypalPaymentService are
-   * registered as separate tokens (mirroring payment.controller.ts's
-   * provider routing); the provider packages swap these factories to
-   * StripePaymentService/PaypalPaymentService.
-   */
   PaymentService: {
     lifetime: Lifetime.Scoped,
-    type: BasePaymentService<SchemaValidator, PaymentMapperTypes, PaymentDtoTypes>,
-    factory: ({ EntityManager, OtelCollector }, context, resolve) =>
-      new BasePaymentService(
+    type: StripePaymentService<
+      SchemaValidator,
+      PaymentMapperTypes,
+      PaymentDtoTypes
+    >,
+    factory: (
+      { StripeClient, EntityManager, OtelCollector },
+      context,
+      resolve
+    ) =>
+      new StripePaymentService(
+        StripeClient,
         context?.entityManagerOptions
           ? resolve('EntityManager', context)
           : EntityManager,
         OtelCollector,
         schemaValidator,
-        // CreatePaymentMapper.toEntity takes a Stripe.PaymentIntent 3rd arg
-        // (payment.mappers.ts is provider-shaped) rather than the generic
-        // BasePaymentService mapper signature (...args: unknown[]) — the
-        // cast bridges the two over one shared runtime mapper object, the
-        // same pattern PaypalPaymentService uses for this pair.
-        { PaymentMapper, CreatePaymentMapper } as unknown as ConstructorParameters<
-          typeof BasePaymentService<
-            SchemaValidator,
-            PaymentMapperTypes,
-            PaymentDtoTypes
-          >
-        >[3]
-      )
-  },
-  PaypalPaymentService: {
-    lifetime: Lifetime.Scoped,
-    type: BasePaymentService<SchemaValidator, PaymentMapperTypes, PaymentDtoTypes>,
-    factory: ({ EntityManager, OtelCollector }, context, resolve) =>
-      new BasePaymentService(
-        context?.entityManagerOptions
-          ? resolve('EntityManager', context)
-          : EntityManager,
-        OtelCollector,
-        schemaValidator,
-        { PaymentMapper, CreatePaymentMapper } as unknown as ConstructorParameters<
-          typeof BasePaymentService<
-            SchemaValidator,
-            PaymentMapperTypes,
-            PaymentDtoTypes
-          >
-        >[3]
+        { PaymentMapper, CreatePaymentMapper }
       )
   },
   /**
-   * The event-emission boundary. Redis transport only, which matches
-   * TtlCache already being registered here, so it needs no infrastructure
-   * beyond what cart caching already requires.
+   * Separate token from PaymentService (Stripe, the default) rather than
+   * replacing it — this is the "one socket, many providers" seam: callers
+   * pick a provider per-request (see payment.controller.ts), neither
+   * provider is removed to add the other.
+   */
+  PaypalPaymentService: {
+    lifetime: Lifetime.Scoped,
+    type: PaypalPaymentService<
+      SchemaValidator,
+      PaymentMapperTypes,
+      PaymentDtoTypes
+    >,
+    factory: (
+      { PaypalClient: paypalClientInstance, EntityManager, OtelCollector },
+      context,
+      resolve
+    ) =>
+      new PaypalPaymentService(
+        paypalClientInstance,
+        context?.entityManagerOptions
+          ? resolve('EntityManager', context)
+          : EntityManager,
+        OtelCollector,
+        schemaValidator,
+        // Same runtime shape as Stripe's mappers (toEntity only reads `.id`
+        // off the 3rd arg) — PaypalPaymentMappers narrows the type to
+        // PaypalOrder; the cast bridges the two provider-specific static
+        // types over one shared runtime mapper object, same as
+        // StripePaymentService does internally for its own 3rd-arg type.
+        { PaymentMapper, CreatePaymentMapper } as unknown as ConstructorParameters<
+          typeof PaypalPaymentService<
+            SchemaValidator,
+            PaymentMapperTypes,
+            PaymentDtoTypes
+          >
+        >[4]
+      )
+  },
+  /**
+   * ECOM-12's event-emission boundary, actually implemented — previously
+   * just a comment. Redis transport only (matches TtlCache already being
+   * registered here; no new infra beyond what cart caching already needs).
+   * Only the producer side is wired here — order.controller.ts is the only
+   * local consumer of a token from this pair; the consumer/worker.ts side
+   * is scoped to a follow-up PR.
    */
   RedisWorkerOptions: {
     lifetime: Lifetime.Singleton,
