@@ -2,12 +2,15 @@ import {
   CartDto,
   CreateCartDto,
   CreateInventoryDto,
+  CreateOrderDto,
   CreateProductDto,
   CreateVariantDto,
   InventoryDto,
+  OrderDto,
   ProductDto,
   UpdateCartDto,
   UpdateInventoryDto,
+  UpdateOrderDto,
   UpdateProductDto,
   UpdateVariantDto,
   VariantDto
@@ -41,3 +44,10 @@ export type BaseCartDtos = {
   UpdateCartMapper: UpdateCartDto;
 };
 
+
+// order dto types
+export type BaseOrderDtos = {
+  OrderMapper: OrderDto;
+  CreateOrderMapper: CreateOrderDto;
+  UpdateOrderMapper: UpdateOrderDto;
+};
