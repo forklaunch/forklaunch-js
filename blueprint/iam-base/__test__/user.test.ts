@@ -199,6 +199,22 @@ describe('User Routes E2E Tests with PostgreSQL Container', () => {
       expect(result[0].id).toBe(user1Id);
       expect(result[0].email).toBe('user1@org1.com');
     });
+
+    it('should require an organization filter for getBatchUsers at compile time (FOR-24 regression)', async () => {
+      const { ci, tokens } = await import('../bootstrapper');
+      const UserService = ci.resolve(tokens.UserService);
+
+      // Never invoked at runtime; exists solely so the type checker proves
+      // that omitting `organization` fails to compile (FOR-24 guard).
+      const assertOrganizationFilterIsRequired = () => {
+        // @ts-expect-error — organization is required on getBatchUsers; omitting it must not compile
+        UserService.getBatchUsers({
+          ids: ['123e4567-e89b-12d3-a456-426614174000']
+        });
+      };
+
+      expect(typeof assertOrganizationFilterIsRequired).toBe('function');
+    });
   });
 
   describe('PUT /user - updateUser', () => {

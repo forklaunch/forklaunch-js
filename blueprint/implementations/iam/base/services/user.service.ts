@@ -11,7 +11,11 @@ import {
   OpenTelemetryCollector,
   TelemetryOptions
 } from '@forklaunch/core/http';
-import { CreateUserDto, UpdateUserDto } from '@forklaunch/interfaces-iam/types';
+import {
+  CreateUserDto,
+  OrganizationScopeDto,
+  UpdateUserDto
+} from '@forklaunch/interfaces-iam/types';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager, FilterQuery, InferEntity } from '@mikro-orm/core';
 import { User } from '../persistence/entities';
@@ -154,7 +158,9 @@ export class BaseUserService<
   }
 
   async getBatchUsers(
-    idsDto: IdsDto & FilterQuery<InferEntity<MapperEntities['UserMapper']>>,
+    idsDto: IdsDto &
+      OrganizationScopeDto &
+      FilterQuery<InferEntity<MapperEntities['UserMapper']>>,
     em?: EntityManager
   ): Promise<MapperDomains['UserMapper'][]> {
     if (this.evaluatedTelemetryOptions.logging) {

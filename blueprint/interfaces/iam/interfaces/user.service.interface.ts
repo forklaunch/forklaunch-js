@@ -21,7 +21,9 @@ export interface UserService<
     em?: EntityManager
   ): Promise<Params['UserDto']>;
   getBatchUsers(
-    idsDto: Params['IdsDto'] & FilterQuery<unknown>,
+    idsDto: Params['IdsDto'] &
+      Params['OrganizationScopeDto'] &
+      FilterQuery<unknown>,
     em?: EntityManager
   ): Promise<Params['UserDto'][]>;
   updateUser(

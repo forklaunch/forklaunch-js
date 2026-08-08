@@ -21,10 +21,15 @@ export type UserDto = Omit<CreateUserDto, 'roles' | 'password'> &
     roles: RoleDto[];
   };
 
+export type OrganizationScopeDto = {
+  organization: { id: string };
+};
+
 export type UserServiceParameters = {
   CreateUserDto: CreateUserDto;
   UserDto: UserDto;
   UpdateUserDto: UpdateUserDto;
   IdDto: IdDto;
   IdsDto: IdsDto;
+  OrganizationScopeDto: OrganizationScopeDto;
 };
