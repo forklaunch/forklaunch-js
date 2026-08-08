@@ -21,6 +21,7 @@ import {
   BaseCartService,
   BaseInventoryService,
   BaseOrderService,
+  BasePaymentService,
   BaseProductService,
   BaseVariantService
 } from '@forklaunch/implementation-ecommerce-base/services';
@@ -46,6 +47,10 @@ import {
   UpdateOrderMapper
 } from './domain/mappers/order.mappers';
 import {
+  CreatePaymentMapper,
+  PaymentMapper
+} from './domain/mappers/payment.mappers';
+import {
   CreateProductMapper,
   ProductMapper,
   UpdateProductMapper
@@ -62,6 +67,8 @@ import {
   InventoryMapperTypes,
   OrderDtoTypes,
   OrderMapperTypes,
+  PaymentDtoTypes,
+  PaymentMapperTypes,
   ProductDtoTypes,
   ProductMapperTypes,
   VariantDtoTypes,
@@ -283,6 +290,58 @@ const serviceDependencies = runtimeDependencies.chain({
         OtelCollector,
         schemaValidator,
         { OrderMapper, CreateOrderMapper, UpdateOrderMapper }
+      )
+  },
+  /**
+   * BasePaymentService directly for now, matching the CartService/
+   * OrderService/ProductService/VariantService/InventoryService pattern
+   * above — no provider-specific behavior is needed to typecheck/persist a
+   * payment record yet. PaymentService and PaypalPaymentService are
+   * registered as separate tokens (mirroring payment.controller.ts's
+   * provider routing); the provider packages swap these factories to
+   * StripePaymentService/PaypalPaymentService.
+   */
+  PaymentService: {
+    lifetime: Lifetime.Scoped,
+    type: BasePaymentService<SchemaValidator, PaymentMapperTypes, PaymentDtoTypes>,
+    factory: ({ EntityManager, OtelCollector }, context, resolve) =>
+      new BasePaymentService(
+        context?.entityManagerOptions
+          ? resolve('EntityManager', context)
+          : EntityManager,
+        OtelCollector,
+        schemaValidator,
+        // CreatePaymentMapper.toEntity takes a Stripe.PaymentIntent 3rd arg
+        // (payment.mappers.ts is provider-shaped) rather than the generic
+        // BasePaymentService mapper signature (...args: unknown[]) — the
+        // cast bridges the two over one shared runtime mapper object, the
+        // same pattern PaypalPaymentService uses for this pair.
+        { PaymentMapper, CreatePaymentMapper } as unknown as ConstructorParameters<
+          typeof BasePaymentService<
+            SchemaValidator,
+            PaymentMapperTypes,
+            PaymentDtoTypes
+          >
+        >[3]
+      )
+  },
+  PaypalPaymentService: {
+    lifetime: Lifetime.Scoped,
+    type: BasePaymentService<SchemaValidator, PaymentMapperTypes, PaymentDtoTypes>,
+    factory: ({ EntityManager, OtelCollector }, context, resolve) =>
+      new BasePaymentService(
+        context?.entityManagerOptions
+          ? resolve('EntityManager', context)
+          : EntityManager,
+        OtelCollector,
+        schemaValidator,
+        { PaymentMapper, CreatePaymentMapper } as unknown as ConstructorParameters<
+          typeof BasePaymentService<
+            SchemaValidator,
+            PaymentMapperTypes,
+            PaymentDtoTypes
+          >
+        >[3]
       )
   },
   /**
