@@ -25,7 +25,7 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/core": "^1.5.11"
+    "@forklaunch/core": "^1.5.12"
   },
   "devDependencies": {
     "@typescript/native-preview": "7.0.0-dev.20260707.2"
