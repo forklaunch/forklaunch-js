@@ -40,7 +40,7 @@
   "dependencies": {
     "@forklaunch/blueprint-core": "workspace:^",
     "@forklaunch/blueprint-monitoring": "workspace:^",
-    "@forklaunch/core": "^1.5.13",
+    "@forklaunch/core": "^1.5.15",
     "@forklaunch/implementation-worker-bullmq": "workspace:^",
     "@forklaunch/implementation-worker-database": "workspace:^",
     "@forklaunch/implementation-worker-kafka": "workspace:^",
@@ -71,7 +71,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@forklaunch/testing": "^1.2.25",
+    "@forklaunch/testing": "^1.2.27",
     "@mikro-orm/cli": "^7.1.11",
     "@types/express": "^5.0.6",
     "@types/express-serve-static-core": "^5.1.3",

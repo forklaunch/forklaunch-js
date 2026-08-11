@@ -13,13 +13,13 @@ import { StartedTestContainer } from 'testcontainers';
 import { DatabaseType } from './containers';
 
 /**
- * MikroORM options that accept both mutable and readonly (defineConfig-
- * inferred) shapes. MikroORM 7.1+ infers `entities` as a readonly tuple,
- * which is not assignable to the mutable array in a bare `Partial<Options>`.
+ * MikroORM options that accept any driver's `defineConfig()` return —
+ * mutable or readonly entities, base or driver-specific `Options`
+ * (e.g. `Options<PostgreSqlDriver, ...>` is not assignable to the
+ * base-driver `Options` default).
  */
-export type AnyMikroOrmOptions = Partial<Omit<Options, 'entities'>> & {
-  entities?: readonly NonNullable<Options['entities']>[number][];
-};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AnyMikroOrmOptions = Partial<Options<any, any, any>>;
 
 export interface MikroOrmTestConfig {
   /**

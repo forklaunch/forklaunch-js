@@ -234,17 +234,17 @@ pub(crate) const BUNRUN_VERSION: &str = "~0.0.2";
 // @forklaunch/common
 pub(crate) const COMMON_VERSION: &str = "~1.2.23";
 // @forklaunch/core
-pub(crate) const CORE_VERSION: &str = "~1.5.13";
+pub(crate) const CORE_VERSION: &str = "~1.5.15";
 // @forklaunch/express
 pub(crate) const EXPRESS_VERSION: &str = "~1.2.39";
 // @forklaunch/hyper-express
 pub(crate) const HYPER_EXPRESS_VERSION: &str = "~1.2.39";
 // @forklaunch/implementation-billing-base
-pub(crate) const BILLING_BASE_VERSION: &str = "~1.0.31";
+pub(crate) const BILLING_BASE_VERSION: &str = "~1.0.32";
 // @forklaunch/implementation-billing-stripe
-pub(crate) const BILLING_STRIPE_VERSION: &str = "~1.2.1";
+pub(crate) const BILLING_STRIPE_VERSION: &str = "~1.2.2";
 // @forklaunch/implementation-iam-base
-pub(crate) const IAM_BASE_VERSION: &str = "~1.0.31";
+pub(crate) const IAM_BASE_VERSION: &str = "~1.0.32";
 // @forklaunch/implementation-worker-bullmq
 pub(crate) const WORKER_BULLMQ_VERSION: &str = "~1.0.31";
 // @forklaunch/implementation-worker-redis
@@ -266,7 +266,7 @@ pub(crate) const WORKER_INTERFACES_VERSION: &str = "~1.0.29";
 // @forklaunch/internal
 pub(crate) const INTERNAL_VERSION: &str = "~1.2.25";
 // @forklaunch/testing
-pub(crate) const TESTING_VERSION: &str = "~1.2.25";
+pub(crate) const TESTING_VERSION: &str = "~1.2.27";
 // @forklaunch/universal-sdk
 pub(crate) const UNIVERSAL_SDK_VERSION: &str = "~1.2.24";
 // @forklaunch/validator

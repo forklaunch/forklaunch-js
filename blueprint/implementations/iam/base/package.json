@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/implementation-iam-base",
-  "version": "1.0.31",
+  "version": "1.0.32",
   "description": "IAM basic implementation for forklaunch",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -58,7 +58,7 @@
   },
   "dependencies": {
     "@forklaunch/common": "^1.2.23",
-    "@forklaunch/core": "^1.5.13",
+    "@forklaunch/core": "^1.5.15",
     "@forklaunch/interfaces-iam": "workspace:^",
     "@forklaunch/internal": "^1.2.24",
     "@forklaunch/validator": "^1.2.24",
