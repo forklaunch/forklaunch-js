@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  '@forklaunch/core': ^1.5.13
+  '@forklaunch/core': ^1.5.15
 
 importers:
 
@@ -15,8 +15,8 @@ importers:
         specifier: ^1.2.23
         version: 1.2.23
       '@forklaunch/core':
-        specifier: ^1.5.13
-        version: 1.5.13(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.15
+        version: 1.5.15(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/express':
         specifier: ^1.2.39
         version: 1.2.39(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(jose@6.2.8)(zod@4.4.3)
@@ -100,8 +100,8 @@ importers:
         specifier: ^1.2.23
         version: 1.2.23
       '@forklaunch/core':
-        specifier: ^1.5.13
-        version: 1.5.13(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.15
+        version: 1.5.15(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/express':
         specifier: ^1.2.39
         version: 1.2.39(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(jose@6.2.8)(zod@4.4.3)
@@ -164,8 +164,8 @@ importers:
         version: 4.4.3
     devDependencies:
       '@forklaunch/testing':
-        specifier: ^1.2.25
-        version: 1.2.25(vitest@4.1.10(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.2.0)(esbuild@0.27.7)(tsx@4.23.12)(yaml@2.9.0)))
+        specifier: ^1.2.27
+        version: 1.2.27(vitest@4.1.10(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.2.0)(esbuild@0.27.7)(tsx@4.23.12)(yaml@2.9.0)))
       '@mikro-orm/cli':
         specifier: ^7.1.11
         version: 7.1.11
@@ -221,8 +221,8 @@ importers:
         specifier: ^1.2.23
         version: 1.2.23
       '@forklaunch/core':
-        specifier: ^1.5.13
-        version: 1.5.13(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.15
+        version: 1.5.15(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/express':
         specifier: ^1.2.39
         version: 1.2.39(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(jose@6.2.8)(zod@4.4.3)
@@ -288,8 +288,8 @@ importers:
         version: 4.4.3
     devDependencies:
       '@forklaunch/testing':
-        specifier: ^1.2.25
-        version: 1.2.25(vitest@4.1.10(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.2.0)(esbuild@0.27.7)(tsx@4.23.12)(yaml@2.9.0)))
+        specifier: ^1.2.27
+        version: 1.2.27(vitest@4.1.10(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.2.0)(esbuild@0.27.7)(tsx@4.23.12)(yaml@2.9.0)))
       '@mikro-orm/cli':
         specifier: ^7.1.11
         version: 7.1.11
@@ -336,8 +336,8 @@ importers:
         specifier: ^1.2.23
         version: 1.2.23
       '@forklaunch/core':
-        specifier: ^1.5.13
-        version: 1.5.13(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.15
+        version: 1.5.15(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/express':
         specifier: ^1.2.39
         version: 1.2.39(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(jose@6.2.8)(zod@4.4.3)
@@ -391,8 +391,8 @@ importers:
         specifier: ^1.2.23
         version: 1.2.23
       '@forklaunch/core':
-        specifier: ^1.5.13
-        version: 1.5.13(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.15
+        version: 1.5.15(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/express':
         specifier: ^1.2.39
         version: 1.2.39(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(jose@6.2.8)(zod@4.4.3)
@@ -452,8 +452,8 @@ importers:
         version: 4.4.3
     devDependencies:
       '@forklaunch/testing':
-        specifier: ^1.2.25
-        version: 1.2.25(vitest@4.1.10(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.2.0)(esbuild@0.27.7)(tsx@4.23.12)(yaml@2.9.0)))
+        specifier: ^1.2.27
+        version: 1.2.27(vitest@4.1.10(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.2.0)(esbuild@0.27.7)(tsx@4.23.12)(yaml@2.9.0)))
       '@mikro-orm/cli':
         specifier: ^7.1.11
         version: 7.1.11
@@ -503,8 +503,8 @@ importers:
         specifier: workspace:^
         version: link:../monitoring
       '@forklaunch/core':
-        specifier: ^1.5.13
-        version: 1.5.13(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.15
+        version: 1.5.15(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/hyper-express-fork':
         specifier: ^6.17.35
         version: 6.17.35
@@ -561,8 +561,8 @@ importers:
         version: 4.4.3
     devDependencies:
       '@forklaunch/testing':
-        specifier: ^1.2.25
-        version: 1.2.25(vitest@4.1.10(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.2.0)(esbuild@0.27.7)(tsx@4.23.12)(yaml@2.9.0)))
+        specifier: ^1.2.27
+        version: 1.2.27(vitest@4.1.10(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.2.0)(esbuild@0.27.7)(tsx@4.23.12)(yaml@2.9.0)))
       '@mikro-orm/cli':
         specifier: ^7.1.11
         version: 7.1.11
@@ -612,8 +612,8 @@ importers:
         specifier: workspace:^
         version: link:../monitoring
       '@forklaunch/core':
-        specifier: ^1.5.13
-        version: 1.5.13(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.15
+        version: 1.5.15(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/implementation-iam-base':
         specifier: workspace:^
         version: link:../implementations/iam/base
@@ -667,8 +667,8 @@ importers:
         version: 4.4.3
     devDependencies:
       '@forklaunch/testing':
-        specifier: ^1.2.25
-        version: 1.2.25(vitest@4.1.10(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.2.0)(esbuild@0.27.7)(tsx@4.23.12)(yaml@2.9.0)))
+        specifier: ^1.2.27
+        version: 1.2.27(vitest@4.1.10(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.2.0)(esbuild@0.27.7)(tsx@4.23.12)(yaml@2.9.0)))
       '@mikro-orm/cli':
         specifier: ^7.1.11
         version: 7.1.11
@@ -709,8 +709,8 @@ importers:
         specifier: ^1.2.23
         version: 1.2.23
       '@forklaunch/core':
-        specifier: ^1.5.13
-        version: 1.5.13(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.15
+        version: 1.5.15(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/interfaces-billing':
         specifier: workspace:^
         version: link:../../../interfaces/billing
@@ -752,8 +752,8 @@ importers:
         specifier: ^1.2.23
         version: 1.2.23
       '@forklaunch/core':
-        specifier: ^1.5.13
-        version: 1.5.13(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.15
+        version: 1.5.15(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/implementation-billing-base':
         specifier: workspace:^
         version: link:../base
@@ -807,8 +807,8 @@ importers:
         specifier: ^1.2.23
         version: 1.2.23
       '@forklaunch/core':
-        specifier: ^1.5.13
-        version: 1.5.13(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.15
+        version: 1.5.15(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/interfaces-ecommerce':
         specifier: workspace:^
         version: link:../../../interfaces/ecommerce
@@ -850,8 +850,8 @@ importers:
         specifier: ^1.2.23
         version: 1.2.23
       '@forklaunch/core':
-        specifier: ^1.5.13
-        version: 1.5.13(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.15
+        version: 1.5.15(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/interfaces-iam':
         specifier: workspace:^
         version: link:../../../interfaces/iam
@@ -893,8 +893,8 @@ importers:
   implementations/worker/bullmq:
     dependencies:
       '@forklaunch/core':
-        specifier: ^1.5.13
-        version: 1.5.13(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.15
+        version: 1.5.15(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/interfaces-worker':
         specifier: workspace:^
         version: link:../../../interfaces/worker
@@ -933,8 +933,8 @@ importers:
   implementations/worker/database:
     dependencies:
       '@forklaunch/core':
-        specifier: ^1.5.13
-        version: 1.5.13(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.15
+        version: 1.5.15(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/interfaces-worker':
         specifier: workspace:^
         version: link:../../../interfaces/worker
@@ -973,8 +973,8 @@ importers:
   implementations/worker/kafka:
     dependencies:
       '@forklaunch/core':
-        specifier: ^1.5.13
-        version: 1.5.13(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.15
+        version: 1.5.15(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/interfaces-worker':
         specifier: workspace:^
         version: link:../../../interfaces/worker
@@ -1013,8 +1013,8 @@ importers:
   implementations/worker/redis:
     dependencies:
       '@forklaunch/core':
-        specifier: ^1.5.13
-        version: 1.5.13(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.15
+        version: 1.5.15(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/interfaces-worker':
         specifier: workspace:^
         version: link:../../../interfaces/worker
@@ -1137,8 +1137,8 @@ importers:
   monitoring:
     dependencies:
       '@forklaunch/core':
-        specifier: ^1.5.13
-        version: 1.5.13(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.15
+        version: 1.5.15(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
     devDependencies:
       '@typescript/native-preview':
         specifier: 7.0.0-dev.20260707.2
@@ -1153,8 +1153,8 @@ importers:
         specifier: workspace:^
         version: link:../monitoring
       '@forklaunch/core':
-        specifier: ^1.5.13
-        version: 1.5.13(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.15
+        version: 1.5.15(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/implementation-worker-bullmq':
         specifier: workspace:^
         version: link:../implementations/worker/bullmq
@@ -1241,8 +1241,8 @@ importers:
         version: 4.4.3
     devDependencies:
       '@forklaunch/testing':
-        specifier: ^1.2.25
-        version: 1.2.25(vitest@4.1.10(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.2.0)(esbuild@0.27.7)(tsx@4.23.12)(yaml@2.9.0)))
+        specifier: ^1.2.27
+        version: 1.2.27(vitest@4.1.10(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.2.0)(esbuild@0.27.7)(tsx@4.23.12)(yaml@2.9.0)))
       '@mikro-orm/cli':
         specifier: ^7.1.11
         version: 7.1.11
@@ -2170,8 +2170,8 @@ packages:
   '@forklaunch/common@1.2.23':
     resolution: {integrity: sha512-KbKY+mL5VJGTM2XH0nufTfNgXuguMqJewVPgQmV6pp16IAa6dFZkqXiib87csuOXjUyt1QxJmolMhgx0mln0cQ==}
 
-  '@forklaunch/core@1.5.13':
-    resolution: {integrity: sha512-GF2HE5OHD6dbCGwBHeNK7ayZPtNiclFBk7MEG4Msoe8ijxc1eNvFQf/zDfHIIlhbd0dZp5f7Jajey3buTOTcxg==}
+  '@forklaunch/core@1.5.15':
+    resolution: {integrity: sha512-aljGKfZffJYuuiahjxLcLDhVf6rELJpNWRrDFCGH9R8Mf2mG7l6dmDoug9k5PNl0Wt1L43LjtbYT8/xdfbVp0Q==}
 
   '@forklaunch/express@1.2.39':
     resolution: {integrity: sha512-zUIN80L++cVa0d8+w2QzI/UKYTusTFYbIgosldS1ajpQtbjdpDnH/xdPx56cyNWoPO/H4R+vmnqmSd2dfH8w0w==}
@@ -2197,8 +2197,8 @@ packages:
     peerDependencies:
       '@opentelemetry/api': ^1.3.0
 
-  '@forklaunch/testing@1.2.25':
-    resolution: {integrity: sha512-2nQUA/mUNGd417kUt+DhqWdAGZXXIL0pyy97fhUv3pX65HkXY8im6jS6Vnp7xBsK2xF2X1RKcJ/GbtztM3VCDw==}
+  '@forklaunch/testing@1.2.27':
+    resolution: {integrity: sha512-0EAmAW04BALr4KonG11cxeztnBd0/6QLGuO15TTn7nqRmqE7YkPSNSEkAkVkc9g4p+Qm0KLLPBT1w0WRRbSQ9g==}
     peerDependencies:
       vitest: ^3.0.0
 
@@ -8810,7 +8810,7 @@ snapshots:
 
   '@forklaunch/common@1.2.23': {}
 
-  '@forklaunch/core@1.5.13(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)':
+  '@forklaunch/core@1.5.15(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)':
     dependencies:
       '@asyncapi/parser': 3.6.3
       '@forklaunch/common': 1.2.23
@@ -8866,7 +8866,7 @@ snapshots:
   '@forklaunch/express@1.2.39(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(jose@6.2.8)(zod@4.4.3)':
     dependencies:
       '@forklaunch/common': 1.2.23
-      '@forklaunch/core': 1.5.13(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+      '@forklaunch/core': 1.5.15(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/validator': 1.2.24
       '@modelcontextprotocol/sdk': 1.30.0(zod@4.4.3)
       '@scalar/express-api-reference': 0.10.13
@@ -8918,7 +8918,7 @@ snapshots:
   '@forklaunch/hyper-express@1.2.39(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(express@5.2.1)':
     dependencies:
       '@forklaunch/common': 1.2.23
-      '@forklaunch/core': 1.5.13(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+      '@forklaunch/core': 1.5.15(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/hyper-express-fork': 6.17.35
       '@forklaunch/validator': 1.2.24
       '@forklaunch/ws': 1.2.38(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
@@ -8956,7 +8956,7 @@ snapshots:
   '@forklaunch/infrastructure-redis@1.4.10(@opentelemetry/api@1.9.1)(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)':
     dependencies:
       '@forklaunch/common': 1.2.23
-      '@forklaunch/core': 1.5.13(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+      '@forklaunch/core': 1.5.15(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       redis: 6.2.0(@opentelemetry/api@1.9.1)
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
@@ -8983,7 +8983,7 @@ snapshots:
     dependencies:
       '@aws-sdk/client-s3': 3.1106.0
       '@forklaunch/common': 1.2.23
-      '@forklaunch/core': 1.5.13(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+      '@forklaunch/core': 1.5.15(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
       - '@cfworker/json-schema'
@@ -9022,7 +9022,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@forklaunch/testing@1.2.25(vitest@4.1.10(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.2.0)(esbuild@0.27.7)(tsx@4.23.12)(yaml@2.9.0)))':
+  '@forklaunch/testing@1.2.27(vitest@4.1.10(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.2.0)(esbuild@0.27.7)(tsx@4.23.12)(yaml@2.9.0)))':
     dependencies:
       '@mikro-orm/core': 7.1.11
       ioredis: 6.0.0
@@ -9052,7 +9052,7 @@ snapshots:
     dependencies:
       '@asyncapi/parser': 3.6.3
       '@forklaunch/common': 1.2.23
-      '@forklaunch/core': 1.5.13(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+      '@forklaunch/core': 1.5.15(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/validator': 1.2.24
       '@types/ws': 8.18.1
       ws: 8.21.3

@@ -21,3 +21,18 @@ import type { MikroORM } from '@mikro-orm/core';
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyMikroORM = MikroORM<any, any, any>;
+
+/**
+ * The resolved, structural view of an inferred entity: its plain data fields
+ * only, without mikro-orm's symbol-keyed metadata slots (`PrimaryKeyProp`,
+ * `IndexHints`, ...). Those slots embed the raw property-builder record,
+ * which is invariant — two identically-shaped entities defined in different
+ * packages (or with different builder options such as `.unique()` or
+ * `.index()`) will never unify on it. Cross-package entity constraints
+ * should compare `ResolvedEntity<(typeof X)['~entity']>` so compatibility is
+ * judged on the actual field types, which is what the consuming code reads
+ * and writes.
+ */
+export type ResolvedEntity<T> = {
+  [K in keyof T as K extends string ? K : never]: T[K];
+};
