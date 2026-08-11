@@ -31,6 +31,20 @@ pnpm tsgo --noEmit   # type-check (frontend)
 
 > Never mix package managers. If a project has a `bun.lockb`, use bun. If it has `pnpm-lock.yaml`, use pnpm.
 
+### Stopping a local dev server
+
+`pkill -f '<script>.ts'` is unreliable for killing a `tsx`-run process — `tsx` spawns the actual running process as a `node` child with a different command line, so pattern-based `pkill`/`pgrep` often misses it, leaving a stale server bound to the port while a newly-started instance crashes with `EADDRINUSE`. **Kill by port instead:**
+
+```bash
+lsof -ti :<port> | xargs kill -9
+```
+
+Check every port the service binds (the HTTP port and, for services with a `WS_PORT`, that one too).
+
+### Running multiple services locally (outside Docker)
+
+Every generated `.env.local` defaults to the **same** `PORT` (8000) and `WS_PORT` (11000) regardless of service — Docker Compose isolates services by container so this never collides there, but running two services directly with `tsx` on the host will hit `EADDRINUSE` unless you pass distinct `PORT`/`WS_PORT` overrides per service (e.g. `PORT=8001 WS_PORT=11001 tsx server.ts`).
+
 ---
 
 ## Type Safety — Never Use `any`

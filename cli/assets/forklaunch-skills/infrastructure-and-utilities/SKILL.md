@@ -678,6 +678,7 @@ console.log(result);
 3. **Use typed keys** - `createCacheKey` ensures consistent naming
 4. **Batch operations** - More efficient than individual operations
 5. **Monitor cache hit rates** - Optimize based on actual usage
+6. **A misconfigured `REDIS_URL` does not fail fast** - the redis client's reconnect/retry behavior means any `await` touching a Redis-backed cache (role/permission surfacing, session lookups, BullMQ producers/consumers) hangs far longer than any reasonable request timeout, which is easily misdiagnosed as a hung framework call rather than a connectivity problem. If you've remapped Docker Compose host ports for parallel local testing, verify every service's port actually got remapped — `docker ps` takes a few seconds and can save a long debugging detour chasing a "hung" endpoint that's really just talking to a dead port.
 
 ### Object Store
 

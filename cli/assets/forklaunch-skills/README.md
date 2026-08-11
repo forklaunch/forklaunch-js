@@ -23,6 +23,7 @@ Skills that teach Claude Code (and developers) how to build with ForkLaunch.
 - `/design-system` — Design philosophy router: Stripe, Linear, Robinhood, Fidelity, Clinical, Airbnb, Retool, Notion.
 
 ### Infrastructure
+- `/infra` — `fl infra` commands: list, status, resize, config-set, stop, delete provisioned resources. JWT-only, no CI mode.
 - `/infrastructure-and-utilities` — Redis cache, S3 object store, TestContainers, utilities.
 - `/platform-architecture` — Modules, DDD, deployment workflow, Pulumi, multi-tenancy, worker queues.
 - `/development-guidelines` — Toolchain: runtimes (node/bun), validators (zod/typebox), databases, formatters, linters, tests, workers.
