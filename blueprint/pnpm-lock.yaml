@@ -782,6 +782,9 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
+      '@mikro-orm/sqlite':
+        specifier: 7.1.11
+        version: 7.1.11(@mikro-orm/core@7.1.11)
       '@typescript/native-preview':
         specifier: 7.0.0-dev.20260707.2
         version: 7.0.0-dev.20260707.2
@@ -794,6 +797,9 @@ importers:
       typedoc:
         specifier: ^0.28.20
         version: 0.28.20(typescript@6.0.3)
+      uuid:
+        specifier: ^14.0.1
+        version: 14.0.1
 
   implementations/ecommerce/base:
     dependencies:
