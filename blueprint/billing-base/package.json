@@ -40,7 +40,7 @@
     "@forklaunch/blueprint-iam-base": "workspace:^",
     "@forklaunch/blueprint-monitoring": "workspace:^",
     "@forklaunch/common": "^1.2.23",
-    "@forklaunch/core": "^1.5.12",
+    "@forklaunch/core": "^1.5.13",
     "@forklaunch/express": "^1.2.39",
     "@forklaunch/hyper-express": "^1.2.39",
     "@forklaunch/implementation-billing-base": "workspace:^",
@@ -63,7 +63,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@forklaunch/testing": "^1.2.24",
+    "@forklaunch/testing": "^1.2.25",
     "@mikro-orm/cli": "7.1.11",
     "@types/express": "^5.0.6",
     "@types/express-serve-static-core": "^5.1.3",

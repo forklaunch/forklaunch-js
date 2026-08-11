@@ -12,11 +12,20 @@ import Redis from 'ioredis';
 import { StartedTestContainer } from 'testcontainers';
 import { DatabaseType } from './containers';
 
+/**
+ * MikroORM options that accept both mutable and readonly (defineConfig-
+ * inferred) shapes. MikroORM 7.1+ infers `entities` as a readonly tuple,
+ * which is not assignable to the mutable array in a bare `Partial<Options>`.
+ */
+export type AnyMikroOrmOptions = Partial<Omit<Options, 'entities'>> & {
+  entities?: readonly NonNullable<Options['entities']>[number][];
+};
+
 export interface MikroOrmTestConfig {
   /**
    * MikroORM config object (imported from mikro-orm.config)
    */
-  mikroOrmConfig: Partial<Options>;
+  mikroOrmConfig: AnyMikroOrmOptions;
 
   /**
    * Database type (postgres, mysql, mongodb, etc.)
@@ -81,7 +90,7 @@ export async function setupTestORM(
   const dbPort = getDatabasePort(databaseType);
 
   // SQLite databases are file-based
-  let ormConfig: Partial<Options> = {};
+  let ormConfig: AnyMikroOrmOptions = {};
   if (databaseType === 'sqlite' || databaseType === 'libsql') {
     ormConfig = {
       ...mikroOrmConfig,
