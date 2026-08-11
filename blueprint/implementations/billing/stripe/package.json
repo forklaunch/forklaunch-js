@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/implementation-billing-stripe",
-  "version": "1.1.30",
+  "version": "1.1.32",
   "description": "Stripe implementation for forklaunch billing",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -48,13 +48,22 @@
     },
     "./types/*": {
       "types": "./lib/domain/types/*.d.ts"
+    },
+    "./persistence": {
+      "types": "./lib/persistence/entities/index.d.ts",
+      "import": "./lib/persistence/entities/index.mjs",
+      "require": "./lib/persistence/entities/index.js",
+      "default": "./lib/persistence/entities/index.js"
+    },
+    "./persistence/*": {
+      "types": "./lib/persistence/entities/*.d.ts"
     }
   },
   "files": [
     "lib/**"
   ],
   "scripts": {
-    "build": "tsgo --noEmit && tsup domain/schemas/index.ts services/index.ts domain/enum/index.ts domain/types/index.ts --format cjs,esm --no-splitting --tsconfig tsconfig.json --out-dir lib --clean && tsgo -p tsconfig.build.json --emitDeclarationOnly && if [ -f eject-package.bash ]; then pnpm package:eject; fi",
+    "build": "tsgo --noEmit && tsup persistence/entities/index.ts domain/schemas/index.ts services/index.ts domain/enum/index.ts domain/types/index.ts --format cjs,esm --no-splitting --tsconfig tsconfig.json --out-dir lib --clean && tsgo -p tsconfig.build.json --emitDeclarationOnly && if [ -f eject-package.bash ]; then pnpm package:eject; fi",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
@@ -82,7 +91,9 @@
     "@typescript/native-preview": "7.0.0-dev.20260707.2",
     "depcheck": "^1.4.7",
     "prettier": "^3.9.6",
-    "typedoc": "^0.28.20"
+    "typedoc": "^0.28.20",
+    "@mikro-orm/sqlite": "7.1.11",
+    "uuid": "^14.0.1"
   },
   "publishConfig": {
     "access": "public"

@@ -3,7 +3,7 @@ import {
   OpenTelemetryCollector
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { EntityManager } from '@mikro-orm/core';
+import { EntityManager, EntityName, InferEntity } from '@mikro-orm/core';
 import Stripe from 'stripe';
 import { BillingProviderEnum } from '../domain/enum/billingProvider.enum';
 import { CurrencyEnum } from '../domain/enum/currency.enum';
@@ -18,10 +18,29 @@ import {
 } from '../domain/types/stripe.entity.types';
 import { StripeWebhookEvent } from '../persistence/entities';
 import { StripeBillingPortalService } from './billingPortal.service';
+
 import { StripeCheckoutSessionService } from './checkoutSession.service';
 import { StripePaymentLinkService } from './paymentLink.service';
 import { StripePlanService } from './plan.service';
 import { StripeSubscriptionService } from './subscription.service';
+
+/**
+ * Webhook idempotency records are looked up and written BY NAME so they
+ * resolve against the consuming application's discovered metadata. Passing
+ * this package's internal `StripeWebhookEvent` object to the EntityManager
+ * queries an entity the app's ORM never discovered, which mikro-orm 7.1.x
+ * rejects deep in EntityLoader (`meta.relations` is undefined for
+ * undiscovered entities). Applications must discover an entity named
+ * `StripeWebhookEvent` — either their own definition (the blueprint app
+ * ships one) or this package's, importable from
+ * `@forklaunch/implementation-billing-stripe/persistence`.
+ */
+type StripeWebhookEventEntity = InferEntity<typeof StripeWebhookEvent>;
+// mikro-orm 7 narrowed EntityName's type to exclude strings, but the runtime
+// resolves registered entity names as it always has — and name resolution is
+// exactly what we need by default (see above).
+const DEFAULT_STRIPE_WEBHOOK_EVENT_ENTITY =
+  'StripeWebhookEvent' as unknown as EntityName<StripeWebhookEventEntity>;
 
 export class StripeWebhookService<
   SchemaValidator extends AnySchemaValidator,
@@ -38,6 +57,7 @@ export class StripeWebhookService<
     StripeSubscriptionEntities<PartyEnum> = StripeSubscriptionEntities<PartyEnum>
 > {
   protected readonly partyEnum: PartyEnum;
+  protected readonly webhookEventEntity: EntityName<StripeWebhookEventEntity>;
   protected readonly stripeClient: Stripe;
   protected readonly em: EntityManager;
   protected readonly schemaValidator: SchemaValidator;
@@ -91,8 +111,16 @@ export class StripeWebhookService<
       PartyEnum,
       SubscriptionEntities
     >,
-    partyEnum: PartyEnum
+    partyEnum: PartyEnum,
+    /**
+     * The entity used for webhook idempotency records. Defaults to
+     * resolving the application's discovered entity named
+     * 'StripeWebhookEvent'; inject your own entity (mapper-style) to use a
+     * different one.
+     */
+    webhookEventEntity: EntityName<StripeWebhookEventEntity> = DEFAULT_STRIPE_WEBHOOK_EVENT_ENTITY
   ) {
+    this.webhookEventEntity = webhookEventEntity;
     this.partyEnum = partyEnum;
     this.stripeClient = stripeClient;
     this.em = em;
@@ -154,7 +182,7 @@ export class StripeWebhookService<
     }
 
     if (
-      await this.em.findOne(StripeWebhookEvent, {
+      await this.em.findOne<StripeWebhookEventEntity>(this.webhookEventEntity, {
         idempotencyKey: event.request?.idempotency_key
       })
     ) {
@@ -472,12 +500,15 @@ export class StripeWebhookService<
         break;
     }
 
-    await this.em.insert(StripeWebhookEvent, {
+    // em.create (not native em.insert): the app's entity generates its id and
+    // timestamps via onCreate hooks, which native inserts bypass — a native
+    // insert fails NOT NULL on id for sqlBaseProperties-style entities.
+    this.em.create<StripeWebhookEventEntity>(this.webhookEventEntity, {
       stripeId: event.id,
       idempotencyKey: event.request?.idempotency_key,
       eventType: event.type,
       eventData: event.data
-    });
+    } as never);
     await this.em.flush();
   }
 }
