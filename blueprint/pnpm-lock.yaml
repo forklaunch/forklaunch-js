@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  '@forklaunch/core': ^1.5.6
+  '@forklaunch/core': ^1.5.11
 
 importers:
 
@@ -15,14 +15,14 @@ importers:
         specifier: ^1.2.20
         version: 1.2.20
       '@forklaunch/core':
-        specifier: ^1.5.6
-        version: 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.11
+        version: 1.5.11(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/express':
-        specifier: ^1.2.34
-        version: 1.2.34(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(jose@6.2.4)(zod@4.4.3)
+        specifier: ^1.2.38
+        version: 1.2.38(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(jose@6.2.4)(zod@4.4.3)
       '@forklaunch/hyper-express':
-        specifier: ^1.2.34
-        version: 1.2.34(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(express@5.2.1)
+        specifier: ^1.2.38
+        version: 1.2.38(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(express@5.2.1)
       '@forklaunch/universal-sdk':
         specifier: ^1.2.20
         version: 1.2.20
@@ -100,14 +100,14 @@ importers:
         specifier: ^1.2.20
         version: 1.2.20
       '@forklaunch/core':
-        specifier: ^1.5.6
-        version: 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.11
+        version: 1.5.11(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/express':
-        specifier: ^1.2.34
-        version: 1.2.34(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(jose@6.2.4)(zod@4.4.3)
+        specifier: ^1.2.38
+        version: 1.2.38(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(jose@6.2.4)(zod@4.4.3)
       '@forklaunch/hyper-express':
-        specifier: ^1.2.34
-        version: 1.2.34(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(express@5.2.1)
+        specifier: ^1.2.38
+        version: 1.2.38(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(express@5.2.1)
       '@forklaunch/implementation-billing-base':
         specifier: workspace:^
         version: link:../implementations/billing/base
@@ -221,14 +221,14 @@ importers:
         specifier: ^1.2.20
         version: 1.2.20
       '@forklaunch/core':
-        specifier: ^1.5.6
-        version: 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.11
+        version: 1.5.11(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/express':
-        specifier: ^1.2.34
-        version: 1.2.34(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(jose@6.2.4)(zod@4.4.3)
+        specifier: ^1.2.38
+        version: 1.2.38(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(jose@6.2.4)(zod@4.4.3)
       '@forklaunch/hyper-express':
-        specifier: ^1.2.34
-        version: 1.2.34(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(express@5.2.1)
+        specifier: ^1.2.38
+        version: 1.2.38(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(express@5.2.1)
       '@forklaunch/implementation-billing-stripe':
         specifier: workspace:^
         version: link:../implementations/billing/stripe
@@ -336,14 +336,14 @@ importers:
         specifier: ^1.2.20
         version: 1.2.20
       '@forklaunch/core':
-        specifier: ^1.5.6
-        version: 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.11
+        version: 1.5.11(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/express':
-        specifier: ^1.2.34
-        version: 1.2.34(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(jose@6.2.4)(zod@4.4.3)
+        specifier: ^1.2.38
+        version: 1.2.38(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(jose@6.2.4)(zod@4.4.3)
       '@forklaunch/hyper-express':
-        specifier: ^1.2.34
-        version: 1.2.34(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(express@5.2.1)
+        specifier: ^1.2.38
+        version: 1.2.38(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(express@5.2.1)
       '@forklaunch/validator':
         specifier: ^1.2.20
         version: 1.2.20
@@ -391,14 +391,14 @@ importers:
         specifier: ^1.2.20
         version: 1.2.20
       '@forklaunch/core':
-        specifier: ^1.5.6
-        version: 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.11
+        version: 1.5.11(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/express':
-        specifier: ^1.2.34
-        version: 1.2.34(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(jose@6.2.4)(zod@4.4.3)
+        specifier: ^1.2.38
+        version: 1.2.38(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(jose@6.2.4)(zod@4.4.3)
       '@forklaunch/hyper-express':
-        specifier: ^1.2.34
-        version: 1.2.34(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(express@5.2.1)
+        specifier: ^1.2.38
+        version: 1.2.38(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(express@5.2.1)
       '@forklaunch/infrastructure-redis':
         specifier: ^1.4.6
         version: 1.4.6(@opentelemetry/api@1.9.1)(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
@@ -503,8 +503,8 @@ importers:
         specifier: workspace:^
         version: link:../monitoring
       '@forklaunch/core':
-        specifier: ^1.5.6
-        version: 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.11
+        version: 1.5.11(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/hyper-express-fork':
         specifier: ^6.17.35
         version: 6.17.35
@@ -612,8 +612,8 @@ importers:
         specifier: workspace:^
         version: link:../monitoring
       '@forklaunch/core':
-        specifier: ^1.5.6
-        version: 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.11
+        version: 1.5.11(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/implementation-iam-base':
         specifier: workspace:^
         version: link:../implementations/iam/base
@@ -709,8 +709,8 @@ importers:
         specifier: ^1.2.20
         version: 1.2.20
       '@forklaunch/core':
-        specifier: ^1.5.6
-        version: 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.11
+        version: 1.5.11(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/interfaces-billing':
         specifier: workspace:^
         version: link:../../../interfaces/billing
@@ -752,8 +752,8 @@ importers:
         specifier: ^1.2.20
         version: 1.2.20
       '@forklaunch/core':
-        specifier: ^1.5.6
-        version: 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.11
+        version: 1.5.11(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/implementation-billing-base':
         specifier: workspace:^
         version: link:../base
@@ -801,8 +801,8 @@ importers:
         specifier: ^1.2.20
         version: 1.2.20
       '@forklaunch/core':
-        specifier: ^1.5.6
-        version: 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.11
+        version: 1.5.11(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/interfaces-ecommerce':
         specifier: workspace:^
         version: link:../../../interfaces/ecommerce
@@ -844,8 +844,8 @@ importers:
         specifier: ^1.2.20
         version: 1.2.20
       '@forklaunch/core':
-        specifier: ^1.5.6
-        version: 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.11
+        version: 1.5.11(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/interfaces-iam':
         specifier: workspace:^
         version: link:../../../interfaces/iam
@@ -887,8 +887,8 @@ importers:
   implementations/worker/bullmq:
     dependencies:
       '@forklaunch/core':
-        specifier: ^1.5.6
-        version: 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.11
+        version: 1.5.11(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/interfaces-worker':
         specifier: workspace:^
         version: link:../../../interfaces/worker
@@ -927,8 +927,8 @@ importers:
   implementations/worker/database:
     dependencies:
       '@forklaunch/core':
-        specifier: ^1.5.6
-        version: 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.11
+        version: 1.5.11(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/interfaces-worker':
         specifier: workspace:^
         version: link:../../../interfaces/worker
@@ -967,8 +967,8 @@ importers:
   implementations/worker/kafka:
     dependencies:
       '@forklaunch/core':
-        specifier: ^1.5.6
-        version: 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.11
+        version: 1.5.11(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/interfaces-worker':
         specifier: workspace:^
         version: link:../../../interfaces/worker
@@ -1007,8 +1007,8 @@ importers:
   implementations/worker/redis:
     dependencies:
       '@forklaunch/core':
-        specifier: ^1.5.6
-        version: 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.11
+        version: 1.5.11(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/interfaces-worker':
         specifier: workspace:^
         version: link:../../../interfaces/worker
@@ -1131,8 +1131,8 @@ importers:
   monitoring:
     dependencies:
       '@forklaunch/core':
-        specifier: ^1.5.6
-        version: 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.11
+        version: 1.5.11(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
     devDependencies:
       '@typescript/native-preview':
         specifier: 7.0.0-dev.20260707.2
@@ -1147,8 +1147,8 @@ importers:
         specifier: workspace:^
         version: link:../monitoring
       '@forklaunch/core':
-        specifier: ^1.5.6
-        version: 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.11
+        version: 1.5.11(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/implementation-worker-bullmq':
         specifier: workspace:^
         version: link:../implementations/worker/bullmq
@@ -2164,17 +2164,20 @@ packages:
   '@forklaunch/common@1.2.20':
     resolution: {integrity: sha512-G3RwaeuH57MKKTBEMtvebnfiyPVwAZMeOwl18dOv2/uuTAeAexixFhjLGSZKWxPYC0owTwAaWZqm9NY8sJOpEQ==}
 
-  '@forklaunch/core@1.5.6':
-    resolution: {integrity: sha512-tq+dwMs4AoXcQx1Bm0dBTXt0p3lcSZ79iixjFwXM/TXGTa58KUsCL/YbSHQfXQ9ORwN7cXQ+dzmlG49tAPRrqQ==}
+  '@forklaunch/common@1.2.22':
+    resolution: {integrity: sha512-ZC+uqLQDFksoR+FVaCu8PU6CqMBdv0bmWc+qhhtBBnQIYPXhHdw7iajWPR3P6Pr/sqSh30C1z+ZDwpF5zQZ1DA==}
 
-  '@forklaunch/express@1.2.34':
-    resolution: {integrity: sha512-diUitKjlNu/hnDTq8m2nl2KG8KuaAb0zJe/rlLnc+WphevboQluufqKNd4bLXT6IqlC2SGjkmSaTyRDAZ83ZhA==}
+  '@forklaunch/core@1.5.11':
+    resolution: {integrity: sha512-xqxCbSmKci4QbqRv6pSg0VFFBBRvz4BdzVmfeIvOz5CthPf2sXYWeFytMgAooIlBF/d3cqv5IQeNbNS94yCwLA==}
+
+  '@forklaunch/express@1.2.38':
+    resolution: {integrity: sha512-7nclbHrKCDJNs8sHWB0osOOXWHbfWEH8HfmlJkpOJ//Y3HJX833UNT/F+0LK5wBtmaX/hJgL3uRUvKQFSvUdsQ==}
 
   '@forklaunch/hyper-express-fork@6.17.35':
     resolution: {integrity: sha512-FXez51tbt+3bB8J6B6qcL1Jqp0Bd6/Aq2iFVaQq3PDeeWAAXhktnN9+WkQ+UdqvxgV07oHbZgOY6ec56K0IxTg==}
 
-  '@forklaunch/hyper-express@1.2.34':
-    resolution: {integrity: sha512-0ZHjU1tYcCT0MJrxRWHUp6851qOOOviNP4Yh53DLj3D2/TEVQ8YMuCYt7AaPe/40sW56RLjVZ5OZYqqtNWgNSQ==}
+  '@forklaunch/hyper-express@1.2.38':
+    resolution: {integrity: sha512-aAfDwgIA2no87jFnDESYdLaz+LA1y48BchazlqC+q6sT72eIbjQhKDM0H5N5r5ifEwDwVq5yjkf7kwQFEtmF9A==}
 
   '@forklaunch/infrastructure-redis@1.4.6':
     resolution: {integrity: sha512-Q3d9rgF8cAfxDvSrK6mga36GvHqdKD7o0+Q7AVaM2UBLhSgIT2hkgsoy9ZKzWFkHPFa8JXjvRJone+DmkXa+4g==}
@@ -2202,8 +2205,11 @@ packages:
   '@forklaunch/validator@1.2.20':
     resolution: {integrity: sha512-ezNzceVozYX+hCpDVwqPVAymIXS7DiBdD8Kn0dgT9pvPfzywLBNCHjoNnxB3sjtMV7Bnuj+SklWldWW+m1oZ0g==}
 
-  '@forklaunch/ws@1.2.34':
-    resolution: {integrity: sha512-GgYpaPFHf+4630F98vHicuQdxKD7iFlOtV4VVhxWjB9G0UUXnAH9/zZQL8GFrKCIF6vBVqECD/bBil6d7N61NA==}
+  '@forklaunch/validator@1.2.23':
+    resolution: {integrity: sha512-5cH2P0+eP8n1QNxcpGEtTCvB/LRFT2P57MEz68aeU3Nw3Ix/S+Y+GAxExPLudGwynYDcaEs6qX4g0TVt1idHow==}
+
+  '@forklaunch/ws@1.2.37':
+    resolution: {integrity: sha512-hvaZjiQV5vhToxQEsP5/Tnz9+dRM8SDsvfY7NAr4pqnvrBVNAv5IYxfpUIeEsyxfxHYTyJvSyN/Yc9zJYR+PiQ==}
 
   '@gerrit0/mini-shiki@3.23.0':
     resolution: {integrity: sha512-bEMORlG0cqdjVyCEuU0cDQbORWX+kYCeo0kV1lbxF5bt4r7SID2l9bqsxJEM0zndaxpOUT7riCyIVEuqq/Ynxg==}
@@ -8775,12 +8781,14 @@ snapshots:
 
   '@forklaunch/common@1.2.20': {}
 
-  '@forklaunch/core@1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)':
+  '@forklaunch/common@1.2.22': {}
+
+  '@forklaunch/core@1.5.11(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)':
     dependencies:
       '@asyncapi/parser': 3.6.0
-      '@forklaunch/common': 1.2.20
+      '@forklaunch/common': 1.2.22
       '@forklaunch/opentelemetry-instrumentation-hyper-express': 0.0.5(@opentelemetry/api@1.9.1)
-      '@forklaunch/validator': 1.2.20
+      '@forklaunch/validator': 1.2.23
       '@mikro-orm/core': 7.1.8
       '@mikro-orm/mongodb': 7.1.8(@mikro-orm/core@7.1.8)
       '@opentelemetry/api': 1.9.1
@@ -8828,11 +8836,11 @@ snapshots:
       - supports-color
       - sury
 
-  '@forklaunch/express@1.2.34(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(jose@6.2.4)(zod@4.4.3)':
+  '@forklaunch/express@1.2.38(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(jose@6.2.4)(zod@4.4.3)':
     dependencies:
-      '@forklaunch/common': 1.2.20
-      '@forklaunch/core': 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
-      '@forklaunch/validator': 1.2.20
+      '@forklaunch/common': 1.2.22
+      '@forklaunch/core': 1.5.11(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+      '@forklaunch/validator': 1.2.23
       '@modelcontextprotocol/sdk': 1.30.0(zod@4.4.3)
       '@scalar/express-api-reference': 0.10.11
       '@types/multer': 2.2.0
@@ -8880,13 +8888,13 @@ snapshots:
       typed-emitter: 2.1.0
       uWebSockets.js: https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/cfc9a40d8132a34881813cec3d5f8e3a185b3ce3
 
-  '@forklaunch/hyper-express@1.2.34(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(express@5.2.1)':
+  '@forklaunch/hyper-express@1.2.38(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)(express@5.2.1)':
     dependencies:
-      '@forklaunch/common': 1.2.20
-      '@forklaunch/core': 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+      '@forklaunch/common': 1.2.22
+      '@forklaunch/core': 1.5.11(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/hyper-express-fork': 6.17.35
-      '@forklaunch/validator': 1.2.20
-      '@forklaunch/ws': 1.2.34(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+      '@forklaunch/validator': 1.2.23
+      '@forklaunch/ws': 1.2.37(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@scalar/express-api-reference': 0.10.11
       cors: 2.8.6
       live-directory: 3.0.3
@@ -8921,7 +8929,7 @@ snapshots:
   '@forklaunch/infrastructure-redis@1.4.6(@opentelemetry/api@1.9.1)(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)':
     dependencies:
       '@forklaunch/common': 1.2.20
-      '@forklaunch/core': 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+      '@forklaunch/core': 1.5.11(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       redis: 6.1.0(@opentelemetry/api@1.9.1)
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
@@ -8948,7 +8956,7 @@ snapshots:
     dependencies:
       '@aws-sdk/client-s3': 3.1098.0
       '@forklaunch/common': 1.2.20
-      '@forklaunch/core': 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+      '@forklaunch/core': 1.5.11(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
       - '@cfworker/json-schema'
@@ -9013,12 +9021,19 @@ snapshots:
       ts-deepmerge: 8.0.0
       zod: 4.4.3
 
-  '@forklaunch/ws@1.2.34(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)':
+  '@forklaunch/validator@1.2.23':
+    dependencies:
+      '@forklaunch/common': 1.2.22
+      '@sinclair/typebox': 0.34.52
+      ts-deepmerge: 8.0.0
+      zod: 4.4.3
+
+  '@forklaunch/ws@1.2.37(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)':
     dependencies:
       '@asyncapi/parser': 3.6.0
-      '@forklaunch/common': 1.2.20
-      '@forklaunch/core': 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
-      '@forklaunch/validator': 1.2.20
+      '@forklaunch/common': 1.2.22
+      '@forklaunch/core': 1.5.11(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+      '@forklaunch/validator': 1.2.23
       '@types/ws': 8.18.1
       ws: 8.21.1
     transitivePeerDependencies:

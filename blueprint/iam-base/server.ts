@@ -19,7 +19,7 @@ const userService = ci.resolve(tokens.UserService);
 //! creates an instance of forklaunchExpress
 const app = forklaunchExpress(schemaValidator, openTelemetryCollector, {
   auth: {
-    surfacePermissions: async (payload) => {
+    surfacePermissions: async (payload: { sub?: string }) => {
       if (!payload.sub) {
         return new Set();
       }
@@ -31,7 +31,7 @@ const app = forklaunchExpress(schemaValidator, openTelemetryCollector, {
         ).map((permission) => permission.slug)
       );
     },
-    surfaceRoles: async (payload) => {
+    surfaceRoles: async (payload: { sub?: string }) => {
       if (!payload.sub) {
         return new Set();
       }
