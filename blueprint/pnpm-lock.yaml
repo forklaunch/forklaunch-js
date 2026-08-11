@@ -121,25 +121,25 @@ importers:
         specifier: ^1.2.24
         version: 1.2.24
       '@mikro-orm/core':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11
       '@mikro-orm/migrations':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@mikro-orm/mongodb':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@mikro-orm/mysql':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)(@types/node@26.2.0)
       '@mikro-orm/postgresql':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@mikro-orm/seeder':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@mikro-orm/sqlite':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@sinclair/typebox':
         specifier: ^0.34.52
@@ -167,7 +167,7 @@ importers:
         specifier: ^1.2.25
         version: 1.2.25(vitest@4.1.10(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.2.0)(esbuild@0.27.7)(tsx@4.23.12)(yaml@2.9.0)))
       '@mikro-orm/cli':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11
       '@types/express':
         specifier: ^5.0.6
@@ -242,25 +242,25 @@ importers:
         specifier: ^1.2.24
         version: 1.2.24
       '@mikro-orm/core':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11
       '@mikro-orm/migrations':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@mikro-orm/mongodb':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@mikro-orm/mysql':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)(@types/node@26.2.0)
       '@mikro-orm/postgresql':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@mikro-orm/seeder':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@mikro-orm/sqlite':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@sinclair/typebox':
         specifier: ^0.34.52
@@ -291,7 +291,7 @@ importers:
         specifier: ^1.2.25
         version: 1.2.25(vitest@4.1.10(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.2.0)(esbuild@0.27.7)(tsx@4.23.12)(yaml@2.9.0)))
       '@mikro-orm/cli':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11
       '@types/express':
         specifier: ^5.0.6
@@ -348,10 +348,10 @@ importers:
         specifier: ^1.2.24
         version: 1.2.24
       '@mikro-orm/core':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11
       '@mikro-orm/mongodb':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@sinclair/typebox':
         specifier: ^0.34.52
@@ -406,25 +406,25 @@ importers:
         specifier: ^1.2.24
         version: 1.2.24
       '@mikro-orm/core':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11
       '@mikro-orm/migrations':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@mikro-orm/mongodb':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@mikro-orm/mysql':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)(@types/node@26.2.0)
       '@mikro-orm/postgresql':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@mikro-orm/seeder':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@mikro-orm/sqlite':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@sinclair/typebox':
         specifier: ^0.34.52
@@ -455,7 +455,7 @@ importers:
         specifier: ^1.2.25
         version: 1.2.25(vitest@4.1.10(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.2.0)(esbuild@0.27.7)(tsx@4.23.12)(yaml@2.9.0)))
       '@mikro-orm/cli':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11
       '@types/express':
         specifier: ^5.0.6
@@ -518,25 +518,25 @@ importers:
         specifier: ^1.2.24
         version: 1.2.24
       '@mikro-orm/core':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11
       '@mikro-orm/migrations':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@mikro-orm/mongodb':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@mikro-orm/mysql':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)(@types/node@26.2.0)
       '@mikro-orm/postgresql':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@mikro-orm/seeder':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@mikro-orm/sqlite':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@sinclair/typebox':
         specifier: ^0.34.52
@@ -564,7 +564,7 @@ importers:
         specifier: ^1.2.25
         version: 1.2.25(vitest@4.1.10(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.2.0)(esbuild@0.27.7)(tsx@4.23.12)(yaml@2.9.0)))
       '@mikro-orm/cli':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11
       '@types/express':
         specifier: ^5.0.6
@@ -621,25 +621,25 @@ importers:
         specifier: workspace:^
         version: link:../interfaces/iam
       '@mikro-orm/core':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11
       '@mikro-orm/migrations':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@mikro-orm/mongodb':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@mikro-orm/mysql':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)(@types/node@26.2.0)
       '@mikro-orm/postgresql':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@mikro-orm/seeder':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@mikro-orm/sqlite':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@opentelemetry/api':
         specifier: ^1.9.1
@@ -670,7 +670,7 @@ importers:
         specifier: ^1.2.25
         version: 1.2.25(vitest@4.1.10(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.2.0)(esbuild@0.27.7)(tsx@4.23.12)(yaml@2.9.0)))
       '@mikro-orm/cli':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11
       '@types/express':
         specifier: ^5.0.6
@@ -721,7 +721,7 @@ importers:
         specifier: ^1.2.24
         version: 1.2.24
       '@mikro-orm/core':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11
       '@sinclair/typebox':
         specifier: ^0.34.52
@@ -767,7 +767,7 @@ importers:
         specifier: ^1.2.24
         version: 1.2.24
       '@mikro-orm/core':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11
       '@sinclair/typebox':
         specifier: ^0.34.52
@@ -783,7 +783,7 @@ importers:
         version: 4.4.3
     devDependencies:
       '@mikro-orm/sqlite':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@typescript/native-preview':
         specifier: 7.0.0-dev.20260707.2
@@ -819,7 +819,7 @@ importers:
         specifier: ^1.2.24
         version: 1.2.24
       '@mikro-orm/core':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11
       '@sinclair/typebox':
         specifier: ^0.34.52
@@ -862,7 +862,7 @@ importers:
         specifier: ^1.2.24
         version: 1.2.24
       '@mikro-orm/core':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11
       '@sinclair/typebox':
         specifier: ^0.34.52
@@ -942,7 +942,7 @@ importers:
         specifier: ^1.2.24
         version: 1.2.24
       '@mikro-orm/core':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11
       '@sinclair/typebox':
         specifier: ^0.34.52
@@ -1053,7 +1053,7 @@ importers:
         specifier: ^1.2.23
         version: 1.2.23
       '@mikro-orm/core':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11
     devDependencies:
       '@typescript/native-preview':
@@ -1075,7 +1075,7 @@ importers:
         specifier: ^1.2.23
         version: 1.2.23
       '@mikro-orm/core':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11
     devDependencies:
       '@typescript/native-preview':
@@ -1097,7 +1097,7 @@ importers:
         specifier: ^1.2.23
         version: 1.2.23
       '@mikro-orm/core':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11
     devDependencies:
       '@typescript/native-preview':
@@ -1180,34 +1180,34 @@ importers:
         specifier: ^1.2.24
         version: 1.2.24
       '@mikro-orm/core':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11
       '@mikro-orm/libsql':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@mikro-orm/mariadb':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)(@types/node@26.2.0)
       '@mikro-orm/migrations':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@mikro-orm/mongodb':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@mikro-orm/mssql':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@mikro-orm/mysql':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)(@types/node@26.2.0)
       '@mikro-orm/postgresql':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@mikro-orm/seeder':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@mikro-orm/sqlite':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11(@mikro-orm/core@7.1.11)
       '@sinclair/typebox':
         specifier: ^0.34.52
@@ -1244,7 +1244,7 @@ importers:
         specifier: ^1.2.25
         version: 1.2.25(vitest@4.1.10(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.2.0)(esbuild@0.27.7)(tsx@4.23.12)(yaml@2.9.0)))
       '@mikro-orm/cli':
-        specifier: 7.1.11
+        specifier: ^7.1.11
         version: 7.1.11
       '@types/express':
         specifier: ^5.0.6
