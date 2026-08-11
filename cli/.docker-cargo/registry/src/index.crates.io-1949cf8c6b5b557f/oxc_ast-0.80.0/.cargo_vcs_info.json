@@ -1,6 +1,0 @@
-{
-  "git": {
-    "sha1": "9671def11f23dac91662d84b8a22639a4d1dc647"
-  },
-  "path_in_vcs": "crates/oxc_ast"
-}
