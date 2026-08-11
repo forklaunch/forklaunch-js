@@ -58,7 +58,7 @@
   },
   "dependencies": {
     "@forklaunch/common": "^1.2.23",
-    "@forklaunch/core": "^1.5.12",
+    "@forklaunch/core": "^1.5.13",
     "@forklaunch/interfaces-billing": "workspace:^",
     "@forklaunch/internal": "^1.2.24",
     "@forklaunch/validator": "^1.2.24",

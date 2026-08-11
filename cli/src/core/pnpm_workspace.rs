@@ -78,6 +78,44 @@ fn sanitize_allow_builds(pnpm_workspace: &mut PnpmWorkspace) {
     pnpm_workspace.allow_builds = Some(allow_builds);
 }
 
+/// Tooling (e.g. Studio upgrade flows) writes version-pinned entries like
+/// `@forklaunch/core@1.5.9` into `minimumReleaseAgeExclude`. After a
+/// framework release those pins go stale: pnpm blocks the new version with
+/// ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION and in-range resolution falls back
+/// to the old one. First-party packages should always be exempt from the age
+/// gate, so strip version suffixes down to bare package names on every
+/// rewrite.
+fn sanitize_minimum_release_age_exclude(pnpm_workspace: &mut PnpmWorkspace) {
+    let Some(Value::Sequence(entries)) =
+        pnpm_workspace.other.get_mut("minimumReleaseAgeExclude")
+    else {
+        return;
+    };
+    let mut seen: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
+    let mut normalized: Vec<Value> = Vec::new();
+    for entry in entries.iter() {
+        match entry {
+            Value::String(spec) if spec.starts_with("@forklaunch/") => {
+                // find a version separator after the scope's leading '@'
+                let name = match spec[1..].find('@') {
+                    Some(index) => spec[..index + 1].to_string(),
+                    None => spec.clone(),
+                };
+                if seen.insert(name.clone()) {
+                    normalized.push(Value::String(name));
+                }
+            }
+            Value::String(spec) => {
+                if seen.insert(spec.clone()) {
+                    normalized.push(entry.clone());
+                }
+            }
+            _ => normalized.push(entry.clone()),
+        }
+    }
+    *entries = normalized;
+}
+
 pub(crate) fn generate_pnpm_workspace(
     application_path: &str,
     additional_projects: &Vec<ProjectEntry>,
@@ -122,6 +160,7 @@ pub(crate) fn render_pnpm_workspace_with_packages(
     };
     pnpm_workspace.packages = packages;
     sanitize_allow_builds(&mut pnpm_workspace);
+    sanitize_minimum_release_age_exclude(&mut pnpm_workspace);
     Ok(to_string(&pnpm_workspace)
         .with_context(|| ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE)?)
 }
@@ -142,6 +181,7 @@ pub(crate) fn add_project_definition_to_pnpm_workspace<
         pnpm_workspace.packages.push(manifest_data.name().clone());
     }
     sanitize_allow_builds(&mut pnpm_workspace);
+    sanitize_minimum_release_age_exclude(&mut pnpm_workspace);
     Ok(to_string(&pnpm_workspace)
         .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?)
 }
@@ -164,7 +204,35 @@ pub(crate) fn remove_project_definition_to_pnpm_workspace(
         pnpm_workspace.packages.remove(position);
     }
     sanitize_allow_builds(&mut pnpm_workspace);
+    sanitize_minimum_release_age_exclude(&mut pnpm_workspace);
 
     Ok(to_string(&pnpm_workspace)
         .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_minimum_release_age_exclude_strips_forklaunch_versions() {
+        let mut ws: PnpmWorkspace = from_str(
+            "packages:\n- core\nminimumReleaseAgeExclude:\n- '@forklaunch/core@1.5.9'\n- '@forklaunch/express@1.2.37'\n- '@forklaunch/core@1.5.10'\n- 'left-pad@1.3.0'\n",
+        )
+        .unwrap();
+        sanitize_minimum_release_age_exclude(&mut ws);
+        let rendered = to_string(&ws).unwrap();
+        assert!(rendered.contains("- '@forklaunch/core'"));
+        assert!(rendered.contains("- '@forklaunch/express'"));
+        // duplicates collapse, non-forklaunch entries untouched
+        assert_eq!(rendered.matches("@forklaunch/core").count(), 1);
+        assert!(rendered.contains("left-pad@1.3.0"));
+    }
+
+    #[test]
+    fn test_minimum_release_age_exclude_absent_is_noop() {
+        let mut ws: PnpmWorkspace = from_str("packages:\n- core\n").unwrap();
+        sanitize_minimum_release_age_exclude(&mut ws);
+        assert!(!to_string(&ws).unwrap().contains("minimumReleaseAgeExclude"));
+    }
 }

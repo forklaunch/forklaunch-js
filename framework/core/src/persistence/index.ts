@@ -56,6 +56,8 @@ export {
 // PostgreSQL Row-Level Security
 export { setupRls, RlsEventSubscriber, type RlsConfig } from './rls';
 
+export type { AnyMikroORM } from './mikroOrm.types';
+
 // Tenant-scoped EM proxy (wraps every operation in withEncryptionContext to
 // survive AsyncLocalStorage propagation through pg connection pool callbacks)
 export { wrapEmWithTenantContext } from './tenantEm';

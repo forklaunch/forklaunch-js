@@ -1,8 +1,12 @@
-import { Options } from '@mikro-orm/core';
 import Redis from 'ioredis';
 import { StartedTestContainer } from 'testcontainers';
 import { DatabaseType, TestContainerManager } from './containers';
-import { AnyMikroORM, clearTestDatabase, setupTestORM } from './database';
+import {
+  AnyMikroORM,
+  AnyMikroOrmOptions,
+  clearTestDatabase,
+  setupTestORM
+} from './database';
 import { setupTestEnvironment } from './environment';
 
 export interface BlueprintTestConfig {
@@ -11,7 +15,7 @@ export interface BlueprintTestConfig {
    * This is called AFTER environment variables are set
    * Optional - if not provided, no database will be set up
    */
-  getConfig?: () => Promise<Partial<Options>>;
+  getConfig?: () => Promise<AnyMikroOrmOptions>;
 
   /**
    * Database type (postgres, mysql, mongodb, etc.)

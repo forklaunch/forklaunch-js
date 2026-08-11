@@ -234,7 +234,7 @@ pub(crate) const BUNRUN_VERSION: &str = "~0.0.2";
 // @forklaunch/common
 pub(crate) const COMMON_VERSION: &str = "~1.2.23";
 // @forklaunch/core
-pub(crate) const CORE_VERSION: &str = "~1.5.12";
+pub(crate) const CORE_VERSION: &str = "~1.5.13";
 // @forklaunch/express
 pub(crate) const EXPRESS_VERSION: &str = "~1.2.39";
 // @forklaunch/hyper-express
@@ -266,7 +266,7 @@ pub(crate) const WORKER_INTERFACES_VERSION: &str = "~1.0.29";
 // @forklaunch/internal
 pub(crate) const INTERNAL_VERSION: &str = "~1.2.24";
 // @forklaunch/testing
-pub(crate) const TESTING_VERSION: &str = "~1.2.24";
+pub(crate) const TESTING_VERSION: &str = "~1.2.25";
 // @forklaunch/universal-sdk
 pub(crate) const UNIVERSAL_SDK_VERSION: &str = "~1.2.24";
 // @forklaunch/validator
