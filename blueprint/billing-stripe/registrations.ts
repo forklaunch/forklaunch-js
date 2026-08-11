@@ -70,6 +70,8 @@ import {
   SubscriptionMapperTypes
 } from './domain/types/billingMappers.types';
 import mikroOrmOptionsConfig from './mikro-orm.config';
+import { InferEntity } from '@mikro-orm/core';
+import { StripeWebhookEvent } from './persistence/entities';
 
 //! defines the configuration schema for the application
 const configInjector = createConfigInjector(schemaValidator, {
@@ -359,7 +361,8 @@ const serviceDependencies = runtimeDependencies.chain({
       CheckoutSessionMapperTypes,
       PaymentLinkMapperTypes,
       PlanMapperTypes,
-      SubscriptionMapperTypes
+      SubscriptionMapperTypes,
+      InferEntity<typeof StripeWebhookEvent>
     >,
     factory: (
       {
@@ -387,7 +390,10 @@ const serviceDependencies = runtimeDependencies.chain({
         PaymentLinkService,
         PlanService,
         SubscriptionService,
-        PartyEnum
+        PartyEnum,
+        // entity-first: inject this app's discovered webhook event entity
+        // (mapper-style) rather than relying on name resolution
+        StripeWebhookEvent
       )
   },
   ComplianceDataService: {

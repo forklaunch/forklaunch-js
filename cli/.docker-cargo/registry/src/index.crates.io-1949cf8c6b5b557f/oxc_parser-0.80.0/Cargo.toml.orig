@@ -1,0 +1,50 @@
+[package]
+name = "oxc_parser"
+version = "0.80.0"
+authors.workspace = true
+categories.workspace = true
+edition.workspace = true
+homepage.workspace = true
+include = ["/examples", "/src"]
+keywords.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+doctest = false
+
+[dependencies]
+oxc_allocator = { workspace = true }
+oxc_ast = { workspace = true }
+oxc_data_structures = { workspace = true, features = ["assert_unchecked", "pointer_ext"] }
+oxc_diagnostics = { workspace = true }
+oxc_ecmascript = { workspace = true }
+oxc_regular_expression = { workspace = true, optional = true }
+oxc_span = { workspace = true }
+oxc_syntax = { workspace = true }
+
+bitflags = { workspace = true }
+cow-utils = { workspace = true }
+num-bigint = { workspace = true }
+num-traits = { workspace = true }
+rustc-hash = { workspace = true }
+seq-macro = { workspace = true }
+
+memchr = { workspace = true }
+
+[dev-dependencies]
+oxc_ast = { workspace = true, features = ["serialize"] }
+oxc_ast_visit = { workspace = true, features = ["serialize"] }
+pico-args = { workspace = true }
+
+[features]
+default = ["regular_expression"]
+# Parse regex
+regular_expression = ["dep:oxc_regular_expression"]
+# Expose Lexer for benchmarks
+benchmarking = []

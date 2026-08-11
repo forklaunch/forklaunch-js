@@ -1,0 +1,32 @@
+[package]
+name = "ramhorns"
+version = "1.0.1"
+authors = ["Maciej Hirsz <hello@maciej.codes>"]
+license = "MPL-2.0"
+edition = "2018"
+description = "Experimental Mustache-like templating engine."
+repository = "https://github.com/maciejhirsz/ramhorns"
+documentation = "https://docs.rs/ramhorns"
+readme = "../README.md"
+keywords = ["html", "template", "mustache"]
+categories = ["template-engine"]
+
+[dependencies]
+arrayvec = "0.7.4"
+beef = "0.5.2"
+fnv = "1.0"
+pulldown-cmark = { version = "0.12", default-features = false, features = ["html"], optional = true }
+ramhorns-derive = { version = "1.0.1", path = "../ramhorns-derive", optional = true }
+logos = "0.14.0"
+
+[dev-dependencies]
+pretty_assertions = "1.4"
+
+[features]
+default = ["export_derive", "pulldown-cmark"]
+indexes = []
+
+# Re-exports the `Context` derive macro, so that end user only needs to
+# import this crate and `use ramhorns::Context` to get both the trait and
+# derive proc macro.
+export_derive = ["ramhorns-derive"]

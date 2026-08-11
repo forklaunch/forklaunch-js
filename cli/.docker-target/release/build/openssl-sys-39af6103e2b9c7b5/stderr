@@ -1,0 +1,25 @@
+DEBUG: all keys: APPLINKDIR, BINDIR, CMAKECONFIGDIR, ENGINESDIR, INCLUDEDIR, LDLIBS, LIBDIR, MODULESDIR, PKGCONFIGDIR, PREFIX, VERSION, libdir
+No value given for CMAKECONFIGDIR
+No value given for PKGCONFIGDIR
+No value given for libdir
+DEBUG: PREFIX = . => PREFIX = /work/.docker-target/release/build/openssl-sys-39af6103e2b9c7b5/out/openssl-build/build/src
+DEBUG: libdir = . => libdir = /work/.docker-target/release/build/openssl-sys-39af6103e2b9c7b5/out/openssl-build/build/src
+DEBUG: BINDIR = apps => BINDIR = /work/.docker-target/release/build/openssl-sys-39af6103e2b9c7b5/out/openssl-build/build/src/apps, BINDIR_REL_PREFIX = apps
+DEBUG: LIBDIR =  => LIBDIR = /work/.docker-target/release/build/openssl-sys-39af6103e2b9c7b5/out/openssl-build/build/src, LIBDIR_REL_PREFIX = 
+DEBUG: INCLUDEDIR = [ include, ./include ] => INCLUDEDIR = [ /work/.docker-target/release/build/openssl-sys-39af6103e2b9c7b5/out/openssl-build/build/src/include, /work/.docker-target/release/build/openssl-sys-39af6103e2b9c7b5/out/openssl-build/build/src/include ], INCLUDEDIR_REL_PREFIX = [ include, ./include ]
+DEBUG: APPLINKDIR = ms => APPLINKDIR = /work/.docker-target/release/build/openssl-sys-39af6103e2b9c7b5/out/openssl-build/build/src/ms, APPLINKDIR_REL_PREFIX = ms
+DEBUG: ENGINESDIR = engines => ENGINESDIR = /work/.docker-target/release/build/openssl-sys-39af6103e2b9c7b5/out/openssl-build/build/src/engines, ENGINESDIR_REL_LIBDIR = engines
+DEBUG: MODULESDIR = providers => MODULESDIR = /work/.docker-target/release/build/openssl-sys-39af6103e2b9c7b5/out/openssl-build/build/src/providers, MODULESDIR_REL_LIBDIR = providers
+DEBUG: PKGCONFIGDIR = . => PKGCONFIGDIR = /work/.docker-target/release/build/openssl-sys-39af6103e2b9c7b5/out/openssl-build/build/src, PKGCONFIGDIR_REL_LIBDIR = .
+DEBUG: CMAKECONFIGDIR = . => CMAKECONFIGDIR = /work/.docker-target/release/build/openssl-sys-39af6103e2b9c7b5/out/openssl-build/build/src, CMAKECONFIGDIR_REL_LIBDIR = .
+DEBUG: all keys: APPLINKDIR, BINDIR, CMAKECONFIGDIR, ENGINESDIR, INCLUDEDIR, LDLIBS, LIBDIR, MODULESDIR, PKGCONFIGDIR, PREFIX, VERSION, libdir
+DEBUG: PREFIX = /work/.docker-target/release/build/openssl-sys-39af6103e2b9c7b5/out/openssl-build/install => PREFIX = /work/.docker-target/release/build/openssl-sys-39af6103e2b9c7b5/out/openssl-build/install
+DEBUG: libdir = /work/.docker-target/release/build/openssl-sys-39af6103e2b9c7b5/out/openssl-build/install/lib => libdir = /work/.docker-target/release/build/openssl-sys-39af6103e2b9c7b5/out/openssl-build/install/lib
+DEBUG: BINDIR = bin => BINDIR = /work/.docker-target/release/build/openssl-sys-39af6103e2b9c7b5/out/openssl-build/install/bin, BINDIR_REL_PREFIX = bin
+DEBUG: LIBDIR = lib => LIBDIR = /work/.docker-target/release/build/openssl-sys-39af6103e2b9c7b5/out/openssl-build/install/lib, LIBDIR_REL_PREFIX = lib
+DEBUG: INCLUDEDIR = include => INCLUDEDIR = /work/.docker-target/release/build/openssl-sys-39af6103e2b9c7b5/out/openssl-build/install/include, INCLUDEDIR_REL_PREFIX = include
+DEBUG: APPLINKDIR = include/openssl => APPLINKDIR = /work/.docker-target/release/build/openssl-sys-39af6103e2b9c7b5/out/openssl-build/install/include/openssl, APPLINKDIR_REL_PREFIX = include/openssl
+DEBUG: ENGINESDIR = /work/.docker-target/release/build/openssl-sys-39af6103e2b9c7b5/out/openssl-build/install/lib/engines-3 => ENGINESDIR = /work/.docker-target/release/build/openssl-sys-39af6103e2b9c7b5/out/openssl-build/install/lib/engines-3, ENGINESDIR_REL_LIBDIR = engines-3
+DEBUG: MODULESDIR = /work/.docker-target/release/build/openssl-sys-39af6103e2b9c7b5/out/openssl-build/install/lib/ossl-modules => MODULESDIR = /work/.docker-target/release/build/openssl-sys-39af6103e2b9c7b5/out/openssl-build/install/lib/ossl-modules, MODULESDIR_REL_LIBDIR = ossl-modules
+DEBUG: PKGCONFIGDIR = /work/.docker-target/release/build/openssl-sys-39af6103e2b9c7b5/out/openssl-build/install/lib/pkgconfig => PKGCONFIGDIR = /work/.docker-target/release/build/openssl-sys-39af6103e2b9c7b5/out/openssl-build/install/lib/pkgconfig, PKGCONFIGDIR_REL_LIBDIR = pkgconfig
+DEBUG: CMAKECONFIGDIR = /work/.docker-target/release/build/openssl-sys-39af6103e2b9c7b5/out/openssl-build/install/lib/cmake/OpenSSL => CMAKECONFIGDIR = /work/.docker-target/release/build/openssl-sys-39af6103e2b9c7b5/out/openssl-build/install/lib/cmake/OpenSSL, CMAKECONFIGDIR_REL_LIBDIR = cmake/OpenSSL

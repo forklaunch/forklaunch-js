@@ -1,0 +1,12 @@
+# https://github.com/crate-ci/typos
+# cargo install typos-cli
+# typos
+
+[files]
+extend-exclude = [
+  "CHANGELOG.md",
+  "tests/**"
+]
+
+[default.extend-words]
+welp = "welp"

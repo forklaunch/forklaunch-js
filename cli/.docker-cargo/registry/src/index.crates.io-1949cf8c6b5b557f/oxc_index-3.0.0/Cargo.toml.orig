@@ -1,0 +1,55 @@
+[package]
+name = "oxc_index"
+version = "3.0.0"
+publish = true
+authors = ["Boshen <boshenc@gmail.com>"]
+edition = "2024"
+description = "Newtype-style helpers for `Vec` and `usize`."
+keywords = ["newtype", "vec", "index", "indexed", "usize"]
+categories = ["data-structures", "no-std", "rust-patterns"]
+readme = "README.md"
+license = "MIT"
+repository = "https://github.com/oxc-project/oxc-index-vec"
+rust-version = "1.85.0"
+include = ["/src"]
+
+# <https://doc.rust-lang.org/rustc/lints/listing/allowed-by-default.html>
+[lints.rust]
+absolute_paths_not_starting_with_crate = "warn"
+non_ascii_idents = "warn"
+unit-bindings = "warn"
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(coverage)', 'cfg(coverage_nightly)'] }
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+# restriction
+dbg_macro = "warn"
+todo = "warn"
+unimplemented = "warn"
+print_stdout = "warn" # Must be opt-in
+print_stderr = "warn" # Must be opt-in
+allow_attributes = "warn"
+# I like the explicitness of this rule as it removes confusion around `clone`.
+# This increases readability, avoids `clone` mindlessly and heap allocating by accident.
+clone_on_ref_ptr = "warn"
+# These two are mutually exclusive, I like `mod.rs` files for better fuzzy searches on module entries.
+self_named_module_files = "warn" # "-Wclippy::mod_module_files"
+empty_drop = "warn"
+empty_structs_with_brackets = "warn"
+exit = "warn"
+filetype_is_file = "warn"
+get_unwrap = "warn"
+impl_trait_in_params = "warn"
+rc_buffer = "warn"
+rc_mutex = "warn"
+rest_pat_in_fully_bound_structs = "warn"
+unnecessary_safety_comment = "warn"
+infinite_loop = "warn"
+undocumented_unsafe_blocks = "allow"
+
+[lib]
+doctest = false
+
+[dependencies]
+rayon = { version = "1", optional = true }
+serde = { version = "1", optional = true }

@@ -1,0 +1,7 @@
+/target
+/book/book
+**/*.rs.bk
+Cargo.lock
+
+# ignore output fuzzing
+out

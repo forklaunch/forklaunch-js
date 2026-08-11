@@ -1,0 +1,5 @@
+/work/cli/.docker-target/release/deps/wasm_bindgen_macro-23beb860e7a785cb.d: /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wasm-bindgen-macro-0.2.100/src/lib.rs
+
+/work/cli/.docker-target/release/deps/libwasm_bindgen_macro-23beb860e7a785cb.so: /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wasm-bindgen-macro-0.2.100/src/lib.rs
+
+/usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wasm-bindgen-macro-0.2.100/src/lib.rs:

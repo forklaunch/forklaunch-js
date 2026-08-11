@@ -1,0 +1,19 @@
+[package]
+name = "oxc-miette-derive"
+description = "Derive macros for miette. Like `thiserror` for Diagnostics."
+version = "2.4.0"
+authors.workspace = true
+categories.workspace = true
+repository.workspace = true
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[lib]
+proc-macro = true
+
+[dependencies]
+# Relaxed version so the user can decide which version to use.
+proc-macro2 = "1"
+quote = "1"
+syn = "2"

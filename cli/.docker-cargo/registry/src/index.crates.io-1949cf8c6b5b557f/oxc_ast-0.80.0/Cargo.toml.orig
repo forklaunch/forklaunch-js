@@ -1,0 +1,39 @@
+[package]
+name = "oxc_ast"
+version = "0.80.0"
+authors.workspace = true
+categories.workspace = true
+edition.workspace = true
+homepage.workspace = true
+include = ["/src"]
+keywords.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+doctest = true
+
+[dependencies]
+oxc_allocator = { workspace = true }
+oxc_ast_macros = { workspace = true }
+oxc_data_structures = { workspace = true, features = ["inline_string"] }
+oxc_estree = { workspace = true }
+oxc_regular_expression = { workspace = true }
+oxc_span = { workspace = true }
+oxc_syntax = { workspace = true }
+
+bitflags = { workspace = true }
+
+[features]
+default = []
+serialize = [
+  "oxc_allocator/serialize",
+  "oxc_span/serialize",
+  "oxc_syntax/serialize",
+  "oxc_estree/serialize",
+]
