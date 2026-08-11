@@ -65,7 +65,8 @@ describe('webhook idempotency against an app-discovered entity', () => {
       null as never,
       null as never,
       null as never,
-      { USER: 'user' } as never
+      { USER: 'user' } as never,
+      StripeWebhookEvent
     );
 
   const event = {
