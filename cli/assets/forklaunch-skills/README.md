@@ -21,6 +21,7 @@ Skills that teach Claude Code (and developers) how to build with ForkLaunch.
 - `/frontend-patterns` — Pages, SDK client, useApi/useMutation hooks, auth, feature gating, forms, tables.
 - `/tanstack` — TanStack Start: routing, server functions, SSR, data loading.
 - `/design-system` — Design philosophy router: Stripe, Linear, Robinhood, Fidelity, Clinical, Airbnb, Retool, Notion.
+- `/vercel-frontend` — Deploy a frontend (Next.js, Vite, Nuxt, SvelteKit, Astro) to Vercel and wire it to deployed services: origin strategy and rewrite proxying, custom domains and DNS, env vars both ways, CORS, better-auth cookies.
 
 ### Infrastructure
 - `/infra` — `fl infra` commands: list, status, resize, config-set, stop, delete provisioned resources. JWT-only, no CI mode.
