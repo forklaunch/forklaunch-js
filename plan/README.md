@@ -59,6 +59,13 @@ This directory contains internal planning documents, implementation specs, and t
 
 ## Contents
 
+### Medical Coding / Billing Platform
+- **[MEDICAL-CODING-IMPLEMENTATION-PLAN.md](MEDICAL-CODING-IMPLEMENTATION-PLAN.md)** - Free-first implementation plan for a HIPAA-compliant medical coding/billing service
+  - Built as an app-level service following the `billing-base`/`iam-base` architectural pattern (compliance-classified entities, RBAC, tenant isolation) — not a new CLI module
+  - Launches on free code sets (ICD-10, HCPCS); AMA CPT license deferred until a hospital confirms as a paying client
+  - CPT license gating modeled as a feature flag reusing the existing `hasFeatureChecks`/`surfaceFeatures` guard, so no framework changes are needed
+  - Phased delivery plan (Phase 0-6) and AMA licensing timeline (~4-6 weeks, trigger-based)
+
 ### Release & Deploy Implementation
 - **[release-deploy-implementation.md](release-deploy-implementation.md)** - Implementation plan for release and deploy CLI commands
   - 4 new CLI commands: `integrate`, `openapi export`, `release create`, `deploy create`
