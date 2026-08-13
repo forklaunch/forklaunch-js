@@ -6,6 +6,17 @@
 
 ---
 
+## Executive summary
+
+- **What:** a HIPAA-compliant medical coding/billing service, built as an app-level ForkLaunch service (`medical-coding-base`) that mirrors the existing `billing-base`/`iam-base` architecture — no framework changes required (§1, §3).
+- **Free-first:** launch and demo entirely on ICD-10-CM, HCPCS, NCCI, and LCD/NCD data — all free/government-published — using mock procedure codes in place of CPT (§2). License real CPT only once a hospital confirms as a paying client; budget ~4–6 weeks and a per-clinician royalty, not a flat fee (§2).
+- **The mechanism that makes this safe:** a `CodeSetProvider` interface, gated per-organization by the framework's existing feature-flag guard — flipping a hospital from mock to real CPT is a data change, not a code change, and historical claims are never retroactively recoded (§5).
+- **What research corrected:** the source doc conflated NCCI code-conflict rules with diagnosis-procedure medical necessity. These are two separate CMS mechanisms with different data, cadences, and denial codes — the scrubbing engine now has three distinct rule layers instead of one (§6).
+- **What's still open, not just deferred:** the Phase 0–6 week estimates are inherited from the source doc and unvalidated against actual team capacity (§10); and real LCD/NCD data can't be meaningfully integrated until CPT is licensed even though LCD data itself is free, because LCD policies are written in terms of real CPT codes (§6, §12).
+- **Where to start:** §13 Immediate next steps.
+
+---
+
 ## 1. Decision: how this gets built
 
 Two ways to build this were considered:
@@ -178,6 +189,8 @@ The source doc's phase plan referred to a single, vaguely-named "diagnosis-proce
 
 Each mock procedure code built in Phase 2 needs a corresponding mock LCD-style mapping (which mock diagnoses justify which mock procedures) so the scrubbing logic and its test suite are exercising the real three-layer shape — not a placeholder single check — before real CPT data is swapped in.
 
+**A subtlety §2's free/paid table doesn't fully capture: real LCD/NCD data is coupled to CPT licensing, even though it has no license of its own.** LCD/NCD data itself is free CMS data (§2 correctly marks it "Build now: Yes"), but every real LCD policy is written *in terms of real CPT/HCPCS codes* — "procedure X is covered for diagnoses A, B, C" only means something once "procedure X" is a real CPT code, not a mock placeholder. So while the LCD/NCD *data* can be downloaded and stored pre-license, a *meaningful* real LCD crosswalk can't be built until CPT is licensed either. Phase 6 (§10) already accounts for re-running QA on real CPT+ICD-10 pairs — this should explicitly include re-ingesting real LCD/NCD crosswalks at the same time, not treat LCD/NCD as "already done" just because it was technically buildable earlier.
+
 ### Reference: exact CARC definitions in use (confirmed against x12.org)
 
 | Code | Definition | Layer it maps to |
@@ -242,7 +255,7 @@ Before any real hospital data touches the system: run an external security revie
 
 ## 10. Phased delivery plan
 
-Directly adopting the source doc's phases, corrected for the domain-accuracy fixes in §6–8:
+Directly adopting the source doc's phases, corrected for the domain-accuracy fixes in §6–8. **Caveat: the week ranges below are inherited from the source doc, not re-estimated against this team's actual capacity or velocity** — treat them as a starting hypothesis to validate in a sizing session before committing to them externally, not as a researched estimate.
 
 | Phase | Focus | CPT needed? | Concrete engineering tasks |
 |---|---|---|---|
@@ -252,7 +265,7 @@ Directly adopting the source doc's phases, corrected for the domain-accuracy fix
 | **3** (Wk 10–14) | Eligibility & remittance | No | EDI 270/271 eligibility check at intake (blocks CO-27); 835 remittance parsing, auto-post + CARC/RARC capture; 277CA/999 acknowledgment handling; denial worklist UI |
 | **4** (Wk 14–16) | Analytics & compliance hardening | No | Clean-claim-rate / denial-rate / days-in-A/R dashboard (benchmarked against §11); confirm RBAC + audit logging on every PHI path; external security review |
 | **5** (Mo 4–6) | Sales demos | No — mock codes | Demo to small clinics/billing companies; use CO-27/CO-16/CO-97 denial examples as live proof points; be transparent that CO-11/CO-50 (LCD/NCD) checks run against mock diagnosis-procedure mappings pre-license, and that historical claims are never retroactively recoded post-license (§5) |
-| **6** (Trigger-based) | CPT licensing & go-live | **Yes** | On trigger: contact AMA immediately (§2); file license 4–6 weeks before go-live target, budgeting per-clinician royalty pricing (§2); once signed — implement `CptCodeProvider`, flip `CodeSetLicense.status='active'` for that org, run the container-based cutover test suite (§9) against real CPT+ICD-10 pairs before first real claim |
+| **6** (Trigger-based) | CPT licensing & go-live | **Yes** | On trigger: contact AMA immediately (§2); file license 4–6 weeks before go-live target, budgeting per-clinician royalty pricing (§2); once signed — implement `CptCodeProvider`, **ingest real LCD/NCD crosswalks for the relevant MAC jurisdiction(s)** (§6 — this cannot happen meaningfully before real CPT exists), flip `CodeSetLicense.status='active'` for that org, run the container-based cutover test suite (§9) against real CPT+ICD-10 pairs before first real claim |
 
 **Do not start Phase 6 on a calendar** — it's trigger-based off a real signed/verbally-confirmed paying client, run in parallel with that client's onboarding.
 
@@ -274,17 +287,20 @@ Directly adopting the source doc's phases, corrected for the domain-accuracy fix
 2. **IAM cross-service integration** — does the hospital's staff (coders/billers) get provisioned in the *existing* `iam-base` service as `User`s with new `Role`s, or does this need its own lightweight staff directory? (Recommend: existing IAM — the cross-service SDK mechanism in §3 makes this straightforward, and avoids duplicating auth.)
 3. **CO-11/CO-50 demo honesty** — Phase 5 demos must clearly disclose to prospects that LCD/NCD-style medical-necessity checks run against a mock diagnosis-procedure crosswalk pre-license, not real CMS coverage data; confirm sales is aligned on this messaging.
 4. **Mock LCD/NCD data source** — who owns building a plausible mock diagnosis-procedure crosswalk for Phase 2 (a coding/compliance SME, not engineering alone) so the three-layer scrubbing design in §6 is exercised realistically before real CPT/LCD data exists?
+5. **MAC jurisdiction scope for real LCD ingestion** — once CPT is licensed (§6, §10 Phase 6), which Medicare Administrative Contractor jurisdiction(s) does the first real client fall under? LCD coverage is regional, so Phase 6's "ingest real LCD/NCD crosswalks" task needs this answered before it can be scoped, not after.
+6. **Phase timeline validation** — the Phase 0–6 week estimates (§10) come from the source doc, not from this team's actual velocity. Needs a sizing session with whoever will staff this before the timeline is quoted to a prospective client or used to plan the AMA licensing lead time against a real go-live date.
 
 ---
 
 ## 13. Immediate next steps
 
-1. Create a Stedi sandbox account (free) and request API credentials (§8).
-2. Finalize the `medical-coding-base` entity schema (§4) — including the SSN/surrogate-ID decision — and confirm HIPAA-ready hosting/BAA.
-3. Extend the existing ICD-10 loader to HCPCS using the same pattern; stand up the `refresh-code-sets.ts` ETL shape (§7) even before its first scheduled run.
-4. Build the scrubbing rules engine against `MockProcedureCodeProvider`, implementing all **three** rule layers from §6, not a single check.
-5. Begin outreach to small clinics/billing companies for early demos — no license required yet.
-6. Only after a paying client is confirmed: contact AMA and start the CPT licensing process (§2), budgeting for per-clinician royalty pricing rather than a flat fee.
+1. Run a sizing session against §10's phase estimates with whoever will actually staff this, before quoting the timeline externally (§12, item 6).
+2. Create a Stedi sandbox account (free) and request API credentials (§8).
+3. Finalize the `medical-coding-base` entity schema (§4) — including the SSN/surrogate-ID decision — and confirm HIPAA-ready hosting/BAA.
+4. Extend the existing ICD-10 loader to HCPCS using the same pattern; stand up the `refresh-code-sets.ts` ETL shape (§7) even before its first scheduled run.
+5. Build the scrubbing rules engine against `MockProcedureCodeProvider`, implementing all **three** rule layers from §6, not a single check.
+6. Begin outreach to small clinics/billing companies for early demos — no license required yet.
+7. Only after a paying client is confirmed: contact AMA and start the CPT licensing process (§2), budgeting for per-clinician royalty pricing rather than a flat fee.
 
 ---
 

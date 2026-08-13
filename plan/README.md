@@ -67,6 +67,7 @@ This directory contains internal planning documents, implementation specs, and t
   - Phased delivery plan (Phase 0-6) and AMA licensing timeline (~4-6 weeks, trigger-based)
   - Claim scrubbing engine corrected to three distinct rule layers (NCCI PTP, NCCI MUE, LCD/NCD medical necessity) after domain research found the source doc's original single-check design conflated unrelated CMS mechanisms
   - Code-set refresh pipeline, EDI transaction set list, clearinghouse choice (Stedi), and success-metric targets benchmarked against MGMA/HFMA industry data — see §14 Sources
+  - Executive summary up top; explicit open questions flag the LCD/CPT licensing coupling and unvalidated phase-timeline estimates rather than leaving them implicit
 
 ### Release & Deploy Implementation
 - **[release-deploy-implementation.md](release-deploy-implementation.md)** - Implementation plan for release and deploy CLI commands
