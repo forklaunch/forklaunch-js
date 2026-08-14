@@ -224,8 +224,12 @@ impl CliCommand for ModuleCommand {
             is_iam: module.clone() == Module::BaseIam || module.clone() == Module::BetterAuthIam,
             is_billing: module.clone() == Module::BaseBilling
                 || module.clone() == Module::StripeBilling,
+            // Ecommerce needs a cache like billing does: the cart is a
+            // Redis-backed read-through cache and the order-event producer
+            // publishes to a Redis queue, so REDIS_URL must be scaffolded.
             is_cache_enabled: module.clone() == Module::BaseBilling
-                || module.clone() == Module::StripeBilling,
+                || module.clone() == Module::StripeBilling
+                || module.clone() == Module::StripeEcommerce,
             is_s3_enabled: false,
             is_database_enabled: true,
             platform_application_id: manifest_data.platform_application_id.clone(),
@@ -238,6 +242,7 @@ impl CliCommand for ModuleCommand {
                 || module.clone() == Module::TwilioMessaging,
             is_twilio: module.clone() == Module::TwilioMessaging,
             is_cac: module.clone() == Module::BaseCac,
+            is_ecommerce: module.clone() == Module::StripeEcommerce,
 
             is_iam_configured: manifest_data.projects.iter().any(|project_entry| {
                 if project_entry.name == "iam" {

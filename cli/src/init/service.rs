@@ -833,6 +833,7 @@ impl CliCommand for ServiceCommand {
             is_better_auth: false,
             is_stripe: false,
             is_twilio: false,
+            is_ecommerce: false,
 
             is_iam_configured: manifest_data.projects.iter().any(|project_entry| {
                 if project_entry.name == "iam" {
