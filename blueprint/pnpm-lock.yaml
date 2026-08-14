@@ -403,7 +403,7 @@ importers:
         specifier: workspace:^
         version: link:../implementations/ecommerce/base
       '@forklaunch/implementation-worker-redis':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../implementations/worker/redis
       '@forklaunch/infrastructure-redis':
         specifier: ^1.4.10
@@ -412,7 +412,7 @@ importers:
         specifier: workspace:^
         version: link:../interfaces/ecommerce
       '@forklaunch/interfaces-worker':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../interfaces/worker
       '@forklaunch/validator':
         specifier: ^1.2.24
