@@ -403,10 +403,10 @@ importers:
         specifier: workspace:^
         version: link:../implementations/ecommerce/base
       '@forklaunch/implementation-ecommerce-paypal':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../implementations/ecommerce/paypal
       '@forklaunch/implementation-ecommerce-stripe':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../implementations/ecommerce/stripe
       '@forklaunch/implementation-worker-redis':
         specifier: workspace:^
@@ -866,10 +866,10 @@ importers:
     dependencies:
       '@forklaunch/common':
         specifier: ^1.2.20
-        version: 1.2.20
+        version: 1.2.23
       '@forklaunch/core':
-        specifier: ^1.5.6
-        version: 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.15
+        version: 1.5.15(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/implementation-ecommerce-base':
         specifier: workspace:^
         version: link:../base
@@ -878,10 +878,10 @@ importers:
         version: link:../../../interfaces/ecommerce
       '@forklaunch/internal':
         specifier: ^1.2.20
-        version: 1.2.20
+        version: 1.2.24
       '@forklaunch/validator':
         specifier: ^1.2.20
-        version: 1.2.20
+        version: 1.2.24
       '@mikro-orm/core':
         specifier: 7.1.8
         version: 7.1.8
@@ -906,15 +906,16 @@ importers:
         version: 3.9.6
       typedoc:
         specifier: ^0.28.20
-        version: 0.28.20(typescript@6.0.3)
+        version: 0.28.20(@typescript/typescript6@6.0.2)
+
   implementations/ecommerce/stripe:
     dependencies:
       '@forklaunch/common':
         specifier: ^1.2.20
-        version: 1.2.20
+        version: 1.2.23
       '@forklaunch/core':
-        specifier: ^1.5.6
-        version: 1.5.6(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
+        specifier: ^1.5.15
+        version: 1.5.15(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
       '@forklaunch/implementation-ecommerce-base':
         specifier: workspace:^
         version: link:../base
@@ -923,10 +924,10 @@ importers:
         version: link:../../../interfaces/ecommerce
       '@forklaunch/internal':
         specifier: ^1.2.20
-        version: 1.2.20
+        version: 1.2.24
       '@forklaunch/validator':
         specifier: ^1.2.20
-        version: 1.2.20
+        version: 1.2.24
       '@mikro-orm/core':
         specifier: 7.1.8
         version: 7.1.8
@@ -938,7 +939,7 @@ importers:
         version: 8.20.0
       stripe:
         specifier: ^22.3.2
-        version: 22.3.2(@types/node@26.1.2)
+        version: 22.4.0(@types/node@26.2.0)
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -954,7 +955,8 @@ importers:
         version: 3.9.6
       typedoc:
         specifier: ^0.28.20
-        version: 0.28.20(typescript@6.0.3)
+        version: 0.28.20(@typescript/typescript6@6.0.2)
+
   implementations/iam/base:
     dependencies:
       '@forklaunch/common':
@@ -2579,6 +2581,15 @@ packages:
 
   '@mikro-orm/core@7.1.11':
     resolution: {integrity: sha512-LjxeVx7PYIVqFW4WDwjOYSHa7RygEGK1RJhjUC5ldY1xbvhOgntwrKJSxfJjBxGx6G3CL55jX6xT2HjU1WdyaQ==}
+    engines: {node: '>= 22.17.0'}
+    peerDependencies:
+      dataloader: 2.2.3
+    peerDependenciesMeta:
+      dataloader:
+        optional: true
+
+  '@mikro-orm/core@7.1.8':
+    resolution: {integrity: sha512-hX/869Heo+EEzLEnJsL/c17T4N0qJEn9E6ZQv58nRaV2yIKZGa9FJFnqRXgo5H8wv1ktieQLXcfARs1pcXZofw==}
     engines: {node: '>= 22.17.0'}
     peerDependencies:
       dataloader: 2.2.3
@@ -9544,6 +9555,8 @@ snapshots:
       - dataloader
 
   '@mikro-orm/core@7.1.11': {}
+
+  '@mikro-orm/core@7.1.8': {}
 
   '@mikro-orm/libsql@7.1.11(@mikro-orm/core@7.1.11)':
     dependencies:
