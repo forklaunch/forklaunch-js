@@ -151,6 +151,25 @@ const environmentConfig = configInjector.chain({
     type: string,
     value: getEnvVar('STRIPE_API_KEY')
   },
+  /** Stripe Connect (platform) mode — optional. When set, this deploy's
+   *  charges are DIRECT charges on the merchant's connected account
+   *  (acct_...): the merchant is merchant-of-record and settles the funds
+   *  themselves. When unset, bring-your-own-key mode is unchanged: the
+   *  STRIPE_API_KEY's own account is the merchant. */
+  STRIPE_CONNECTED_ACCOUNT_ID: {
+    lifetime: Lifetime.Singleton,
+    type: optional(string),
+    value: getEnvVar('STRIPE_CONNECTED_ACCOUNT_ID') ?? undefined
+  },
+  /** Platform fee in basis points, applied only in Connect mode. Defaults
+   *  to 0 — the launch business model takes NO per-transaction markup
+   *  ("payments flat at launch", Guild deck); this is a dial for a future
+   *  deliberate decision, not a revenue assumption. */
+  STRIPE_PLATFORM_FEE_BPS: {
+    lifetime: Lifetime.Singleton,
+    type: optional(string),
+    value: getEnvVar('STRIPE_PLATFORM_FEE_BPS') ?? undefined
+  },
   /** Stripe's webhook signing secret (`whsec_...`) — used by
    *  stripe.webhooks.constructEvent to verify `stripe-signature`, never to
    *  call the Stripe API itself (that's STRIPE_API_KEY). Already
@@ -374,7 +393,13 @@ const serviceDependencies = runtimeDependencies.chain({
       PaymentDtoTypes
     >,
     factory: (
-      { StripeClient, EntityManager, OtelCollector },
+      {
+        StripeClient,
+        EntityManager,
+        OtelCollector,
+        STRIPE_CONNECTED_ACCOUNT_ID,
+        STRIPE_PLATFORM_FEE_BPS
+      },
       context,
       resolve
     ) =>
@@ -385,7 +410,17 @@ const serviceDependencies = runtimeDependencies.chain({
           : EntityManager,
         OtelCollector,
         schemaValidator,
-        { PaymentMapper, CreatePaymentMapper }
+        { PaymentMapper, CreatePaymentMapper },
+        STRIPE_CONNECTED_ACCOUNT_ID
+          ? {
+              connect: {
+                connectedAccountId: STRIPE_CONNECTED_ACCOUNT_ID,
+                platformFeeBps: STRIPE_PLATFORM_FEE_BPS
+                  ? Number(STRIPE_PLATFORM_FEE_BPS)
+                  : 0
+              }
+            }
+          : undefined
       )
   },
   /**
