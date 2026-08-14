@@ -865,7 +865,7 @@ importers:
   implementations/ecommerce/paypal:
     dependencies:
       '@forklaunch/common':
-        specifier: ^1.2.20
+        specifier: ^1.2.23
         version: 1.2.23
       '@forklaunch/core':
         specifier: ^1.5.15
@@ -877,14 +877,14 @@ importers:
         specifier: workspace:^
         version: link:../../../interfaces/ecommerce
       '@forklaunch/internal':
-        specifier: ^1.2.20
+        specifier: ^1.2.24
         version: 1.2.24
       '@forklaunch/validator':
-        specifier: ^1.2.20
+        specifier: ^1.2.24
         version: 1.2.24
       '@mikro-orm/core':
-        specifier: 7.1.8
-        version: 7.1.8
+        specifier: ^7.1.11
+        version: 7.1.11
       '@sinclair/typebox':
         specifier: ^0.34.52
         version: 0.34.52
@@ -911,7 +911,7 @@ importers:
   implementations/ecommerce/stripe:
     dependencies:
       '@forklaunch/common':
-        specifier: ^1.2.20
+        specifier: ^1.2.23
         version: 1.2.23
       '@forklaunch/core':
         specifier: ^1.5.15
@@ -923,14 +923,14 @@ importers:
         specifier: workspace:^
         version: link:../../../interfaces/ecommerce
       '@forklaunch/internal':
-        specifier: ^1.2.20
+        specifier: ^1.2.24
         version: 1.2.24
       '@forklaunch/validator':
-        specifier: ^1.2.20
+        specifier: ^1.2.24
         version: 1.2.24
       '@mikro-orm/core':
-        specifier: 7.1.8
-        version: 7.1.8
+        specifier: ^7.1.11
+        version: 7.1.11
       '@sinclair/typebox':
         specifier: ^0.34.52
         version: 0.34.52
@@ -2933,15 +2933,6 @@ packages:
 
   '@mikro-orm/core@7.1.11':
     resolution: {integrity: sha512-LjxeVx7PYIVqFW4WDwjOYSHa7RygEGK1RJhjUC5ldY1xbvhOgntwrKJSxfJjBxGx6G3CL55jX6xT2HjU1WdyaQ==}
-    engines: {node: '>= 22.17.0'}
-    peerDependencies:
-      dataloader: 2.2.3
-    peerDependenciesMeta:
-      dataloader:
-        optional: true
-
-  '@mikro-orm/core@7.1.8':
-    resolution: {integrity: sha512-hX/869Heo+EEzLEnJsL/c17T4N0qJEn9E6ZQv58nRaV2yIKZGa9FJFnqRXgo5H8wv1ktieQLXcfARs1pcXZofw==}
     engines: {node: '>= 22.17.0'}
     peerDependencies:
       dataloader: 2.2.3
@@ -9869,8 +9860,6 @@ snapshots:
       - dataloader
 
   '@mikro-orm/core@7.1.11': {}
-
-  '@mikro-orm/core@7.1.8': {}
 
   '@mikro-orm/libsql@7.1.11(@mikro-orm/core@7.1.11)':
     dependencies:
