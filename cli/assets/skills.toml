@@ -1,0 +1,38 @@
+# Skills vendored into the fl binary via `include_dir!` in cli/src/context.rs.
+# Source of truth: forklaunch-platform/.claude/skills (private repo).
+#
+# Regenerate: scripts/sync-skills.bash
+# Verify:     scripts/sync-skills.bash --check
+#
+# `include` is an allowlist, not a mirror — anything not listed here is never
+# vendored, even if it exists upstream. Excluded on purpose:
+#   - gstack, plan-design-review, plan-devex-review: third-party workflow
+#     tooling, not ForkLaunch documentation.
+#   - db-query.md: a production-database runbook, not agent-facing content.
+
+source_repo = "forklaunch-platform"
+source_commit = "0b009cd578824b9f78b42906271275613859f952"
+
+include = [
+  "README.md",
+  "backend-patterns",
+  "cli",
+  "common-tasks",
+  "compliance",
+  "design-system",
+  "development-guidelines",
+  "framework",
+  "frontend-patterns",
+  "imports-and-structure",
+  "infra",
+  "infrastructure-and-utilities",
+  "plan",
+  "plan-ceo-review",
+  "plan-eng-review",
+  "platform-architecture",
+  "quick-reference",
+  "studio",
+  "tanstack",
+  "vercel-frontend",
+  "websockets-and-mappers",
+]
