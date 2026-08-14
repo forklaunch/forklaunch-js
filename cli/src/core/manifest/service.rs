@@ -82,6 +82,13 @@ config_struct!(
         pub(crate) is_messaging: bool,
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) is_twilio: bool,
+        /// True when scaffolding the stripe ecommerce module. Kept separate
+        /// from `is_stripe` (which means "the stripe *billing* module") because
+        /// that flag also pulls in @forklaunch/implementation-billing-stripe —
+        /// an ecommerce project needs the Stripe SDK and Stripe env vars, but
+        /// not the billing implementation.
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) is_ecommerce: bool,
 
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) is_iam_configured: bool,
