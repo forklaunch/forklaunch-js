@@ -243,10 +243,13 @@ pub(crate) const HYPER_EXPRESS_VERSION: &str = "~1.2.39";
 pub(crate) const BILLING_BASE_VERSION: &str = "~1.0.32";
 // @forklaunch/implementation-billing-stripe
 pub(crate) const BILLING_STRIPE_VERSION: &str = "~1.2.2";
-pub(crate) const ECOMMERCE_BASE_VERSION: &str = "~1.0.0";
+pub(crate) const ECOMMERCE_BASE_VERSION: &str = "~1.0.5";
+// NOTE: implementation-ecommerce-stripe / -paypal are not published to npm
+// yet. Scaffolded projects cannot install until the first release goes out;
+// bump these to the published versions at that point.
 pub(crate) const ECOMMERCE_STRIPE_VERSION: &str = "~1.0.0";
 pub(crate) const ECOMMERCE_PAYPAL_VERSION: &str = "~1.0.0";
-pub(crate) const ECOMMERCE_INTERFACES_VERSION: &str = "~1.0.0";
+pub(crate) const ECOMMERCE_INTERFACES_VERSION: &str = "~1.0.5";
 // @forklaunch/implementation-iam-base
 pub(crate) const IAM_BASE_VERSION: &str = "~1.0.32";
 // @forklaunch/implementation-worker-bullmq
