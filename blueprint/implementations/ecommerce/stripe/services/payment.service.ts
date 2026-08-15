@@ -68,9 +68,27 @@ export class StripePaymentService<
     this.stripeClient = stripeClient;
     this.em = em;
     if (options?.connect) {
+      // Validate the fee dial here rather than trusting the caller: it comes
+      // from an env var, and every bad value fails SILENTLY downstream
+      // otherwise. A non-numeric STRIPE_PLATFORM_FEE_BPS makes Number()
+      // return NaN, `feeCents > 0` is then false, and the application fee is
+      // quietly omitted — an operator who meant to charge a fee would get
+      // none, with nothing logged. A negative value does the same. Failing
+      // at construction turns a silent misconfiguration into a startup error.
+      const platformFeeBps = options.connect.platformFeeBps ?? 0;
+      if (
+        !Number.isInteger(platformFeeBps) ||
+        platformFeeBps < 0 ||
+        platformFeeBps > 10000
+      ) {
+        throw new Error(
+          `Invalid Stripe platform fee: expected an integer between 0 and 10000 basis points, got ${platformFeeBps}. ` +
+            'Check STRIPE_PLATFORM_FEE_BPS.'
+        );
+      }
       this.connect = {
         connectedAccountId: options.connect.connectedAccountId,
-        platformFeeBps: options.connect.platformFeeBps ?? 0
+        platformFeeBps
       };
     }
     // CreatePaymentMapper.toEntity's 3rd param is concretely Stripe.PaymentIntent
