@@ -51,6 +51,9 @@ use crate::{
                 APP_MONITORING_VERSION, BETTER_AUTH_MIKRO_ORM_VERSION, BETTER_AUTH_VERSION,
                 BETTER_SQLITE3_VERSION, BILLING_BASE_VERSION, BILLING_INTERFACES_VERSION,
                 BILLING_STRIPE_VERSION, BIOME_VERSION, COMMON_VERSION, CORE_VERSION,
+                ECOMMERCE_BASE_VERSION, ECOMMERCE_INTERFACES_VERSION,
+                ECOMMERCE_PAYPAL_VERSION, ECOMMERCE_STRIPE_VERSION,
+                WORKER_INTERFACES_VERSION, WORKER_REDIS_VERSION,
                 DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION, HYPER_EXPRESS_VERSION,
                 IAM_BASE_VERSION, IAM_INTERFACES_VERSION, INFRASTRUCTURE_REDIS_VERSION,
                 INFRASTRUCTURE_S3_VERSION, INTERNAL_VERSION, IOREDIS_VERSION, JOSE_VERSION,
@@ -428,6 +431,26 @@ pub(crate) fn generate_service_package_json(
                 } else {
                     None
                 },
+                forklaunch_implementation_ecommerce_base: if manifest_data.is_ecommerce {
+                    Some(ECOMMERCE_BASE_VERSION.to_string())
+                } else {
+                    None
+                },
+                forklaunch_implementation_ecommerce_stripe: if manifest_data.is_ecommerce {
+                    Some(ECOMMERCE_STRIPE_VERSION.to_string())
+                } else {
+                    None
+                },
+                forklaunch_implementation_ecommerce_paypal: if manifest_data.is_ecommerce {
+                    Some(ECOMMERCE_PAYPAL_VERSION.to_string())
+                } else {
+                    None
+                },
+                forklaunch_interfaces_ecommerce: if manifest_data.is_ecommerce {
+                    Some(ECOMMERCE_INTERFACES_VERSION.to_string())
+                } else {
+                    None
+                },
                 forklaunch_interfaces_billing: if manifest_data.is_billing {
                     Some(BILLING_INTERFACES_VERSION.to_string())
                 } else {
@@ -460,8 +483,19 @@ pub(crate) fn generate_service_package_json(
                 forklaunch_implementation_worker_bullmq: None,
                 forklaunch_implementation_worker_database: None,
                 forklaunch_implementation_worker_kafka: None,
-                forklaunch_implementation_worker_redis: None,
-                forklaunch_interfaces_worker: None,
+                // The ecommerce module ships an order-event worker (worker.ts)
+                // that consumes a Redis-backed queue, so it needs the worker
+                // packages even though it is a service, not a worker project.
+                forklaunch_implementation_worker_redis: if manifest_data.is_ecommerce {
+                    Some(WORKER_REDIS_VERSION.to_string())
+                } else {
+                    None
+                },
+                forklaunch_interfaces_worker: if manifest_data.is_ecommerce {
+                    Some(WORKER_INTERFACES_VERSION.to_string())
+                } else {
+                    None
+                },
                 forklaunch_internal: Some(INTERNAL_VERSION.to_string()),
                 forklaunch_universal_sdk: Some(UNIVERSAL_SDK_VERSION.to_string()),
                 forklaunch_validator: Some(VALIDATOR_VERSION.to_string()),
@@ -514,7 +548,7 @@ pub(crate) fn generate_service_package_json(
                 } else {
                     None
                 },
-                stripe: if manifest_data.is_stripe {
+                stripe: if manifest_data.is_stripe || manifest_data.is_ecommerce {
                     Some(STRIPE_VERSION.to_string())
                 } else {
                     None
