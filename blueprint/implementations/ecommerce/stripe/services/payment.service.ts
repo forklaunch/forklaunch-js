@@ -30,8 +30,7 @@ export class StripePaymentService<
   SchemaValidator extends AnySchemaValidator,
   Entities extends BasePaymentEntities,
   Dto extends BasePaymentDtos = BasePaymentDtos
-> implements PaymentService
-{
+> implements PaymentService {
   basePaymentService: BasePaymentService<SchemaValidator, Entities, Dto>;
   protected readonly stripeClient: Stripe;
   protected readonly em: EntityManager;
@@ -127,7 +126,9 @@ export class StripePaymentService<
     // merchant-of-record and keeps the funds. The platform fee is only
     // attached when non-zero — at launch it always is zero (no markup).
     const feeCents = this.connect
-      ? Math.round((paymentDto.amountCents * this.connect.platformFeeBps) / 10000)
+      ? Math.round(
+          (paymentDto.amountCents * this.connect.platformFeeBps) / 10000
+        )
       : 0;
     const paymentIntent = await this.stripeClient.paymentIntents.create(
       {
