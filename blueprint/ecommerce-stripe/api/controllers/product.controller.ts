@@ -183,6 +183,18 @@ export const listProducts = handlers.get(
         : candidateProductIds;
     }
 
+    // An empty productIds means the variant-level filters matched nothing —
+    // a real, empty result, not the absence of a filter. It has to be
+    // short-circuited here because neither layer below can tell those apart:
+    // `[]` is truthy, so `{ ids: [] }` is forwarded; listProducts then tests
+    // `searchDto?.ids?.length`, which is 0, so it never constrains the query
+    // and returns the ENTIRE catalog. A shopper filtering for an out-of-stock
+    // or non-existent option would be shown every product as if it matched.
+    if (productIds != null && productIds.length === 0) {
+      res.status(200).json([]);
+      return;
+    }
+
     res.status(200).json(
       await serviceFactory().listProducts({
         ...(productIds ? { ids: productIds } : {}),
