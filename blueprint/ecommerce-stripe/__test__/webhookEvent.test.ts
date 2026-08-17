@@ -1,7 +1,11 @@
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { randomUUID } from 'crypto';
 import { EntityManager } from '@mikro-orm/core';
-import { cleanupTestDatabase, setupTestDatabase, TestSetupResult } from './test-utils';
+import {
+  cleanupTestDatabase,
+  setupTestDatabase,
+  TestSetupResult
+} from './test-utils';
 
 /**
  * Regression test for the webhook idempotency gate (ECOM-10).
@@ -35,9 +39,8 @@ describe('WebhookEventService idempotency gate', () => {
   }, 30000);
 
   async function makeService() {
-    const { WebhookEventService } = await import(
-      '../domain/services/webhookEvent.service'
-    );
+    const { WebhookEventService } =
+      await import('../domain/services/webhookEvent.service');
     const em = setup.orm!.em.fork() as unknown as EntityManager;
     return {
       service: new WebhookEventService(

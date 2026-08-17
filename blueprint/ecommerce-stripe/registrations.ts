@@ -331,7 +331,11 @@ const serviceDependencies = runtimeDependencies.chain({
   },
   ProductService: {
     lifetime: Lifetime.Scoped,
-    type: BaseProductService<SchemaValidator, ProductMapperTypes, ProductDtoTypes>,
+    type: BaseProductService<
+      SchemaValidator,
+      ProductMapperTypes,
+      ProductDtoTypes
+    >,
     factory: ({ EntityManager, OtelCollector }, context, resolve) =>
       new BaseProductService(
         context?.entityManagerOptions
@@ -344,7 +348,11 @@ const serviceDependencies = runtimeDependencies.chain({
   },
   VariantService: {
     lifetime: Lifetime.Scoped,
-    type: BaseVariantService<SchemaValidator, VariantMapperTypes, VariantDtoTypes>,
+    type: BaseVariantService<
+      SchemaValidator,
+      VariantMapperTypes,
+      VariantDtoTypes
+    >,
     factory: ({ EntityManager, OtelCollector }, context, resolve) =>
       new BaseVariantService(
         context?.entityManagerOptions
@@ -453,7 +461,10 @@ const serviceDependencies = runtimeDependencies.chain({
         // PaypalOrder; the cast bridges the two provider-specific static
         // types over one shared runtime mapper object, same as
         // StripePaymentService does internally for its own 3rd-arg type.
-        { PaymentMapper, CreatePaymentMapper } as unknown as ConstructorParameters<
+        {
+          PaymentMapper,
+          CreatePaymentMapper
+        } as unknown as ConstructorParameters<
           typeof PaypalPaymentService<
             SchemaValidator,
             PaymentMapperTypes,
