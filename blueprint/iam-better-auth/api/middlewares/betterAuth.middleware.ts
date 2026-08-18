@@ -19,6 +19,53 @@ import {
 import { v4 } from 'uuid';
 import { isBetterAuthRequest } from '../../domain/guards/isBetterAuthRequest.guard';
 
+/**
+ * Reconstructs this service's own Better Auth base-URL origin, mirroring the
+ * baseURL logic in auth.ts. Better Auth always adds `new URL(baseURL).origin`
+ * to its trusted origins, so a value produced here is guaranteed to be trusted.
+ */
+function resolveTrustedOrigin(): string | undefined {
+  const explicit = getEnvVar('BETTER_AUTH_URL');
+  if (explicit) {
+    try {
+      return new URL(explicit).origin;
+    } catch {
+      /* fall through to host/port reconstruction */
+    }
+  }
+  const protocol = getEnvVar('PROTOCOL') ?? 'http';
+  const host = getEnvVar('HOST') ?? 'localhost';
+  const port = getEnvVar('PORT') ?? '8000';
+  const publicHost = host === '0.0.0.0' ? 'localhost' : host;
+  return `${protocol}://${publicHost}:${port}`;
+}
+
+/**
+ * Better Auth's CSRF guard rejects any cookie-bearing request that carries no
+ * `Origin`/`Referer` header with `MISSING_OR_NULL_ORIGIN`. Browsers ALWAYS send
+ * an `Origin` on state-changing requests, so only non-browser callers — the
+ * generated SDK used server-to-server, native apps, and test harnesses — ever
+ * hit this path. For those we supply this service's own (always-trusted) base
+ * URL as the Origin. Requests that already carry an Origin/Referer are left
+ * untouched, so browser CSRF protection is fully preserved and a mismatched
+ * cross-site Origin is still rejected.
+ */
+function ensureTrustedOrigin(req: Request): void {
+  const headers = req.headers as Record<string, string | string[] | undefined>;
+  const origin = headers.origin;
+  const referer = headers.referer ?? headers.referrer;
+  const hasUsableOrigin =
+    (typeof origin === 'string' && origin.length > 0 && origin !== 'null') ||
+    (typeof referer === 'string' && referer.length > 0 && referer !== 'null');
+  if (hasUsableOrigin) {
+    return;
+  }
+  const trustedOrigin = resolveTrustedOrigin();
+  if (trustedOrigin) {
+    headers.origin = trustedOrigin;
+  }
+}
+
 export function betterAuthTelemetryHookMiddleware(
   req: Request,
   _res: Response,
@@ -50,6 +97,7 @@ export function enrichBetterAuthApi<T extends BetterAuthOptions>(
     if (!isBetterAuthRequest(req)) {
       throw new Error('Invalid request');
     }
+    ensureTrustedOrigin(req);
     await toNodeHandler(auth)(
       req as unknown as ExpressRequest,
       res as unknown as ExpressResponse
