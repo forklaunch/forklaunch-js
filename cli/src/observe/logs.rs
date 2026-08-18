@@ -72,6 +72,17 @@ impl CliCommand for LogsCommand {
                     .help("Only lines containing this text"),
             )
             .arg(
+                Arg::new("source")
+                    .long("source")
+                    .value_parser(["otel", "cloudwatch"])
+                    .default_value("otel")
+                    .help(
+                        "Log source: otel = the app's OpenTelemetry pipeline (structured, filter-rich); \
+                         cloudwatch = raw container stdout/stderr captured by the platform (survives \
+                         crashes that happen before the OTel exporter flushes)",
+                    ),
+            )
+            .arg(
                 Arg::new("since")
                     .long("since")
                     .help("Return logs newer than this ISO timestamp"),
@@ -105,6 +116,10 @@ impl CliCommand for LogsCommand {
             .get_one::<String>("environment")
             .context("--environment is required")?
             .to_string();
+        let source = matches
+            .get_one::<String>("source")
+            .map(String::as_str)
+            .unwrap_or("otel");
         let filters = LogFilters {
             environment,
             region: matches.get_one::<String>("region").cloned(),
@@ -113,12 +128,30 @@ impl CliCommand for LogsCommand {
             level: matches.get_one::<String>("level").cloned(),
             query: matches.get_one::<String>("query").cloned(),
             since: matches.get_one::<String>("since").cloned(),
+            // The server defaults to the OTel/Loki pipeline; only "cloudwatch"
+            // needs to be sent explicitly.
+            source: (source == "cloudwatch").then(|| source.to_string()),
         };
+        // Raw container output carries no OTel resource attributes, so a
+        // deployment filter would be silently ignored server-side — reject it
+        // instead of returning results that look filtered but aren't.
+        if filters.source.is_some() && filters.deployment_id.is_some() {
+            anyhow::bail!(
+                "--deployment filters on OTel resource attributes, which raw CloudWatch \
+                 output does not carry. Drop --deployment or use --source otel."
+            );
+        }
         let limit: u32 = matches.get_one::<u32>("limit").copied().unwrap_or(100);
         let follow = matches.get_flag("follow");
         let json_output = matches.get_flag("json");
 
         if follow {
+            if filters.source.is_some() {
+                anyhow::bail!(
+                    "--follow streams from the OTel pipeline and cannot be combined with \
+                     --source cloudwatch. Poll instead: fl observe logs --source cloudwatch --since <ts>"
+                );
+            }
             stream_logs(&application_id, &filters, limit, json_output)
         } else {
             query_logs(&application_id, &filters, limit, json_output)
@@ -137,6 +170,8 @@ struct LogFilters {
     level: Option<String>,
     query: Option<String>,
     since: Option<String>,
+    /// "cloudwatch" to read raw container stdout/stderr; None = OTel/Loki (server default).
+    source: Option<String>,
 }
 
 // ── HTTP query (no --follow) ──────────────────────────────────────────────────
@@ -178,6 +213,7 @@ fn fetch_logs(application_id: &str, filters: &LogFilters, limit: u32) -> Result<
     push_param("level", &filters.level);
     push_param("q", &filters.query);
     push_param("since", &filters.since);
+    push_param("source", &filters.source);
 
     let auth_mode = AuthMode::detect();
     let response =
