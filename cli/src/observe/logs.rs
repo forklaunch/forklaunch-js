@@ -44,15 +44,32 @@ impl CliCommand for LogsCommand {
                     .help("Environment to inspect (for example: dev, staging, production)"),
             )
             .arg(
+                Arg::new("region")
+                    .short('r')
+                    .long("region")
+                    .help("Cloud region to inspect (for example: us-west-2); defaults to every region the environment is deployed in"),
+            )
+            .arg(
                 Arg::new("service")
                     .short('s')
                     .long("service")
-                    .help("Filter to a specific service name"),
+                    .help("Filter to a specific service or worker name"),
+            )
+            .arg(
+                Arg::new("deployment")
+                    .long("deployment")
+                    .help("Filter to logs emitted by tasks of one deployment id"),
             )
             .arg(
                 Arg::new("level")
                     .long("level")
                     .help("Filter by log level (error, warn, info, debug)"),
+            )
+            .arg(
+                Arg::new("query")
+                    .short('q')
+                    .long("query")
+                    .help("Only lines containing this text"),
             )
             .arg(
                 Arg::new("since")
@@ -88,48 +105,49 @@ impl CliCommand for LogsCommand {
             .get_one::<String>("environment")
             .context("--environment is required")?
             .to_string();
-        let service = matches.get_one::<String>("service").cloned();
-        let level = matches.get_one::<String>("level").cloned();
-        let since = matches.get_one::<String>("since").cloned();
+        let filters = LogFilters {
+            environment,
+            region: matches.get_one::<String>("region").cloned(),
+            service: matches.get_one::<String>("service").cloned(),
+            deployment_id: matches.get_one::<String>("deployment").cloned(),
+            level: matches.get_one::<String>("level").cloned(),
+            query: matches.get_one::<String>("query").cloned(),
+            since: matches.get_one::<String>("since").cloned(),
+        };
         let limit: u32 = matches.get_one::<u32>("limit").copied().unwrap_or(100);
         let follow = matches.get_flag("follow");
         let json_output = matches.get_flag("json");
 
         if follow {
-            stream_logs(
-                &application_id,
-                &environment,
-                service.as_deref(),
-                level.as_deref(),
-                limit,
-                json_output,
-            )
+            stream_logs(&application_id, &filters, limit, json_output)
         } else {
-            query_logs(
-                &application_id,
-                &environment,
-                service.as_deref(),
-                level.as_deref(),
-                since.as_deref(),
-                limit,
-                json_output,
-            )
+            query_logs(&application_id, &filters, limit, json_output)
         }
     }
+}
+
+/// Server-side log filters forwarded as query params (see the observability
+/// API's ServiceLogsQuerySchema).
+#[derive(Clone)]
+struct LogFilters {
+    environment: String,
+    region: Option<String>,
+    service: Option<String>,
+    deployment_id: Option<String>,
+    level: Option<String>,
+    query: Option<String>,
+    since: Option<String>,
 }
 
 // ── HTTP query (no --follow) ──────────────────────────────────────────────────
 
 fn query_logs(
     application_id: &str,
-    environment: &str,
-    service: Option<&str>,
-    level: Option<&str>,
-    since: Option<&str>,
+    filters: &LogFilters,
     limit: u32,
     json_output: bool,
 ) -> Result<()> {
-    let response = fetch_logs(application_id, environment, service, level, since, limit)?;
+    let response = fetch_logs(application_id, filters, limit)?;
 
     if json_output {
         println!("{}", serde_json::to_string_pretty(&response)?);
@@ -140,31 +158,26 @@ fn query_logs(
     Ok(())
 }
 
-fn fetch_logs(
-    application_id: &str,
-    environment: &str,
-    service: Option<&str>,
-    level: Option<&str>,
-    since: Option<&str>,
-    limit: u32,
-) -> Result<LogsResponse> {
+fn fetch_logs(application_id: &str, filters: &LogFilters, limit: u32) -> Result<LogsResponse> {
     let api_url = get_observability_api_url();
     let mut url = format!(
         "{}/applications/{}/logs?environment={}&limit={}&direction=backward",
         api_url,
         application_id,
-        urlencoding::encode(environment),
+        urlencoding::encode(&filters.environment),
         limit
     );
-    if let Some(svc) = service {
-        url.push_str(&format!("&service={}", urlencoding::encode(svc)));
-    }
-    if let Some(lvl) = level {
-        url.push_str(&format!("&level={}", urlencoding::encode(lvl)));
-    }
-    if let Some(s) = since {
-        url.push_str(&format!("&since={}", urlencoding::encode(s)));
-    }
+    let mut push_param = |key: &str, value: &Option<String>| {
+        if let Some(v) = value {
+            url.push_str(&format!("&{}={}", key, urlencoding::encode(v)));
+        }
+    };
+    push_param("region", &filters.region);
+    push_param("service", &filters.service);
+    push_param("deploymentId", &filters.deployment_id);
+    push_param("level", &filters.level);
+    push_param("q", &filters.query);
+    push_param("since", &filters.since);
 
     let auth_mode = AuthMode::detect();
     let response =
@@ -187,14 +200,19 @@ fn fetch_logs(
 
 fn stream_logs(
     application_id: &str,
-    environment: &str,
-    service: Option<&str>,
-    level: Option<&str>,
+    filters: &LogFilters,
     limit: u32,
     json_output: bool,
 ) -> Result<()> {
     // Fetch one page first so we print recent history and know the starting timestamp
-    let initial = fetch_logs(application_id, environment, service, level, None, limit)?;
+    let initial = fetch_logs(
+        application_id,
+        &LogFilters {
+            since: None,
+            ..filters.clone()
+        },
+        limit,
+    )?;
     if json_output {
         println!("{}", serde_json::to_string_pretty(&initial)?);
     } else {
@@ -242,9 +260,11 @@ fn stream_logs(
     let subscribe_msg = serde_json::json!({
         "type": "subscribeLogs",
         "applicationId": application_id,
-        "environment": environment,
-        "serviceName": service,
-        "level": level,
+        "environment": filters.environment,
+        "region": filters.region,
+        "serviceName": filters.service,
+        "deploymentId": filters.deployment_id,
+        "level": filters.level,
     });
     socket
         .send(tungstenite::Message::Text(
@@ -256,7 +276,7 @@ fn stream_logs(
 
     if !json_output {
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)).set_bold(true))?;
-        writeln!(stdout, "Streaming logs for {} ({})…  Ctrl+C to stop", application_id, environment)?;
+        writeln!(stdout, "Streaming logs for {} ({})…  Ctrl+C to stop", application_id, filters.environment)?;
         stdout.reset()?;
         writeln!(stdout)?;
     }
@@ -324,8 +344,8 @@ fn print_logs(logs: &[LogEntry]) -> Result<()> {
     let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
     for entry in logs {
-        let level = entry.level.as_deref().unwrap_or("info");
-        let color = level_color(level);
+        let level = entry.display_level();
+        let color = level_color(&level);
 
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::White)))?;
         let ts_display = entry.timestamp.get(..19).unwrap_or(&entry.timestamp).replace('T', " ");
@@ -362,6 +382,28 @@ struct LogEntry {
     message: String,
     #[serde(default)]
     labels: serde_json::Value,
+}
+
+impl LogEntry {
+    /// The severity to display. The top-level `level` may be absent on older
+    /// API versions (no indexed level label in Loki) — fall back to the
+    /// structured-metadata severity the pipeline actually populates, and never
+    /// invent a level: an unknown severity renders as "-", not "info".
+    fn display_level(&self) -> String {
+        if let Some(l) = self.level.as_deref() {
+            if !l.is_empty() {
+                return l.to_lowercase();
+            }
+        }
+        for key in ["detected_level", "severity_text", "level"] {
+            if let Some(l) = self.labels.get(key).and_then(|v| v.as_str()) {
+                if !l.is_empty() {
+                    return l.to_lowercase();
+                }
+            }
+        }
+        "-".to_string()
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize)]
