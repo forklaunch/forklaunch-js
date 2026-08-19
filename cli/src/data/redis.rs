@@ -214,6 +214,18 @@ impl CliCommand for DeleteCommand {
     }
 }
 
+/// `ttl` is optional(number) server-side, which means "omit the key", not
+/// "send null" — `serde_json::json!({"ttl": seconds})` would serialize
+/// `None` as an explicit `null` and fail schema validation on the clear-ttl
+/// path, so the key is only inserted when a value is actually given.
+fn build_ttl_body(seconds: Option<i64>) -> serde_json::Value {
+    let mut body = serde_json::Map::new();
+    if let Some(s) = seconds {
+        body.insert("ttl".to_string(), serde_json::Value::from(s));
+    }
+    serde_json::Value::Object(body)
+}
+
 #[derive(Debug)]
 struct TtlCommand;
 impl TtlCommand {
@@ -240,7 +252,7 @@ impl CliCommand for TtlCommand {
             .map(|s| s.parse())
             .transpose()
             .context("--seconds must be an integer")?;
-        let body = serde_json::json!({ "ttl": seconds });
+        let body = build_ttl_body(seconds);
         let auth_mode = AuthMode::detect();
         let url = explorer_url(resource, &format!("/keys/{}/ttl", key));
         print_pretty(&check(
@@ -332,5 +344,20 @@ mod tests {
         let sub = matches.subcommand_matches("command").unwrap();
         let args: Vec<&String> = sub.get_many::<String>("arg").unwrap().collect();
         assert_eq!(args.len(), 2);
+    }
+
+    #[test]
+    fn ttl_body_omits_the_key_when_clearing() {
+        // Regression: must NOT be `{"ttl": null}` — optional(number) server-side
+        // rejects an explicit null, it expects the key omitted entirely.
+        let body = build_ttl_body(None);
+        assert_eq!(body, serde_json::json!({}));
+        assert!(body.get("ttl").is_none());
+    }
+
+    #[test]
+    fn ttl_body_includes_the_key_when_setting() {
+        let body = build_ttl_body(Some(60));
+        assert_eq!(body, serde_json::json!({ "ttl": 60 }));
     }
 }
