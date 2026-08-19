@@ -10,6 +10,7 @@ use depcheck::DepcheckCommand;
 use deploy::DeployCommand;
 use eject::EjectCommand;
 use environment::EnvironmentCommand;
+use github::GithubCommand;
 use infra::InfraCommand;
 use init::InitCommand;
 use integrate::IntegrateCommand;
@@ -18,9 +19,9 @@ use logout::LogoutCommand;
 use observe::ObserveCommand;
 use openapi::OpenApiCommand;
 use release::ReleaseCommand;
+use sync::SyncCommand;
 use version::VersionCommand;
 use whoami::WhoAmICommand;
-use sync::SyncCommand;
 
 use crate::sdk::SdkCommand;
 
@@ -37,6 +38,7 @@ mod depcheck;
 mod deploy;
 mod eject;
 mod environment;
+mod github;
 mod infra;
 mod init;
 mod integrate;
@@ -47,9 +49,9 @@ mod openapi;
 mod prompt;
 mod release;
 mod sdk;
+mod sync;
 mod version;
 mod whoami;
-mod sync;
 
 pub(crate) trait CliCommand {
     fn command(&self) -> Command;
@@ -70,6 +72,7 @@ fn main() -> Result<()> {
     let eject = EjectCommand::new();
     let environment = EnvironmentCommand::new();
     let infra = InfraCommand::new();
+    let github = GithubCommand::new();
     let integrate = IntegrateCommand::new();
     let login = LoginCommand::new();
     let logout = LogoutCommand::new();
@@ -97,6 +100,7 @@ fn main() -> Result<()> {
         .subcommand(deploy.command())
         .subcommand(environment.command())
         .subcommand(infra.command())
+        .subcommand(github.command())
         .subcommand(integrate.command())
         .subcommand(openapi.command())
         .subcommand(release.command())
@@ -126,6 +130,7 @@ fn main() -> Result<()> {
         Some(("eject", sub_matches)) => eject.handler(sub_matches),
         Some(("environment", sub_matches)) => environment.handler(sub_matches),
         Some(("infra", sub_matches)) => infra.handler(sub_matches),
+        Some(("github", sub_matches)) => github.handler(sub_matches),
         Some(("integrate", sub_matches)) => integrate.handler(sub_matches),
         Some(("openapi", sub_matches)) => openapi.handler(sub_matches),
         Some(("release", sub_matches)) => release.handler(sub_matches),
