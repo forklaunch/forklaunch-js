@@ -13,6 +13,7 @@ const DEV_IAM_API_URL: &str = "http://localhost:8001";
 const DEV_BILLING_API_URL: &str = "http://localhost:8000";
 const DEV_PLATFORM_UI_URL: &str = "http://localhost:5173";
 const DEV_RESOURCE_MANAGEMENT_API_URL: &str = "http://localhost:8005";
+const DEV_DEVELOPER_TOOLS_API_URL: &str = "http://localhost:8006";
 
 const PROD_PLATFORM_MANAGEMENT_API_URL: &str = "https://platform-management.forklaunch.com";
 const PROD_OBSERVABILITY_API_URL: &str = "https://observability-api.forklaunch.com";
@@ -20,6 +21,14 @@ const PROD_IAM_API_URL: &str = "https://iam.forklaunch.com";
 const PROD_BILLING_API_URL: &str = "https://billing.forklaunch.com";
 const PROD_PLATFORM_UI_URL: &str = "https://forklaunch.com";
 const PROD_RESOURCE_MANAGEMENT_API_URL: &str = "https://resource-management.forklaunch.com";
+// UNCONFIRMED: unlike the other services above, this hostname does not
+// currently resolve (checked directly — no DNS record). developer-tools
+// doesn't have a documented stable production alias yet, only the generic
+// per-deployment `<service>.<app>-<env>-<region>-<hash>.app.forklaunch.com`
+// form. Kept here so `FORKLAUNCH_DEVELOPER_TOOLS_API_URL` has a sensible
+// default to override once the real alias is confirmed; don't rely on this
+// resolving out of the box.
+const PROD_DEVELOPER_TOOLS_API_URL: &str = "https://developer-tools.forklaunch.com";
 
 pub(crate) fn is_dev_build() -> bool {
     std::env::current_exe()
@@ -81,6 +90,17 @@ pub(crate) fn get_billing_api_url() -> String {
             DEV_BILLING_API_URL
         } else {
             PROD_BILLING_API_URL
+        }
+        .to_string()
+    })
+}
+
+pub(crate) fn get_developer_tools_api_url() -> String {
+    std::env::var("FORKLAUNCH_DEVELOPER_TOOLS_API_URL").unwrap_or_else(|_| {
+        if is_dev_build() {
+            DEV_DEVELOPER_TOOLS_API_URL
+        } else {
+            PROD_DEVELOPER_TOOLS_API_URL
         }
         .to_string()
     })

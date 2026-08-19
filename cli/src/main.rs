@@ -3,6 +3,7 @@ use analyze::AnalyzeCommand;
 use anyhow::Result;
 use change::ChangeCommand;
 use clap::{ArgMatches, Command, command};
+use cloud_account::CloudAccountCommand;
 use compliance::ComplianceCommand;
 use config::ConfigCommand;
 use context::ContextCommand;
@@ -38,6 +39,7 @@ mod constants;
 mod core;
 mod app;
 mod change;
+mod cloud_account;
 mod compliance;
 mod config;
 mod context;
@@ -76,6 +78,7 @@ fn main() -> Result<()> {
     let init = InitCommand::new();
     let analyze = AnalyzeCommand::new();
     let change = ChangeCommand::new();
+    let cloud_account = CloudAccountCommand::new();
     let compliance = ComplianceCommand::new();
     let config = ConfigCommand::new();
     let context = ContextCommand::new();
@@ -112,6 +115,7 @@ fn main() -> Result<()> {
         .subcommand(analyze.command())
         .subcommand(delete.command())
         .subcommand(change.command())
+        .subcommand(cloud_account.command())
         .subcommand(compliance.command())
         .subcommand(eject.command())
         .subcommand(depcheck.command())
@@ -147,6 +151,7 @@ fn main() -> Result<()> {
         Some(("init", sub_matches)) => init.handler(sub_matches),
         Some(("analyze", sub_matches)) => analyze.handler(sub_matches),
         Some(("change", sub_matches)) => change.handler(sub_matches),
+        Some(("cloud-account", sub_matches)) => cloud_account.handler(sub_matches),
         Some(("compliance", sub_matches)) => compliance.handler(sub_matches),
         Some(("config", sub_matches)) => config.handler(sub_matches),
         Some(("context", sub_matches)) => context.handler(sub_matches),
