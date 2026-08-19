@@ -5,6 +5,7 @@ use change::ChangeCommand;
 use clap::{ArgMatches, Command, command};
 use cloud_account::CloudAccountCommand;
 use compliance::ComplianceCommand;
+use data::DataCommand;
 use config::ConfigCommand;
 use context::ContextCommand;
 use delete::DeleteCommand;
@@ -42,6 +43,7 @@ mod change;
 mod cloud_account;
 mod compliance;
 mod config;
+mod data;
 mod context;
 mod delete;
 mod depcheck;
@@ -80,6 +82,7 @@ fn main() -> Result<()> {
     let change = ChangeCommand::new();
     let cloud_account = CloudAccountCommand::new();
     let compliance = ComplianceCommand::new();
+    let data = DataCommand::new();
     let config = ConfigCommand::new();
     let context = ContextCommand::new();
     let delete = DeleteCommand::new();
@@ -117,6 +120,7 @@ fn main() -> Result<()> {
         .subcommand(change.command())
         .subcommand(cloud_account.command())
         .subcommand(compliance.command())
+        .subcommand(data.command())
         .subcommand(eject.command())
         .subcommand(depcheck.command())
         .subcommand(config.command())
@@ -153,6 +157,7 @@ fn main() -> Result<()> {
         Some(("change", sub_matches)) => change.handler(sub_matches),
         Some(("cloud-account", sub_matches)) => cloud_account.handler(sub_matches),
         Some(("compliance", sub_matches)) => compliance.handler(sub_matches),
+        Some(("data", sub_matches)) => data.handler(sub_matches),
         Some(("config", sub_matches)) => config.handler(sub_matches),
         Some(("context", sub_matches)) => context.handler(sub_matches),
         Some(("delete", sub_matches)) => delete.handler(sub_matches),

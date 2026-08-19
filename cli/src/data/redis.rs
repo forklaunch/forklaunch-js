@@ -1,0 +1,336 @@
+use anyhow::{Context, Result, bail};
+use clap::{Arg, ArgAction, ArgMatches, Command};
+
+use crate::{
+    CliCommand,
+    constants::get_observability_api_url,
+    core::{
+        command::command,
+        hmac::AuthMode,
+        http_client::{delete_with_auth, get_with_auth, patch_with_auth, post_with_auth},
+    },
+};
+
+#[derive(Debug)]
+pub(super) struct RedisCommand {
+    keys: KeysCommand,
+    get: GetCommand,
+    set: SetCommand,
+    delete: DeleteCommand,
+    ttl: TtlCommand,
+    command: RunCommand,
+}
+
+impl RedisCommand {
+    pub(super) fn new() -> Self {
+        Self {
+            keys: KeysCommand::new(),
+            get: GetCommand::new(),
+            set: SetCommand::new(),
+            delete: DeleteCommand::new(),
+            ttl: TtlCommand::new(),
+            command: RunCommand::new(),
+        }
+    }
+}
+
+impl CliCommand for RedisCommand {
+    fn command(&self) -> Command {
+        command("redis", "Explore a provisioned Redis/ElastiCache resource")
+            .subcommand_required(true)
+            .subcommand(self.keys.command())
+            .subcommand(self.get.command())
+            .subcommand(self.set.command())
+            .subcommand(self.delete.command())
+            .subcommand(self.ttl.command())
+            .subcommand(self.command.command())
+    }
+
+    fn handler(&self, matches: &ArgMatches) -> Result<()> {
+        match matches.subcommand() {
+            Some(("keys", m)) => self.keys.handler(m),
+            Some(("get", m)) => self.get.handler(m),
+            Some(("set", m)) => self.set.handler(m),
+            Some(("delete", m)) => self.delete.handler(m),
+            Some(("ttl", m)) => self.ttl.handler(m),
+            Some(("command", m)) => self.command.handler(m),
+            _ => unreachable!(),
+        }
+    }
+}
+
+fn resource_arg() -> Arg {
+    Arg::new("resource")
+        .long("resource")
+        .required(true)
+        .help("The provisioned Redis resource id")
+}
+
+fn explorer_url(resource_id: &str, path: &str) -> String {
+    format!(
+        "{}/resources/{}/explorer{}",
+        get_observability_api_url(),
+        resource_id,
+        path
+    )
+}
+
+fn print_pretty(value: &serde_json::Value) -> Result<()> {
+    println!("{}", serde_json::to_string_pretty(value)?);
+    Ok(())
+}
+
+fn check(response: reqwest::blocking::Response) -> Result<serde_json::Value> {
+    if !response.status().is_success() {
+        bail!(
+            "Request failed ({}): {}",
+            response.status(),
+            response.text().unwrap_or_default()
+        );
+    }
+    response.json().with_context(|| "Failed to parse response")
+}
+
+#[derive(Debug)]
+struct KeysCommand;
+impl KeysCommand {
+    fn new() -> Self {
+        Self
+    }
+}
+impl CliCommand for KeysCommand {
+    fn command(&self) -> Command {
+        command("keys", "List keys, optionally by glob pattern")
+            .arg(resource_arg())
+            .arg(Arg::new("pattern").long("pattern").help("Glob pattern (e.g. session:*)"))
+            .arg(Arg::new("cursor").long("cursor").help("Pagination cursor"))
+            .arg(Arg::new("count").long("count").help("Approximate scan count"))
+    }
+    fn handler(&self, matches: &ArgMatches) -> Result<()> {
+        let resource = matches.get_one::<String>("resource").context("--resource is required")?;
+        let mut url = explorer_url(resource, "/keys");
+        let mut params = Vec::new();
+        if let Some(v) = matches.get_one::<String>("pattern") {
+            params.push(format!("pattern={}", v));
+        }
+        if let Some(v) = matches.get_one::<String>("cursor") {
+            params.push(format!("cursor={}", v));
+        }
+        if let Some(v) = matches.get_one::<String>("count") {
+            params.push(format!("count={}", v));
+        }
+        if !params.is_empty() {
+            url.push('?');
+            url.push_str(&params.join("&"));
+        }
+        let auth_mode = AuthMode::detect();
+        print_pretty(&check(
+            get_with_auth(&auth_mode, &url).with_context(|| "Failed to reach observability API")?,
+        )?)
+    }
+}
+
+#[derive(Debug)]
+struct GetCommand;
+impl GetCommand {
+    fn new() -> Self {
+        Self
+    }
+}
+impl CliCommand for GetCommand {
+    fn command(&self) -> Command {
+        command("get", "Get a key's value, type, and TTL")
+            .arg(resource_arg())
+            .arg(Arg::new("key").required(true).help("The Redis key"))
+    }
+    fn handler(&self, matches: &ArgMatches) -> Result<()> {
+        let resource = matches.get_one::<String>("resource").context("--resource is required")?;
+        let key = matches.get_one::<String>("key").context("key is required")?;
+        let auth_mode = AuthMode::detect();
+        let url = explorer_url(resource, &format!("/keys/{}", key));
+        print_pretty(&check(
+            get_with_auth(&auth_mode, &url).with_context(|| "Failed to reach observability API")?,
+        )?)
+    }
+}
+
+#[derive(Debug)]
+struct SetCommand;
+impl SetCommand {
+    fn new() -> Self {
+        Self
+    }
+}
+impl CliCommand for SetCommand {
+    fn command(&self) -> Command {
+        command("set", "Set a key's value")
+            .arg(resource_arg())
+            .arg(Arg::new("key").required(true).help("The Redis key"))
+            .arg(Arg::new("value").required(true).help("The value to set"))
+            .arg(
+                Arg::new("type")
+                    .long("type")
+                    .default_value("string")
+                    .help("Redis type (string, list, set, hash, ...)"),
+            )
+    }
+    fn handler(&self, matches: &ArgMatches) -> Result<()> {
+        let resource = matches.get_one::<String>("resource").context("--resource is required")?;
+        let key = matches.get_one::<String>("key").context("key is required")?;
+        let value = matches.get_one::<String>("value").context("value is required")?;
+        let r#type = matches.get_one::<String>("type").map(String::as_str).unwrap_or("string");
+        let body = serde_json::json!({ "key": key, "type": r#type, "value": value });
+        let auth_mode = AuthMode::detect();
+        let url = explorer_url(resource, "/keys");
+        print_pretty(&check(
+            post_with_auth(&auth_mode, &url, body)
+                .with_context(|| "Failed to reach observability API")?,
+        )?)
+    }
+}
+
+#[derive(Debug)]
+struct DeleteCommand;
+impl DeleteCommand {
+    fn new() -> Self {
+        Self
+    }
+}
+impl CliCommand for DeleteCommand {
+    fn command(&self) -> Command {
+        command("delete", "Delete a key")
+            .arg(resource_arg())
+            .arg(Arg::new("key").required(true).help("The Redis key"))
+    }
+    fn handler(&self, matches: &ArgMatches) -> Result<()> {
+        let resource = matches.get_one::<String>("resource").context("--resource is required")?;
+        let key = matches.get_one::<String>("key").context("key is required")?;
+        let auth_mode = AuthMode::detect();
+        let url = explorer_url(resource, &format!("/keys/{}", key));
+        print_pretty(&check(
+            delete_with_auth(&auth_mode, &url)
+                .with_context(|| "Failed to reach observability API")?,
+        )?)
+    }
+}
+
+#[derive(Debug)]
+struct TtlCommand;
+impl TtlCommand {
+    fn new() -> Self {
+        Self
+    }
+}
+impl CliCommand for TtlCommand {
+    fn command(&self) -> Command {
+        command("ttl", "Set (or clear) a key's expiry")
+            .arg(resource_arg())
+            .arg(Arg::new("key").required(true).help("The Redis key"))
+            .arg(
+                Arg::new("seconds")
+                    .long("seconds")
+                    .help("New TTL in seconds; omit to clear the expiry"),
+            )
+    }
+    fn handler(&self, matches: &ArgMatches) -> Result<()> {
+        let resource = matches.get_one::<String>("resource").context("--resource is required")?;
+        let key = matches.get_one::<String>("key").context("key is required")?;
+        let seconds: Option<i64> = matches
+            .get_one::<String>("seconds")
+            .map(|s| s.parse())
+            .transpose()
+            .context("--seconds must be an integer")?;
+        let body = serde_json::json!({ "ttl": seconds });
+        let auth_mode = AuthMode::detect();
+        let url = explorer_url(resource, &format!("/keys/{}/ttl", key));
+        print_pretty(&check(
+            patch_with_auth(&auth_mode, &url, body)
+                .with_context(|| "Failed to reach observability API")?,
+        )?)
+    }
+}
+
+#[derive(Debug)]
+struct RunCommand;
+impl RunCommand {
+    fn new() -> Self {
+        Self
+    }
+}
+impl CliCommand for RunCommand {
+    fn command(&self) -> Command {
+        command("command", "Run an arbitrary Redis command")
+            .arg(resource_arg())
+            .arg(Arg::new("redis_command").required(true).help("The Redis command, e.g. INFO"))
+            .arg(
+                Arg::new("arg")
+                    .action(ArgAction::Append)
+                    .help("Command arguments, repeatable"),
+            )
+    }
+    fn handler(&self, matches: &ArgMatches) -> Result<()> {
+        let resource = matches.get_one::<String>("resource").context("--resource is required")?;
+        let redis_command = matches
+            .get_one::<String>("redis_command")
+            .context("command is required")?;
+        let args: Vec<&String> = matches
+            .get_many::<String>("arg")
+            .map(|v| v.collect())
+            .unwrap_or_default();
+        let body = serde_json::json!({ "command": redis_command, "args": args });
+        let auth_mode = AuthMode::detect();
+        let url = explorer_url(resource, "/redis-command");
+        print_pretty(&check(
+            post_with_auth(&auth_mode, &url, body)
+                .with_context(|| "Failed to reach observability API")?,
+        )?)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn redis_cmd() -> Command {
+        RedisCommand::new().command().version("0.0.0-test")
+    }
+
+    #[test]
+    fn command_definition_is_valid() {
+        redis_cmd().debug_assert();
+    }
+
+    #[test]
+    fn keys_requires_resource() {
+        assert!(redis_cmd().try_get_matches_from(["redis", "keys"]).is_err());
+        assert!(
+            redis_cmd()
+                .try_get_matches_from(["redis", "keys", "--resource", "res-1"])
+                .is_ok()
+        );
+    }
+
+    #[test]
+    fn set_requires_key_and_value() {
+        assert!(
+            redis_cmd()
+                .try_get_matches_from(["redis", "set", "--resource", "res-1", "mykey"])
+                .is_err()
+        );
+        assert!(
+            redis_cmd()
+                .try_get_matches_from(["redis", "set", "--resource", "res-1", "mykey", "myvalue"])
+                .is_ok()
+        );
+    }
+
+    #[test]
+    fn command_accepts_multiple_args() {
+        let matches = redis_cmd()
+            .try_get_matches_from(["redis", "command", "--resource", "res-1", "SET", "a", "b"])
+            .unwrap();
+        let sub = matches.subcommand_matches("command").unwrap();
+        let args: Vec<&String> = sub.get_many::<String>("arg").unwrap().collect();
+        assert_eq!(args.len(), 2);
+    }
+}
