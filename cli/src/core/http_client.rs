@@ -122,6 +122,11 @@ pub fn patch(url: &str, body: Value) -> Result<Response> {
     make_authenticated_request(Method::PATCH, url, Some(body))
 }
 
+/// Helper to make a DELETE request with authentication
+pub fn delete(url: &str) -> Result<Response> {
+    make_authenticated_request(Method::DELETE, url, None)
+}
+
 /// Extract the path component from a full URL (e.g. "https://host:port/path?q" -> "/path?q")
 fn extract_url_path(url: &str) -> Result<String> {
     // Find the start of the path after scheme://host(:port)

@@ -8,6 +8,7 @@ use context::ContextCommand;
 use delete::DeleteCommand;
 use depcheck::DepcheckCommand;
 use deploy::DeployCommand;
+use dlq::DlqCommand;
 use eject::EjectCommand;
 use environment::EnvironmentCommand;
 use github::GithubCommand;
@@ -23,6 +24,7 @@ use release::ReleaseCommand;
 use sync::SyncCommand;
 use version::VersionCommand;
 use whoami::WhoAmICommand;
+use worker::WorkerCommand;
 
 use crate::sdk::SdkCommand;
 
@@ -38,6 +40,7 @@ mod context;
 mod delete;
 mod depcheck;
 mod deploy;
+mod dlq;
 mod eject;
 mod environment;
 mod github;
@@ -54,6 +57,7 @@ mod sdk;
 mod sync;
 mod version;
 mod whoami;
+mod worker;
 
 pub(crate) trait CliCommand {
     fn command(&self) -> Command;
@@ -71,6 +75,7 @@ fn main() -> Result<()> {
     let delete = DeleteCommand::new();
     let depcheck = DepcheckCommand::new();
     let deploy = DeployCommand::new();
+    let dlq = DlqCommand::new();
     let eject = EjectCommand::new();
     let environment = EnvironmentCommand::new();
     let infra = InfraCommand::new();
@@ -86,6 +91,7 @@ fn main() -> Result<()> {
     let whoami = WhoAmICommand::new();
     let version = VersionCommand::new();
     let sync = SyncCommand::new();
+    let worker = WorkerCommand::new();
 
     let matches = command!()
         .propagate_version(true)
@@ -102,6 +108,7 @@ fn main() -> Result<()> {
         .subcommand(config.command())
         .subcommand(context.command())
         .subcommand(deploy.command())
+        .subcommand(dlq.command())
         .subcommand(environment.command())
         .subcommand(infra.command())
         .subcommand(github.command())
@@ -115,6 +122,7 @@ fn main() -> Result<()> {
         .subcommand(whoami.command())
         .subcommand(version.command())
         .subcommand(sync.command())
+        .subcommand(worker.command())
         .get_matches();
 
     if let Some((cmd, sub_matches)) = matches.subcommand() {
@@ -132,6 +140,7 @@ fn main() -> Result<()> {
         Some(("delete", sub_matches)) => delete.handler(sub_matches),
         Some(("depcheck", sub_matches)) => depcheck.handler(sub_matches),
         Some(("deploy", sub_matches)) => deploy.handler(sub_matches),
+        Some(("dlq", sub_matches)) => dlq.handler(sub_matches),
         Some(("eject", sub_matches)) => eject.handler(sub_matches),
         Some(("environment", sub_matches)) => environment.handler(sub_matches),
         Some(("infra", sub_matches)) => infra.handler(sub_matches),
@@ -146,6 +155,7 @@ fn main() -> Result<()> {
         Some(("whoami", sub_matches)) => whoami.handler(sub_matches),
         Some(("version", sub_matches)) => version.handler(sub_matches),
         Some(("sync", sub_matches)) => sync.handler(sub_matches),
+        Some(("worker", sub_matches)) => worker.handler(sub_matches),
         _ => unreachable!(),
     };
 

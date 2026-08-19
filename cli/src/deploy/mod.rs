@@ -3,12 +3,14 @@ use clap::{ArgMatches, Command};
 use create::CreateCommand;
 use destroy::DestroyCommand;
 use info::InfoCommand;
+use rollback::RollbackCommand;
 
 use crate::{CliCommand, core::command::command};
 
 mod create;
 mod destroy;
 mod info;
+mod rollback;
 pub(crate) mod utils;
 
 #[derive(Debug)]
@@ -16,6 +18,7 @@ pub(crate) struct DeployCommand {
     create: CreateCommand,
     destroy: DestroyCommand,
     info: InfoCommand,
+    rollback: RollbackCommand,
 }
 
 impl DeployCommand {
@@ -24,6 +27,7 @@ impl DeployCommand {
             create: CreateCommand::new(),
             destroy: DestroyCommand::new(),
             info: InfoCommand::new(),
+            rollback: RollbackCommand::new(),
         }
     }
 }
@@ -34,6 +38,7 @@ impl CliCommand for DeployCommand {
             .subcommand(self.create.command())
             .subcommand(self.destroy.command())
             .subcommand(self.info.command())
+            .subcommand(self.rollback.command())
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
@@ -41,6 +46,7 @@ impl CliCommand for DeployCommand {
             Some(("create", sub_matches)) => self.create.handler(sub_matches),
             Some(("destroy", sub_matches)) => self.destroy.handler(sub_matches),
             Some(("info", sub_matches)) => self.info.handler(sub_matches),
+            Some(("rollback", sub_matches)) => self.rollback.handler(sub_matches),
             // Default to create for convenience - preserving existing behavior but usually nice to be explicit
             None => self.create.handler(matches),
             _ => unreachable!(),
