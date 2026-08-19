@@ -21,14 +21,17 @@ const PROD_IAM_API_URL: &str = "https://iam.forklaunch.com";
 const PROD_BILLING_API_URL: &str = "https://billing.forklaunch.com";
 const PROD_PLATFORM_UI_URL: &str = "https://forklaunch.com";
 const PROD_RESOURCE_MANAGEMENT_API_URL: &str = "https://resource-management.forklaunch.com";
-// UNCONFIRMED: unlike the other services above, this hostname does not
-// currently resolve (checked directly — no DNS record). developer-tools
-// doesn't have a documented stable production alias yet, only the generic
-// per-deployment `<service>.<app>-<env>-<region>-<hash>.app.forklaunch.com`
-// form. Kept here so `FORKLAUNCH_DEVELOPER_TOOLS_API_URL` has a sensible
-// default to override once the real alias is confirmed; don't rely on this
-// resolving out of the box.
-const PROD_DEVELOPER_TOOLS_API_URL: &str = "https://developer-tools.forklaunch.com";
+// NOT A STABLE ALIAS, unlike the other services above: developer-tools has
+// no custom domain configured yet, so this is the raw per-deployment
+// hostname (`<service>.<app>-<env>-<region>-<hash>.app.forklaunch.com`) for
+// ForkLaunch's own production app, confirmed reachable (`/health` and
+// `/api/v1/openapi` both 200). The `-0aef7f56` hash is tied to this specific
+// deployment — if the forklaunch app is ever redeployed fresh or migrated,
+// this will need updating (or, better, developer-tools gets a real alias
+// like the others). Override via `FORKLAUNCH_DEVELOPER_TOOLS_API_URL` if it
+// breaks before this constant is fixed.
+const PROD_DEVELOPER_TOOLS_API_URL: &str =
+    "https://developer-tools.forklaunch-production-us-west-2-0aef7f56.app.forklaunch.com";
 
 pub(crate) fn is_dev_build() -> bool {
     std::env::current_exe()
