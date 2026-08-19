@@ -1,3 +1,4 @@
+use alerts::AlertsCommand;
 use analyze::AnalyzeCommand;
 use anyhow::Result;
 use change::ChangeCommand;
@@ -9,6 +10,7 @@ use delete::DeleteCommand;
 use depcheck::DepcheckCommand;
 use deploy::DeployCommand;
 use dlq::DlqCommand;
+use drift::DriftCommand;
 use eject::EjectCommand;
 use environment::EnvironmentCommand;
 use github::GithubCommand;
@@ -18,6 +20,7 @@ use app::AppCommand;
 use integrate::IntegrateCommand;
 use login::LoginCommand;
 use logout::LogoutCommand;
+use notifiers::NotifiersCommand;
 use observe::ObserveCommand;
 use openapi::OpenApiCommand;
 use release::ReleaseCommand;
@@ -28,6 +31,7 @@ use worker::WorkerCommand;
 
 use crate::sdk::SdkCommand;
 
+mod alerts;
 mod analyze;
 mod constants;
 #[macro_use]
@@ -41,6 +45,7 @@ mod delete;
 mod depcheck;
 mod deploy;
 mod dlq;
+mod drift;
 mod eject;
 mod environment;
 mod github;
@@ -49,6 +54,7 @@ mod init;
 mod integrate;
 mod login;
 mod logout;
+mod notifiers;
 mod observe;
 mod openapi;
 mod prompt;
@@ -66,6 +72,7 @@ pub(crate) trait CliCommand {
 
 fn main() -> Result<()> {
     // inject token into init, config
+    let alerts = AlertsCommand::new();
     let init = InitCommand::new();
     let analyze = AnalyzeCommand::new();
     let change = ChangeCommand::new();
@@ -76,6 +83,7 @@ fn main() -> Result<()> {
     let depcheck = DepcheckCommand::new();
     let deploy = DeployCommand::new();
     let dlq = DlqCommand::new();
+    let drift = DriftCommand::new();
     let eject = EjectCommand::new();
     let environment = EnvironmentCommand::new();
     let infra = InfraCommand::new();
@@ -84,6 +92,7 @@ fn main() -> Result<()> {
     let integrate = IntegrateCommand::new();
     let login = LoginCommand::new();
     let logout = LogoutCommand::new();
+    let notifiers = NotifiersCommand::new();
     let observe = ObserveCommand::new();
     let openapi = OpenApiCommand::new();
     let release = ReleaseCommand::new();
@@ -97,6 +106,7 @@ fn main() -> Result<()> {
         .propagate_version(true)
         .arg_required_else_help(true)
         .subcommand_required(true)
+        .subcommand(alerts.command())
         .subcommand(app.command())
         .subcommand(init.command())
         .subcommand(analyze.command())
@@ -109,6 +119,7 @@ fn main() -> Result<()> {
         .subcommand(context.command())
         .subcommand(deploy.command())
         .subcommand(dlq.command())
+        .subcommand(drift.command())
         .subcommand(environment.command())
         .subcommand(infra.command())
         .subcommand(github.command())
@@ -117,6 +128,7 @@ fn main() -> Result<()> {
         .subcommand(release.command())
         .subcommand(login.command())
         .subcommand(logout.command())
+        .subcommand(notifiers.command())
         .subcommand(observe.command())
         .subcommand(sdk.command())
         .subcommand(whoami.command())
@@ -130,6 +142,7 @@ fn main() -> Result<()> {
     }
 
     let result = match matches.subcommand() {
+        Some(("alerts", sub_matches)) => alerts.handler(sub_matches),
         Some(("app", sub_matches)) => app.handler(sub_matches),
         Some(("init", sub_matches)) => init.handler(sub_matches),
         Some(("analyze", sub_matches)) => analyze.handler(sub_matches),
@@ -141,6 +154,7 @@ fn main() -> Result<()> {
         Some(("depcheck", sub_matches)) => depcheck.handler(sub_matches),
         Some(("deploy", sub_matches)) => deploy.handler(sub_matches),
         Some(("dlq", sub_matches)) => dlq.handler(sub_matches),
+        Some(("drift", sub_matches)) => drift.handler(sub_matches),
         Some(("eject", sub_matches)) => eject.handler(sub_matches),
         Some(("environment", sub_matches)) => environment.handler(sub_matches),
         Some(("infra", sub_matches)) => infra.handler(sub_matches),
@@ -150,6 +164,7 @@ fn main() -> Result<()> {
         Some(("release", sub_matches)) => release.handler(sub_matches),
         Some(("login", sub_matches)) => login.handler(sub_matches),
         Some(("logout", sub_matches)) => logout.handler(sub_matches),
+        Some(("notifiers", sub_matches)) => notifiers.handler(sub_matches),
         Some(("observe", sub_matches)) => observe.handler(sub_matches),
         Some(("sdk", sub_matches)) => sdk.handler(sub_matches),
         Some(("whoami", sub_matches)) => whoami.handler(sub_matches),

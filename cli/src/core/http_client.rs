@@ -245,6 +245,16 @@ pub fn patch_with_auth(auth_mode: &AuthMode, url: &str, body: Value) -> Result<R
     }
 }
 
+/// DELETE with auth mode dispatch (JWT or HMAC)
+pub fn delete_with_auth(auth_mode: &AuthMode, url: &str) -> Result<Response> {
+    match auth_mode {
+        AuthMode::Jwt => delete(url),
+        AuthMode::Hmac { secret_key } => {
+            make_hmac_request(secret_key, Method::DELETE, url, None)
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

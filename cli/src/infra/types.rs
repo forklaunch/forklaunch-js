@@ -141,3 +141,16 @@ pub(crate) struct PatchResourceRequest {
     #[serde(rename = "primaryRegion", skip_serializing_if = "Option::is_none")]
     pub(crate) primary_region: Option<String>,
 }
+
+/// One CloudWatch time series from `GET /platform-resources/:id/metrics` — e.g.
+/// `CPUUtilization`, `FreeableMemory`, `DatabaseConnections` for RDS, or the
+/// ElastiCache equivalents. `timestamps`/`values` are parallel arrays over the
+/// requested period; `fl infra status --metrics` shows only the latest point,
+/// `--json` shows the full series.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub(crate) struct MetricSeries {
+    pub(crate) id: String,
+    pub(crate) label: String,
+    pub(crate) timestamps: Vec<String>,
+    pub(crate) values: Vec<f64>,
+}

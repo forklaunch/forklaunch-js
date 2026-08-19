@@ -126,6 +126,34 @@ pub(crate) fn fetch_resource_detail(
         .with_context(|| "Failed to parse resource detail response")
 }
 
+/// Fetches CloudWatch utilization metrics (CPU%, memory%, connection count) for a
+/// resolved resource id — the series backing `fl infra status --metrics`.
+pub(crate) fn fetch_resource_metrics(
+    auth_mode: &AuthMode,
+    resource_id: &str,
+) -> Result<Vec<super::types::MetricSeries>> {
+    let url = format!(
+        "{}/platform-resources/{}/metrics",
+        get_resource_management_api_url(),
+        encode_resource_id_for_url(resource_id)
+    );
+
+    let response =
+        get_with_auth(auth_mode, &url).with_context(|| "Failed to reach resource-management API")?;
+    let status = response.status();
+
+    if !status.is_success() {
+        let body = response
+            .text()
+            .unwrap_or_else(|_| "unknown error".to_string());
+        bail!("resource-management API returned {} — {}", status, body);
+    }
+
+    response
+        .json()
+        .with_context(|| "Failed to parse resource metrics response")
+}
+
 /// A resolved `<project>:<type>` identifier, ready to address a specific platform
 /// resource.
 pub(crate) struct ResolvedResource {
