@@ -62,7 +62,7 @@ fn explorer_url(resource_id: &str, path: &str) -> String {
     format!(
         "{}/resources/{}/explorer{}",
         get_observability_api_url(),
-        resource_id,
+        urlencoding::encode(resource_id),
         path
     )
 }
@@ -135,7 +135,7 @@ impl CliCommand for SchemaCommand {
         let table = matches.get_one::<String>("table").context("table is required")?;
         print_pretty(&get_json(&explorer_url(
             resource,
-            &format!("/tables/{}/schema", table),
+            &format!("/tables/{}/schema", urlencoding::encode(table)),
         ))?)
     }
 }
@@ -160,19 +160,19 @@ impl CliCommand for RowsCommand {
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
         let resource = matches.get_one::<String>("resource").context("--resource is required")?;
         let table = matches.get_one::<String>("table").context("table is required")?;
-        let mut url = explorer_url(resource, &format!("/tables/{}/rows", table));
+        let mut url = explorer_url(resource, &format!("/tables/{}/rows", urlencoding::encode(table)));
         let mut params = Vec::new();
         if let Some(v) = matches.get_one::<String>("page") {
-            params.push(format!("page={}", v));
+            params.push(format!("page={}", urlencoding::encode(v)));
         }
         if let Some(v) = matches.get_one::<String>("page_size") {
-            params.push(format!("pageSize={}", v));
+            params.push(format!("pageSize={}", urlencoding::encode(v)));
         }
         if let Some(v) = matches.get_one::<String>("sort_column") {
-            params.push(format!("sortColumn={}", v));
+            params.push(format!("sortColumn={}", urlencoding::encode(v)));
         }
         if let Some(v) = matches.get_one::<String>("sort_direction") {
-            params.push(format!("sortDirection={}", v));
+            params.push(format!("sortDirection={}", urlencoding::encode(v)));
         }
         if !params.is_empty() {
             url.push('?');

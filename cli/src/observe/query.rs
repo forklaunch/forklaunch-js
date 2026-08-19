@@ -95,9 +95,11 @@ impl CliCommand for QueryCommand {
         let response = post_with_auth(&auth_mode, &url, body)
             .with_context(|| "Failed to reach observability API")?;
 
-        if !response.status().is_success() {
+        let status = response.status();
+        if !status.is_success() {
             bail!(
-                "PromQL query failed: {}",
+                "PromQL query failed ({}): {}",
+                status,
                 response.text().unwrap_or_default()
             );
         }

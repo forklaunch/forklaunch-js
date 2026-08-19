@@ -34,7 +34,11 @@ impl CliCommand for ControllerCommand {
             .get_one::<String>("id")
             .context("controller id is required")?;
 
-        let url = format!("{}/controllers/{}", get_platform_management_api_url(), id);
+        let url = format!(
+            "{}/controllers/{}",
+            get_platform_management_api_url(),
+            urlencoding::encode(id)
+        );
         let response = http_client::get(&url).with_context(|| ERROR_FAILED_TO_SEND_REQUEST)?;
 
         if response.status().as_u16() == 404 {

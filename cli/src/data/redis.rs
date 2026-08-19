@@ -70,7 +70,7 @@ fn explorer_url(resource_id: &str, path: &str) -> String {
     format!(
         "{}/resources/{}/explorer{}",
         get_observability_api_url(),
-        resource_id,
+        urlencoding::encode(resource_id),
         path
     )
 }
@@ -111,13 +111,13 @@ impl CliCommand for KeysCommand {
         let mut url = explorer_url(resource, "/keys");
         let mut params = Vec::new();
         if let Some(v) = matches.get_one::<String>("pattern") {
-            params.push(format!("pattern={}", v));
+            params.push(format!("pattern={}", urlencoding::encode(v)));
         }
         if let Some(v) = matches.get_one::<String>("cursor") {
-            params.push(format!("cursor={}", v));
+            params.push(format!("cursor={}", urlencoding::encode(v)));
         }
         if let Some(v) = matches.get_one::<String>("count") {
-            params.push(format!("count={}", v));
+            params.push(format!("count={}", urlencoding::encode(v)));
         }
         if !params.is_empty() {
             url.push('?');
@@ -147,7 +147,7 @@ impl CliCommand for GetCommand {
         let resource = matches.get_one::<String>("resource").context("--resource is required")?;
         let key = matches.get_one::<String>("key").context("key is required")?;
         let auth_mode = AuthMode::detect();
-        let url = explorer_url(resource, &format!("/keys/{}", key));
+        let url = explorer_url(resource, &format!("/keys/{}", urlencoding::encode(key)));
         print_pretty(&check(
             get_with_auth(&auth_mode, &url).with_context(|| "Failed to reach observability API")?,
         )?)
@@ -206,7 +206,7 @@ impl CliCommand for DeleteCommand {
         let resource = matches.get_one::<String>("resource").context("--resource is required")?;
         let key = matches.get_one::<String>("key").context("key is required")?;
         let auth_mode = AuthMode::detect();
-        let url = explorer_url(resource, &format!("/keys/{}", key));
+        let url = explorer_url(resource, &format!("/keys/{}", urlencoding::encode(key)));
         print_pretty(&check(
             delete_with_auth(&auth_mode, &url)
                 .with_context(|| "Failed to reach observability API")?,
@@ -254,7 +254,7 @@ impl CliCommand for TtlCommand {
             .context("--seconds must be an integer")?;
         let body = build_ttl_body(seconds);
         let auth_mode = AuthMode::detect();
-        let url = explorer_url(resource, &format!("/keys/{}/ttl", key));
+        let url = explorer_url(resource, &format!("/keys/{}/ttl", urlencoding::encode(key)));
         print_pretty(&check(
             patch_with_auth(&auth_mode, &url, body)
                 .with_context(|| "Failed to reach observability API")?,

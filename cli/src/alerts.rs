@@ -146,6 +146,13 @@ impl CliCommand for CreateCommand {
             .context("--value is required")?
             .parse()
             .context("--value must be a number")?;
+        // f64::parse happily accepts "nan"/"inf"/"-infinity"; serde_json can't
+        // represent either (Value::from(f64) silently becomes Null for both),
+        // so a threshold rule would be created with a missing/invalid value
+        // server-side instead of failing here with a clear message.
+        if !value.is_finite() {
+            bail!("--value must be a finite number, got {}", value);
+        }
         let window = matches
             .get_one::<String>("window")
             .context("--window is required")?;
@@ -176,9 +183,11 @@ impl CliCommand for CreateCommand {
         let response = post_with_auth(&auth_mode, &url, body)
             .with_context(|| "Failed to reach observability API")?;
 
-        if !response.status().is_success() {
+        let status = response.status();
+        if !status.is_success() {
             bail!(
-                "Failed to create alert rule: {}",
+                "Failed to create alert rule ({}): {}",
+                status,
                 response.text().unwrap_or_default()
             );
         }
@@ -235,9 +244,11 @@ impl CliCommand for DeleteCommand {
         let response = delete_with_auth(&auth_mode, &url)
             .with_context(|| "Failed to reach observability API")?;
 
-        if !response.status().is_success() {
+        let status = response.status();
+        if !status.is_success() {
             bail!(
-                "Failed to delete alert rule: {}",
+                "Failed to delete alert rule ({}): {}",
+                status,
                 response.text().unwrap_or_default()
             );
         }
@@ -277,9 +288,11 @@ fn list_alerts(matches: &ArgMatches) -> Result<()> {
     let response =
         get_with_auth(&auth_mode, &url).with_context(|| "Failed to reach observability API")?;
 
-    if !response.status().is_success() {
+    let status = response.status();
+    if !status.is_success() {
         bail!(
-            "Failed to list alert rules: {}",
+            "Failed to list alert rules ({}): {}",
+            status,
             response.text().unwrap_or_default()
         );
     }
@@ -400,6 +413,19 @@ mod tests {
                 ])
                 .is_ok()
         );
+    }
+
+    #[test]
+    fn nan_and_infinity_parse_but_are_not_finite() {
+        // Regression: str::parse::<f64> happily accepts these, and
+        // serde_json::json! silently turns either into `null` rather than
+        // erroring — the CLI has to reject them itself before that happens.
+        for input in ["nan", "NaN", "inf", "-infinity"] {
+            let v: f64 = input.parse().unwrap();
+            assert!(!v.is_finite(), "{input} parsed to a finite value");
+        }
+        let ok: f64 = "0.05".parse().unwrap();
+        assert!(ok.is_finite());
     }
 
     #[test]

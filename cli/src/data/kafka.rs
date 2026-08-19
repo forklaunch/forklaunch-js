@@ -82,7 +82,7 @@ fn explorer_url(resource_id: &str, path: &str) -> String {
     format!(
         "{}/resources/{}/explorer{}",
         get_observability_api_url(),
-        resource_id,
+        urlencoding::encode(resource_id),
         path
     )
 }
@@ -183,12 +183,47 @@ impl CliCommand for DeleteTopicCommand {
         let resource = matches.get_one::<String>("resource").context("--resource is required")?;
         let name = matches.get_one::<String>("name").context("name is required")?;
         let auth_mode = AuthMode::detect();
-        let url = explorer_url(resource, &format!("/topics/{}", name));
+        let url = explorer_url(resource, &format!("/topics/{}", urlencoding::encode(name)));
         print_pretty(&check(
             delete_with_auth(&auth_mode, &url)
                 .with_context(|| "Failed to reach observability API")?,
         )?)
     }
+}
+
+fn parse_config_entries<'a, I: Iterator<Item = &'a String>>(
+    entries: Option<I>,
+) -> Result<Vec<serde_json::Value>> {
+    let configs: Vec<serde_json::Value> = entries
+        .map(|entries| {
+            entries
+                .map(|e| {
+                    let (n, v) = e
+                        .split_once('=')
+                        .with_context(|| format!("--config '{}' must be in <name>=<value> form", e))?;
+                    if n.is_empty() {
+                        bail!("--config '{}' has an empty name", e);
+                    }
+                    Ok(serde_json::json!({ "name": n, "value": v }))
+                })
+                .collect::<Result<Vec<_>>>()
+        })
+        .transpose()?
+        .unwrap_or_default();
+    if configs.is_empty() {
+        bail!("At least one --config <name>=<value> is required");
+    }
+    Ok(configs)
+}
+
+fn validate_reset_target(target: &str) -> Result<()> {
+    if target != "earliest" && target != "latest" && target.parse::<i64>().is_err() {
+        bail!(
+            "--target must be 'earliest', 'latest', or a specific integer offset, got '{}'",
+            target
+        );
+    }
+    Ok(())
 }
 
 #[derive(Debug)]
@@ -213,20 +248,11 @@ impl CliCommand for UpdateTopicConfigCommand {
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
         let resource = matches.get_one::<String>("resource").context("--resource is required")?;
         let name = matches.get_one::<String>("name").context("name is required")?;
-        let configs: Vec<serde_json::Value> = matches
-            .get_many::<String>("config")
-            .map(|entries| {
-                entries
-                    .filter_map(|e| {
-                        e.split_once('=')
-                            .map(|(n, v)| serde_json::json!({ "name": n, "value": v }))
-                    })
-                    .collect()
-            })
-            .unwrap_or_default();
+        let configs =
+            parse_config_entries(matches.get_many::<String>("config").map(|v| v.into_iter()))?;
         let body = serde_json::json!({ "configs": configs });
         let auth_mode = AuthMode::detect();
-        let url = explorer_url(resource, &format!("/topics/{}/config", name));
+        let url = explorer_url(resource, &format!("/topics/{}/config", urlencoding::encode(name)));
         print_pretty(&check(
             patch_with_auth(&auth_mode, &url, body)
                 .with_context(|| "Failed to reach observability API")?,
@@ -254,7 +280,7 @@ impl CliCommand for MessagesCommand {
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
         let resource = matches.get_one::<String>("resource").context("--resource is required")?;
         let name = matches.get_one::<String>("name").context("name is required")?;
-        let mut url = explorer_url(resource, &format!("/topics/{}/messages", name));
+        let mut url = explorer_url(resource, &format!("/topics/{}/messages", urlencoding::encode(name)));
         let mut params = Vec::new();
         for (flag, key) in [
             ("partition", "partition"),
@@ -263,7 +289,7 @@ impl CliCommand for MessagesCommand {
             ("timestamp", "timestamp"),
         ] {
             if let Some(v) = matches.get_one::<String>(flag) {
-                params.push(format!("{}={}", key, v));
+                params.push(format!("{}={}", key, urlencoding::encode(v)));
             }
         }
         if !params.is_empty() {
@@ -294,7 +320,7 @@ impl CliCommand for TopicMetadataCommand {
         let resource = matches.get_one::<String>("resource").context("--resource is required")?;
         let name = matches.get_one::<String>("name").context("name is required")?;
         let auth_mode = AuthMode::detect();
-        let url = explorer_url(resource, &format!("/topics/{}/metadata", name));
+        let url = explorer_url(resource, &format!("/topics/{}/metadata", urlencoding::encode(name)));
         print_pretty(&check(
             get_with_auth(&auth_mode, &url).with_context(|| "Failed to reach observability API")?,
         )?)
@@ -390,9 +416,10 @@ impl CliCommand for ResetOffsetsCommand {
         let group = matches.get_one::<String>("group").context("group is required")?;
         let topic = matches.get_one::<String>("topic").context("--topic is required")?;
         let target = matches.get_one::<String>("target").context("--target is required")?;
+        validate_reset_target(target)?;
         let body = serde_json::json!({ "topicName": topic, "target": target });
         let auth_mode = AuthMode::detect();
-        let url = explorer_url(resource, &format!("/consumer-groups/{}/offsets", group));
+        let url = explorer_url(resource, &format!("/consumer-groups/{}/offsets", urlencoding::encode(group)));
         print_pretty(&check(
             post_with_auth(&auth_mode, &url, body)
                 .with_context(|| "Failed to reach observability API")?,
@@ -438,6 +465,27 @@ mod tests {
                 ])
                 .is_ok()
         );
+    }
+
+    #[test]
+    fn parse_config_entries_rejects_malformed_or_empty_name() {
+        assert!(parse_config_entries::<std::slice::Iter<String>>(None).is_err());
+        let missing_eq = vec!["retention.ms".to_string()];
+        assert!(parse_config_entries(Some(missing_eq.iter())).is_err());
+        let empty_name = vec!["=1000".to_string()];
+        assert!(parse_config_entries(Some(empty_name.iter())).is_err());
+        let valid = vec!["retention.ms=1000".to_string()];
+        assert!(parse_config_entries(Some(valid.iter())).is_ok());
+    }
+
+    #[test]
+    fn validate_reset_target_accepts_named_or_numeric_only() {
+        assert!(validate_reset_target("earliest").is_ok());
+        assert!(validate_reset_target("latest").is_ok());
+        assert!(validate_reset_target("42").is_ok());
+        assert!(validate_reset_target("-1").is_ok());
+        assert!(validate_reset_target("bogus").is_err());
+        assert!(validate_reset_target("").is_err());
     }
 
     #[test]

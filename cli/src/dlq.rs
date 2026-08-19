@@ -92,7 +92,7 @@ impl CliCommand for RetryCommand {
         let url = format!(
             "{}/dlq/{}/retry",
             get_platform_management_api_url(),
-            job_id
+            urlencoding::encode(job_id)
         );
         let response =
             http_client::post(&url, serde_json::json!({})).with_context(|| ERROR_FAILED_TO_SEND_REQUEST)?;
@@ -137,7 +137,7 @@ impl CliCommand for RemoveCommand {
             .get_one::<String>("job_id")
             .context("job id is required")?;
 
-        let url = format!("{}/dlq/{}", get_platform_management_api_url(), job_id);
+        let url = format!("{}/dlq/{}", get_platform_management_api_url(), urlencoding::encode(job_id));
         let response = http_client::delete(&url).with_context(|| ERROR_FAILED_TO_SEND_REQUEST)?;
 
         if response.status().as_u16() == 404 {
@@ -219,7 +219,7 @@ fn list_jobs(matches: &ArgMatches) -> Result<()> {
 
     let mut url = format!("{}/dlq", get_platform_management_api_url());
     if let Some(l) = &limit {
-        url.push_str(&format!("?limit={}", l));
+        url.push_str(&format!("?limit={}", urlencoding::encode(l)));
     }
 
     let response = http_client::get(&url).with_context(|| ERROR_FAILED_TO_SEND_REQUEST)?;

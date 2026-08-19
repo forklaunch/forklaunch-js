@@ -22,12 +22,13 @@ pub(crate) struct WorkerCommand {
 impl WorkerCommand {
     pub(crate) fn new() -> Self {
         Self {
-            pause: ActionCommand::new("pause", "Pause a running worker", "pause"),
-            resume: ActionCommand::new("resume", "Resume a paused worker", "resume"),
+            pause: ActionCommand::new("pause", "Pause a running worker", "pause", "paused"),
+            resume: ActionCommand::new("resume", "Resume a paused worker", "resume", "resumed"),
             restart: ActionCommand::new(
                 "restart",
                 "Restart a worker (force a new deployment)",
                 "restart",
+                "restarted",
             ),
         }
     }
@@ -61,14 +62,21 @@ struct ActionCommand {
     name: &'static str,
     about: &'static str,
     path_segment: &'static str,
+    past_tense: &'static str,
 }
 
 impl ActionCommand {
-    fn new(name: &'static str, about: &'static str, path_segment: &'static str) -> Self {
+    fn new(
+        name: &'static str,
+        about: &'static str,
+        path_segment: &'static str,
+        past_tense: &'static str,
+    ) -> Self {
         Self {
             name,
             about,
             path_segment,
+            past_tense,
         }
     }
 }
@@ -91,7 +99,7 @@ impl CliCommand for ActionCommand {
         let url = format!(
             "{}/workers/{}/{}",
             get_platform_management_api_url(),
-            worker_id,
+            urlencoding::encode(worker_id),
             self.path_segment
         );
         let response = http_client::post(&url, serde_json::json!({}))
@@ -100,10 +108,12 @@ impl CliCommand for ActionCommand {
         if response.status().as_u16() == 404 {
             bail!("Worker '{}' not found.", worker_id);
         }
-        if !response.status().is_success() {
+        let status = response.status();
+        if !status.is_success() {
             bail!(
-                "Failed to {} worker: {}",
+                "Failed to {} worker ({}): {}",
                 self.name,
+                status,
                 response.text().unwrap_or_default()
             );
         }
@@ -114,7 +124,7 @@ impl CliCommand for ActionCommand {
         write!(stdout, "  Done")?;
         stdout.reset()?;
         if body.trim().is_empty() {
-            writeln!(stdout, "  worker {} {}d", worker_id, self.name)?;
+            writeln!(stdout, "  worker {} {}", worker_id, self.past_tense)?;
         } else {
             writeln!(stdout, "  {}", body)?;
         }
@@ -167,5 +177,15 @@ mod tests {
                 .try_get_matches_from(["worker", "restart", "worker-1"])
                 .is_ok()
         );
+    }
+
+    #[test]
+    fn restart_past_tense_is_not_naive_suffix_concatenation() {
+        // Regression: "restart" + "d" = "restartd", not "restarted". Each
+        // action carries its own correct past_tense instead of deriving one.
+        let restart = ActionCommand::new("restart", "about", "restart", "restarted");
+        assert_eq!(restart.past_tense, "restarted");
+        let pause = ActionCommand::new("pause", "about", "pause", "paused");
+        assert_eq!(pause.past_tense, "paused");
     }
 }

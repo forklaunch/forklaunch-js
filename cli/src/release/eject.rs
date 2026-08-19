@@ -59,6 +59,7 @@ impl CliCommand for EjectCommand {
             Arg::new("output")
                 .short('o')
                 .long("output")
+                .conflicts_with("json")
                 .help("Write the generated Pulumi code to this file instead of stdout"),
         )
         .arg(
@@ -70,7 +71,7 @@ impl CliCommand for EjectCommand {
         .arg(
             Arg::new("json")
                 .long("json")
-                .help("Output the full raw response as JSON instead of formatted text")
+                .help("Output the full raw response as JSON instead of formatted text (cannot be combined with --output — --json always prints to stdout)")
                 .action(ArgAction::SetTrue),
         )
     }
@@ -217,6 +218,30 @@ mod tests {
                     "eject", "--release", "1.0.0", "-e", "production", "-r", "us-east-1"
                 ])
                 .is_ok()
+        );
+    }
+
+    #[test]
+    fn output_and_json_are_mutually_exclusive() {
+        let base = [
+            "eject", "--release", "1.0.0", "-e", "production", "-r", "us-east-1",
+        ];
+        assert!(
+            eject_cmd()
+                .try_get_matches_from(base.iter().chain(["--output", "out.ts"].iter()))
+                .is_ok()
+        );
+        assert!(
+            eject_cmd()
+                .try_get_matches_from(base.iter().chain(["--json"].iter()))
+                .is_ok()
+        );
+        assert!(
+            eject_cmd()
+                .try_get_matches_from(
+                    base.iter().chain(["--output", "out.ts", "--json"].iter())
+                )
+                .is_err()
         );
     }
 

@@ -33,7 +33,11 @@ impl CliCommand for RouteCommand {
         let _token = require_auth()?;
         let id = matches.get_one::<String>("id").context("route id is required")?;
 
-        let url = format!("{}/routes/{}", get_platform_management_api_url(), id);
+        let url = format!(
+            "{}/routes/{}",
+            get_platform_management_api_url(),
+            urlencoding::encode(id)
+        );
         let response = http_client::get(&url).with_context(|| ERROR_FAILED_TO_SEND_REQUEST)?;
 
         if response.status().as_u16() == 404 {

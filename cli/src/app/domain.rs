@@ -1,7 +1,7 @@
 use std::io::Write;
 
 use anyhow::{Context, Result, bail};
-use clap::{ArgMatches, Command};
+use clap::{Arg, ArgMatches, Command};
 use serde::{Deserialize, Serialize};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
@@ -58,6 +58,12 @@ impl CliCommand for StatusCommand {
             "status",
             "Show custom-domain validation status for this application",
         )
+        .arg(
+            Arg::new("base_path")
+                .short('p')
+                .long("path")
+                .help("Path to application root (optional)"),
+        )
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
@@ -68,7 +74,7 @@ impl CliCommand for StatusCommand {
         let url = format!(
             "{}/applications/{}/custom-domain",
             get_platform_management_api_url(),
-            application_id
+            urlencoding::encode(&application_id)
         );
         let response = http_client::get(&url).with_context(|| ERROR_FAILED_TO_SEND_REQUEST)?;
 

@@ -70,7 +70,7 @@ impl CliCommand for CheckCommand {
         let url = format!(
             "{}/hosting/organizations/{}/hosting-drift",
             get_platform_management_api_url(),
-            org_id
+            urlencoding::encode(&org_id)
         );
         let response = http_client::get(&url).with_context(|| "Failed to reach platform API")?;
         if !response.status().is_success() {

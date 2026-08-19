@@ -15,6 +15,23 @@ use crate::{
     },
 };
 
+fn parse_instance_sizes(sizes: &[&String]) -> Result<serde_json::Map<String, serde_json::Value>> {
+    let mut instance_sizes = serde_json::Map::new();
+    for entry in sizes {
+        let (id, size) = entry
+            .split_once('=')
+            .with_context(|| format!("--size '{}' must be <id>=<size>", entry))?;
+        if size.is_empty() {
+            bail!("--size '{}' has an empty size value", entry);
+        }
+        if instance_sizes.contains_key(id) {
+            bail!("--size specified more than once for id '{}'", id);
+        }
+        instance_sizes.insert(id.to_string(), serde_json::Value::String(size.to_string()));
+    }
+    Ok(instance_sizes)
+}
+
 #[derive(Debug)]
 pub(crate) struct ResizeCommand;
 
@@ -74,13 +91,7 @@ impl CliCommand for ResizeCommand {
             .context("--size is required")?
             .collect();
 
-        let mut instance_sizes = serde_json::Map::new();
-        for entry in &sizes {
-            let (id, size) = entry
-                .split_once('=')
-                .with_context(|| format!("--size '{}' must be <id>=<size>", entry))?;
-            instance_sizes.insert(id.to_string(), serde_json::Value::String(size.to_string()));
-        }
+        let instance_sizes = parse_instance_sizes(&sizes)?;
 
         let body = serde_json::json!({
             "applicationId": application_id,
@@ -170,6 +181,25 @@ mod tests {
             .unwrap();
         let sizes: Vec<&String> = matches.get_many::<String>("size").unwrap().collect();
         assert_eq!(sizes.len(), 2);
+    }
+
+    #[test]
+    fn parse_instance_sizes_rejects_empty_value_and_duplicates() {
+        let missing_eq = "svc-1".to_string();
+        assert!(parse_instance_sizes(&[&missing_eq]).is_err());
+
+        let empty_value = "svc-1=".to_string();
+        assert!(parse_instance_sizes(&[&empty_value]).is_err());
+
+        let dup_a = "svc-1=t3.medium".to_string();
+        let dup_b = "svc-1=t3.large".to_string();
+        assert!(parse_instance_sizes(&[&dup_a, &dup_b]).is_err());
+
+        let valid_a = "svc-1=t3.medium".to_string();
+        let valid_b = "worker-1=t3.small".to_string();
+        let parsed = parse_instance_sizes(&[&valid_a, &valid_b]).unwrap();
+        assert_eq!(parsed.len(), 2);
+        assert_eq!(parsed.get("svc-1").unwrap(), "t3.medium");
     }
 
     #[test]

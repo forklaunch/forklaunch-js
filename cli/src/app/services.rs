@@ -67,14 +67,14 @@ impl CliCommand for ServicesCommand {
         let mut url = format!(
             "{}/applications/{}/services",
             get_platform_management_api_url(),
-            application_id
+            urlencoding::encode(&application_id)
         );
         let mut query_parts = Vec::new();
         if let Some(e) = environment {
-            query_parts.push(format!("environment={}", e));
+            query_parts.push(format!("environment={}", urlencoding::encode(e)));
         }
         if let Some(r) = region {
-            query_parts.push(format!("region={}", r));
+            query_parts.push(format!("region={}", urlencoding::encode(r)));
         }
         if !query_parts.is_empty() {
             url.push('?');

@@ -210,7 +210,7 @@ impl CliCommand for LinkCommand {
             .get_one::<String>("role_arn")
             .context("--role-arn is required")?;
 
-        let url = format!("{}/cloud-accounts/{}", get_platform_management_api_url(), id);
+        let url = format!("{}/cloud-accounts/{}", get_platform_management_api_url(), urlencoding::encode(id));
         let body = serde_json::json!({ "roleArn": role_arn });
         let response =
             http_client::put(&url, body).with_context(|| ERROR_FAILED_TO_SEND_REQUEST)?;
@@ -255,7 +255,7 @@ impl CliCommand for UnlinkCommand {
         let _token = require_auth()?;
         let id = matches.get_one::<String>("id").context("id is required")?;
 
-        let url = format!("{}/cloud-accounts/{}", get_platform_management_api_url(), id);
+        let url = format!("{}/cloud-accounts/{}", get_platform_management_api_url(), urlencoding::encode(id));
         let response = http_client::delete(&url).with_context(|| ERROR_FAILED_TO_SEND_REQUEST)?;
 
         if !response.status().is_success() {
@@ -301,7 +301,7 @@ impl CliCommand for ValidateCommand {
         let url = format!(
             "{}/cloud-accounts/{}/validate",
             get_platform_management_api_url(),
-            id
+            urlencoding::encode(id)
         );
         let response = http_client::post(&url, serde_json::json!({}))
             .with_context(|| ERROR_FAILED_TO_SEND_REQUEST)?;

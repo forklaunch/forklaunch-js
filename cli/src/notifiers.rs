@@ -113,9 +113,11 @@ impl CliCommand for CreateCommand {
         let response = post_with_auth(&auth_mode, &url, body)
             .with_context(|| "Failed to reach observability API")?;
 
-        if !response.status().is_success() {
+        let status = response.status();
+        if !status.is_success() {
             bail!(
-                "Failed to create notifier config: {}",
+                "Failed to create notifier config ({}): {}",
+                status,
                 response.text().unwrap_or_default()
             );
         }
@@ -172,9 +174,11 @@ impl CliCommand for DeleteCommand {
         let response = delete_with_auth(&auth_mode, &url)
             .with_context(|| "Failed to reach observability API")?;
 
-        if !response.status().is_success() {
+        let status = response.status();
+        if !status.is_success() {
             bail!(
-                "Failed to delete notifier config: {}",
+                "Failed to delete notifier config ({}): {}",
+                status,
                 response.text().unwrap_or_default()
             );
         }
@@ -204,9 +208,11 @@ fn list_notifiers(matches: &ArgMatches) -> Result<()> {
     let response =
         get_with_auth(&auth_mode, &url).with_context(|| "Failed to reach observability API")?;
 
-    if !response.status().is_success() {
+    let status = response.status();
+    if !status.is_success() {
         bail!(
-            "Failed to list notifier configs: {}",
+            "Failed to list notifier configs ({}): {}",
+            status,
             response.text().unwrap_or_default()
         );
     }

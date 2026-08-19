@@ -56,10 +56,10 @@ impl CliCommand for FetchCommand {
         let mut url = format!(
             "{}/services/{}/openapi",
             get_developer_tools_api_url(),
-            service_id
+            urlencoding::encode(service_id)
         );
         if let Some(v) = version {
-            url.push_str(&format!("?version={}", v));
+            url.push_str(&format!("?version={}", urlencoding::encode(v)));
         }
 
         let response = http_client::get(&url).with_context(|| ERROR_FAILED_TO_SEND_REQUEST)?;
