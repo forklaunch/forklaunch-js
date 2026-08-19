@@ -173,6 +173,8 @@ CodeSetProvider (interface)
 
 This also gives a clean **per-hospital** cutover: some organizations can stay on mock codes while others are already licensed, with zero risk of one tenant's licensing status leaking into another (enforced by the same tenant-isolation filter used everywhere else).
 
+**License-check failure mode (fail closed).** `surfaceFeatures` resolves `cpt-licensed` via a cross-service call — if that lookup fails or times out mid-claim-submission (e.g. a network blip between `medical-coding-base` and IAM), treat the organization as unlicensed and fall back to `MockProcedureCodeProvider` rather than blocking claim submission. A stalled claims pipeline is worse than a claim coded against mock data that can be re-submitted later — and, per the rule below, historical claims are never retroactively recoded anyway, so a transient mock-coded claim during an outage is not a special case to design around.
+
 **Historical claims are never retroactively recoded.** When an organization's `CodeSetLicense` flips to `active`, only *new* encounters created afterward use `CptCodeProvider`. Claims already built and submitted under `MockProcedureCodeProvider` remain exactly as they were coded — a submitted claim is a financial/legal record, and retroactively changing its procedure codes after the fact would itself be a compliance problem. This should be stated explicitly to any pilot client during Phase 5 demos (see §12).
 
 ---
@@ -218,6 +220,8 @@ Every code set this platform depends on has its own publisher and update cadence
 
 **Refresh mechanism — no framework-native cron exists (confirmed by codebase inspection):** `framework/implementations/worker/{bullmq,kafka,redis,database}` expose only `enqueueJob`/`enqueueBatchJobs`/`start` — no repeat/cron primitive is surfaced anywhere, even though BullMQ itself supports one internally. The one real precedent in this codebase is `scripts/enforce-retention.ts`, wired to a plain `"retention:enforce"` npm script that an external scheduler (k8s CronJob / cloud scheduler) invokes — there's no in-repo trigger. `medical-coding-base` should follow this exact convention: a `scripts/refresh-code-sets.ts` + `"codeset:refresh"` npm script, invoked externally on a schedule matched to the table above (the tightest cadence — HCPCS/NCCI quarterly — sets the polling interval).
 
+**Scrubbing lookups must be cached, not per-line queries.** The §6 scrubbing engine checks NCCI PTP/MUE and LCD/NCD edit tables per claim line, and these tables run into the tens of thousands of code pairs. A naive per-line DB query against them is an N+1 risk on multi-line claims at any real submission volume. Scrubbing should check these tables against an in-memory or Redis-cached lookup keyed by the active code-set version, refreshed each time `refresh-code-sets.ts` runs on its quarterly cadence — not queried fresh per claim line. Demo-scale (Phase 2–5) volume won't expose this, but it's cheap to design correctly now versus retrofitting a caching layer onto a scrubbing engine that already shipped with naive queries.
+
 **Bulk loading needs a dedicated ETL step, not the seeder pattern.** The existing `persistence/seeders/*.seeder.ts` + `seed.data.ts` pattern (e.g. `blueprint/billing-base/persistence/seeders/plan.seeder.ts`) is a thin wrapper that does one `em.create(...).flush()` per hand-written object literal — clearly sized for a handful of config rows, not the ~70,000 ICD-10-CM codes or ~7,000 HCPCS codes. `framework/infrastructure/S3`'s `S3ObjectStore` is closer but its `putBatchObjects` is just `Promise.all` over individual JSON puts, not a bulk-CSV loader either. `refresh-code-sets.ts` should instead: stream the government-published CSV/XML (staged in S3), parse it, and batch-insert via MikroORM in chunks (e.g. 1,000 rows per `em.persist(...).flush()`) — a purpose-built ETL script, following the *shape* of `enforce-retention.ts`'s batching loop (`framework/core/src/services/retentionService.ts` already batches at 1,000 records/flush for exactly this reason) but against a new code-set-specific service, not a reused generic primitive.
 
 ---
@@ -250,6 +254,20 @@ Before any real hospital data touches the system: run an external security revie
 ### Test/QA strategy (confirmed against existing test conventions — fills a prior gap)
 
 `billing-base`'s tests (`__test__/test-utils.ts`, `plan.test.ts`) use `BlueprintTestHarness` from `@forklaunch/testing`, backed by **real `testcontainers`** (Postgres + Redis) — not mocks, not in-memory sqlite. Test data is seeded via real MikroORM entities, and assertions call the generated route SDK in-process (`route.sdk.createPlan({...})`) rather than raw HTTP. This directly answers the previously-open question of how to validate the mock→real CPT cutover: **spin up the real containerized test DB, seed a representative subset of both mock and real code pairs (including at least one of each CARC scenario in §6's table), and assert against the actual `sdk.*` calls end-to-end** — not a mocked unit test — before flipping `CodeSetLicense.status` to `active` for any real organization.
+
+**Required test matrix (one row per scrubbing scenario from §6):**
+
+| Scenario | Layer exercised | Test file | Asserts |
+|---|---|---|---|
+| Two procedures billed together without a justifying modifier | NCCI PTP | `scrubbing.ncciPtp.test.ts` | Claim rejected pre-submission with CO-97-equivalent internal denial code |
+| Implausible unit count for a single code/date-of-service | NCCI MUE | `scrubbing.ncciMue.test.ts` | Claim rejected with a unit-level denial, valid unit counts pass |
+| Diagnosis doesn't justify the procedure (mock LCD-style crosswalk) | LCD/NCD medical necessity | `scrubbing.lcdNcd.test.ts` | Claim rejected with CO-11/CO-50-equivalent, covered diagnosis-procedure pairs pass |
+| Missing required claim field | Required-fields scrubbing | `scrubbing.requiredFields.test.ts` | CO-16-equivalent with the specific missing field surfaced |
+| Eligibility check fails at intake (coverage terminated) | Eligibility (270/271) | `eligibility.test.ts` | CO-27-equivalent, blocks claim submission before it reaches scrubbing |
+| `CodeSetLicense` flips to `active` mid-organization-lifecycle | Mock→real CPT cutover (§5) | `codeSetCutover.test.ts` | **Regression test:** claims submitted under `MockProcedureCodeProvider` before the flip are byte-for-byte unchanged after the flip; only claims created after the flip use `CptCodeProvider` |
+| License-check lookup to IAM fails/times out | License-gate fail-closed (§5) | `codeSetLicenseGate.test.ts` | Organization falls back to `MockProcedureCodeProvider` rather than blocking claim submission |
+
+Each row is a full `testcontainers` end-to-end test per this section's harness, not a mocked unit test — the scrubbing engine's correctness is exactly the kind of logic where a passing mock and a failing production query diverge.
 
 ---
 
@@ -289,6 +307,7 @@ Directly adopting the source doc's phases, corrected for the domain-accuracy fix
 4. **Mock LCD/NCD data source** — who owns building a plausible mock diagnosis-procedure crosswalk for Phase 2 (a coding/compliance SME, not engineering alone) so the three-layer scrubbing design in §6 is exercised realistically before real CPT/LCD data exists?
 5. **MAC jurisdiction scope for real LCD ingestion** — once CPT is licensed (§6, §10 Phase 6), which Medicare Administrative Contractor jurisdiction(s) does the first real client fall under? LCD coverage is regional, so Phase 6's "ingest real LCD/NCD crosswalks" task needs this answered before it can be scoped, not after.
 6. **Phase timeline validation** — the Phase 0–6 week estimates (§10) come from the source doc, not from this team's actual velocity. Needs a sizing session with whoever will staff this before the timeline is quoted to a prospective client or used to plan the AMA licensing lead time against a real go-live date.
+7. **Multi-org billers** — §3 models each hospital/clinic as one `Organization`, with RBAC and tenant isolation scoped to a single org per user (matching `iam-base`'s existing model exactly). But §2's own go-to-market ("demos to small clinics/billing companies") implies some customers may be third-party billing companies whose coders/billers need visibility across multiple hospital clients — a cross-org access pattern the current single-tenant-per-user model doesn't support. Unclear whether the near-term (mock-code, small-clinic-demo) target is hospitals' own staff or billing companies acting on their behalf; answering this wrong now risks baking in the wrong RBAC model. Needs resolving before Phase 2's RBAC work, not after.
 
 ---
 
