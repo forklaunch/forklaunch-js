@@ -599,6 +599,10 @@ const res = await platformApi.service.get(...)
 if (res.code !== 200) return null  // handle error
 ```
 
+### Editing generated `.env.local` / `.env.test` files
+
+Generated env files ship with **no trailing newline**. A blind append (`printf 'KEY=value\n' >> .env.local`, or a naive string-append edit) lands directly on the last existing line and silently merges the two — e.g. `CORS_ORIGINS="..."JWKS_PUBLIC_KEY_URL=...` — which then fails validation with a confusing "Required" error for a variable that visually looks present. Always read the file, ensure it ends with a newline (or append a leading `\n`), then write — don't blind-append with `>>`.
+
 ## Task 5: Run Migrations
 
 ```bash
@@ -614,5 +618,7 @@ pnpm migrate:down
 # Check migration status
 pnpm migrate:list
 ```
+
+**`migrate:down` does not work on the very first (initial) migration** — the generated initial migration ships without a `down()` implementation, and running it fails with "This migration cannot be reverted." Incremental migrations created later (adding/dropping a column, etc.) DO get a working, correctly auto-generated `down()` from MikroORM — rollback works fine for those. Don't rely on rolling back the initial migration; if you need to undo it, drop and re-migrate instead.
 
 Never run raw migration CLI commands — always use `pnpm` scripts from the module's `package.json`.

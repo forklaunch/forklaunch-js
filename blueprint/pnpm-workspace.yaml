@@ -42,4 +42,4 @@ allowBuilds:
   unrs-resolver: true
 
 overrides:
-  "@forklaunch/core": ^1.5.6
+  "@forklaunch/core": ^1.5.15

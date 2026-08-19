@@ -12,11 +12,20 @@ import Redis from 'ioredis';
 import { StartedTestContainer } from 'testcontainers';
 import { DatabaseType } from './containers';
 
+/**
+ * MikroORM options that accept any driver's `defineConfig()` return —
+ * mutable or readonly entities, base or driver-specific `Options`
+ * (e.g. `Options<PostgreSqlDriver, ...>` is not assignable to the
+ * base-driver `Options` default).
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AnyMikroOrmOptions = Partial<Options<any, any, any>>;
+
 export interface MikroOrmTestConfig {
   /**
    * MikroORM config object (imported from mikro-orm.config)
    */
-  mikroOrmConfig: Partial<Options>;
+  mikroOrmConfig: AnyMikroOrmOptions;
 
   /**
    * Database type (postgres, mysql, mongodb, etc.)
@@ -81,7 +90,7 @@ export async function setupTestORM(
   const dbPort = getDatabasePort(databaseType);
 
   // SQLite databases are file-based
-  let ormConfig: Partial<Options> = {};
+  let ormConfig: AnyMikroOrmOptions = {};
   if (databaseType === 'sqlite' || databaseType === 'libsql') {
     ormConfig = {
       ...mikroOrmConfig,

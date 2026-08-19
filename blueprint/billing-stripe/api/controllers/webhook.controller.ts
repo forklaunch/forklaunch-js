@@ -13,8 +13,12 @@ export const handleWebhookEvent = handlers.post(
     name: 'handleWebhookEvent',
     access: 'public',
     summary: 'Handle a stripe event via webhook',
+    // Stripe posts application/json and signs the exact bytes: declare the
+    // body as text with a json contentType so req.body is the raw payload
+    // string that stripe.webhooks.constructEvent verifies against.
     body: {
-      text: string
+      text: string,
+      contentType: 'application/json'
     },
     requestHeaders: {
       'stripe-signature': string

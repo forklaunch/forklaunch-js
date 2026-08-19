@@ -362,6 +362,7 @@ export function serveExpress(
 
         strictContentLength: false,
         writeProcessing: () => {},
+        writeInformation: () => {},
         chunkedEncoding: false,
         shouldKeepAlive: true,
         useChunkedEncodingByDefault: true,

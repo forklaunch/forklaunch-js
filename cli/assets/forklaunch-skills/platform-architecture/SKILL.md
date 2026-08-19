@@ -323,6 +323,8 @@ async generatePulumiCode(
 
 **Location:** `src/modules/deployment-agent-worker/domain/services/pulumi-generator.service.ts`
 
+**Known bug (fix in PR #233, not yet merged): deploys with a dedicated-only cache resource crash with `error TS2304: Cannot find name 'centralizedRedis'`.** In `generateOutputs()`, the cache-export branching only checked `resourceAnalysis.sharedCaches.length > 0`; a service with a *dedicated* cache and no shared cache (`resourceAnalysis.dedicatedCaches.length > 0` only) falls through to a legacy fallback branch that hardcodes a reference to a `centralizedRedis` Pulumi resource that is never declared anywhere for that case — the real ElastiCache instance for dedicated-cache consumers is actually created under a different name (`distributedRedis`, via a "synthesize a shared-cache-like entry" step in `generateCache()`). The fallback branch's fix is to stop emitting those outputs rather than reference a name matching nothing: `} else if (hasCache && config.cache) { /* no resource named centralizedRedis is ever declared here — omit instead of referencing it */ }`. If you hit this on a deploy before the PR merges, there's no app-side workaround — it's a platform bug.
+
 ### Pulumi Executor Service
 
 The `PulumiExecutorService` executes Pulumi operations:

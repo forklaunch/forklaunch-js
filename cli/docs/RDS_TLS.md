@@ -28,7 +28,7 @@ How it works:
 
 ## Migrating existing apps
 
-Apps generated before CLI 1.5.0 need three things:
+Apps generated before CLI 1.4.2 need three things:
 
 1. Copy the bundle into your repo (path is convention, not requirement):
 

@@ -192,6 +192,18 @@ fn fetch_trace_detail(
 
 // ── Display ───────────────────────────────────────────────────────────────────
 
+/// Shown where the API omitted an optional field (route, service, status).
+const MISSING: &str = "—";
+
+/// Truncate to `max` display characters, appending an ellipsis when clipped.
+fn truncate(s: &str, max: usize) -> String {
+    if s.chars().count() > max {
+        format!("{}…", s.chars().take(max - 1).collect::<String>())
+    } else {
+        s.to_string()
+    }
+}
+
 fn print_traces(traces: &[TraceEntry]) -> Result<()> {
     let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
@@ -223,27 +235,19 @@ fn print_traces(traces: &[TraceEntry]) -> Result<()> {
 
     for trace in traces {
         let trace_id_short = trace.trace_id.get(..12).unwrap_or(&trace.trace_id);
-        let service = if trace.service_name.chars().count() > 20 {
-            format!(
-                "{}…",
-                trace.service_name.chars().take(19).collect::<String>()
-            )
-        } else {
-            trace.service_name.clone()
-        };
-        let route = if trace.route.chars().count() > 30 {
-            format!("{}…", trace.route.chars().take(29).collect::<String>())
-        } else {
-            trace.route.clone()
-        };
-        let duration = format!("{}ms", trace.duration_ms);
+        // service/route/status are optional server-side — show a placeholder
+        // instead of failing or leaving the column blank.
+        let service = truncate(trace.service_name.as_deref().unwrap_or(MISSING), 20);
+        let route = truncate(trace.route.as_deref().unwrap_or(MISSING), 30);
+        let status = trace.status.as_deref().unwrap_or(MISSING);
+        let duration = format!("{:.0}ms", trace.duration_ms);
         let start_time = trace
             .start_time
             .get(..19)
             .map(|s| s.replace('T', " "))
             .unwrap_or_else(|| trace.start_time.clone());
 
-        let color = status_color(&trace.status);
+        let color = status_color(status);
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::White)))?;
         write!(
             stdout,
@@ -251,7 +255,7 @@ fn print_traces(traces: &[TraceEntry]) -> Result<()> {
             trace_id_short, service, route, duration
         )?;
         stdout.set_color(ColorSpec::new().set_fg(Some(color)).set_bold(true))?;
-        write!(stdout, "{:<10}", trace.status)?;
+        write!(stdout, "{:<10}", status)?;
         stdout.reset()?;
         writeln!(stdout, "  {}", start_time)?;
     }
@@ -295,7 +299,7 @@ fn print_trace_detail(response: &TraceDetailResponse) -> Result<()> {
             .unwrap_or(false);
         let color = if is_error {
             Color::Red
-        } else if span.duration_ms > 1000 {
+        } else if span.duration_ms > 1000.0 {
             Color::Yellow
         } else {
             Color::Green
@@ -306,7 +310,12 @@ fn print_trace_detail(response: &TraceDetailResponse) -> Result<()> {
         stdout.reset()?;
 
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::White)))?;
-        writeln!(stdout, "  ({}, {}ms)", span.service_name, span.duration_ms)?;
+        writeln!(
+            stdout,
+            "  ({}, {:.2}ms)",
+            span.service_name.as_deref().unwrap_or(MISSING),
+            span.duration_ms
+        )?;
         stdout.reset()?;
     }
 
@@ -377,14 +386,25 @@ fn status_color(status: &str) -> Color {
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
+/// Mirrors the API's trace summary. `serviceName`, `route` and `status` are
+/// declared `.optional()` server-side (see `ServiceTracesResponseSchema`) —
+/// not every span is an HTTP request, so a trace can legitimately arrive
+/// without a route. Treating them as required made the whole command fail with
+/// `missing field \`route\`` the moment one such trace appeared.
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct TraceEntry {
     trace_id: String,
-    service_name: String,
-    route: String,
-    duration_ms: u64,
-    status: String,
+    #[serde(default)]
+    service_name: Option<String>,
+    #[serde(default)]
+    route: Option<String>,
+    /// Fractional: the server computes this as (endNano-startNano)/1e6 with no
+    /// rounding, so it is not an integer in general. `u64` rejected every float
+    /// value serde saw — including whole ones like `12.0`.
+    duration_ms: f64,
+    #[serde(default)]
+    status: Option<String>,
     start_time: String,
 }
 
@@ -403,9 +423,15 @@ struct Span {
     #[serde(default)]
     parent_span_id: Option<String>,
     name: String,
-    service_name: String,
+    /// `.optional()` server-side, same as on `TraceEntry` — required here would
+    /// break `observe traces <id>` on any span without a service name.
+    #[serde(default)]
+    service_name: Option<String>,
     start_time: String,
-    duration_ms: u64,
+    /// Fractional: the server computes this as (endNano-startNano)/1e6 with no
+    /// rounding, so it is not an integer in general. `u64` rejected every float
+    /// value serde saw — including whole ones like `12.0`.
+    duration_ms: f64,
     #[serde(default)]
     attributes: HashMap<String, serde_json::Value>,
 }
@@ -438,9 +464,9 @@ mod tests {
             span_id: span_id.to_string(),
             parent_span_id: parent_span_id.map(|s| s.to_string()),
             name: name.to_string(),
-            service_name: "svc".to_string(),
+            service_name: Some("svc".to_string()),
             start_time: "2024-01-15T10:00:00Z".to_string(),
-            duration_ms: 100,
+            duration_ms: 100.0,
             attributes: HashMap::new(),
         }
     }
@@ -551,7 +577,45 @@ mod tests {
         }"#;
         let entry: TraceEntry = serde_json::from_str(json).unwrap();
         assert_eq!(entry.trace_id, "abc123");
-        assert_eq!(entry.duration_ms, 42);
+        assert_eq!(entry.duration_ms, 42.0);
+        assert_eq!(entry.route.as_deref(), Some("/health"));
+    }
+
+    /// Regression: the server computes durations as
+    /// `(endNano - startNano) / 1_000_000` with no rounding
+    /// (traces.service.ts durationFromNano), so `durationMs` is fractional in
+    /// general. `u64` rejected every float — including whole ones like `12.0`
+    /// — which broke `observe traces <trace-id>` entirely.
+    #[test]
+    fn fractional_durations_deserialize() {
+        let span: Span = serde_json::from_str(
+            r#"{"spanId":"s1","name":"http.request","startTime":"2024-01-15T10:00:00Z","durationMs":55.45556640625}"#,
+        )
+        .unwrap();
+        assert!((span.duration_ms - 55.45556640625).abs() < f64::EPSILON);
+
+        let entry: TraceEntry = serde_json::from_str(
+            r#"{"traceId":"t1","startTime":"2024-01-15T10:00:00Z","durationMs":12.0}"#,
+        )
+        .unwrap();
+        assert!((entry.duration_ms - 12.0).abs() < f64::EPSILON);
+    }
+
+    /// Regression: `route`, `serviceName` and `status` are `.optional()`
+    /// server-side. A non-HTTP trace arrives without them and previously blew
+    /// the whole command up with `missing field \`route\``.
+    #[test]
+    fn trace_entry_deserializes_without_optional_fields() {
+        let json = r#"{
+            "traceId": "abc123",
+            "durationMs": 42,
+            "startTime": "2024-01-15T10:00:00Z"
+        }"#;
+        let entry: TraceEntry = serde_json::from_str(json).unwrap();
+        assert_eq!(entry.trace_id, "abc123");
+        assert!(entry.route.is_none());
+        assert!(entry.service_name.is_none());
+        assert!(entry.status.is_none());
     }
 
     #[test]

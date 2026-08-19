@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 use crate::{
-    CliCommand,
     constants::get_observability_api_url,
     core::{
         command::command,
@@ -14,6 +13,7 @@ use crate::{
         http_client::{get_with_auth, post_with_auth},
         validate::{require_integration, require_manifest},
     },
+    CliCommand,
 };
 
 // ── Top-level command ─────────────────────────────────────────────────────────
@@ -89,16 +89,14 @@ impl CliCommand for MetricsCommand {
         };
 
         if let Some(q) = query {
-            let response =
-                fetch_promql(&q, &environment, &application_id, &time_range)?;
+            let response = fetch_promql(&q, &environment, &application_id, &time_range)?;
             if json_output {
                 println!("{}", serde_json::to_string_pretty(&response)?);
             } else {
                 print_promql(&response)?;
             }
         } else {
-            let response =
-                fetch_application_metrics(&application_id, &environment, &time_range)?;
+            let response = fetch_all_application_metrics(&application_id, &environment, &time_range)?;
             if json_output {
                 println!("{}", serde_json::to_string_pretty(&response)?);
             } else {
@@ -112,18 +110,27 @@ impl CliCommand for MetricsCommand {
 
 // ── HTTP helpers ──────────────────────────────────────────────────────────────
 
+/// The endpoint fills in exactly ONE metric per call, chosen by `chartType`
+/// (see `transformToControllerMonitoring`'s `switch (chartType)`); every other
+/// field is returned as a literal `0`, and `uptime` is derived as
+/// `100 - errorRate`. Omitting `chartType` defaults it to `requestRate`, which
+/// is why the command used to print `Latency p50: 0.0000` and
+/// `Uptime: 100.0000` as if they were real measurements. Callers must request
+/// each metric they intend to display — see `fetch_all_application_metrics`.
 fn fetch_application_metrics(
     application_id: &str,
     environment: &str,
     time_range: &str,
+    chart_type: &str,
 ) -> Result<ApplicationMonitoringResponse> {
     let api_url = get_observability_api_url();
     let url = format!(
-        "{}/applications/{}/monitoring?environment={}&timeRange={}",
+        "{}/applications/{}/monitoring?environment={}&timeRange={}&chartType={}",
         api_url,
         urlencoding::encode(application_id),
         urlencoding::encode(environment),
         urlencoding::encode(time_range),
+        urlencoding::encode(chart_type),
     );
 
     let auth_mode = AuthMode::detect();
@@ -143,6 +150,72 @@ fn fetch_application_metrics(
         .with_context(|| "Failed to parse metrics response")
 }
 
+/// Fetch each metric the display shows, since the endpoint only populates one
+/// per request. A failure on any single metric is not fatal — that row simply
+/// renders as "-" rather than losing the whole command.
+fn fetch_all_application_metrics(
+    application_id: &str,
+    environment: &str,
+    time_range: &str,
+) -> Result<ApplicationMonitoringResponse> {
+    let mut merged = ApplicationMonitoringResponse::default();
+    let mut latency = LatencyMetric::default();
+    let mut any_latency = false;
+    let mut succeeded = false;
+    let mut first_err: Option<anyhow::Error> = None;
+
+    for chart_type in ["requestRate", "errorRate", "latencyP50", "latencyP95", "latencyP99"] {
+        let r = match fetch_application_metrics(application_id, environment, time_range, chart_type)
+        {
+            Ok(r) => {
+                succeeded = true;
+                r
+            }
+            Err(e) => {
+                // Degrade one metric to "-" rather than losing the command —
+                // but never swallow a total failure (auth rejected, API down),
+                // which must still surface as an error instead of a table of
+                // dashes and a zero exit code.
+                if first_err.is_none() {
+                    first_err = Some(e);
+                }
+                continue;
+            }
+        };
+        match chart_type {
+            "requestRate" => merged.request_rate = r.request_rate,
+            "errorRate" => {
+                merged.error_rate = r.error_rate;
+                // uptime is derived from errorRate server-side, so it is only
+                // meaningful on the errorRate call.
+                merged.uptime = r.uptime;
+            }
+            "latencyP50" => {
+                latency.p50 = r.latency.and_then(|l| l.p50);
+                any_latency |= latency.p50.is_some();
+            }
+            "latencyP95" => {
+                latency.p95 = r.latency.and_then(|l| l.p95);
+                any_latency |= latency.p95.is_some();
+            }
+            "latencyP99" => {
+                latency.p99 = r.latency.and_then(|l| l.p99);
+                any_latency |= latency.p99.is_some();
+            }
+            _ => {}
+        }
+    }
+
+    if !succeeded {
+        if let Some(e) = first_err {
+            return Err(e);
+        }
+    }
+
+    merged.latency = if any_latency { Some(latency) } else { None };
+    Ok(merged)
+}
+
 fn fetch_promql(
     query: &str,
     environment: &str,
@@ -160,8 +233,8 @@ fn fetch_promql(
     });
 
     let auth_mode = AuthMode::detect();
-    let response =
-        post_with_auth(&auth_mode, &url, body).with_context(|| "Failed to reach observability API")?;
+    let response = post_with_auth(&auth_mode, &url, body)
+        .with_context(|| "Failed to reach observability API")?;
 
     if !response.status().is_success() {
         let status = response.status();
@@ -252,6 +325,11 @@ fn print_metric_row(out: &mut StandardStream, name: &str, metric: &MetricValue) 
     } else {
         "unavailable".to_string()
     };
+    // No client-side unit defaults: ApplicationMonitoringSchema carries no unit
+    // for these values, and guessing is worse than showing nothing. The server's
+    // own numbers are req/MINUTE (monitoring-transforms.ts multiplies rate by 60)
+    // and latency comes from `http_server_duration_seconds_bucket` (seconds), so
+    // any hardcoded "req/s"/"ms" here would be actively wrong.
     let unit_str = metric.unit.as_deref().unwrap_or("-");
 
     if !available {
@@ -294,9 +372,17 @@ fn print_promql(response: &PromQLResponse) -> Result<()> {
                 writeln!(stdout, "  {{<no labels>}}")?;
             }
 
-            // Value tuple: [timestamp_f64, value_string]
-            if series.value.len() == 2 {
-                writeln!(stdout, "       value: {}", series.value[1])?;
+            // Each sample is a [timestamp, value] pair; show the latest.
+            match series.values.last() {
+                Some(sample) if sample.len() == 2 => {
+                    writeln!(stdout, "       value: {}", sample[1])?;
+                    if series.values.len() > 1 {
+                        writeln!(stdout, "       ({} samples)", series.values.len())?;
+                    }
+                }
+                _ => {
+                    writeln!(stdout, "       (no samples)")?;
+                }
             }
         }
     }
@@ -308,18 +394,65 @@ fn print_promql(response: &PromQLResponse) -> Result<()> {
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct MetricValue {
-    #[serde(default)]
     value: Option<f64>,
-    #[serde(default)]
     unit: Option<String>,
-    #[serde(default)]
     available: Option<bool>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+/// The observability API sends these metrics as bare JSON numbers —
+/// `"requestRate": 12.5` (see `ApplicationMonitoringSchema`, which types
+/// `requestRate`/`errorRate`/`uptime` as `number`). Earlier CLI versions
+/// assumed an object (`{value, unit, available}`), which made every
+/// `observe metrics` call fail with `invalid type: integer, expected struct
+/// MetricValue`. Accept both shapes so the CLI survives either side changing.
+impl<'de> Deserialize<'de> for MetricValue {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(untagged)]
+        enum Raw {
+            // An explicitly null metric renders as "-" rather than failing the
+            // whole command. The schema types these as required numbers, but
+            // trusting that assumption is what caused this bug in the first
+            // place.
+            Null,
+            Scalar(f64),
+            Object {
+                #[serde(default)]
+                value: Option<f64>,
+                #[serde(default)]
+                unit: Option<String>,
+                #[serde(default)]
+                available: Option<bool>,
+            },
+        }
+
+        Ok(match Raw::deserialize(deserializer)? {
+            Raw::Null => MetricValue::default(),
+            Raw::Scalar(value) => MetricValue {
+                value: Some(value),
+                unit: None,
+                available: None,
+            },
+            Raw::Object {
+                value,
+                unit,
+                available,
+            } => MetricValue {
+                value,
+                unit,
+                available,
+            },
+        })
+    }
+}
+
+#[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct LatencyMetric {
     #[serde(default)]
@@ -334,7 +467,7 @@ struct LatencyMetric {
     available: Option<bool>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct ApplicationMonitoringResponse {
     #[serde(default)]
@@ -362,8 +495,15 @@ impl Default for MetricValue {
 struct PromQLResultEntry {
     #[serde(default)]
     metric: HashMap<String, String>,
+    /// The controller normalizes to the PLURAL key and always nests:
+    /// `values: r.values ?? (r.value ? [r.value] : [])`
+    /// (monitoring.controller.ts), typed `values: array(array(unknown))`.
+    /// Reading the singular `value` here meant this silently deserialized to an
+    /// empty Vec — no error, just every series printed with no data.
+    /// Queries always go through query_range, so resultType is `matrix` and
+    /// each element is a `[timestamp, value]` pair.
     #[serde(default)]
-    value: Vec<serde_json::Value>,
+    values: Vec<Vec<serde_json::Value>>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -415,26 +555,33 @@ mod tests {
 
     #[test]
     fn promql_response_deserializes() {
+        // Real shape: queries always go through query_range, so resultType is
+        // `matrix` and samples arrive under the PLURAL `values` key as
+        // [timestamp, value] pairs (monitoring.controller.ts normalizes this).
         let json = r#"{
             "status": "success",
             "data": {
-                "resultType": "vector",
+                "resultType": "matrix",
                 "result": [
                     {
                         "metric": {"__name__": "http_requests_total", "job": "api"},
-                        "value": [1700000000.0, "42"]
+                        "values": [[1700000000.0, "41"], [1700000060.0, "42"]]
                     }
                 ]
             }
         }"#;
         let resp: PromQLResponse = serde_json::from_str(json).unwrap();
         assert_eq!(resp.status, "success");
-        assert_eq!(resp.data.result_type, "vector");
+        assert_eq!(resp.data.result_type, "matrix");
         assert_eq!(resp.data.result.len(), 1);
         assert_eq!(
             resp.data.result[0].metric.get("job").map(|s| s.as_str()),
             Some("api")
         );
+        // latest sample is what print_promql shows
+        let last = resp.data.result[0].values.last().unwrap();
+        assert_eq!(last[1], serde_json::json!("42"));
+        assert_eq!(resp.data.result[0].values.len(), 2);
     }
 
     #[test]
@@ -456,4 +603,58 @@ mod tests {
         assert_eq!(resp.request_rate.value, Some(10.0));
         assert!(resp.latency.is_some());
     }
+
+    /// Regression — the shape the API ACTUALLY returns
+    /// (`ApplicationMonitoringSchema`: `requestRate`/`errorRate`/`uptime` are
+    /// plain `number`, latency is `{p50,p95,p99,avg}`). This previously failed
+    /// with `invalid type: integer 0, expected struct MetricValue`.
+    #[test]
+    fn application_monitoring_response_deserializes_scalar_metrics() {
+        let json = r#"{
+            "requestRate": 0,
+            "requestRateTrend": "—",
+            "latency": {"p50": 10.0, "p95": 50.0, "p99": 100.0, "avg": 22.0},
+            "latencyTrend": "—",
+            "errorRate": 0.5,
+            "errorRateTrend": "+1.2%",
+            "successRatePercent": 99.5,
+            "available": true,
+            "uptime": 99.9
+        }"#;
+        let resp: ApplicationMonitoringResponse = serde_json::from_str(json).unwrap();
+        assert_eq!(resp.request_rate.value, Some(0.0));
+        assert_eq!(resp.error_rate.value, Some(0.5));
+        assert_eq!(resp.uptime.value, Some(99.9));
+        assert_eq!(resp.latency.as_ref().and_then(|l| l.p95), Some(50.0));
+    }
+
+    #[test]
+    fn metric_value_accepts_bare_number() {
+        let mv: MetricValue = serde_json::from_str("0").unwrap();
+        assert_eq!(mv.value, Some(0.0));
+        assert!(mv.unit.is_none());
+    }
+
+    /// A metric explicitly sent as `null` should render as "-", not abort the
+    /// command. Schema says these are required numbers; this guards the case
+    /// where reality disagrees (which is the whole reason this PR exists).
+    #[test]
+    fn metric_value_accepts_null() {
+        let mv: MetricValue = serde_json::from_str("null").unwrap();
+        assert!(mv.value.is_none());
+
+        let resp: ApplicationMonitoringResponse =
+            serde_json::from_str(r#"{"requestRate": null, "errorRate": 1, "uptime": 2}"#).unwrap();
+        assert!(resp.request_rate.value.is_none());
+        assert_eq!(resp.error_rate.value, Some(1.0));
+    }
+
+    /// A metric key absent entirely falls back to the struct default.
+    #[test]
+    fn application_monitoring_response_tolerates_missing_metrics() {
+        let resp: ApplicationMonitoringResponse = serde_json::from_str("{}").unwrap();
+        assert!(resp.request_rate.value.is_none());
+        assert!(resp.latency.is_none());
+    }
+
 }

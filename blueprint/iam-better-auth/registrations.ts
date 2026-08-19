@@ -180,7 +180,7 @@ const expressApplicationOptions = serviceDependencies.chain({
         SessionObject<SchemaValidator>
       > = {
         auth: {
-          surfacePermissions: async (payload) => {
+          surfacePermissions: async (payload: { sub?: string }) => {
             if (!payload.sub) {
               return new Set();
             }
@@ -189,7 +189,7 @@ const expressApplicationOptions = serviceDependencies.chain({
             );
             return new Set(permissions);
           },
-          surfaceRoles: async (payload) => {
+          surfaceRoles: async (payload: { sub?: string }) => {
             if (!payload.sub) {
               return new Set();
             }

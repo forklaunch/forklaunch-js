@@ -7,6 +7,7 @@
     "domain/schemas/index.ts",
     "services/index.ts",
     "domain/enum/index.ts",
-    "domain/types/index.ts"
+    "domain/types/index.ts",
+    "persistence/entities/index.ts"
   ]
 }
