@@ -51,7 +51,7 @@
     "@mikro-orm/sqlite": "^7.1.11",
     "@opentelemetry/api": "^1.9.1",
     "@sinclair/typebox": "^0.34.52",
-    "better-auth": "^1.6.26",
+    "better-auth": "^1.7.1",
     "dotenv": "^17.4.2",
     "jose": "^6.2.8",
     "pino": "^10.3.1",
