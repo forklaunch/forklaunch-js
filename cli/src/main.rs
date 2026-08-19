@@ -13,6 +13,7 @@ use environment::EnvironmentCommand;
 use github::GithubCommand;
 use infra::InfraCommand;
 use init::InitCommand;
+use app::AppCommand;
 use integrate::IntegrateCommand;
 use login::LoginCommand;
 use logout::LogoutCommand;
@@ -29,6 +30,7 @@ mod analyze;
 mod constants;
 #[macro_use]
 mod core;
+mod app;
 mod change;
 mod compliance;
 mod config;
@@ -73,6 +75,7 @@ fn main() -> Result<()> {
     let environment = EnvironmentCommand::new();
     let infra = InfraCommand::new();
     let github = GithubCommand::new();
+    let app = AppCommand::new();
     let integrate = IntegrateCommand::new();
     let login = LoginCommand::new();
     let logout = LogoutCommand::new();
@@ -88,6 +91,7 @@ fn main() -> Result<()> {
         .propagate_version(true)
         .arg_required_else_help(true)
         .subcommand_required(true)
+        .subcommand(app.command())
         .subcommand(init.command())
         .subcommand(analyze.command())
         .subcommand(delete.command())
@@ -118,6 +122,7 @@ fn main() -> Result<()> {
     }
 
     let result = match matches.subcommand() {
+        Some(("app", sub_matches)) => app.handler(sub_matches),
         Some(("init", sub_matches)) => init.handler(sub_matches),
         Some(("analyze", sub_matches)) => analyze.handler(sub_matches),
         Some(("change", sub_matches)) => change.handler(sub_matches),
