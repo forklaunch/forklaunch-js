@@ -78,6 +78,13 @@ config_struct!(
         pub(crate) is_better_auth: bool,
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) is_stripe: bool,
+        /// True when scaffolding the stripe ecommerce module. Kept separate
+        /// from `is_stripe` (which means "the stripe *billing* module") because
+        /// that flag also pulls in @forklaunch/implementation-billing-stripe —
+        /// an ecommerce project needs the Stripe SDK and Stripe env vars, but
+        /// not the billing implementation.
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) is_ecommerce: bool,
 
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) is_iam_configured: bool,

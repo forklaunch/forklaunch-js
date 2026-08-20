@@ -929,8 +929,11 @@ impl CliCommand for ApplicationCommand {
                     || template_dir.module_id == Some(Module::BetterAuthIam),
                 is_billing: template_dir.module_id == Some(Module::BaseBilling)
                     || template_dir.module_id == Some(Module::StripeBilling),
+                // Ecommerce needs a cache like billing does: Redis-backed
+                // cart cache + order-event queue (see init/module.rs).
                 is_cache_enabled: template_dir.module_id == Some(Module::BaseBilling)
-                    || template_dir.module_id == Some(Module::StripeBilling),
+                    || template_dir.module_id == Some(Module::StripeBilling)
+                    || template_dir.module_id == Some(Module::StripeEcommerce),
                 is_s3_enabled: false,
                 is_database_enabled: true,
                 platform_application_id: data.platform_application_id.clone(),
@@ -939,6 +942,7 @@ impl CliCommand for ApplicationCommand {
 
                 is_better_auth: template_dir.module_id == Some(Module::BetterAuthIam),
                 is_stripe: template_dir.module_id == Some(Module::StripeBilling),
+                is_ecommerce: template_dir.module_id == Some(Module::StripeEcommerce),
 
                 is_iam_configured: data.projects.iter().any(|project_entry| {
                     if project_entry.name == "iam" {
