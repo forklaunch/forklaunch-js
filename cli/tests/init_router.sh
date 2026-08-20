@@ -1,3 +1,5 @@
+set -e
+
 if [ -d "output/init-router" ]; then
     rm -rf output/init-router
 fi

@@ -1932,6 +1932,20 @@ pub(crate) fn add_service_definition_to_docker_compose(
             "replace-with-stripe-webhook-secret".to_string(),
         );
     }
+    if manifest_data.is_twilio {
+        environment.insert(
+            "TWILIO_ACCOUNT_SID".to_string(),
+            "replace-with-twilio-account-sid".to_string(),
+        );
+        environment.insert(
+            "TWILIO_AUTH_TOKEN".to_string(),
+            "replace-with-twilio-auth-token".to_string(),
+        );
+        environment.insert(
+            "TWILIO_FROM_NUMBER".to_string(),
+            "replace-with-twilio-from-number".to_string(),
+        );
+    }
 
     if manifest_data.is_iam_configured {
         add_iam_environment_variables_to_docker_compose(

@@ -1,3 +1,5 @@
+set -e
+
 if [ -d "output/change-worker" ]; then
     rm -rf output/change-worker
 fi

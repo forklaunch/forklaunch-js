@@ -154,6 +154,14 @@ impl CliCommand for ModuleCommand {
 
         let name = manifest_data.app_name.clone();
 
+        // Reuse the app's field-encryption key so the new module can decrypt
+        // shared cache records; mint one only for key-less apps.
+        let generated_encryption_key =
+            crate::core::env_defaults::find_existing_encryption_key(&base_path)
+                .unwrap_or_else(|| {
+                    crate::core::manifest::service::generate_random_secret(32)
+                });
+
         let mut service_data = ServiceManifestData {
             id: manifest_data.id.clone(),
             cli_version: manifest_data.cli_version.clone(),
@@ -231,6 +239,9 @@ impl CliCommand for ModuleCommand {
             is_better_auth: module.clone() == Module::BetterAuthIam,
             is_stripe: module.clone() == Module::StripeBilling,
             is_ecommerce: module.clone() == Module::StripeEcommerce,
+            is_messaging: module.clone() == Module::BaseMessaging
+                || module.clone() == Module::TwilioMessaging,
+            is_twilio: module.clone() == Module::TwilioMessaging,
 
             is_iam_configured: manifest_data.projects.iter().any(|project_entry| {
                 if project_entry.name == "iam" {
@@ -246,8 +257,7 @@ impl CliCommand for ModuleCommand {
                 return false;
             }),
 
-            is_request_cache_needed: (module.clone() == Module::BaseBilling
-                || module.clone() == Module::StripeBilling)
+            is_request_cache_needed: get_service_module_cache(&module).is_some()
                 || manifest_data.projects.iter().any(|project_entry| {
                     project_entry.name == "iam" || project_entry.name == "billing"
                 }),
@@ -263,6 +273,7 @@ impl CliCommand for ModuleCommand {
             // These will be properly generated when initialized
             generated_better_auth_secret: String::new(),
             generated_hmac_secret: String::new(),
+            generated_encryption_key,
             otel_token: "OtelCollector".to_string(),
         };
         let manifest_data = add_project_definition_to_manifest(

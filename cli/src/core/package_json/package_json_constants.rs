@@ -252,6 +252,10 @@ pub(crate) const ECOMMERCE_PAYPAL_VERSION: &str = "~1.0.0";
 pub(crate) const ECOMMERCE_INTERFACES_VERSION: &str = "~1.0.5";
 // @forklaunch/implementation-iam-base
 pub(crate) const IAM_BASE_VERSION: &str = "~1.0.32";
+// @forklaunch/implementation-messaging-base
+pub(crate) const MESSAGING_BASE_VERSION: &str = "~1.0.0";
+// @forklaunch/implementation-messaging-twilio
+pub(crate) const MESSAGING_TWILIO_VERSION: &str = "~1.0.0";
 // @forklaunch/implementation-worker-bullmq
 pub(crate) const WORKER_BULLMQ_VERSION: &str = "~1.0.31";
 // @forklaunch/implementation-worker-redis
@@ -268,6 +272,8 @@ pub(crate) const INFRASTRUCTURE_S3_VERSION: &str = "~1.4.10";
 pub(crate) const BILLING_INTERFACES_VERSION: &str = "~1.0.31";
 // @forklaunch/interfaces-iam
 pub(crate) const IAM_INTERFACES_VERSION: &str = "~1.0.30";
+// @forklaunch/interfaces-messaging
+pub(crate) const MESSAGING_INTERFACES_VERSION: &str = "~1.0.0";
 // @forklaunch/interfaces-worker
 pub(crate) const WORKER_INTERFACES_VERSION: &str = "~1.0.29";
 // @forklaunch/internal

@@ -56,6 +56,7 @@ use crate::{
                 WORKER_INTERFACES_VERSION, WORKER_REDIS_VERSION,
                 DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION, HYPER_EXPRESS_VERSION,
                 IAM_BASE_VERSION, IAM_INTERFACES_VERSION, INFRASTRUCTURE_REDIS_VERSION,
+                MESSAGING_BASE_VERSION, MESSAGING_INTERFACES_VERSION, MESSAGING_TWILIO_VERSION,
                 INFRASTRUCTURE_S3_VERSION, INTERNAL_VERSION, IOREDIS_VERSION, JOSE_VERSION,
                 MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION,
                 MIKRO_ORM_MIGRATIONS_VERSION,
@@ -328,12 +329,12 @@ pub(crate) fn generate_service_package_json(
         keywords: Some(vec![]),
         license: Some(manifest_data.license.to_string()),
         author: Some(manifest_data.author.to_string()),
-        main: main_override.or_else(|| if manifest_data.is_iam || manifest_data.is_billing {
+        main: main_override.or_else(|| if manifest_data.is_iam || manifest_data.is_billing || manifest_data.is_messaging {
             Some("./dist/index.js".to_string())
         } else {
             None
         }),
-        types: types_override.unwrap_or(if manifest_data.is_iam || manifest_data.is_billing {
+        types: types_override.unwrap_or(if manifest_data.is_iam || manifest_data.is_billing || manifest_data.is_messaging {
             Some("./dist/index.d.ts".to_string())
         } else {
             None
@@ -477,6 +478,24 @@ pub(crate) fn generate_service_package_json(
                 },
                 forklaunch_interfaces_iam: if manifest_data.service_name == "iam" {
                     Some(IAM_INTERFACES_VERSION.to_string())
+                } else {
+                    None
+                },
+                // Always a direct dependency for messaging modules: the twilio
+                // implementation's schema types reference base's SmsMappers, and
+                // declaration emit (TS2883) needs it nameable from the app.
+                forklaunch_implementation_messaging_base: if manifest_data.is_messaging {
+                    Some(MESSAGING_BASE_VERSION.to_string())
+                } else {
+                    None
+                },
+                forklaunch_implementation_messaging_twilio: if manifest_data.is_twilio {
+                    Some(MESSAGING_TWILIO_VERSION.to_string())
+                } else {
+                    None
+                },
+                forklaunch_interfaces_messaging: if manifest_data.is_messaging {
+                    Some(MESSAGING_INTERFACES_VERSION.to_string())
                 } else {
                     None
                 },
@@ -825,6 +844,7 @@ impl CliCommand for ServiceCommand {
 
             is_iam: false,
             is_billing: false,
+            is_messaging: false,
             is_cache_enabled: infrastructure.contains(&Infrastructure::Redis),
             platform_application_id: manifest_data.platform_application_id.clone(),
             platform_organization_id: manifest_data.platform_organization_id.clone(),
@@ -835,6 +855,7 @@ impl CliCommand for ServiceCommand {
             is_better_auth: false,
             is_stripe: false,
             is_ecommerce: false,
+            is_twilio: false,
 
             is_iam_configured: manifest_data.projects.iter().any(|project_entry| {
                 if project_entry.name == "iam" {
@@ -866,6 +887,11 @@ impl CliCommand for ServiceCommand {
             // These will be properly generated when initialized
             generated_better_auth_secret: String::new(),
             generated_hmac_secret: String::new(),
+            generated_encryption_key:
+                crate::core::env_defaults::find_existing_encryption_key(&base_path)
+                    .unwrap_or_else(|| {
+                        crate::core::manifest::service::generate_random_secret(32)
+                    }),
             otel_token: "OtelCollector".to_string(),
         };
 

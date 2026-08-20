@@ -28,7 +28,13 @@ export const setupTestDatabase = async (): Promise<TestSetupResult> => {
   harness = new BlueprintTestHarness({
     getConfig: async () => {
       const { default: config } = await import('../mikro-orm.config');
-      return config;
+      // MikroORM.init() mutates options.discovery.skipSyncDiscovery = true on
+      // the object it receives. mikro-orm.config exports a single shared object
+      // that the app's own DI container also builds a MikroORM from, so letting
+      // the harness mutate it leaves the app's `new MikroORM(config)` with an
+      // undefined `.em` (every route then crashes on `Orm.em.fork`). Hand the
+      // harness its own discovery object so the mutation can't leak.
+      return { ...config, discovery: { ...config.discovery } };
     },
     databaseType: getEnvVar('DATABASE_TYPE') as DatabaseType,
     useMigrations: false,

@@ -1,3 +1,5 @@
+set -e
+
 if [ -d "output/init-service" ]; then
     rm -rf output/init-service
 fi

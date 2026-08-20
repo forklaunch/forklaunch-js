@@ -1,3 +1,5 @@
+set -e
+
 if [ -d "output/init-iam-better-auth" ]; then
     rm -rf output/init-iam-better-auth
 fi

@@ -162,18 +162,45 @@ export async function clearTestDatabase(options?: {
 
   if (orm) {
     const em = orm.em.fork();
-    const entities = Object.values(orm.getMetadata().getAll());
+    // orm.getMetadata().getAll() returns an empty object under MikroORM v7, so
+    // the configured entity list is the reliable source of what to clear.
+    type Deletable = Parameters<typeof em.nativeDelete>[0];
+    let remaining = [...(orm.config.get('entities') as Deletable[])];
 
-    // Delete in reverse order to avoid foreign key constraints
-    for (const entity of entities.reverse()) {
-      try {
-        await em.nativeDelete(entity.class, {});
-      } catch (error) {
-        // Ignore "table does not exist" errors
-        if (!(error as Error).message?.includes('does not exist')) {
+    // The entity list is in declaration order, not FK-dependency order, so a
+    // single reverse pass can still violate foreign keys. Retry the ones that
+    // fail on a constraint until a full pass clears nothing new — that leaves
+    // only genuine errors (a real FK cycle, which would stop making progress).
+    while (remaining.length > 0) {
+      const stillBlocked: Deletable[] = [];
+      let lastConstraintError: Error | undefined;
+      let progressed = false;
+
+      for (const entity of remaining) {
+        try {
+          await em.nativeDelete(entity, {});
+          progressed = true;
+        } catch (error) {
+          const message = (error as Error).message ?? '';
+          if (message.includes('does not exist')) {
+            continue; // table not created — nothing to clear
+          }
+          if (/foreign key|constraint/i.test(message)) {
+            stillBlocked.push(entity);
+            lastConstraintError = error as Error;
+            continue;
+          }
           throw error;
         }
       }
+
+      if (!progressed) {
+        if (lastConstraintError) {
+          throw lastConstraintError; // no progress => unbreakable FK cycle
+        }
+        break;
+      }
+      remaining = stillBlocked;
     }
 
     await em.flush();
