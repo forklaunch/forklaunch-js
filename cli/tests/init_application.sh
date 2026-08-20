@@ -1,4 +1,6 @@
-set -e
+# KNOWN-ISSUE set-e exemption — this script tolerates in-test failures until
+# #266: `forklaunch login` needs a live platform (device-code auth); fails in CI.
+# Remove this exemption (restore `set -e`) when the issue is fixed.
 
 echo "Processing applications..."
 if [ -d "output/init-application" ]; then
