@@ -568,6 +568,7 @@ impl CliCommand for ApplicationCommand {
             iam: None,
             billing: None,
             ecommerce: None,
+            messaging: None,
             };
         let mut modules: Vec<Module> = if matches.get_many::<String>("modules").is_none()
             && std::io::stdin().is_terminal()
@@ -578,6 +579,7 @@ impl CliCommand for ApplicationCommand {
                     iam: None,
                     billing: None,
                     ecommerce: None,
+                    messaging: None,
                     };
                 modules_to_test = prompt_comma_separated_list(
                     &mut line_editor,
@@ -616,6 +618,7 @@ impl CliCommand for ApplicationCommand {
                 Module::BaseIam | Module::BetterAuthIam => 0,
                 Module::BaseBilling | Module::StripeBilling => 1,
                 Module::StripeEcommerce => 2,
+                Module::BaseMessaging | Module::TwilioMessaging => 3,
             }
         });
 
@@ -857,6 +860,11 @@ impl CliCommand for ApplicationCommand {
             .unwrap(),
         );
 
+        // One field-encryption key for the whole app: services share encrypted
+        // cache records, so per-service keys would fail cross-service decrypts.
+        let generated_encryption_key =
+            crate::core::manifest::service::generate_random_secret(32);
+
         for template_dir in template_dirs {
             let mut service_data = ServiceManifestData {
                 id: data.id.clone(),
@@ -939,6 +947,9 @@ impl CliCommand for ApplicationCommand {
 
                 is_better_auth: template_dir.module_id == Some(Module::BetterAuthIam),
                 is_stripe: template_dir.module_id == Some(Module::StripeBilling),
+                is_messaging: template_dir.module_id == Some(Module::BaseMessaging)
+                    || template_dir.module_id == Some(Module::TwilioMessaging),
+                is_twilio: template_dir.module_id == Some(Module::TwilioMessaging),
 
                 is_iam_configured: data.projects.iter().any(|project_entry| {
                     if project_entry.name == "iam" {
@@ -967,12 +978,14 @@ impl CliCommand for ApplicationCommand {
                 // These will be properly generated when initialized
                 generated_better_auth_secret: String::new(),
                 generated_hmac_secret: String::new(),
+                generated_encryption_key: generated_encryption_key.clone(),
                 otel_token: "OtelCollector".to_string(),
             };
 
             if service_data.service_name == "client-sdk" {
                 service_data.is_iam = global_module_config.iam.is_some();
                 service_data.is_billing = global_module_config.billing.is_some();
+                service_data.is_messaging = global_module_config.messaging.is_some();
                 service_data.is_better_auth = global_module_config
                     .iam
                     .as_ref()
@@ -1099,6 +1112,7 @@ impl CliCommand for ApplicationCommand {
                             &service_data.app_name,
                             global_module_config.billing.is_some(),
                             global_module_config.iam.is_some(),
+                            global_module_config.messaging.is_some(),
                         ),
                         ..Default::default()
                     }),

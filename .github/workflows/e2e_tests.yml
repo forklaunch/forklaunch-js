@@ -21,7 +21,7 @@ jobs:
         include:
           - group: 1
             name: "Init Tests (heavy modules)"
-            pattern: "init_@(application|billing|iam)*.sh"
+            pattern: "init_@(application|billing|iam|messaging)*.sh"
           - group: 2
             name: "Init Tests (components)"
             pattern: "init_@(compile|library|module|router|service|worker)*.sh"

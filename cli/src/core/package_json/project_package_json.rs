@@ -183,6 +183,9 @@ pub(crate) struct ProjectDependencies {
     pub(crate) forklaunch_interfaces_billing: Option<String>,
     pub(crate) forklaunch_implementation_iam_base: Option<String>,
     pub(crate) forklaunch_interfaces_iam: Option<String>,
+    pub(crate) forklaunch_implementation_messaging_base: Option<String>,
+    pub(crate) forklaunch_implementation_messaging_twilio: Option<String>,
+    pub(crate) forklaunch_interfaces_messaging: Option<String>,
     pub(crate) forklaunch_implementation_worker_bullmq: Option<String>,
     pub(crate) forklaunch_implementation_worker_redis: Option<String>,
     pub(crate) forklaunch_implementation_worker_database: Option<String>,
@@ -271,6 +274,15 @@ impl Serialize for ProjectDependencies {
         }
         if let Some(ref v) = self.forklaunch_interfaces_iam {
             map.serialize_entry("@forklaunch/interfaces-iam", v)?;
+        }
+        if let Some(ref v) = self.forklaunch_implementation_messaging_base {
+            map.serialize_entry("@forklaunch/implementation-messaging-base", v)?;
+        }
+        if let Some(ref v) = self.forklaunch_implementation_messaging_twilio {
+            map.serialize_entry("@forklaunch/implementation-messaging-twilio", v)?;
+        }
+        if let Some(ref v) = self.forklaunch_interfaces_messaging {
+            map.serialize_entry("@forklaunch/interfaces-messaging", v)?;
         }
         if let Some(ref v) = self.forklaunch_implementation_worker_bullmq {
             map.serialize_entry("@forklaunch/implementation-worker-bullmq", v)?;
@@ -531,6 +543,15 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
                         }
                         "@forklaunch/interfaces-iam" => {
                             deps.forklaunch_interfaces_iam = Some(value)
+                        }
+                        "@forklaunch/implementation-messaging-base" => {
+                            deps.forklaunch_implementation_messaging_base = Some(value)
+                        }
+                        "@forklaunch/implementation-messaging-twilio" => {
+                            deps.forklaunch_implementation_messaging_twilio = Some(value)
+                        }
+                        "@forklaunch/interfaces-messaging" => {
+                            deps.forklaunch_interfaces_messaging = Some(value)
                         }
                         "@forklaunch/implementation-worker-bullmq" => {
                             deps.forklaunch_implementation_worker_bullmq = Some(value)
