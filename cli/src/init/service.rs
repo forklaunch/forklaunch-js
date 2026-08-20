@@ -851,6 +851,11 @@ impl CliCommand for ServiceCommand {
             // These will be properly generated when initialized
             generated_better_auth_secret: String::new(),
             generated_hmac_secret: String::new(),
+            generated_encryption_key:
+                crate::core::env_defaults::find_existing_encryption_key(&base_path)
+                    .unwrap_or_else(|| {
+                        crate::core::manifest::service::generate_random_secret(32)
+                    }),
             otel_token: "OtelCollector".to_string(),
         };
 

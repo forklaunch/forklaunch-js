@@ -13,7 +13,7 @@ use crate::{
 };
 
 /// Generate a random base64-encoded secret of specified length
-fn generate_random_secret(byte_length: usize) -> String {
+pub(crate) fn generate_random_secret(byte_length: usize) -> String {
     let mut bytes = vec![0u8; byte_length];
     getrandom::getrandom(&mut bytes).expect("Failed to generate random bytes");
     STANDARD.encode(&bytes)
@@ -104,6 +104,8 @@ config_struct!(
         pub(crate) generated_better_auth_secret: String,
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) generated_hmac_secret: String,
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) generated_encryption_key: String,
 
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) otel_token: String,
@@ -244,6 +246,7 @@ impl InitializableManifestConfig for ServiceManifestData {
             // Generate unique random secrets for each service/environment
             generated_better_auth_secret: generate_random_secret(32),
             generated_hmac_secret: generate_random_secret(32),
+            generated_encryption_key: generate_random_secret(32),
 
             otel_token: "OtelCollector".to_string(),
 

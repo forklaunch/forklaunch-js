@@ -860,6 +860,11 @@ impl CliCommand for ApplicationCommand {
             .unwrap(),
         );
 
+        // One field-encryption key for the whole app: services share encrypted
+        // cache records, so per-service keys would fail cross-service decrypts.
+        let generated_encryption_key =
+            crate::core::manifest::service::generate_random_secret(32);
+
         for template_dir in template_dirs {
             let mut service_data = ServiceManifestData {
                 id: data.id.clone(),
@@ -973,6 +978,7 @@ impl CliCommand for ApplicationCommand {
                 // These will be properly generated when initialized
                 generated_better_auth_secret: String::new(),
                 generated_hmac_secret: String::new(),
+                generated_encryption_key: generated_encryption_key.clone(),
                 otel_token: "OtelCollector".to_string(),
             };
 
