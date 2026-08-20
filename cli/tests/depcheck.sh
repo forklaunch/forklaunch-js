@@ -1,3 +1,5 @@
+set -e
+
 if [ -d "output/depcheck" ]; then
     rm -rf output/depcheck
 fi

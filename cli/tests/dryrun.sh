@@ -1,3 +1,5 @@
+set -e
+
 if [ -d "output/dryrun" ]; then
     rm -rf output/dryrun
 fi

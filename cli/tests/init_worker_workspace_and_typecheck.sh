@@ -1,3 +1,5 @@
+set -e
+
 if [ -d "output/init-worker-workspace" ]; then
     rm -rf output/init-worker-workspace
 fi

@@ -937,8 +937,12 @@ impl CliCommand for ApplicationCommand {
                     || template_dir.module_id == Some(Module::BetterAuthIam),
                 is_billing: template_dir.module_id == Some(Module::BaseBilling)
                     || template_dir.module_id == Some(Module::StripeBilling),
-                is_cache_enabled: template_dir.module_id == Some(Module::BaseBilling)
-                    || template_dir.module_id == Some(Module::StripeBilling),
+                // Derive from the module registry — a hardcoded billing list
+                // silently skipped the cache for newer modules (messaging).
+                is_cache_enabled: template_dir
+                    .module_id
+                    .as_ref()
+                    .is_some_and(|module| get_service_module_cache(module).is_some()),
                 is_s3_enabled: false,
                 is_database_enabled: true,
                 platform_application_id: data.platform_application_id.clone(),
@@ -965,8 +969,10 @@ impl CliCommand for ApplicationCommand {
                     return false;
                 }),
 
-                is_request_cache_needed: (template_dir.module_id == Some(Module::BaseBilling)
-                    || template_dir.module_id == Some(Module::StripeBilling))
+                is_request_cache_needed: template_dir
+                    .module_id
+                    .as_ref()
+                    .is_some_and(|module| get_service_module_cache(module).is_some())
                     || data.projects.iter().any(|project_entry| project_entry.name == "iam" || project_entry.name == "billing"),
                 is_type_needed: data.projects.iter().any(|project_entry| project_entry.name == "iam" || project_entry.name == "billing"),
 

@@ -252,8 +252,7 @@ impl CliCommand for ModuleCommand {
                 return false;
             }),
 
-            is_request_cache_needed: (module.clone() == Module::BaseBilling
-                || module.clone() == Module::StripeBilling)
+            is_request_cache_needed: get_service_module_cache(&module).is_some()
                 || manifest_data.projects.iter().any(|project_entry| {
                     project_entry.name == "iam" || project_entry.name == "billing"
                 }),

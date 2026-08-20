@@ -1,3 +1,5 @@
+set -e
+
 if [ -d "output/init-module" ]; then
     rm -rf output/init-module
 fi

@@ -1,3 +1,5 @@
+set -e
+
 if [ -d "output/change-router" ]; then
     rm -rf output/change-router
 fi
