@@ -1,6 +1,10 @@
 export * from './cart.controller';
 export * from './catalogImport.controller';
+export * from './checkout.controller';
 export * from './inventory.controller';
+export * from './order.controller';
+export * from './payment.controller';
 export * from './product.controller';
 export * from './variant.controller';
+export * from './webhook.controller';
 // Remaining controllers are added incrementally as each PR lands.

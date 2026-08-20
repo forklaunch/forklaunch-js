@@ -1,6 +1,13 @@
 import { SchemaValidator } from '../../schema';
 import { Schema } from '@forklaunch/validator';
-import { Cart, Inventory, Product, Variant } from '../../persistence/entities';
+import {
+  Cart,
+  Inventory,
+  Order,
+  Payment,
+  Product,
+  Variant
+} from '../../persistence/entities';
 import {
   CartMapper,
   CreateCartMapper,
@@ -11,6 +18,12 @@ import {
   InventoryMapper,
   UpdateInventoryMapper
 } from '../mappers/inventory.mappers';
+import {
+  CreateOrderMapper,
+  OrderMapper,
+  UpdateOrderMapper
+} from '../mappers/order.mappers';
+import { CreatePaymentMapper, PaymentMapper } from '../mappers/payment.mappers';
 import {
   CreateProductMapper,
   ProductMapper,
@@ -76,6 +89,28 @@ export type CartDtoTypes = {
   UpdateCartMapper: Schema<typeof UpdateCartMapper.schema, SchemaValidator>;
 };
 
+// order
+export type OrderMapperTypes = {
+  OrderMapper: typeof Order;
+  CreateOrderMapper: typeof Order;
+  UpdateOrderMapper: typeof Order;
+};
+export type OrderDtoTypes = {
+  OrderMapper: Schema<typeof OrderMapper.schema, SchemaValidator>;
+  CreateOrderMapper: Schema<typeof CreateOrderMapper.schema, SchemaValidator>;
+  UpdateOrderMapper: Schema<typeof UpdateOrderMapper.schema, SchemaValidator>;
+};
+
+// payment (no update mapper — confirm/fail are provider-driven, not user-editable)
+export type PaymentMapperTypes = {
+  PaymentMapper: typeof Payment;
+  CreatePaymentMapper: typeof Payment;
+};
+export type PaymentDtoTypes = {
+  PaymentMapper: Schema<typeof PaymentMapper.schema, SchemaValidator>;
+  CreatePaymentMapper: Schema<typeof CreatePaymentMapper.schema, SchemaValidator>;
+};
+
 // Remaining entities' mapper/DTO types are added incrementally as each PR lands.
 
 // TS2883 workaround. The dependency container infers through the Base*Service
@@ -88,6 +123,14 @@ export type CartDtoTypes = {
 // this block is the place to look.
 export type {
   InventoryMappers,
+  OrderMappers,
   ProductMappers,
   VariantMappers
 } from '@forklaunch/implementation-ecommerce-base/types';
+
+// Same TS2883 anchor requirement as above, but for the two payment-provider
+// packages: their StripePaymentMappers/PaypalPaymentMappers types are what
+// the dependency container infers through StripePaymentService/
+// PaypalPaymentService's constructor generics.
+export type { StripePaymentMappers } from '@forklaunch/implementation-ecommerce-stripe/types';
+export type { PaypalPaymentMappers } from '@forklaunch/implementation-ecommerce-paypal/types';

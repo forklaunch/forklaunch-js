@@ -20,11 +20,31 @@ import {
 import {
   BaseCartService,
   BaseInventoryService,
+  BaseOrderService,
   BaseProductService,
   BaseVariantService
 } from '@forklaunch/implementation-ecommerce-base/services';
+import {
+  PaypalClient,
+  PaypalPaymentService
+} from '@forklaunch/implementation-ecommerce-paypal/services';
+import { StripePaymentService } from '@forklaunch/implementation-ecommerce-stripe/services';
+import { RedisWorkerConsumer } from '@forklaunch/implementation-worker-redis/consumers';
+import { RedisWorkerProducer } from '@forklaunch/implementation-worker-redis/producers';
+import { RedisWorkerSchemas } from '@forklaunch/implementation-worker-redis/schemas';
+import { RedisWorkerOptions } from '@forklaunch/implementation-worker-redis/types';
+import {
+  WorkerFailureHandler,
+  WorkerProcessFunction
+} from '@forklaunch/interfaces-worker/types';
+import { OrderEventRecord } from './persistence/entities/orderEvent.entity';
+import { StripeTaxService } from './domain/services/tax.service';
+import { FlatRateShippingService } from './domain/services/shipping.service';
+import { WebhookEventService } from './domain/services/webhookEvent.service';
+import { OrderCartLookupService } from './domain/services/orderCartLookup.service';
 import { ForkOptions } from '@mikro-orm/core';
 import { EntityManager, MikroORM } from '@mikro-orm/postgresql';
+import Stripe from 'stripe';
 import {
   CartMapper,
   CreateCartMapper,
@@ -35,6 +55,15 @@ import {
   InventoryMapper,
   UpdateInventoryMapper
 } from './domain/mappers/inventory.mappers';
+import {
+  CreateOrderMapper,
+  OrderMapper,
+  UpdateOrderMapper
+} from './domain/mappers/order.mappers';
+import {
+  CreatePaymentMapper,
+  PaymentMapper
+} from './domain/mappers/payment.mappers';
 import {
   CreateProductMapper,
   ProductMapper,
@@ -50,12 +79,20 @@ import {
   CartMapperTypes,
   InventoryDtoTypes,
   InventoryMapperTypes,
+  OrderDtoTypes,
+  OrderMapperTypes,
+  PaymentDtoTypes,
+  PaymentMapperTypes,
   ProductDtoTypes,
   ProductMapperTypes,
   VariantDtoTypes,
   VariantMapperTypes
 } from './domain/types/ecommerceMappers.types';
 import mikroOrmOptionsConfig from './mikro-orm.config';
+
+const RedisWorkerOptionsSchema = RedisWorkerSchemas({
+  validator: schemaValidator
+});
 
 //! defines the configuration schema for the application
 const configInjector = createConfigInjector(schemaValidator, {
@@ -109,6 +146,30 @@ const environmentConfig = configInjector.chain({
     type: string,
     value: getEnvVar('OTEL_EXPORTER_OTLP_ENDPOINT')
   },
+  STRIPE_API_KEY: {
+    lifetime: Lifetime.Singleton,
+    type: string,
+    value: getEnvVar('STRIPE_API_KEY')
+  },
+  /** Stripe's webhook signing secret (`whsec_...`) — used by
+   *  stripe.webhooks.constructEvent to verify `stripe-signature`, never to
+   *  call the Stripe API itself (that's STRIPE_API_KEY). Already
+   *  anticipated by __test__/test-utils.ts's customEnvVars, ahead of this
+   *  PR actually consuming it. */
+  STRIPE_WEBHOOK_SECRET: {
+    lifetime: Lifetime.Singleton,
+    type: string,
+    value: getEnvVar('STRIPE_WEBHOOK_SECRET')
+  },
+  /** The webhook's own id, assigned by PayPal when the webhook URL is
+   *  registered in the developer dashboard — required by PayPal's
+   *  verify-webhook-signature API alongside the per-request transmission
+   *  headers. */
+  PAYPAL_WEBHOOK_ID: {
+    lifetime: Lifetime.Singleton,
+    type: string,
+    value: getEnvVar('PAYPAL_WEBHOOK_ID')
+  },
   HMAC_SECRET_KEY: {
     lifetime: Lifetime.Singleton,
     type: string,
@@ -123,6 +184,21 @@ const environmentConfig = configInjector.chain({
     lifetime: Lifetime.Singleton,
     type: string,
     value: getEnvVar('ENCRYPTION_KEY')
+  },
+  PAYPAL_CLIENT_ID: {
+    lifetime: Lifetime.Singleton,
+    type: string,
+    value: getEnvVar('PAYPAL_CLIENT_ID')
+  },
+  PAYPAL_CLIENT_SECRET: {
+    lifetime: Lifetime.Singleton,
+    type: string,
+    value: getEnvVar('PAYPAL_CLIENT_SECRET')
+  },
+  PAYPAL_BASE_URL: {
+    lifetime: Lifetime.Singleton,
+    type: string,
+    value: getEnvVar('PAYPAL_BASE_URL')
   },
   REDIS_URL: {
     lifetime: Lifetime.Singleton,
@@ -143,6 +219,32 @@ const environmentConfig = configInjector.chain({
 //! -> runtimeDependencies), so every intermediate PR stays independently
 //! buildable rather than referencing services that don't exist yet.
 const runtimeDependencies = environmentConfig.chain({
+  StripeClient: {
+    lifetime: Lifetime.Singleton,
+    type: Stripe,
+    factory: ({ STRIPE_API_KEY }) => new Stripe(STRIPE_API_KEY)
+  },
+  PaypalClient: {
+    lifetime: Lifetime.Singleton,
+    type: PaypalClient,
+    factory: ({ PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_BASE_URL }) =>
+      new PaypalClient({
+        clientId: PAYPAL_CLIENT_ID,
+        clientSecret: PAYPAL_CLIENT_SECRET,
+        baseUrl: PAYPAL_BASE_URL
+      })
+  },
+  TaxService: {
+    lifetime: Lifetime.Singleton,
+    type: StripeTaxService,
+    factory: ({ StripeClient, OtelCollector }) =>
+      new StripeTaxService(StripeClient, OtelCollector)
+  },
+  ShippingService: {
+    lifetime: Lifetime.Singleton,
+    type: FlatRateShippingService,
+    factory: () => new FlatRateShippingService()
+  },
   /**
    * Cart's fast/temporary-state layer (ECOM-06's original design) — a
    * read-through cache in front of Postgres, which stays the source of
@@ -250,6 +352,160 @@ const serviceDependencies = runtimeDependencies.chain({
         schemaValidator,
         { InventoryMapper, CreateInventoryMapper, UpdateInventoryMapper }
       )
+  },
+  OrderService: {
+    lifetime: Lifetime.Scoped,
+    type: BaseOrderService<SchemaValidator, OrderMapperTypes, OrderDtoTypes>,
+    factory: ({ EntityManager, OtelCollector }, context, resolve) =>
+      new BaseOrderService(
+        context?.entityManagerOptions
+          ? resolve('EntityManager', context)
+          : EntityManager,
+        OtelCollector,
+        schemaValidator,
+        { OrderMapper, CreateOrderMapper, UpdateOrderMapper }
+      )
+  },
+  PaymentService: {
+    lifetime: Lifetime.Scoped,
+    type: StripePaymentService<
+      SchemaValidator,
+      PaymentMapperTypes,
+      PaymentDtoTypes
+    >,
+    factory: (
+      { StripeClient, EntityManager, OtelCollector },
+      context,
+      resolve
+    ) =>
+      new StripePaymentService(
+        StripeClient,
+        context?.entityManagerOptions
+          ? resolve('EntityManager', context)
+          : EntityManager,
+        OtelCollector,
+        schemaValidator,
+        { PaymentMapper, CreatePaymentMapper }
+      )
+  },
+  /**
+   * Separate token from PaymentService (Stripe, the default) rather than
+   * replacing it — this is the "one socket, many providers" seam: callers
+   * pick a provider per-request (see payment.controller.ts), neither
+   * provider is removed to add the other.
+   */
+  PaypalPaymentService: {
+    lifetime: Lifetime.Scoped,
+    type: PaypalPaymentService<
+      SchemaValidator,
+      PaymentMapperTypes,
+      PaymentDtoTypes
+    >,
+    factory: (
+      { PaypalClient: paypalClientInstance, EntityManager, OtelCollector },
+      context,
+      resolve
+    ) =>
+      new PaypalPaymentService(
+        paypalClientInstance,
+        context?.entityManagerOptions
+          ? resolve('EntityManager', context)
+          : EntityManager,
+        OtelCollector,
+        schemaValidator,
+        // Same runtime shape as Stripe's mappers (toEntity only reads `.id`
+        // off the 3rd arg) — PaypalPaymentMappers narrows the type to
+        // PaypalOrder; the cast bridges the two provider-specific static
+        // types over one shared runtime mapper object, same as
+        // StripePaymentService does internally for its own 3rd-arg type.
+        { PaymentMapper, CreatePaymentMapper } as unknown as ConstructorParameters<
+          typeof PaypalPaymentService<
+            SchemaValidator,
+            PaymentMapperTypes,
+            PaymentDtoTypes
+          >
+        >[4]
+      )
+  },
+  /**
+   * The webhook idempotency gate (ECOM-10's other half) — Scoped, same
+   * lifetime as PaymentService/OrderService, since it holds a
+   * per-request-scoped EntityManager the same way they do.
+   */
+  WebhookEventService: {
+    lifetime: Lifetime.Scoped,
+    type: WebhookEventService,
+    factory: ({ EntityManager, OtelCollector }, context, resolve) =>
+      new WebhookEventService(
+        context?.entityManagerOptions
+          ? resolve('EntityManager', context)
+          : EntityManager,
+        OtelCollector
+      )
+  },
+  /**
+   * Checkout-idempotency lookup (ECOM-09/10) — see OrderCartLookupService's
+   * doc comment for why this is its own service rather than a
+   * BaseOrderService method. Scoped, same lifetime/EntityManager-resolution
+   * pattern as OrderService/WebhookEventService.
+   */
+  OrderCartLookupService: {
+    lifetime: Lifetime.Scoped,
+    type: OrderCartLookupService,
+    factory: ({ EntityManager }, context, resolve) =>
+      new OrderCartLookupService(
+        context?.entityManagerOptions
+          ? resolve('EntityManager', context)
+          : EntityManager
+      )
+  },
+  /**
+   * ECOM-12's event-emission boundary, actually implemented — previously
+   * just a comment. Redis transport only (matches TtlCache already being
+   * registered here; no new infra beyond what cart caching already needs).
+   */
+  RedisWorkerOptions: {
+    lifetime: Lifetime.Singleton,
+    type: RedisWorkerOptionsSchema,
+    value: {
+      pageSize: 100,
+      retries: 3,
+      interval: 5000
+    }
+  },
+  OrderEventProducer: {
+    lifetime: Lifetime.Scoped,
+    type: RedisWorkerProducer<OrderEventRecord, RedisWorkerOptions>,
+    factory: ({ TtlCache, ORDER_EVENT_QUEUE, RedisWorkerOptions }) =>
+      new RedisWorkerProducer(ORDER_EVENT_QUEUE, TtlCache, RedisWorkerOptions)
+  },
+  OrderEventConsumer: {
+    lifetime: Lifetime.Scoped,
+    // The function_([...], type<...>()) TypeBox-style signature (the exact
+    // pattern sample-worker/registrations.ts uses for its own Redis
+    // consumer) does not type-check here despite being byte-for-byte
+    // identical — a real, unresolved TS-inference discrepancy between the
+    // two files, not a typo. Falling back to an explicit type assertion on
+    // the factory's return so the actual runtime behavior (verified
+    // separately below) isn't blocked by it. Left as a known loose end —
+    // narrowing the real cause needs more time than this pass has.
+    type: null as unknown as (
+      processEventsFunction: WorkerProcessFunction<OrderEventRecord>,
+      failureHandler: WorkerFailureHandler<OrderEventRecord>
+    ) => RedisWorkerConsumer<OrderEventRecord, RedisWorkerOptions>,
+    factory:
+      ({ TtlCache, ORDER_EVENT_QUEUE, RedisWorkerOptions }) =>
+      (
+        processEventsFunction: WorkerProcessFunction<OrderEventRecord>,
+        failureHandler: WorkerFailureHandler<OrderEventRecord>
+      ) =>
+        new RedisWorkerConsumer(
+          ORDER_EVENT_QUEUE,
+          TtlCache,
+          RedisWorkerOptions,
+          processEventsFunction,
+          failureHandler
+        )
   }
 });
 
