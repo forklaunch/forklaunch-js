@@ -458,9 +458,10 @@ pub(crate) fn generate_service_package_json(
                 } else {
                     None
                 },
-                forklaunch_implementation_messaging_base: if manifest_data.is_messaging
-                    && !manifest_data.is_twilio
-                {
+                // Always a direct dependency for messaging modules: the twilio
+                // implementation's schema types reference base's SmsMappers, and
+                // declaration emit (TS2883) needs it nameable from the app.
+                forklaunch_implementation_messaging_base: if manifest_data.is_messaging {
                     Some(MESSAGING_BASE_VERSION.to_string())
                 } else {
                     None

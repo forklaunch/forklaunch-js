@@ -562,6 +562,10 @@ pub(crate) fn get_service_module_description(name: &str, service_type: &Module) 
 pub(crate) fn get_service_module_cache(service_type: &Module) -> Option<String> {
     match service_type {
         Module::BaseBilling | Module::StripeBilling => Some(Infrastructure::Redis.to_string()),
+        // The messaging blueprint's registrations wire a RedisTtlCache.
+        Module::BaseMessaging | Module::TwilioMessaging => {
+            Some(Infrastructure::Redis.to_string())
+        }
         _ => None,
     }
 }
