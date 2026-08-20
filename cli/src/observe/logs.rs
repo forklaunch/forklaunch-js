@@ -22,19 +22,6 @@ use crate::{
     },
 };
 
-/// How often `--follow` asks the API for logs newer than the last one printed.
-const POLL_INTERVAL: Duration = Duration::from_secs(2);
-
-/// The API resolves `since` at second granularity, so each poll deliberately
-/// overlaps the previous window by a second rather than risk dropping a line
-/// that landed in the same second as the newest one already printed. The
-/// overlap is absorbed by de-duplicating on log id.
-const POLL_OVERLAP_SECONDS: i64 = 1;
-
-/// Upper bound on remembered log ids. Large enough that a poll window's worth
-/// of overlap is always covered, small enough to stay flat over a long tail.
-const SEEN_IDS_CAPACITY: usize = 5_000;
-
 #[derive(Debug)]
 pub(super) struct LogsCommand;
 
@@ -61,18 +48,43 @@ impl CliCommand for LogsCommand {
                     .help("Environment to inspect (for example: dev, staging, production)"),
             )
             .arg(
+                Arg::new("region")
+                    .short('r')
+                    .long("region")
+                    .help("Cloud region to inspect (for example: us-west-2); defaults to every region the environment is deployed in"),
+            )
+            .arg(
                 Arg::new("service")
                     .short('s')
                     .long("service")
-                    .help(
-                        "Filter to a single service or worker by name (a bare \
-                         project name matches both)",
-                    ),
+                    .help("Filter to a specific service or worker name"),
+            )
+            .arg(
+                Arg::new("deployment")
+                    .long("deployment")
+                    .help("Filter to logs emitted by tasks of one deployment id"),
             )
             .arg(
                 Arg::new("level")
                     .long("level")
                     .help("Filter by log level (error, warn, info, debug)"),
+            )
+            .arg(
+                Arg::new("query")
+                    .short('q')
+                    .long("query")
+                    .help("Only lines containing this text"),
+            )
+            .arg(
+                Arg::new("source")
+                    .long("source")
+                    .value_parser(["otel", "cloudwatch"])
+                    .default_value("otel")
+                    .help(
+                        "Log source: otel = the app's OpenTelemetry pipeline (structured, filter-rich); \
+                         cloudwatch = raw container stdout/stderr captured by the platform (survives \
+                         crashes that happen before the OTel exporter flushes)",
+                    ),
             )
             .arg(
                 Arg::new("since")
@@ -108,49 +120,73 @@ impl CliCommand for LogsCommand {
             .get_one::<String>("environment")
             .context("--environment is required")?
             .to_string();
-        let service = matches.get_one::<String>("service").cloned();
-        let level = matches.get_one::<String>("level").cloned();
-        let since = matches.get_one::<String>("since").cloned();
+        let source = matches
+            .get_one::<String>("source")
+            .map(String::as_str)
+            .unwrap_or("otel");
+        let filters = LogFilters {
+            environment,
+            region: matches.get_one::<String>("region").cloned(),
+            service: matches.get_one::<String>("service").cloned(),
+            deployment_id: matches.get_one::<String>("deployment").cloned(),
+            level: matches.get_one::<String>("level").cloned(),
+            query: matches.get_one::<String>("query").cloned(),
+            since: matches.get_one::<String>("since").cloned(),
+            // The server defaults to the OTel/Loki pipeline; only "cloudwatch"
+            // needs to be sent explicitly.
+            source: (source == "cloudwatch").then(|| source.to_string()),
+        };
+        // Raw container output carries no OTel resource attributes, so a
+        // deployment filter would be silently ignored server-side — reject it
+        // instead of returning results that look filtered but aren't.
+        if filters.source.is_some() && filters.deployment_id.is_some() {
+            anyhow::bail!(
+                "--deployment filters on OTel resource attributes, which raw CloudWatch \
+                 output does not carry. Drop --deployment or use --source otel."
+            );
+        }
         let limit: u32 = matches.get_one::<u32>("limit").copied().unwrap_or(100);
         let follow = matches.get_flag("follow");
         let json_output = matches.get_flag("json");
 
         if follow {
-            stream_logs(
-                &application_id,
-                &environment,
-                service.as_deref(),
-                level.as_deref(),
-                since.as_deref(),
-                limit,
-                json_output,
-            )
+            if filters.source.is_some() {
+                anyhow::bail!(
+                    "--follow streams from the OTel pipeline and cannot be combined with \
+                     --source cloudwatch. Poll instead: fl observe logs --source cloudwatch --since <ts>"
+                );
+            }
+            stream_logs(&application_id, &filters, limit, json_output)
         } else {
-            query_logs(
-                &application_id,
-                &environment,
-                service.as_deref(),
-                level.as_deref(),
-                since.as_deref(),
-                limit,
-                json_output,
-            )
+            query_logs(&application_id, &filters, limit, json_output)
         }
     }
+}
+
+/// Server-side log filters forwarded as query params (see the observability
+/// API's ServiceLogsQuerySchema).
+#[derive(Clone)]
+struct LogFilters {
+    environment: String,
+    region: Option<String>,
+    service: Option<String>,
+    deployment_id: Option<String>,
+    level: Option<String>,
+    query: Option<String>,
+    since: Option<String>,
+    /// "cloudwatch" to read raw container stdout/stderr; None = OTel/Loki (server default).
+    source: Option<String>,
 }
 
 // ── HTTP query (no --follow) ──────────────────────────────────────────────────
 
 fn query_logs(
     application_id: &str,
-    environment: &str,
-    service: Option<&str>,
-    level: Option<&str>,
-    since: Option<&str>,
+    filters: &LogFilters,
     limit: u32,
     json_output: bool,
 ) -> Result<()> {
-    let response = fetch_logs(application_id, environment, service, level, since, limit)?;
+    let response = fetch_logs(application_id, filters, limit)?;
 
     if json_output {
         println!("{}", serde_json::to_string_pretty(&response)?);
@@ -161,31 +197,27 @@ fn query_logs(
     Ok(())
 }
 
-fn fetch_logs(
-    application_id: &str,
-    environment: &str,
-    service: Option<&str>,
-    level: Option<&str>,
-    since: Option<&str>,
-    limit: u32,
-) -> Result<LogsResponse> {
+fn fetch_logs(application_id: &str, filters: &LogFilters, limit: u32) -> Result<LogsResponse> {
     let api_url = get_observability_api_url();
     let mut url = format!(
         "{}/applications/{}/logs?environment={}&limit={}&direction=backward",
         api_url,
         application_id,
-        urlencoding::encode(environment),
+        urlencoding::encode(&filters.environment),
         limit
     );
-    if let Some(svc) = service {
-        url.push_str(&format!("&service={}", urlencoding::encode(svc)));
-    }
-    if let Some(lvl) = level {
-        url.push_str(&format!("&level={}", urlencoding::encode(lvl)));
-    }
-    if let Some(s) = since {
-        url.push_str(&format!("&since={}", urlencoding::encode(s)));
-    }
+    let mut push_param = |key: &str, value: &Option<String>| {
+        if let Some(v) = value {
+            url.push_str(&format!("&{}={}", key, urlencoding::encode(v)));
+        }
+    };
+    push_param("region", &filters.region);
+    push_param("service", &filters.service);
+    push_param("deploymentId", &filters.deployment_id);
+    push_param("level", &filters.level);
+    push_param("q", &filters.query);
+    push_param("since", &filters.since);
+    push_param("source", &filters.source);
 
     let auth_mode = AuthMode::detect();
     let response =
@@ -206,6 +238,19 @@ fn fetch_logs(
 
 // ── Live tail (--follow) ──────────────────────────────────────────────────────
 
+/// How often `--follow` asks the API for logs newer than the last one printed.
+const POLL_INTERVAL: Duration = Duration::from_secs(2);
+
+/// The API resolves `since` at second granularity, so each poll deliberately
+/// overlaps the previous window by a second rather than risk dropping a line
+/// that landed in the same second as the newest one already printed. The
+/// overlap is absorbed by de-duplicating on log id.
+const POLL_OVERLAP_SECONDS: i64 = 1;
+
+/// Upper bound on remembered log ids. Large enough that a poll window's worth
+/// of overlap is always covered, small enough to stay flat over a long tail.
+const SEEN_IDS_CAPACITY: usize = 5_000;
+
 /// Live-tail by polling the same endpoint the one-shot query uses, asking each
 /// time for logs newer than the newest one already printed.
 ///
@@ -213,20 +258,18 @@ fn fetch_logs(
 /// the CLI derived the socket URL from the HTTP API base, but the monitoring
 /// socket listens on its own port (WS_PORT), and nothing on the server ever
 /// published to the log channels it subscribed to. Polling reuses the request
-/// path and auth that already work, so it needs no additional infrastructure.
+/// path, auth, and every server-side filter that already works for the
+/// one-shot query, so it needs no additional infrastructure.
 fn stream_logs(
     application_id: &str,
-    environment: &str,
-    service: Option<&str>,
-    level: Option<&str>,
-    since: Option<&str>,
+    filters: &LogFilters,
     limit: u32,
     json_output: bool,
 ) -> Result<()> {
     let mut seen = SeenLogIds::new(SEEN_IDS_CAPACITY);
 
     // Seed from recent history so the tail opens with context, oldest first.
-    let initial = fetch_logs(application_id, environment, service, level, since, limit)?;
+    let initial = fetch_logs(application_id, filters, limit)?;
     let mut entries = initial.logs;
     sort_ascending(&mut entries);
     entries.retain(|entry| seen.insert(entry.id.clone()));
@@ -245,7 +288,7 @@ fn stream_logs(
         writeln!(
             stdout,
             "Streaming logs for {} ({})…  Ctrl+C to stop",
-            application_id, environment
+            application_id, filters.environment
         )?;
         stdout.reset()?;
     }
@@ -254,14 +297,11 @@ fn stream_logs(
         sleep(POLL_INTERVAL);
 
         let window_start = cursor - chrono::Duration::seconds(POLL_OVERLAP_SECONDS);
-        let page = fetch_logs(
-            application_id,
-            environment,
-            service,
-            level,
-            Some(&format_timestamp(window_start)),
-            limit,
-        )?;
+        let poll_filters = LogFilters {
+            since: Some(format_timestamp(window_start)),
+            ..filters.clone()
+        };
+        let page = fetch_logs(application_id, &poll_filters, limit)?;
 
         let mut fresh = page.logs;
         sort_ascending(&mut fresh);
@@ -348,8 +388,8 @@ fn print_logs(logs: &[LogEntry]) -> Result<()> {
     let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
     for entry in logs {
-        let level = entry.level.as_deref().unwrap_or("info");
-        let color = level_color(level);
+        let level = entry.display_level();
+        let color = level_color(&level);
 
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::White)))?;
         let ts_display = entry.timestamp.get(..19).unwrap_or(&entry.timestamp).replace('T', " ");
@@ -386,6 +426,28 @@ struct LogEntry {
     message: String,
     #[serde(default)]
     labels: serde_json::Value,
+}
+
+impl LogEntry {
+    /// The severity to display. The top-level `level` may be absent on older
+    /// API versions (no indexed level label in Loki) — fall back to the
+    /// structured-metadata severity the pipeline actually populates, and never
+    /// invent a level: an unknown severity renders as "-", not "info".
+    fn display_level(&self) -> String {
+        if let Some(l) = self.level.as_deref() {
+            if !l.is_empty() {
+                return l.to_lowercase();
+            }
+        }
+        for key in ["detected_level", "severity_text", "level"] {
+            if let Some(l) = self.labels.get(key).and_then(|v| v.as_str()) {
+                if !l.is_empty() {
+                    return l.to_lowercase();
+                }
+            }
+        }
+        "-".to_string()
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -430,8 +492,6 @@ mod tests {
         seen.insert("a".to_string());
         seen.insert("b".to_string());
         seen.insert("c".to_string());
-
-        // "a" was evicted, so it is no longer recognised; "c" still is.
         assert!(seen.insert("a".to_string()));
         assert!(!seen.insert("c".to_string()));
     }
@@ -469,7 +529,6 @@ mod tests {
 
     #[test]
     fn sorts_oldest_first_so_a_tail_appends_downward() {
-        // The API returns newest-first for direction=backward.
         let mut entries = vec![
             entry("newest", "2026-07-28T10:00:02.000Z"),
             entry("oldest", "2026-07-28T10:00:00.000Z"),
@@ -500,9 +559,8 @@ mod tests {
 
     #[test]
     fn poll_window_starts_before_the_last_line_seen() {
-        // Guards against the drop this overlap exists to prevent: the API
-        // resolves `since` at second granularity, so a window starting exactly
-        // at the newest line can skip a line from that same second.
+        // The API resolves `since` at second granularity, so a window starting
+        // exactly at the newest line can skip a line from that same second.
         let cursor = parse_timestamp("2026-07-28T10:00:05.500Z").expect("should parse");
         let window_start = cursor - chrono::Duration::seconds(POLL_OVERLAP_SECONDS);
         assert_eq!(format_timestamp(window_start), "2026-07-28T10:00:04.500Z");
