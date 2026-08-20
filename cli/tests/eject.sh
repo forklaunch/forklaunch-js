@@ -1,3 +1,5 @@
+set -e
+
 if [ -d "output/eject" ]; then
     rm -rf output/eject
 fi

@@ -1,3 +1,5 @@
+set -e
+
 if [ -d "output/existing-docker-compose" ]; then
     rm -rf output/existing-docker-compose
 fi

@@ -1,3 +1,5 @@
+set -e
+
 if [ -d "output/delete-library" ]; then
     rm -rf output/delete-library
 fi

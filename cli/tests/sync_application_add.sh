@@ -1,3 +1,5 @@
+set -e
+
 if [ -d "output/sync-application-add" ]; then
     rm -rf output/sync-application-add
 fi

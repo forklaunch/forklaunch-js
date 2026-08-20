@@ -1,3 +1,5 @@
+set -e
+
 if [ -d "output/change-application" ]; then
     rm -rf output/change-application
 fi

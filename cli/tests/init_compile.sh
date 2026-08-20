@@ -1,3 +1,5 @@
+set -e
+
 # docker is needed for this
 if [ -d "output/init-compile" ]; then
     rm -rf output/init-compile

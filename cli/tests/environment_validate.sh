@@ -1,3 +1,5 @@
+set -e
+
 echo "Testing environment validate command..."
 
 if [ -d "output/environment-validate" ]; then

@@ -113,8 +113,11 @@ mod tests {
     use super::TEMPLATES_DIR;
     use crate::constants::Module;
 
-    // ecommerce-stripe was registered without its template directory and
-    // panics at scaffold time; tracked separately. Do not add to this list.
+    // ecommerce-stripe was registered in the Module enum without the rest of
+    // the pipeline: no cli/src/templates/project/ecommerce-stripe farm (panics
+    // at scaffold time), no ProjectDependencies fields, no version consts, no
+    // is_ecommerce manifest flag, and blueprint/ecommerce-stripe ships no
+    // __test__. Completing it is its own change; do not add to this list.
     const KNOWN_MISSING_TEMPLATE_DIRS: &[&str] = &["ecommerce-stripe"];
 
     #[test]

@@ -1,3 +1,5 @@
+set -e
+
 if [ -d "output/init-messaging-twilio" ]; then
     rm -rf output/init-messaging-twilio
 fi

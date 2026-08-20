@@ -1,3 +1,5 @@
+set -e
+
 if [ -d "output/init-worker-mappers" ]; then
     rm -rf output/init-worker-mappers
 fi

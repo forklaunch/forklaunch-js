@@ -1,3 +1,5 @@
+set -e
+
 echo "Processing applications..."
 if [ -d "output/init-application" ]; then
     rm -rf output/init-application

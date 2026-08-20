@@ -1,3 +1,5 @@
+set -e
+
 if [ -d "output/change-service" ]; then
     rm -rf output/change-service
 fi
