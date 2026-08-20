@@ -228,7 +228,7 @@ fn collect_modules(
 fn is_builtin_module(name: &str) -> bool {
     matches!(
         name,
-        "core" | "monitoring" | "client-sdk" | "iam" | "billing"
+        "core" | "monitoring" | "client-sdk" | "iam" | "billing" | "messaging"
     )
 }
 

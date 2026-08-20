@@ -52,6 +52,9 @@ const MAJORITY_ELIGIBLE_VARS: &[&str] = &[
     "BETTER_AUTH_BASE_PATH",
     "STRIPE_API_KEY",
     "STRIPE_WEBHOOK_SECRET",
+    "TWILIO_ACCOUNT_SID",
+    "TWILIO_AUTH_TOKEN",
+    "TWILIO_FROM_NUMBER",
 ];
 
 /// Check if a var is eligible for majority-value resolution.
@@ -357,6 +360,9 @@ pub(crate) fn resolve_env_var_default(
         }
         "STRIPE_API_KEY" => Some("replace-with-stripe-api-key".to_string()),
         "STRIPE_WEBHOOK_SECRET" => Some("replace-with-stripe-webhook-secret".to_string()),
+        "TWILIO_ACCOUNT_SID" => Some("replace-with-twilio-account-sid".to_string()),
+        "TWILIO_AUTH_TOKEN" => Some("replace-with-twilio-auth-token".to_string()),
+        "TWILIO_FROM_NUMBER" => Some("replace-with-twilio-from-number".to_string()),
         _ => None,
     }
 }

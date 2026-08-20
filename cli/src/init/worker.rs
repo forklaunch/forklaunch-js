@@ -474,6 +474,9 @@ pub(crate) fn generate_worker_package_json(
                 forklaunch_interfaces_billing: None,
                 forklaunch_implementation_iam_base: None,
                 forklaunch_interfaces_iam: None,
+                forklaunch_implementation_messaging_base: None,
+                forklaunch_implementation_messaging_twilio: None,
+                forklaunch_interfaces_messaging: None,
                 forklaunch_implementation_worker_bullmq: if manifest_data
                     .worker_type_lowercase
                     .parse::<WorkerType>()?

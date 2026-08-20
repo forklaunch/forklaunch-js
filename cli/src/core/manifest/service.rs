@@ -78,6 +78,10 @@ config_struct!(
         pub(crate) is_better_auth: bool,
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) is_stripe: bool,
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) is_messaging: bool,
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) is_twilio: bool,
 
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) is_iam_configured: bool,
@@ -190,6 +194,8 @@ impl InitializableManifestConfig for ServiceManifestData {
                 || service_name == get_service_module_name(&Module::BetterAuthIam),
             is_billing: service_name == get_service_module_name(&Module::BaseBilling)
                 || service_name == get_service_module_name(&Module::StripeBilling),
+            is_messaging: service_name == get_service_module_name(&Module::BaseMessaging)
+                || service_name == get_service_module_name(&Module::TwilioMessaging),
             is_cache_enabled,
             is_s3_enabled: service_metadata
                 .infrastructure
@@ -216,6 +222,14 @@ impl InitializableManifestConfig for ServiceManifestData {
                     .parse::<Module>()
                     .unwrap()
                     == Module::BetterAuthIam,
+            is_twilio: project_entry.variant.is_some()
+                && project_entry
+                    .variant
+                    .as_ref()
+                    .unwrap()
+                    .parse::<Module>()
+                    .unwrap()
+                    == Module::TwilioMessaging,
 
             is_iam_configured,
             is_billing_configured,

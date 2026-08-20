@@ -116,7 +116,7 @@ forklaunch init application my-app  # missing --database, --runtime, --modules, 
 | `--test-framework` | Yes | `vitest`, `jest` |
 | `--license` | Yes | `MIT`, `Apache-2.0`, `none`, etc. |
 | `--author` | Yes | Author name string |
-| `--modules` | Yes (non-interactive) | At least one module required: `iam-better-auth`, `iam-base`, `billing-stripe`, `billing-base` (can repeat `-m`) |
+| `--modules` | Yes (non-interactive) | At least one module required: `iam-better-auth`, `iam-base`, `billing-stripe`, `billing-base`, `messaging-twilio`, `messaging-base` (can repeat `-m`) |
 | `--description` | No | App description string |
 
 ## What Gets Generated
@@ -165,10 +165,13 @@ forklaunch init module <name> --path <app-path> --module <module-type> --databas
 # billing-stripe  — Stripe billing implementation
 # iam-base        — IAM authorization only (no auth provider)
 # iam-better-auth — Better Auth implementation for IAM
+# messaging-base    — Messaging hooks only (no delivery provider)
+# messaging-twilio  — Twilio SMS implementation for messaging
 
 # Example:
 forklaunch init module billing --path ./src/modules --module billing-stripe --database postgresql
 forklaunch init module iam --path ./src/modules --module iam-better-auth --database postgresql
+forklaunch init module messaging --path ./src/modules --module messaging-twilio --database postgresql
 ```
 
 ### `forklaunch init router`
@@ -1038,6 +1041,7 @@ forklaunch init application my-app ... -m billing-stripe -m iam-better-auth
 # Add to existing application
 forklaunch init module billing --path ./src/modules --module billing-stripe --database postgresql
 forklaunch init module iam --path ./src/modules --module iam-better-auth --database postgresql
+forklaunch init module messaging --path ./src/modules --module messaging-twilio --database postgresql
 ```
 
 ### 13. Incremental Adoption
