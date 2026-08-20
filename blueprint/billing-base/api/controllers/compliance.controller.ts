@@ -47,7 +47,7 @@ export const eraseUserData = handlers.delete(
       return;
     }
 
-    res.status(200).json(result);
+    res.status(200).json({ ...result });
   }
 );
 
@@ -89,6 +89,6 @@ export const exportUserData = handlers.get(
       return;
     }
 
-    res.status(200).json(result);
+    res.status(200).json({ ...result });
   }
 );

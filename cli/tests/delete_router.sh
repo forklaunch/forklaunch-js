@@ -1,3 +1,5 @@
+set -e
+
 if [ -d "output/delete-router" ]; then
     rm -rf output/delete-router
 fi

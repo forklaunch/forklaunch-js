@@ -745,6 +745,8 @@ export const tokens = serviceDeps.tokens();
 
 ## Auth Configuration
 
+**Required env vars:** a service scaffolded with `--infrastructure redis` does not automatically get `REDIS_URL` added to its `.env.local` — add it manually (`REDIS_URL=redis://localhost:6379/0`, matching whatever port Docker Compose actually exposes). Any service declaring `auth.jwt` needs `JWKS_PUBLIC_KEY_URL` in its `.env.local` — it is present in iam's own template but is **not** added automatically to other services' templates (inventory, billing, custom services). Add it manually, pointing at the iam service: `JWKS_PUBLIC_KEY_URL=http://localhost:<iam-port>/api/auth/jwks`. Cross-service auth (a non-iam service calling iam's surfacing endpoints) also needs `IAM_URL` and an `HMAC_SECRET_KEY` shared with iam's — both should already be scaffolded as resolvable tokens, but the `.env.local` values themselves may still be empty until you fill them.
+
 ```typescript
 // JWT with roles (user-facing, role-gated endpoints)
 access: 'protected',
@@ -770,6 +772,10 @@ forklaunchExpress(SchemaValidator(), otel, {
   }
 });
 ```
+
+**A route-level `auth.surfaceRoles` is silently never invoked once the app already wires a global one** via `forklaunchExpress`'s `auth` option above (or via `createAuthOptions()` in a CLI-scaffolded app's `server.ts` — see below). Don't hand-roll a per-route `surfaceRoles`/`surfacePermissions` callback expecting it to run; only the app/router-level one is called. If you need route-specific role logic, filter inside the app-level surfacing function instead.
+
+**CLI-scaffolded apps (v1.2.6) wire cross-service RBAC inline in `server.ts`**, not via the `registrations.ts` → `bootstrapper.ts` pattern below: `server.ts` defines a local `createAuthOptions()` that calls `createSurfaceRoles()` / `createSurfacePermissions()` (imported from the app's own generated `@{{app-name}}/iam` package, exported from a `surfacing.ts` file for other services to consume) and passes the result straight to `forklaunchExpress`. This works, but diverges from the canonical pattern this repo's own modules follow — check `server.ts` first before adding a new surfacing wire-up, and consider migrating it into `registrations.ts` for consistency if you're touching that file anyway.
 
 ### Making HMAC Calls (Service-to-Service)
 
@@ -824,6 +830,8 @@ await otherServiceSdk.internal.updateDeploymentStatusInternal({
 | `router.put('/applications/:id/observability/:env/:region', ...)` | `/applications/${appId}/observability/${env}/${region}` |
 | `router.get('/deployments', ...)` (with query) | `/deployments` (NOT `/deployments?status=active`) |
 | `router.get('/applications', ...)` (with query) | `/applications` (NOT `/applications?organizationId=xxx`) |
+| Router mounted at `/products`, handler at `/internal/count` | `/internal/count` (NOT `/products/internal/count`) |
+| Calling iam's `/user/:id/surface-roles` from another service | sign `/{id}/surface-roles`, but `fetch` the full `${IAM_URL}/user/{id}/surface-roles` — the mount prefix is stripped for signing purposes only, not from the URL you actually call |
 
 **Common mistake:** Including query parameters in the HMAC path causes "Invalid Authorization signature" (403). The query string is sent via the SDK `query` field but must NOT be part of the signed path.
 
@@ -1077,7 +1085,11 @@ Don't delete these files. Replace the stub entity references with your real enti
 
 ## Seeder Wiring
 
-Seeders must be wired through the `DatabaseSeeder` in `persistence/seeder.ts`. The `mikro-orm.config.ts` has `glob: 'seeder.js'` (singular) pointing to `persistence/seeder.ts`. New seeder classes go in `persistence/seeders/` and must be imported and called via `this.call(em, Object.values(seeders))` in the `DatabaseSeeder` class.
+Seeders must be wired through the `DatabaseSeeder` in `persistence/seeder.ts`. The `mikro-orm.config.ts` has `glob: 'seeder.js'` (singular) pointing to `persistence/seeder.ts`. New seeder classes go in `persistence/seeders/`.
+
+**Do NOT seed via plain `this.call(em, Object.values(seeders))` if any seeder's entity has a foreign key to another seeder's entity.** `Object.values()` on an ES module namespace enumerates export names **alphabetically** (this is a spec-mandated behavior of module namespace exotic objects — see ECMA-262 §9.4.6.6 `[[OwnPropertyKeys]]`), not in declaration or dependency order — e.g. an `AccountSeeder` runs before a `UserSeeder` even though `account.user_id` references `user.id`, causing a foreign-key-constraint violation. It's deterministic, not intermittent, so it will reproduce every time the alphabetical order disagrees with the FK order.
+
+Keep `Object.values(seeders)` for auto-discovery (so a new seeder file is picked up without editing `seeder.ts`), but topologically sort it against an explicit dependency map so FK-dependent seeders still run in the right order:
 
 ```typescript
 // persistence/seeder.ts
@@ -1085,11 +1097,45 @@ import { EntityManager } from '@mikro-orm/core';
 import { Seeder } from '@mikro-orm/seeder';
 import * as seeders from './seeders';
 
+// Map each seeder to the seeders it depends on (FK references). Only
+// entries with a real FK dependency need to be listed — everything else
+// is still auto-discovered and sorted in.
+const SEEDER_DEPENDENCIES: Partial<Record<keyof typeof seeders, (keyof typeof seeders)[]>> = {
+  AccountSeeder: ['UserSeeder'],
+  SessionSeeder: ['UserSeeder']
+};
+
+function topologicalSort(
+  all: typeof seeders,
+  deps: typeof SEEDER_DEPENDENCIES
+): (typeof seeders)[keyof typeof seeders][] {
+  const ordered: (typeof seeders)[keyof typeof seeders][] = [];
+  const visited = new Set<string>();
+
+  function visit(name: keyof typeof seeders) {
+    if (visited.has(name)) return;
+    visited.add(name);
+    for (const dep of deps[name] ?? []) {
+      visit(dep);
+    }
+    ordered.push(all[name]);
+  }
+
+  for (const name of Object.keys(all) as (keyof typeof seeders)[]) {
+    visit(name);
+  }
+  return ordered;
+}
+
 export class DatabaseSeeder extends Seeder {
   async run(em: EntityManager): Promise<void> {
     // Write organizationId directly into each entity.
     // The tenant filter is only registered in server.ts and does not run during seeding.
-    return this.call(em, Object.values(seeders));
+    return this.call(em, topologicalSort(seeders, SEEDER_DEPENDENCIES));
   }
 }
 ```
+
+Update `SEEDER_DEPENDENCIES` whenever a new seeder's entity has a foreign key to another seeded entity. Seeders with no FK relationships need no entry — they're auto-discovered and sorted in wherever `Object.keys` happens to place them.
+
+**Seeders are not idempotent by default** — re-running `pnpm seed` against an already-seeded database throws unique-constraint violations (they always `em.create` + insert, never upsert). Only run seed on a fresh database, or clear the relevant tables first.

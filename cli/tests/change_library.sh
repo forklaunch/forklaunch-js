@@ -1,3 +1,5 @@
+set -e
+
 if [ -d "output/change-library" ]; then
     rm -rf output/change-library
 fi

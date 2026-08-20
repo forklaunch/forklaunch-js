@@ -1,3 +1,5 @@
+set -e
+
 echo "Testing environment sync command..."
 
 if [ -d "output/environment-sync" ]; then

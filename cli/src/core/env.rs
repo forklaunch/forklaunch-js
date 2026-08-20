@@ -74,6 +74,12 @@ pub(crate) struct Env {
     pub(crate) cors_origins: Option<String>,
     #[serde(rename = "STRIPE_API_KEY", skip_serializing_if = "Option::is_none")]
     pub(crate) stripe_api_key: Option<String>,
+    #[serde(rename = "TWILIO_ACCOUNT_SID", skip_serializing_if = "Option::is_none")]
+    pub(crate) twilio_account_sid: Option<String>,
+    #[serde(rename = "TWILIO_AUTH_TOKEN", skip_serializing_if = "Option::is_none")]
+    pub(crate) twilio_auth_token: Option<String>,
+    #[serde(rename = "TWILIO_FROM_NUMBER", skip_serializing_if = "Option::is_none")]
+    pub(crate) twilio_from_number: Option<String>,
     #[serde(rename = "HMAC_SECRET_KEY", skip_serializing_if = "Option::is_none")]
     pub(crate) hmac_secret_key: Option<String>,
     #[serde(
@@ -159,6 +165,9 @@ impl<'de> Deserialize<'de> for Env {
                     better_auth_base_path: None,
                     cors_origins: None,
                     stripe_api_key: None,
+                    twilio_account_sid: None,
+                    twilio_auth_token: None,
+                    twilio_from_number: None,
                     hmac_secret_key: None,
                     jwks_public_key_url: None,
                     additional_env_vars: HashMap::new(),
@@ -302,6 +311,12 @@ pub(crate) fn parse_env_file_items(path: &Path) -> Result<Vec<EnvFileItem>> {
     let content = fs::read_to_string(path)
         .with_context(|| format!("Failed to read env file: {}", path.display()))?;
 
+    Ok(parse_env_items_from_str(&content))
+}
+
+/// String-based variant of `parse_env_file_items` for content fetched over
+/// the wire (e.g. `config set` pulling the current scope before merging).
+pub(crate) fn parse_env_items_from_str(content: &str) -> Vec<EnvFileItem> {
     let lines: Vec<&str> = content.lines().collect();
     let mut items: Vec<EnvFileItem> = Vec::new();
     let mut i = 0;
@@ -332,7 +347,7 @@ pub(crate) fn parse_env_file_items(path: &Path) -> Result<Vec<EnvFileItem>> {
         i += 1;
     }
 
-    Ok(items)
+    items
 }
 
 pub(crate) fn load_env_file(path: &Path) -> Result<HashMap<String, String>> {

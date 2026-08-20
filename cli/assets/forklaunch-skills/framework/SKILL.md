@@ -145,6 +145,15 @@ export const updateItemRoute = itemRouter.patch("/:id", updateItem);
 export const deleteItemRoute = itemRouter.delete("/:id", deleteItem);
 ```
 
+**Registration order matters when a router mixes parameterized and specific/static paths.** A `GET /:id` registered before a more specific path like `/secure/:id` or `/internal/count` on the same router swallows requests to those paths — they get matched (and typically rejected, e.g. on `:id`'s uuid validation) by `/:id` first and never reach the intended handler, usually surfacing as a confusing 404. Always register specific/static paths **before** parameterized catch-alls:
+
+```typescript
+export const listItemsRoute = itemRouter.get("/", listItems);
+export const secureGetRoute = itemRouter.get("/secure/:id", secureGetItem); // specific — first
+export const internalCountRoute = itemRouter.get("/internal/count", internalCount); // specific — first
+export const getItemRoute = itemRouter.get("/:id", getItem); // catch-all — last
+```
+
 ## Application Setup (server.ts)
 
 ```typescript
@@ -256,6 +265,34 @@ const ListSchema = {
   }),
 };
 ```
+
+### Validating schemas programmatically (outside a handler)
+
+To validate a payload against a natural-notation schema directly (e.g. in a unit test, or a script), use `schemaValidator.schemify(...)` to resolve it to the underlying Zod/TypeBox schema, then call that schema's native validation method:
+
+```typescript
+import { schemaValidator } from "@{{app-name}}/core";
+
+const compiled = schemaValidator.schemify(MySchema);
+const result = compiled.safeParse(payload); // Zod: { success: boolean, data? / error? }
+if (!result.success) { /* handle result.error */ }
+```
+
+`schemaValidator.compile(...)` is a **different** function — it expects an already-shaped Zod/TypeBox object schema (`ZodObject`/`TObject`), not a natural-notation object literal, and will produce confusing type errors if you pass it a plain schema object. Use `schemify`, not `compile`, when you just want to validate a natural-notation schema. Also note Zod's `safeParse` result has a `success` field, not `ok`.
+
+## File uploads / non-JSON request bodies
+
+A `body` declared with a single non-JSON content type (`file`, `binary`, or `text`) collapses `req.body` **directly** to the transformed value — it does not wrap it in an object keyed by the field name:
+
+```typescript
+body: { file: file, contentType: 'application/octet-stream' as const }
+
+// In the handler:
+const blob = req.body;       // correct — req.body IS the Blob
+const blob = req.body.file;  // WRONG — Blob has no .file property, this is a type error
+```
+
+This only applies when `body` has a single field with one of the non-JSON content types. A plain object body (the default, `application/json`) is accessed field-by-field as usual (`req.body.name`).
 
 ## Authentication & Authorization
 

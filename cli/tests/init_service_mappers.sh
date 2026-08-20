@@ -1,3 +1,5 @@
+set -e
+
 if [ -d "output/init-service-mappers" ]; then
     rm -rf output/init-service-mappers
 fi

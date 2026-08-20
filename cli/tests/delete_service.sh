@@ -1,3 +1,5 @@
+set -e
+
 if [ -d "output/delete-service" ]; then
     rm -rf output/delete-service
 fi

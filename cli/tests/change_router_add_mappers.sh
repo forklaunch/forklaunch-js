@@ -1,3 +1,5 @@
+set -e
+
 if [ -d "output/change-router-add-mappers" ]; then
     rm -rf output/change-router-add-mappers
 fi

@@ -203,6 +203,10 @@ pub(crate) fn get_routers_from_standard_package(package: Module) -> Option<Vec<S
             String::from("role"),
             String::from("user"),
         ]),
+        Module::BaseMessaging => Some(vec![String::from("sms")]),
+        Module::TwilioMessaging => {
+            Some(vec![String::from("sms"), String::from("webhook")])
+        }
         Module::StripeEcommerce => Some(vec![
             String::from("product"),
             String::from("variant"),

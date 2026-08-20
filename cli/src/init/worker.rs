@@ -111,7 +111,7 @@ fn generate_basic_worker(
         module_id: None,
     };
 
-    let ignore_files = if !manifest_data.is_database_enabled {
+    let mut ignore_files = if !manifest_data.is_database_enabled {
         vec![
             "mikro-orm.config.ts".to_string(),
             "seeder.ts".to_string(),
@@ -122,6 +122,15 @@ fn generate_basic_worker(
     } else {
         vec!["consts.ts".to_string()]
     };
+    // compliance endpoints authenticate via IAM-issued JWTs
+    // (JWKS_PUBLIC_KEY_URL is only registered when IAM is configured)
+    if !manifest_data.is_iam_configured {
+        for file in ["compliance.controller.ts", "compliance.routes.ts"] {
+            if !ignore_files.iter().any(|f| f == file) {
+                ignore_files.push(file.to_string());
+            }
+        }
+    }
     let mut ignore_dirs = if !manifest_data.is_database_enabled {
         let mut dirs = vec!["seeder".to_string(), "seed.data.ts".to_string()];
         if !manifest_data.with_mappers {
@@ -257,6 +266,7 @@ fn add_worker_to_artifacts(
         Some(ProjectMetadata {
             r#type: Some(manifest_data.worker_type_lowercase.clone()),
             hosting_type: None,
+            privileged: None,
         }),
     )
     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
@@ -464,6 +474,9 @@ pub(crate) fn generate_worker_package_json(
                 forklaunch_interfaces_billing: None,
                 forklaunch_implementation_iam_base: None,
                 forklaunch_interfaces_iam: None,
+                forklaunch_implementation_messaging_base: None,
+                forklaunch_implementation_messaging_twilio: None,
+                forklaunch_interfaces_messaging: None,
                 forklaunch_implementation_worker_bullmq: if manifest_data
                     .worker_type_lowercase
                     .parse::<WorkerType>()?
@@ -815,6 +828,7 @@ impl CliCommand for WorkerCommand {
             // Worker-specific fields
             worker_name: worker_name.clone(),
             camel_case_name: worker_name.to_case(Case::Camel),
+            snake_case_name: worker_name.to_case(Case::Snake),
             pascal_case_name: worker_name.to_case(Case::Pascal),
             kebab_case_name: worker_name.to_case(Case::Kebab),
             title_case_name: worker_name.to_case(Case::Title),
@@ -930,7 +944,11 @@ impl CliCommand for WorkerCommand {
             // These will be properly generated when initialized
             generated_better_auth_secret: String::new(),
             generated_hmac_secret: String::new(),
-            generated_encryption_key: String::new(),
+            // Reuse the app's field-encryption key (services and workers share
+            // encrypted cache records); mint one only for key-less apps.
+            generated_encryption_key:
+                crate::core::env_defaults::find_existing_encryption_key(&base_path)
+                    .unwrap_or_else(|| crate::core::manifest::service::generate_random_secret(32)),
             otel_token: "OtelCollector".to_string(),
         };
 

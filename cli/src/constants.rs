@@ -352,6 +352,16 @@ choice! {
             id: "ecommerce-stripe",
             description: Some("stripe ecommerce implementation (catalog, cart, orders, payments, subscriptions)"),
             exclusive_files: Some(&["ecommerce-stripe"])
+        },
+        BaseMessaging = Choice {
+            id: "messaging-base",
+            description: Some("messaging hooks only (no delivery provider)"),
+            exclusive_files: Some(&["messaging-base"]),
+        },
+        TwilioMessaging = Choice {
+            id: "messaging-twilio",
+            description: Some("twilio sms implementation for messaging"),
+            exclusive_files: Some(&["messaging-twilio"]),
         }
     }
 
@@ -532,6 +542,7 @@ pub(crate) fn get_service_module_name(service_type: &Module) -> String {
         Module::BaseBilling | Module::StripeBilling => "billing".to_string(),
         Module::BaseIam | Module::BetterAuthIam => "iam".to_string(),
         Module::StripeEcommerce => "ecommerce".to_string(),
+        Module::BaseMessaging | Module::TwilioMessaging => "messaging".to_string(),
     }
 }
 
@@ -544,12 +555,17 @@ pub(crate) fn get_service_module_description(name: &str, service_type: &Module) 
             Module::BaseBilling | Module::StripeBilling => "billing service APIs",
             Module::BaseIam | Module::BetterAuthIam => "identity and access management APIs",
             Module::StripeEcommerce => "ecommerce service APIs",
+            Module::BaseMessaging | Module::TwilioMessaging => "messaging service APIs",
         }
     )
 }
 pub(crate) fn get_service_module_cache(service_type: &Module) -> Option<String> {
     match service_type {
         Module::BaseBilling | Module::StripeBilling => Some(Infrastructure::Redis.to_string()),
+        // The messaging blueprint's registrations wire a RedisTtlCache.
+        Module::BaseMessaging | Module::TwilioMessaging => {
+            Some(Infrastructure::Redis.to_string())
+        }
         _ => None,
     }
 }

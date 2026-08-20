@@ -21,11 +21,18 @@ pub(crate) enum EcommerceConfig {
     StripeEcommerce,
 }
 
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) enum MessagingConfig {
+    BaseMessaging,
+    TwilioMessaging,
+}
+
 #[derive(Debug, PartialEq, Eq, Default)]
 pub(crate) struct ModuleConfig {
     pub(crate) iam: Option<IamConfig>,
     pub(crate) billing: Option<BillingConfig>,
     pub(crate) ecommerce: Option<EcommerceConfig>,
+    pub(crate) messaging: Option<MessagingConfig>,
 }
 
 pub(crate) fn validate_modules(
@@ -50,6 +57,12 @@ pub(crate) fn validate_modules(
             }
             Module::StripeEcommerce => {
                 global_module_config.ecommerce = Some(EcommerceConfig::StripeEcommerce);
+            }
+            Module::BaseMessaging => {
+                global_module_config.messaging = Some(MessagingConfig::BaseMessaging);
+            }
+            Module::TwilioMessaging => {
+                global_module_config.messaging = Some(MessagingConfig::TwilioMessaging);
             }
         }
 

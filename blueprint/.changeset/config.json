@@ -13,6 +13,8 @@
     "@forklaunch/blueprint-billing-stripe",
     "@forklaunch/blueprint-iam-base",
     "@forklaunch/blueprint-iam-better-auth",
+    "@forklaunch/blueprint-messaging-base",
+    "@forklaunch/blueprint-messaging-twilio",
     "@forklaunch/blueprint-core",
     "@forklaunch/blueprint-monitoring"
   ]

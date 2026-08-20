@@ -1,3 +1,5 @@
+set -e
+
 if [ -d "output/init-billing-stripe" ]; then
     rm -rf output/init-billing-stripe
 fi
