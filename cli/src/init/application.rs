@@ -969,8 +969,10 @@ impl CliCommand for ApplicationCommand {
                     return false;
                 }),
 
-                is_request_cache_needed: (template_dir.module_id == Some(Module::BaseBilling)
-                    || template_dir.module_id == Some(Module::StripeBilling))
+                is_request_cache_needed: template_dir
+                    .module_id
+                    .as_ref()
+                    .is_some_and(|module| get_service_module_cache(module).is_some())
                     || data.projects.iter().any(|project_entry| project_entry.name == "iam" || project_entry.name == "billing"),
                 is_type_needed: data.projects.iter().any(|project_entry| project_entry.name == "iam" || project_entry.name == "billing"),
 
