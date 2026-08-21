@@ -906,7 +906,7 @@ importers:
         version: 3.9.6
       typedoc:
         specifier: ^0.28.20
-        version: 0.28.20(@typescript/typescript6@6.0.2)
+        version: 0.28.20(typescript@6.0.3)
 
   implementations/ecommerce/stripe:
     dependencies:
@@ -955,7 +955,7 @@ importers:
         version: 3.9.6
       typedoc:
         specifier: ^0.28.20
-        version: 0.28.20(@typescript/typescript6@6.0.2)
+        version: 0.28.20(typescript@6.0.3)
 
   implementations/iam/base:
     dependencies:
