@@ -9,8 +9,8 @@
 ## Executive summary
 
 - **What:** a HIPAA-compliant medical coding/billing service, built as an app-level ForkLaunch service (`medical-coding-base`) that mirrors the existing `billing-base`/`iam-base` architecture — no framework changes required (§1, §3).
-- **Free-first:** launch and demo entirely on ICD-10-CM, HCPCS, NCCI, and LCD/NCD data — all free/government-published — using mock procedure codes in place of CPT (§2). License real CPT only once a hospital confirms as a paying client; budget ~4–6 weeks and a per-clinician royalty, not a flat fee (§2).
-- **The mechanism that makes this safe:** a `CodeSetProvider` interface, gated per-organization by the framework's existing feature-flag guard — flipping a hospital from mock to real CPT is a data change, not a code change, and historical claims are never retroactively recoded (§5).
+- **Free-first, but CPT is engineered to be ready, not deferred as an afterthought:** launch and demo on ICD-10-CM, HCPCS, NCCI, and LCD/NCD data (all free/government-published) using mock procedure codes. Licensing CPT (the paid contract with AMA) still only happens once a hospital confirms as a paying client (§2) — but `CptCodeProvider`, the real-CPT code path, is built and structurally proven well *before* that trigger, in parallel with the mock-code work, not written for the first time once a client shows up (§5, §10). Per the founder: CPT is the most valuable standard, so whenever we're ready to enable it, we should already be in good shape — the code should be the easy part, not the bottleneck.
+- **The mechanism that makes this safe:** a `CodeSetProvider` interface, gated per-organization by the framework's existing feature-flag guard — flipping a hospital from mock to real CPT is a config/data change against already-built code, not new engineering, and historical claims are never retroactively recoded (§5).
 - **What research corrected:** the source doc conflated NCCI code-conflict rules with diagnosis-procedure medical necessity. These are two separate CMS mechanisms with different data, cadences, and denial codes — the scrubbing engine now has three distinct rule layers instead of one (§6).
 - **What's still open, not just deferred:** the Phase 0–6 week estimates are inherited from the source doc and unvalidated against actual team capacity (§10); and real LCD/NCD data can't be meaningfully integrated until CPT is licensed even though LCD data itself is free, because LCD policies are written in terms of real CPT codes (§6, §12).
 - **Where to start:** §13 Immediate next steps.
@@ -44,7 +44,9 @@ From the reference doc: we have no paying hospital clients yet. CPT (procedure) 
 | Eligibility / claim status (270/271) | Clearinghouse API | Per-transaction fee | Yes |
 | **CPT (procedure codes)** | **AMA** | **Paid license** | **Defer until a hospital confirms as paying client** |
 
-**Trigger to license CPT:** the moment a real hospital/clinic is confirmed as a paying client and will run real CPT-coded claims. Not before. Until then, the platform is built, tested, and demoed using ICD-10 + HCPCS + **mock procedure codes** that carry the same shape/behavior as CPT without using AMA's actual code list.
+**Trigger to license CPT:** the moment a real hospital/clinic is confirmed as a paying client and will run real CPT-coded claims. Not before — this is about the paid contract with AMA specifically, since we can't legally hold or use real CPT data without it, at any edition or vintage. Until then, the platform is built, tested, and demoed using ICD-10 + HCPCS + **mock procedure codes** that carry the same shape/behavior as CPT without using AMA's actual code list.
+
+**This does not mean CPT engineering itself waits for the trigger.** The founder's direction: CPT is the most valuable standard, so `CptCodeProvider` — the code path, the ingestion pipeline, the scrubbing-engine integration — should be built and structurally proven *now*, in parallel with the mock-code work, so that the only thing gated on the trigger is the license and the real data feed itself. See §5's "CPT readiness bar" and §10's revised Phase 2/Phase 6 split.
 
 ### AMA licensing timeline (once triggered)
 
@@ -154,26 +156,40 @@ All entities get a `retention` policy via the same mechanism `RetentionService` 
 
 ---
 
-## 5. Code-set provider abstraction & CPT license gating
+## 5. Code-set provider abstraction, CPT readiness, and license gating
 
-This is the mechanism that makes "free-first, swap later" actually safe and mechanical rather than a manual migration.
+This is the mechanism that makes "free-first, swap later" actually safe and mechanical rather than a manual migration — and, per the founder's direction, the mechanism that makes "enable CPT" a flag flip against finished code rather than a Phase 6 engineering scramble.
 
 **Pattern to copy:** `billing-base` already solves an almost identical problem — "the real provider (Stripe) costs money and isn't always configured, so build against an interface and swap the implementation." We do the same for procedure codes:
 
 ```
 CodeSetProvider (interface)
  ├─ MockProcedureCodeProvider   — "PROC-001: Office Visit", built Phase 2, no license needed
- └─ CptCodeProvider             — real AMA CPT data, activated only after license signed
+ └─ CptCodeProvider             — real AMA CPT data — built to full readiness in Phase 2 alongside
+                                   the mock provider; only its real data feed and license wait on the trigger
 ```
+
+### CPT readiness bar — what "in good shape" concretely means
+
+Built and proven *before* the AMA trigger, not after:
+
+1. **`CptCodeProvider` fully implements the `CodeSetProvider` interface** — same rigor as `MockProcedureCodeProvider`, not a stub or a TODO. No new interface work happens at Phase 6.
+2. **`refresh-code-sets.ts` (§7) is generalized to ingest a CPT-shaped feed**, parameterized so pointing it at the real licensed data source at Phase 6 is a config change, not new ETL code. (The exact delivery format AMA uses — file drop, API, etc. — is still unknown; see §12's open question on this. The pipeline is built pluggable specifically *because* that answer isn't known yet.)
+3. **The three-layer scrubbing engine (§6) is tested against a synthetic, CPT-*shaped* fixture** — real CPT's actual numeric structure and code-range categories (Category I is 5-digit numeric, ranges like 10000–69990 for surgery, 70000–79999 for radiology, etc.; Category II is 4 digits + `F`; Category III is 4 digits + `T`) — not just against `MockProcedureCodeProvider`'s placeholder strings. This proves the NCCI PTP/MUE and LCD/NCD logic works against something structurally real, without reproducing any of AMA's actual copyrighted code+description content pre-license (see §12's open question on who defines this fixture).
+4. **A smoke-test runbook is written and ready before the trigger**, so that once real data lands the validation step is hours, not a new test-design effort.
 
 **License gate, reusing an existing framework guard — not a new primitive:** the framework already has `hasFeatureChecks` / `hasSubscriptionChecks` guards (`framework/core/src/http/guards/`, wired into `auth.middleware.ts`) that gate routes on `requiredFeatures` resolved per-request via a `surfaceFeatures(session, req)` callback — this is the exact mechanism billing uses for entitlement-gated features. We model **"real CPT codes active"** as a feature flag surfaced from the `CodeSetLicense` entity:
 
-- Before license is signed: `surfaceFeatures` never returns `cpt-licensed`, so any route/behavior requiring real CPT falls back to `MockProcedureCodeProvider`.
+- Before license is signed: `surfaceFeatures` never returns `cpt-licensed`, so any route/behavior requiring real CPT falls back to `MockProcedureCodeProvider` — even though `CptCodeProvider` is fully built and sitting idle behind the flag.
 - After license is signed and `CodeSetLicense.status = 'active'`: `surfaceFeatures` returns `cpt-licensed` for that organization, `CptCodeProvider` is used, same scrubbing/claim logic runs unchanged.
 
 This also gives a clean **per-hospital** cutover: some organizations can stay on mock codes while others are already licensed, with zero risk of one tenant's licensing status leaking into another (enforced by the same tenant-isolation filter used everywhere else).
 
 **License-check failure mode (fail closed).** `surfaceFeatures` resolves `cpt-licensed` via a cross-service call — if that lookup fails or times out mid-claim-submission (e.g. a network blip between `medical-coding-base` and IAM), treat the organization as unlicensed and fall back to `MockProcedureCodeProvider` rather than blocking claim submission. A stalled claims pipeline is worse than a claim coded against mock data that can be re-submitted later — and, per the rule below, historical claims are never retroactively recoded anyway, so a transient mock-coded claim during an outage is not a special case to design around.
+
+**What "untested" honestly means here, and where the line is.** The founder's "it's ok if it's untested" should mean: it's fine that `CptCodeProvider` hasn't been exercised against real production traffic before the trigger fires — we can't legally get real CPT data to test with pre-license, so of course that gap exists, and it's not a reason to hold the whole plan hostage. It should *not* mean: skip the smoke-test runbook (item 4 above) or submit a real claim to a real payer before running it. Once real data lands, running the pre-built runbook is cheap; skipping it isn't.
+
+**Whichever CPT edition is available at trigger time is fine to use.** Don't hold out for the current-year release if AMA's specialist offers an earlier one — the readiness work above is edition-agnostic by design (it's built against CPT's structural shape, not any specific year's content), so swapping editions later is the same low-cost flag flip as licensing for the first time.
 
 **Historical claims are never retroactively recoded.** When an organization's `CodeSetLicense` flips to `active`, only *new* encounters created afterward use `CptCodeProvider`. Claims already built and submitted under `MockProcedureCodeProvider` remain exactly as they were coded — a submitted claim is a financial/legal record, and retroactively changing its procedure codes after the fact would itself be a compliance problem. This should be stated explicitly to any pilot client during Phase 5 demos (see §12).
 
@@ -189,7 +205,7 @@ The source doc's phase plan referred to a single, vaguely-named "diagnosis-proce
 | **NCCI MUE** (Medically Unlikely Edits) | Implausible unit count for a single code on one date of service (e.g. 5 appendectomies) | Single CPT/HCPCS code + units | CMS NCCI MUE tables | Quarterly | Line- or date-of-service-level unit denial |
 | **LCD/NCD medical necessity** | Whether a diagnosis justifies a procedure at all | ICD-10-CM ↔ CPT/HCPCS — this *is* the real diagnosis-procedure crosswalk | CMS Medicare Coverage Database, per Medicare Administrative Contractor (MAC) — coverage is regional | Ongoing, MAC-specific | CO-50 ("not deemed a medical necessity") or CO-11 ("diagnosis is inconsistent with the procedure") |
 
-Each mock procedure code built in Phase 2 needs a corresponding mock LCD-style mapping (which mock diagnoses justify which mock procedures) so the scrubbing logic and its test suite are exercising the real three-layer shape — not a placeholder single check — before real CPT data is swapped in.
+Each mock procedure code built in Phase 2 needs a corresponding mock LCD-style mapping (which mock diagnoses justify which mock procedures) so the scrubbing logic and its test suite are exercising the real three-layer shape — not a placeholder single check — before real CPT data is swapped in. Per §5's readiness bar, this same scrubbing engine also needs a second pass of tests run against the synthetic CPT-*shaped* fixture (real numeric code-range structure, no real AMA content) — the mock-placeholder tests prove the logic is correct, the CPT-shaped tests prove it survives contact with real-shaped data before the license ever arrives.
 
 **A subtlety §2's free/paid table doesn't fully capture: real LCD/NCD data is coupled to CPT licensing, even though it has no license of its own.** LCD/NCD data itself is free CMS data (§2 correctly marks it "Build now: Yes"), but every real LCD policy is written *in terms of real CPT/HCPCS codes* — "procedure X is covered for diagnoses A, B, C" only means something once "procedure X" is a real CPT code, not a mock placeholder. So while the LCD/NCD *data* can be downloaded and stored pre-license, a *meaningful* real LCD crosswalk can't be built until CPT is licensed either. Phase 6 (§10) already accounts for re-running QA on real CPT+ICD-10 pairs — this should explicitly include re-ingesting real LCD/NCD crosswalks at the same time, not treat LCD/NCD as "already done" just because it was technically buildable earlier.
 
@@ -279,11 +295,11 @@ Directly adopting the source doc's phases, corrected for the domain-accuracy fix
 |---|---|---|---|
 | **0** (Wk 1–4) | Foundations | No | Stedi sandbox credentials (§8); confirm HIPAA-ready hosting + BAA; scaffold `medical-coding-base` service skeleton (`forklaunch init service`); synthetic test dataset |
 | **1** (Wk 3–6) | Code validation | No | ICD-10-CM loader; extend to HCPCS Level II; define all entities in §4 with `defineComplianceEntity`; stand up `scripts/refresh-code-sets.ts` (§7) even before it's needed on a schedule, so the ETL shape exists from day one |
-| **2** (Wk 6–10) | Claim engine & scrubbing, mock codes | No — placeholders | `MockProcedureCodeProvider`; claim builder (encounter+charges+diagnoses→claim); scrubbing rules across all **three layers** from §6 — mock NCCI PTP pairs, mock MUE unit caps, mock LCD-style diagnosis-procedure crosswalk; clearinghouse sandbox submission end-to-end via Stedi |
+| **2** (Wk 6–10) | Claim engine & scrubbing, mock codes **+ CPT readiness** | No — placeholders, but `CptCodeProvider` is built here too | `MockProcedureCodeProvider`; claim builder (encounter+charges+diagnoses→claim); scrubbing rules across all **three layers** from §6 — mock NCCI PTP pairs, mock MUE unit caps, mock LCD-style diagnosis-procedure crosswalk; clearinghouse sandbox submission end-to-end via Stedi. **In parallel:** build `CptCodeProvider` to full readiness per §5's bar — interface implementation, generalized ETL, and scrubbing-engine tests against the synthetic CPT-shaped fixture — so Phase 6 has no new engineering left to do |
 | **3** (Wk 10–14) | Eligibility & remittance | No | EDI 270/271 eligibility check at intake (blocks CO-27); 835 remittance parsing, auto-post + CARC/RARC capture; 277CA/999 acknowledgment handling; denial worklist UI |
 | **4** (Wk 14–16) | Analytics & compliance hardening | No | Clean-claim-rate / denial-rate / days-in-A/R dashboard (benchmarked against §11); confirm RBAC + audit logging on every PHI path; external security review |
 | **5** (Mo 4–6) | Sales demos | No — mock codes | Demo to small clinics/billing companies; use CO-27/CO-16/CO-97 denial examples as live proof points; be transparent that CO-11/CO-50 (LCD/NCD) checks run against mock diagnosis-procedure mappings pre-license, and that historical claims are never retroactively recoded post-license (§5) |
-| **6** (Trigger-based) | CPT licensing & go-live | **Yes** | On trigger: contact AMA immediately (§2); file license 4–6 weeks before go-live target, budgeting per-clinician royalty pricing (§2); once signed — implement `CptCodeProvider`, **ingest real LCD/NCD crosswalks for the relevant MAC jurisdiction(s)** (§6 — this cannot happen meaningfully before real CPT exists), flip `CodeSetLicense.status='active'` for that org, run the container-based cutover test suite (§9) against real CPT+ICD-10 pairs before first real claim |
+| **6** (Trigger-based) | CPT licensing & go-live — **activation only, not new engineering** | **Yes** | On trigger: contact AMA immediately (§2); file license 4–6 weeks before go-live target, budgeting per-clinician royalty pricing (§2), accepting whichever edition AMA offers (§5); once signed — point the already-built `CptCodeProvider`'s ETL at the real licensed feed, **ingest real LCD/NCD crosswalks for the relevant MAC jurisdiction(s)** (§6 — this cannot happen meaningfully before real CPT exists), flip `CodeSetLicense.status='active'` for that org, run the pre-built smoke-test runbook (§5) and the container-based cutover test suite (§9) against real CPT+ICD-10 pairs before first real claim. If Phase 2's readiness work was done properly, this phase is measured in days, not weeks |
 
 **Do not start Phase 6 on a calendar** — it's trigger-based off a real signed/verbally-confirmed paying client, run in parallel with that client's onboarding.
 
@@ -304,10 +320,11 @@ Directly adopting the source doc's phases, corrected for the domain-accuracy fix
 1. **Provider abstraction naming/location** — does `CodeSetProvider` live inside `medical-coding-base` itself, or do we want a shared `codeSet` interfaces package under our own product's libraries (analogous to `blueprint/interfaces/billing`) in case we build more than one service against it later?
 2. **IAM cross-service integration** — does the hospital's staff (coders/billers) get provisioned in the *existing* `iam-base` service as `User`s with new `Role`s, or does this need its own lightweight staff directory? (Recommend: existing IAM — the cross-service SDK mechanism in §3 makes this straightforward, and avoids duplicating auth.)
 3. **CO-11/CO-50 demo honesty** — Phase 5 demos must clearly disclose to prospects that LCD/NCD-style medical-necessity checks run against a mock diagnosis-procedure crosswalk pre-license, not real CMS coverage data; confirm sales is aligned on this messaging.
-4. **Mock LCD/NCD data source** — who owns building a plausible mock diagnosis-procedure crosswalk for Phase 2 (a coding/compliance SME, not engineering alone) so the three-layer scrubbing design in §6 is exercised realistically before real CPT/LCD data exists?
+4. **Mock LCD/NCD data source and synthetic CPT-shaped fixture design** — who owns building (a) a plausible mock diagnosis-procedure crosswalk for Phase 2's mock-code path, and (b) the synthetic CPT-*shaped* fixture used to test `CptCodeProvider` and the scrubbing engine per §5's readiness bar? Both need a coding/compliance SME, not engineering alone — and (b) specifically needs sign-off that the fixture is structurally realistic (real numeric ranges/categories) without reproducing any of AMA's actual copyrighted code+description content pre-license.
 5. **MAC jurisdiction scope for real LCD ingestion** — once CPT is licensed (§6, §10 Phase 6), which Medicare Administrative Contractor jurisdiction(s) does the first real client fall under? LCD coverage is regional, so Phase 6's "ingest real LCD/NCD crosswalks" task needs this answered before it can be scoped, not after.
 6. **Phase timeline validation** — the Phase 0–6 week estimates (§10) come from the source doc, not from this team's actual velocity. Needs a sizing session with whoever will staff this before the timeline is quoted to a prospective client or used to plan the AMA licensing lead time against a real go-live date.
 7. **Multi-org billers** — §3 models each hospital/clinic as one `Organization`, with RBAC and tenant isolation scoped to a single org per user (matching `iam-base`'s existing model exactly). But §2's own go-to-market ("demos to small clinics/billing companies") implies some customers may be third-party billing companies whose coders/billers need visibility across multiple hospital clients — a cross-org access pattern the current single-tenant-per-user model doesn't support. Unclear whether the near-term (mock-code, small-clinic-demo) target is hospitals' own staff or billing companies acting on their behalf; answering this wrong now risks baking in the wrong RBAC model. Needs resolving before Phase 2's RBAC work, not after.
+8. **AMA's real CPT data delivery mechanism** — file drop, API, or something else? §5's `refresh-code-sets.ts` generalization is built pluggable specifically because this is unknown; worth asking directly on the AMA discovery call (§2) so Phase 2's readiness work targets the right shape rather than guessing.
 
 ---
 
@@ -317,9 +334,10 @@ Directly adopting the source doc's phases, corrected for the domain-accuracy fix
 2. Create a Stedi sandbox account (free) and request API credentials (§8).
 3. Finalize the `medical-coding-base` entity schema (§4) — including the SSN/surrogate-ID decision — and confirm HIPAA-ready hosting/BAA.
 4. Extend the existing ICD-10 loader to HCPCS using the same pattern; stand up the `refresh-code-sets.ts` ETL shape (§7) even before its first scheduled run.
-5. Build the scrubbing rules engine against `MockProcedureCodeProvider`, implementing all **three** rule layers from §6, not a single check.
-6. Begin outreach to small clinics/billing companies for early demos — no license required yet.
-7. Only after a paying client is confirmed: contact AMA and start the CPT licensing process (§2), budgeting for per-clinician royalty pricing rather than a flat fee.
+5. Get a coding/compliance SME to define the mock LCD/NCD crosswalk *and* the synthetic CPT-shaped fixture (§12, item 4) — both block Phase 2 and need lead time, so line this up now rather than discovering the gap mid-phase.
+6. Build the scrubbing rules engine against `MockProcedureCodeProvider`, implementing all **three** rule layers from §6 — **and, per the founder's direction, build `CptCodeProvider` to full readiness (§5) in parallel, not as a Phase 6 afterthought.**
+7. Begin outreach to small clinics/billing companies for early demos — no license required yet.
+8. Only once a paying client is confirmed: contact AMA and start the actual CPT *licensing* process (§2) — by this point the engineering side should already be done, so this step is a business/legal process, not an engineering one.
 
 ---
 
