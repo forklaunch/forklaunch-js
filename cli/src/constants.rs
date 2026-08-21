@@ -36,6 +36,11 @@ pub(crate) fn is_dev_build() -> bool {
         .unwrap_or(false)
 }
 
+// Bumping this to "1.1.0" to carry `optional` through ingestion MUST wait until
+// the platform's manifest-version registry accepts 1.1.0 and that change is
+// deployed: `manifest-schema-adapter.service.ts` throws outright on a schema
+// version it does not know, so an early bump fails release creation rather than
+// degrading. Until then the field is emitted and validated away harmlessly.
 pub(crate) const RELEASE_MANIFEST_SCHEMA_VERSION: &str = "1.0.0";
 
 pub(crate) fn get_platform_management_api_url() -> String {
