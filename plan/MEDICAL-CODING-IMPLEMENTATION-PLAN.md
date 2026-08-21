@@ -2,31 +2,40 @@
 
 **Status:** Draft for review
 **Owner:** Engineering
-**Based on:** `implementation_plan_free_first.docx` (v2.0, Free-First Strategy) and `ama_cpt_license_timeline.pdf`, reconciled against the current ForkLaunch codebase, deepened with a second codebase pass and external research into medical-coding domain standards (CMS, AMA, X12, MGMA/HFMA — see §14 Sources).
+**Based on:** `implementation_plan_free_first.docx` (v2.0, Free-First Strategy) and `ama_cpt_license_timeline.pdf`, reconciled against the current ForkLaunch codebase, deepened with a second codebase pass and external research into medical-coding domain standards (CMS, AMA, X12, MGMA/HFMA — see §15 Sources), and revised after a live precedent check against the framework's own recently-added module families (messaging, ecommerce — see §1).
 
 ---
 
 ## Executive summary
 
-- **What:** a HIPAA-compliant medical coding/billing service, built as an app-level ForkLaunch service (`medical-coding-base`) that mirrors the existing `billing-base`/`iam-base` architecture — no framework changes required (§1, §3).
+- **What:** a HIPAA-compliant medical coding/billing module — `Module::BaseMedicalCoding` (`medical-coding-base`) — built as a first-class ForkLaunch module the same way `billing-base`/`iam-base`/`messaging-base` are, consumable via `forklaunch init module -m medical-coding-base` by any ForkLaunch application. `framework/core`/`express`/`common` need zero changes; the CLI (`cli/`) and three new `blueprint/` packages are the entire lift (§1, §3).
 - **Free-first, but CPT is engineered to be ready, not deferred as an afterthought:** launch and demo on ICD-10-CM, HCPCS, NCCI, and LCD/NCD data (all free/government-published) using mock procedure codes. Licensing CPT (the paid contract with AMA) still only happens once a hospital confirms as a paying client (§2) — but `CptCodeProvider`, the real-CPT code path, is built and structurally proven well *before* that trigger, in parallel with the mock-code work, not written for the first time once a client shows up (§5, §10). Per the founder: CPT is the most valuable standard, so whenever we're ready to enable it, we should already be in good shape — the code should be the easy part, not the bottleneck.
 - **The mechanism that makes this safe:** a `CodeSetProvider` interface, gated per-organization by the framework's existing feature-flag guard — flipping a hospital from mock to real CPT is a config/data change against already-built code, not new engineering, and historical claims are never retroactively recoded (§5).
 - **What research corrected:** the source doc conflated NCCI code-conflict rules with diagnosis-procedure medical necessity. These are two separate CMS mechanisms with different data, cadences, and denial codes — the scrubbing engine now has three distinct rule layers instead of one (§6).
-- **What's still open, not just deferred:** the Phase 0–6 week estimates are inherited from the source doc and unvalidated against actual team capacity (§10); and real LCD/NCD data can't be meaningfully integrated until CPT is licensed even though LCD data itself is free, because LCD policies are written in terms of real CPT codes (§6, §12).
+- **What's still open, not just deferred:** the Phase 0–6 week estimates are inherited from the source doc and unvalidated against actual team capacity (§10); real LCD/NCD data can't be meaningfully integrated until CPT is licensed even though LCD data itself is free, because LCD policies are written in terms of real CPT codes (§6, §12); and the module-level CLI wiring itself is new work that didn't exist when the phase estimates were first drafted (§14).
+- **How it ships:** one PR per phase, six PRs total — see §14 for the breakdown. PR 1 now also carries the CLI module registration and blueprint package skeleton, so it's larger than originally scoped; PR 3 (Phase 2) remains the largest overall.
 - **Where to start:** §13 Immediate next steps.
 
 ---
 
 ## 1. Decision: how this gets built
 
-Two ways to build this were considered:
+Two ways to build this were considered — and the decision **flipped once** during planning, after new evidence changed the risk calculus.
 
 | Option | What it means | Verdict |
 |---|---|---|
-| **A. App-level service** | A new service inside our own application, built with `forklaunch init service`, that *follows the same architectural pattern* as `blueprint/billing-base` / `blueprint/iam-base` (compliance-classified entities, RBAC, tenant isolation, mappers, SDK) but is **not** registered as a reusable module in the ForkLaunch CLI. | **Chosen** |
-| B. First-class framework module | Add `Module::MedicalCoding` to the Rust CLI (`cli/src/constants.rs` and ~12 other files that exhaustively pattern-match on `Module`), plus new `blueprint/interfaces/medical-coding` and `blueprint/implementations/medical-coding/*` packages, so any ForkLaunch user could run `forklaunch init module -m medical-coding-base`. | Deferred — much larger lift, only worth it if we intend to ship this as a public framework offering the way `billing-base`/`iam-base` are. Revisit after Option A proves the domain model in production. See Appendix. |
+| A. App-level service | A new service inside a separate consumer application, built with `forklaunch init service`, following the same architectural pattern as `blueprint/billing-base`/`blueprint/iam-base` but **not** registered as a reusable module in the CLI. | Superseded — see below |
+| **B. First-class framework module** | Add `Module::BaseMedicalCoding` (`medical-coding-base`) to the Rust CLI, plus new `blueprint/interfaces/medical-coding` and `blueprint/implementations/medical-coding/base` packages, so any ForkLaunch user can run `forklaunch init module -m medical-coding-base`. | **Chosen** |
 
-Everything below assumes **Option A**. We reuse every framework primitive that `billing-base`/`iam-base` use (compliance entities, encryption, tenant isolation, RBAC guards, audit logging, retention) — we just don't touch the CLI's Rust internals.
+**Why it flipped.** Option A was originally chosen because Option B looked like a much larger, riskier lift — the CLI's `Module` enum was, at the time, only exercised by `billing`/`iam`, and touching ~12 exhaustively-matched Rust files for a brand-new module family was unproven territory. That assessment no longer holds. Since then, the framework itself added **two more first-class module families**: `messaging` (`messaging-base`/`messaging-twilio`, PR #264) and `ecommerce` (`ecommerce-stripe`). The messaging PR did this exact thing — "following the billing-base/billing-stripe pattern end to end" — with 346 Rust tests passing and the scaffold smoke-verified.
+
+**Pre-implementation blocker check (done before committing to this rewrite):**
+- **No structural blocker.** Every CLI match site the original research flagged — the `Module` enum, `validate_modules`, `get_service_module_name`/`get_service_module_cache`, `get_routers_from_standard_package`, package.json version constants, manifest boolean flags — is a clean, mechanical exhaustive-`match` extension, confirmed live in `cli/src/constants.rs` and `cli/src/core/modules.rs`, and now exercised twice more since the original research.
+- **RBAC dependency is merged.** `hasPermissionChecks` (`framework/core/src/http/guards/hasPermissionChecks.ts`) is on `main` and wired into `auth.middleware.ts` — the RBAC design in §3 has what it needs.
+- **One cautionary precedent, not a blocker, but a checklist item.** `ecommerce-stripe` was registered in the `Module` enum without finishing the rest of the pipeline — no template farm, no `ProjectDependencies` fields, no version constants, no `is_ecommerce` manifest flag. It's explicitly allowlisted as a *known, intentional gap* in a regression test (`every_module_variant_has_an_embedded_template_dir` in `cli/src/core/rendered_template.rs`), with a comment reading "do not add to this list." Every step in §3's checklist must be completed for `medical-coding-base` — leaving it half-wired like `ecommerce-stripe` is the one concrete way to get this wrong.
+- **Two local-machine prerequisites, not architectural blockers.** This dev machine has no Rust toolchain installed (`cargo` not found — needs `rustup`), and git symlinks aren't materializing on this Windows checkout (`core.symlinks` is `false` — confirmed by inspecting `cli/src/templates/project/messaging-base/bootstrapper.ts`, which is a 43-byte text file containing the target path string, not a real symlink to the blueprint content). Both need fixing before a local `cargo build`/`cargo test` reflects real template content. CI runs on Linux and is unaffected by either.
+
+Given this, `medical-coding-base` is built as a genuine first-class module, the same way `billing-base`/`iam-base`/`messaging-base` are. `framework/core`, `framework/express`, and `framework/common` still need **zero changes** — confirmed by direct inspection, same as before this pivot. The entire lift is the CLI (`cli/`) plus three new `blueprint/` packages, detailed in §3.
 
 ---
 
@@ -73,47 +82,78 @@ Pricing is royalty-based and varies by product/user type rather than a single pu
 
 ---
 
-## 3. Target architecture (mirrors `billing-base` / `iam-base`)
+## 3. Target architecture — a first-class module, following messaging/ecommerce's proven pattern
 
-New service: **`medical-coding-base`** (working name), placed alongside our other application services, using the exact structural pattern already established:
+Three packages, mirroring `billing`/`iam`/`messaging` exactly:
 
 ```
-medical-coding-base/
-├── api/
-│   ├── controllers/        # patient, encounter, claim, eligibility, remittance, codeSet controllers
-│   └── routes/
-├── domain/
-│   ├── enum/                # ClaimStatus, DenialReasonCategory, CodeSetType, LicenseStatus...
-│   ├── mappers/              # request/response <-> entity mapping (mirrors billing's *.mappers.ts)
-│   ├── schemas/
-│   └── types/
-├── persistence/
-│   ├── entities/             # see §4 — all built with defineComplianceEntity()
-│   ├── migrations/           # hand-written DDL, see "Migrations" below
-│   ├── seeders/              # small reference/config data only — NOT full code-set files, see §7
-│   └── seed.data.ts
-├── bootstrapper.ts            # DI container, mirrors billing-base's provider-swap pattern
-├── registrations.ts
-├── sdk.ts
-├── server.ts
-├── mikro-orm.config.ts
-└── scripts/
-    ├── enforce-retention.ts   # reuse framework's RetentionService, same as billing/iam
-    └── refresh-code-sets.ts   # NEW — see §7, follows the enforce-retention.ts pattern exactly
+blueprint/interfaces/medical-coding/              # pure contract package — no implementation
+  interfaces/
+    codeSet.service.interface.ts                  # CodeSetProvider contract (§5)
+    claim.service.interface.ts
+    patient.service.interface.ts
+    eligibility.service.interface.ts
+    remittance.service.interface.ts
+  types/
+
+blueprint/implementations/medical-coding/base/    # concrete services implementing the interfaces
+  services/
+    mockProcedureCodeProvider.service.ts
+    cptCodeProvider.service.ts                     # built to full readiness per §5 — not a stub
+    claim.service.ts
+    scrubbing.service.ts                           # three-layer engine, §6
+  domain/schemas/{zod,typebox}/
+  __test__/schemaEquality.test.ts
+
+blueprint/medical-coding-base/                     # the living reference app — entities, controllers, DI wiring
+  api/
+    controllers/        # patient, encounter, claim, eligibility, remittance, codeSet controllers
+    routes/
+  domain/
+    enum/                # ClaimStatus, DenialReasonCategory, CodeSetType, LicenseStatus...
+    mappers/              # request/response <-> entity mapping
+    schemas/
+    types/
+  persistence/
+    entities/             # see §4 — all built with defineComplianceEntity()
+    migrations/           # hand-written DDL, see "Migrations" below
+    seeders/              # small reference/config data only — NOT full code-set files, see §7
+    seed.data.ts
+  bootstrapper.ts, registrations.ts, sdk.ts, server.ts, mikro-orm.config.ts
+  scripts/
+    enforce-retention.ts   # reuse framework's RetentionService, same as billing/iam
+    refresh-code-sets.ts   # see §7, follows the enforce-retention.ts pattern exactly
 ```
 
-This is not a new pattern to invent — it's copy-the-shape from `blueprint/billing-base`, most directly its **provider abstraction**: `billing-base` defines a `BillingProviderEnum` and a swappable provider interface (`blueprint/interfaces/billing/interfaces/*.service.interface.ts`) so Stripe can be swapped in later without rewriting the app. We do the same thing for code sets (§5).
+This is copy-the-shape from `blueprint/billing-base` and, even more directly now, from `blueprint/messaging-base`/`blueprint/implementations/messaging/base` — the newest module the team actually shipped, so it's the freshest reference for exactly which files matter.
+
+### CLI wiring checklist (mirrors PR #264's real diff, not a hypothetical)
+
+- **`cli/src/constants.rs`** — new `Module::BaseMedicalCoding` variant (`id: "medical-coding-base"`, `exclusive_files: Some(&["medical-coding-base"])`), plus match arms in `get_service_module_name` (→ `"medical-coding"`), `get_service_module_description`, and `get_service_module_cache` (likely `None` — no Redis dependency unless the §7 scrubbing-lookup cache needs it, in which case mirror billing/messaging's `Some(Infrastructure::Redis...)`).
+- **`cli/src/core/modules.rs`** — new `MedicalCodingConfig` enum + `ModuleConfig.medical_coding` field + a `Module::BaseMedicalCoding` arm in `validate_modules()`.
+- **`cli/src/core/template.rs`** — new arm in `get_routers_from_standard_package()` listing this module's sub-routers: `patient`, `encounter`, `claim`, `eligibility`, `remittance`, `codeSet`, `compliance` (the last one generic, same as every module gets).
+- **`cli/src/core/manifest/service.rs`** + `init/module.rs` + `init/application.rs` + `init/service.rs` — new `is_medical_coding` / `is_medical_coding_configured` manifest flags, threaded through the same places `is_messaging`/`is_iam` are today.
+- **`cli/src/core/package_json/project_package_json.rs`** + `package_json_constants.rs` — new `ProjectDependencies` fields + version constants for `@forklaunch/interfaces-medical-coding` / `@forklaunch/implementation-medical-coding-base`, using the machine-readable comment format `check_blueprint_deps` expects (per the messaging PR's notes).
+- **`cli/src/templates/project/medical-coding-base/*`** — git symlink farm into `blueprint/medical-coding-base/*`, same mechanism as billing/iam/messaging (verify with `git config core.symlinks true` set and a real Windows Developer Mode / Linux checkout — see §1's local-prerequisite note).
+- **Docker/env** — only if `medical-coding-base` needs its own env vars beyond DB/Redis (e.g. a Stedi API key for local dev) — mirror messaging's `TWILIO_*` injection pattern in `docker-compose.yaml`, typed `Env` fields, `env_defaults.rs`, and `.env.template` category if so.
+- **`client-sdk`** — gate a `medicalCodingSdkClient` into `clientSdk.ts`'s template if we want app-init to wire it automatically, mirroring messaging's client-sdk gating (also touches the app-init context that sets the flag).
+- **`blueprint/.changeset`** — changesets for the new publishable packages (interfaces, implementation-base), same as messaging's `messaging-module.md`.
+- **`docs/adding-projects/modules.md`** — add a row to the module table.
+- **New CLI shell test** — `cli/tests/init_medical_coding.sh`, following `init_module.sh`/`init_messaging_twilio.sh`; extend the e2e workflow glob so it actually runs (the messaging PR had to do this explicitly — don't skip it).
+- **The regression test does the rest for free.** `every_module_variant_has_an_embedded_template_dir` (`cli/src/core/rendered_template.rs`) will fail loudly with the exact missing path if the template farm is incomplete — this is the safety net that would have caught the `ecommerce-stripe` gap. No changes needed to the test itself; just don't end up on its `KNOWN_MISSING_TEMPLATE_DIRS` allowlist.
+
+**Module variant count — resolved, not left open.** Unlike `billing` (`-base`/`-stripe`) or `messaging` (`-base`/`-twilio`), `medical-coding` gets **one** variant: `medical-coding-base`. The mock-vs-real-CPT swap is an intra-service feature flag (§5), not a module-level implementation choice — there's no second package to publish. This mirrors how `ecommerce` currently has only `ecommerce-stripe` with no `-base` counterpart; a single-variant module family is an established, normal shape here, not a gap.
 
 ### Multi-tenancy: hospital = Organization
 
 The framework already has organization-scoped tenant isolation (`framework/core/src/persistence/tenantFilter.ts`, `rls.ts`) and it's used today in `iam-base` (`Organization` entity, `organizationId` on JWT session). We reuse this directly:
 
-- Each hospital/clinic client == one `Organization` (from the existing IAM service).
+- Each hospital/clinic client == one `Organization` (from the existing IAM module).
 - Every medical-coding entity carries an `organizationId` (tenant) field, exactly like `iam-base`'s pattern of scoping `User` queries by `organization.id` in `blueprint/iam-base/api/controllers/user.controller.ts`.
 
 ### RBAC: coders, billers, admins
 
-Reuse IAM's `Role`/`Permission` entities and the existing permission-guard machinery (`framework/core/src/http/guards/hasPermissionChecks.ts`, wired into `auth.middleware.ts` on this very branch). Routes declare `allowedPermissions` / `allowedRoles` exactly like `iam-base`'s controllers do today, e.g.:
+Reuse IAM's `Role`/`Permission` entities and the existing permission-guard machinery (`framework/core/src/http/guards/hasPermissionChecks.ts`, wired into `auth.middleware.ts`, confirmed merged to `main` — §1). Routes declare `allowedPermissions` / `allowedRoles` exactly like `iam-base`'s controllers do today, e.g.:
 
 - `coder:submit_claim`, `biller:view_remittance`, `admin:manage_codesets`, `auditor:read_only`.
 - PHI-bearing read endpoints (patient demographics, claim detail) get stricter `allowedPermissions` than aggregate/analytics endpoints.
@@ -263,7 +303,7 @@ Confirmed by direct code inspection and by `COMPLIANCE_GAPS_PLAN.md`'s own frami
 - `scripts/enforce-retention.ts` + `RetentionService` batches delete/anonymize per entity's `retention` policy.
 - Tenant isolation (`tenantFilter.ts` + `rls.ts`) activates automatically for any entity with an `organizationId`/`organization` relation.
 
-Gaps called out in `COMPLIANCE_GAPS_PLAN.md` (consent management, pen testing, DR testing) are framework/CLI-level and orthogonal to this service. The **new** thing this service needs that doesn't exist yet is the `CodeSetLicense` entity/feature-gate itself (§5) — everything else is reuse.
+Gaps called out in `COMPLIANCE_GAPS_PLAN.md` (consent management, pen testing, DR testing) are framework/CLI-level and orthogonal to this module. The **new** thing this module needs that doesn't exist yet is the `CodeSetLicense` entity/feature-gate itself (§5) — everything else is reuse.
 
 Before any real hospital data touches the system: run an external security review, same as any other PHI-bearing service on this stack.
 
@@ -289,11 +329,11 @@ Each row is a full `testcontainers` end-to-end test per this section's harness, 
 
 ## 10. Phased delivery plan
 
-Directly adopting the source doc's phases, corrected for the domain-accuracy fixes in §6–8. **Caveat: the week ranges below are inherited from the source doc, not re-estimated against this team's actual capacity or velocity** — treat them as a starting hypothesis to validate in a sizing session before committing to them externally, not as a researched estimate.
+Directly adopting the source doc's phases, corrected for the domain-accuracy fixes in §6–8 and for the Option B pivot in §1. **Caveat: the week ranges below are inherited from the source doc, not re-estimated against this team's actual capacity or velocity, and Phase 0 now carries CLI-wiring work that didn't exist in the original estimate** — treat them as a starting hypothesis to validate in a sizing session before committing to them externally, not as a researched estimate.
 
 | Phase | Focus | CPT needed? | Concrete engineering tasks |
 |---|---|---|---|
-| **0** (Wk 1–4) | Foundations | No | Stedi sandbox credentials (§8); confirm HIPAA-ready hosting + BAA; scaffold `medical-coding-base` service skeleton (`forklaunch init service`); synthetic test dataset |
+| **0** (Wk 1–4) | Foundations **+ module registration** | No | **Register `Module::BaseMedicalCoding` in the CLI and scaffold the three blueprint packages per §3's checklist** — this must land before `forklaunch init module -m medical-coding-base` exists to do anything else in this phase; Stedi sandbox credentials (§8); confirm HIPAA-ready hosting + BAA; synthetic test dataset |
 | **1** (Wk 3–6) | Code validation | No | ICD-10-CM loader; extend to HCPCS Level II; define all entities in §4 with `defineComplianceEntity`; stand up `scripts/refresh-code-sets.ts` (§7) even before it's needed on a schedule, so the ETL shape exists from day one |
 | **2** (Wk 6–10) | Claim engine & scrubbing, mock codes **+ CPT readiness** | No — placeholders, but `CptCodeProvider` is built here too | `MockProcedureCodeProvider`; claim builder (encounter+charges+diagnoses→claim); scrubbing rules across all **three layers** from §6 — mock NCCI PTP pairs, mock MUE unit caps, mock LCD-style diagnosis-procedure crosswalk; clearinghouse sandbox submission end-to-end via Stedi. **In parallel:** build `CptCodeProvider` to full readiness per §5's bar — interface implementation, generalized ETL, and scrubbing-engine tests against the synthetic CPT-shaped fixture — so Phase 6 has no new engineering left to do |
 | **3** (Wk 10–14) | Eligibility & remittance | No | EDI 270/271 eligibility check at intake (blocks CO-27); 835 remittance parsing, auto-post + CARC/RARC capture; 277CA/999 acknowledgment handling; denial worklist UI |
@@ -317,31 +357,51 @@ Directly adopting the source doc's phases, corrected for the domain-accuracy fix
 
 ## 12. Open questions
 
-1. **Provider abstraction naming/location** — does `CodeSetProvider` live inside `medical-coding-base` itself, or do we want a shared `codeSet` interfaces package under our own product's libraries (analogous to `blueprint/interfaces/billing`) in case we build more than one service against it later?
-2. **IAM cross-service integration** — does the hospital's staff (coders/billers) get provisioned in the *existing* `iam-base` service as `User`s with new `Role`s, or does this need its own lightweight staff directory? (Recommend: existing IAM — the cross-service SDK mechanism in §3 makes this straightforward, and avoids duplicating auth.)
-3. **CO-11/CO-50 demo honesty** — Phase 5 demos must clearly disclose to prospects that LCD/NCD-style medical-necessity checks run against a mock diagnosis-procedure crosswalk pre-license, not real CMS coverage data; confirm sales is aligned on this messaging.
-4. **Mock LCD/NCD data source and synthetic CPT-shaped fixture design** — who owns building (a) a plausible mock diagnosis-procedure crosswalk for Phase 2's mock-code path, and (b) the synthetic CPT-*shaped* fixture used to test `CptCodeProvider` and the scrubbing engine per §5's readiness bar? Both need a coding/compliance SME, not engineering alone — and (b) specifically needs sign-off that the fixture is structurally realistic (real numeric ranges/categories) without reproducing any of AMA's actual copyrighted code+description content pre-license.
-5. **MAC jurisdiction scope for real LCD ingestion** — once CPT is licensed (§6, §10 Phase 6), which Medicare Administrative Contractor jurisdiction(s) does the first real client fall under? LCD coverage is regional, so Phase 6's "ingest real LCD/NCD crosswalks" task needs this answered before it can be scoped, not after.
-6. **Phase timeline validation** — the Phase 0–6 week estimates (§10) come from the source doc, not from this team's actual velocity. Needs a sizing session with whoever will staff this before the timeline is quoted to a prospective client or used to plan the AMA licensing lead time against a real go-live date.
-7. **Multi-org billers** — §3 models each hospital/clinic as one `Organization`, with RBAC and tenant isolation scoped to a single org per user (matching `iam-base`'s existing model exactly). But §2's own go-to-market ("demos to small clinics/billing companies") implies some customers may be third-party billing companies whose coders/billers need visibility across multiple hospital clients — a cross-org access pattern the current single-tenant-per-user model doesn't support. Unclear whether the near-term (mock-code, small-clinic-demo) target is hospitals' own staff or billing companies acting on their behalf; answering this wrong now risks baking in the wrong RBAC model. Needs resolving before Phase 2's RBAC work, not after.
-8. **AMA's real CPT data delivery mechanism** — file drop, API, or something else? §5's `refresh-code-sets.ts` generalization is built pluggable specifically because this is unknown; worth asking directly on the AMA discovery call (§2) so Phase 2's readiness work targets the right shape rather than guessing.
+1. **IAM cross-service integration** — does the hospital's staff (coders/billers) get provisioned in the *existing* `iam-base` module as `User`s with new `Role`s, or does this need its own lightweight staff directory? (Recommend: existing IAM — the cross-service SDK mechanism in §3 makes this straightforward, and avoids duplicating auth.)
+2. **CO-11/CO-50 demo honesty** — Phase 5 demos must clearly disclose to prospects that LCD/NCD-style medical-necessity checks run against a mock diagnosis-procedure crosswalk pre-license, not real CMS coverage data; confirm sales is aligned on this messaging.
+3. **Mock LCD/NCD data source and synthetic CPT-shaped fixture design** — who owns building (a) a plausible mock diagnosis-procedure crosswalk for Phase 2's mock-code path, and (b) the synthetic CPT-*shaped* fixture used to test `CptCodeProvider` and the scrubbing engine per §5's readiness bar? Both need a coding/compliance SME, not engineering alone — and (b) specifically needs sign-off that the fixture is structurally realistic (real numeric ranges/categories) without reproducing any of AMA's actual copyrighted code+description content pre-license.
+4. **MAC jurisdiction scope for real LCD ingestion** — once CPT is licensed (§6, §10 Phase 6), which Medicare Administrative Contractor jurisdiction(s) does the first real client fall under? LCD coverage is regional, so Phase 6's "ingest real LCD/NCD crosswalks" task needs this answered before it can be scoped, not after.
+5. **Phase timeline validation** — the Phase 0–6 week estimates (§10) come from the source doc, not from this team's actual velocity, and Phase 0 now also carries CLI module-registration work that wasn't in the original estimate. Needs a sizing session with whoever will staff this before the timeline is quoted to a prospective client or used to plan the AMA licensing lead time against a real go-live date.
+6. **Multi-org billers** — §3 models each hospital/clinic as one `Organization`, with RBAC and tenant isolation scoped to a single org per user (matching `iam-base`'s existing model exactly). But §2's own go-to-market ("demos to small clinics/billing companies") implies some customers may be third-party billing companies whose coders/billers need visibility across multiple hospital clients — a cross-org access pattern the current single-tenant-per-user model doesn't support. Unclear whether the near-term (mock-code, small-clinic-demo) target is hospitals' own staff or billing companies acting on their behalf; answering this wrong now risks baking in the wrong RBAC model. Needs resolving before Phase 2's RBAC work, not after.
+7. **AMA's real CPT data delivery mechanism** — file drop, API, or something else? §5's `refresh-code-sets.ts` generalization is built pluggable specifically because this is unknown; worth asking directly on the AMA discovery call (§2) so Phase 2's readiness work targets the right shape rather than guessing.
+8. **Does `medical-coding-base` need its own env vars / Redis dependency?** §3's CLI checklist flags this as conditional — resolve during Phase 0 once the Stedi integration and §7's caching design (Redis-backed scrubbing lookups) are scoped, since that determines whether `get_service_module_cache` should return `Some(Infrastructure::Redis...)` like billing/messaging do, or `None`.
 
 ---
 
 ## 13. Immediate next steps
 
-1. Run a sizing session against §10's phase estimates with whoever will actually staff this, before quoting the timeline externally (§12, item 6).
-2. Create a Stedi sandbox account (free) and request API credentials (§8).
-3. Finalize the `medical-coding-base` entity schema (§4) — including the SSN/surrogate-ID decision — and confirm HIPAA-ready hosting/BAA.
-4. Extend the existing ICD-10 loader to HCPCS using the same pattern; stand up the `refresh-code-sets.ts` ETL shape (§7) even before its first scheduled run.
-5. Get a coding/compliance SME to define the mock LCD/NCD crosswalk *and* the synthetic CPT-shaped fixture (§12, item 4) — both block Phase 2 and need lead time, so line this up now rather than discovering the gap mid-phase.
-6. Build the scrubbing rules engine against `MockProcedureCodeProvider`, implementing all **three** rule layers from §6 — **and, per the founder's direction, build `CptCodeProvider` to full readiness (§5) in parallel, not as a Phase 6 afterthought.**
-7. Begin outreach to small clinics/billing companies for early demos — no license required yet.
-8. Only once a paying client is confirmed: contact AMA and start the actual CPT *licensing* process (§2) — by this point the engineering side should already be done, so this step is a business/legal process, not an engineering one.
+1. **Register `Module::BaseMedicalCoding` in the CLI and scaffold the three blueprint packages**, following §3's checklist and PR #264's real diff as the concrete template. This is the literal prerequisite for everything else — nothing else in Phase 0 can use `forklaunch init module` until this lands.
+2. Run a sizing session against §10's phase estimates (now including the CLI work above) with whoever will actually staff this, before quoting the timeline externally (§12, item 5).
+3. Create a Stedi sandbox account (free) and request API credentials (§8).
+4. Finalize the `medical-coding-base` entity schema (§4) — including the SSN/surrogate-ID decision — and confirm HIPAA-ready hosting/BAA.
+5. Extend the existing ICD-10 loader to HCPCS using the same pattern; stand up the `refresh-code-sets.ts` ETL shape (§7) even before its first scheduled run.
+6. Get a coding/compliance SME to define the mock LCD/NCD crosswalk *and* the synthetic CPT-shaped fixture (§12, item 3) — both block Phase 2 and need lead time, so line this up now rather than discovering the gap mid-phase.
+7. Build the scrubbing rules engine against `MockProcedureCodeProvider`, implementing all **three** rule layers from §6 — **and, per the founder's direction, build `CptCodeProvider` to full readiness (§5) in parallel, not as a Phase 6 afterthought.**
+8. Begin outreach to small clinics/billing companies for early demos — no license required yet.
+9. Only once a paying client is confirmed: contact AMA and start the actual CPT *licensing* process (§2) — by this point the engineering side should already be done, so this step is a business/legal process, not an engineering one.
 
 ---
 
-## 14. Sources
+## 14. PR breakdown
+
+One PR per phase from §10, mapped 1:1 — six PRs total (Phase 5 is GTM-only, no engineering PR):
+
+| PR | Phase | Scope |
+|---|---|---|
+| PR 1 | Phase 0 | **CLI module registration + blueprint package skeleton (§3)** — this is new scope since the Option B pivot — plus Stedi sandbox, HIPAA hosting/BAA, synthetic test dataset |
+| PR 2 | Phase 1 | Code validation — all §4 entities, ICD-10-CM + HCPCS loaders, `refresh-code-sets.ts` ETL shape |
+| PR 3 | Phase 2 | Claim engine, three-layer scrubbing, **and** `CptCodeProvider` built to full readiness (§5) |
+| PR 4 | Phase 3 | Eligibility & remittance — 270/271, 835, 277CA/999, denial worklist |
+| PR 5 | Phase 4 | Analytics dashboard + RBAC/audit verification pass (the external security review sits outside any PR) |
+| PR 6 | Phase 6 | Activation only — point the already-built `CptCodeProvider` at the real feed, ingest real LCD/NCD, flip the flag |
+
+**PR 1 is now larger than originally scoped** — it carries the entire CLI wiring checklist from §3 (Rust `Module` enum + ~11 other files, the git-symlinked template farm, docs, and a new e2e shell test) on top of what was already there. **PR 3 remains the largest engineering PR overall** — it carries the claim builder, all three scrubbing layers (NCCI PTP, NCCI MUE, LCD/NCD), the clearinghouse submission path, *and* the entire CPT-readiness build (§5's four-item bar). Both should land as a sequence of reviewable commits/checkpoints within the PR rather than a single undifferentiated diff — PR 1 in particular has a natural split (CLI-side Rust changes, then the three blueprint packages) worth keeping visible in the commit history even though it's one PR.
+
+This count is a working estimate, same caveat as §10 and §12 item 5 — it should flex with whatever the sizing session decides, not be treated as fixed.
+
+---
+
+## 15. Sources
 
 Domain research behind §2, §6, §7, §8, and §11:
 
@@ -356,26 +416,4 @@ Domain research behind §2, §6, §7, §8, and §11:
 - AMA — [CPT Licensing FAQs](https://www.ama-assn.org/practice-management/cpt/cpt-licensing-frequently-asked-questions-faqs); AMA compliance portal — [Standard CPT Distribution Pricing Schedule 2026](https://compliance.ama-assn.org/hc/en-us/articles/15166274293399-Notice-Standard-CPT-Distribution-Pricing-Schedule-2026)
 - MGMA-benchmarked summaries: Human Medical Billing — [2025 medical billing KPIs](https://humanmedicalbilling.com/blog/essential-medical-billing-kpis-for-2025-metrics-that-matter-for-revenue-cycle-success/); HFMA — [Redesigning denials management](https://www.hfma.org/revenue-cycle/redesigning-denials-management-in-the-obbba-era/); BillingBench — [RCM benchmarks](https://billingbench.com/benchmarks)
 - Stedi — [API-first clearinghouse](https://www.stedi.com/blog/stedi-healthcare-the-only-api-first-clearinghouse-for-health-tech-companies) / [docs](https://www.stedi.com/docs/healthcare); Claim.MD — [software vendor integration](https://www.claim.md/services-software-vendors); Availity — [API guide](https://developer.availity.com/blog/2025/3/25/availity-api-guide)
-
----
-
-## Appendix: what "framework module" (Option B) would require, if revisited later
-
-Not part of the current plan — kept here so the research isn't lost if we ever decide to ship this as a public, reusable ForkLaunch module the way `billing-base`/`iam-base` are.
-
-The CLI (`cli/`) is a Rust binary. `billing`/`iam` are deeply, exhaustively hardcoded through it — this is not a config-driven plugin system. Adding `Module::MedicalCodingBase` would touch:
-
-- **`cli/src/constants.rs`** — new `Module` enum variant + match arms in `get_service_module_name/description/cache()`.
-- **`cli/src/core/modules.rs`** — new `MedicalCodingConfig` variant, extend `ModuleConfig`/`validate_modules()` exclusivity logic.
-- **`cli/src/core/template.rs`** — new match arm in `get_routers_from_standard_package()` listing this module's sub-routers.
-- **`cli/src/core/manifest/service.rs`** + `init/module.rs` + `init/application.rs` — new `is_medical_coding`/`is_medical_coding_configured` boolean flags, threaded through the same places `is_iam`/`is_billing` are today.
-- **`cli/src/core/package_json/project_package_json.rs`** + `package_json_constants.rs` — new dependency fields + version constants for `@forklaunch/interfaces-medical-coding` / `@forklaunch/implementation-medical-coding-base`.
-- **Three new blueprint layers**, mirroring iam/billing exactly:
-  - `blueprint/interfaces/medical-coding` — pure contract package (service interfaces + types, no implementation).
-  - `blueprint/implementations/medical-coding/base` (+ alternate implementations later, e.g. a different coding engine) — concrete service classes implementing the interfaces.
-  - `blueprint/medical-coding-base` — the living reference app (entities, controllers, DI wiring) that Layer A depends on.
-- **Git symlinks** — `cli/src/templates/project/medical-coding-base/*` would need to be literal symlinks into `blueprint/medical-coding-base/*` (this is how `billing-base`/`iam-base` templates work today — the "template" *is* the blueprint app, with `@forklaunch/blueprint-*` import prefixes mustache-rewritten to the generated app's scope at generation time).
-- **`docs/adding-projects/modules.md`** — add a row to the module table.
-- **New CLI shell tests** — `cli/tests/init_medical_coding.sh`, following `init_module.sh`/`init_billing_stripe.sh`.
-
-Notably, **`framework/core`, `framework/express`, `framework/common` need zero changes** for either option — a grep across the framework for `iam`/`billing` turns up essentially nothing; RBAC, tenant isolation, compliance/encryption, and retention are already fully generic and module-agnostic (see §9). The entire Option B lift is CLI scaffolding + new blueprint packages, not framework work. There is also currently no doc describing "how to add a new module type to the framework itself" (`docs/adding-projects/modules.md` only covers consuming existing modules) — if Option B is pursued, that doc gap should be filled as part of the work.
+- ForkLaunch precedent: PR #264 ("feat(messaging): messaging-base + messaging-twilio preconfigured modules") — the concrete template for §1 and §3, confirmed via `git show` on this repo rather than external research.
