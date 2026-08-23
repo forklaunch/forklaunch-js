@@ -6,8 +6,7 @@ use crate::{
     constants::get_observability_api_url,
     core::{
         command::command,
-        hmac::AuthMode,
-        http_client::{get_with_auth, post_with_auth},
+        http_client::{get, post},
     },
 };
 
@@ -68,9 +67,7 @@ fn explorer_url(resource_id: &str, path: &str) -> String {
 }
 
 fn get_json(url: &str) -> Result<serde_json::Value> {
-    let auth_mode = AuthMode::detect();
-    let response =
-        get_with_auth(&auth_mode, url).with_context(|| "Failed to reach observability API")?;
+    let response = get(url).with_context(|| "Failed to reach observability API")?;
     if !response.status().is_success() {
         bail!(
             "Request failed ({}): {}",
@@ -82,8 +79,7 @@ fn get_json(url: &str) -> Result<serde_json::Value> {
 }
 
 fn post_json(url: &str, body: serde_json::Value) -> Result<serde_json::Value> {
-    let auth_mode = AuthMode::detect();
-    let response = post_with_auth(&auth_mode, url, body)
+    let response = post(url, body)
         .with_context(|| "Failed to reach observability API")?;
     if !response.status().is_success() {
         bail!(

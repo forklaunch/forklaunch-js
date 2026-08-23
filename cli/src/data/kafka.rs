@@ -6,8 +6,7 @@ use crate::{
     constants::get_observability_api_url,
     core::{
         command::command,
-        hmac::AuthMode,
-        http_client::{delete_with_auth, get_with_auth, patch_with_auth, post_with_auth},
+        http_client::{delete, get, patch, post},
     },
 };
 
@@ -116,10 +115,9 @@ impl CliCommand for TopicsCommand {
     }
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
         let resource = matches.get_one::<String>("resource").context("--resource is required")?;
-        let auth_mode = AuthMode::detect();
         let url = explorer_url(resource, "/topics");
         print_pretty(&check(
-            get_with_auth(&auth_mode, &url).with_context(|| "Failed to reach observability API")?,
+            get(&url).with_context(|| "Failed to reach observability API")?,
         )?)
     }
 }
@@ -157,10 +155,9 @@ impl CliCommand for CreateTopicCommand {
                 r.parse::<u32>().context("--replication-factor must be an integer")?,
             );
         }
-        let auth_mode = AuthMode::detect();
         let url = explorer_url(resource, "/topics");
         print_pretty(&check(
-            post_with_auth(&auth_mode, &url, body)
+            post(&url, body)
                 .with_context(|| "Failed to reach observability API")?,
         )?)
     }
@@ -182,10 +179,9 @@ impl CliCommand for DeleteTopicCommand {
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
         let resource = matches.get_one::<String>("resource").context("--resource is required")?;
         let name = matches.get_one::<String>("name").context("name is required")?;
-        let auth_mode = AuthMode::detect();
         let url = explorer_url(resource, &format!("/topics/{}", urlencoding::encode(name)));
         print_pretty(&check(
-            delete_with_auth(&auth_mode, &url)
+            delete(&url)
                 .with_context(|| "Failed to reach observability API")?,
         )?)
     }
@@ -251,10 +247,9 @@ impl CliCommand for UpdateTopicConfigCommand {
         let configs =
             parse_config_entries(matches.get_many::<String>("config").map(|v| v.into_iter()))?;
         let body = serde_json::json!({ "configs": configs });
-        let auth_mode = AuthMode::detect();
         let url = explorer_url(resource, &format!("/topics/{}/config", urlencoding::encode(name)));
         print_pretty(&check(
-            patch_with_auth(&auth_mode, &url, body)
+            patch(&url, body)
                 .with_context(|| "Failed to reach observability API")?,
         )?)
     }
@@ -296,9 +291,8 @@ impl CliCommand for MessagesCommand {
             url.push('?');
             url.push_str(&params.join("&"));
         }
-        let auth_mode = AuthMode::detect();
         print_pretty(&check(
-            get_with_auth(&auth_mode, &url).with_context(|| "Failed to reach observability API")?,
+            get(&url).with_context(|| "Failed to reach observability API")?,
         )?)
     }
 }
@@ -319,10 +313,9 @@ impl CliCommand for TopicMetadataCommand {
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
         let resource = matches.get_one::<String>("resource").context("--resource is required")?;
         let name = matches.get_one::<String>("name").context("name is required")?;
-        let auth_mode = AuthMode::detect();
         let url = explorer_url(resource, &format!("/topics/{}/metadata", urlencoding::encode(name)));
         print_pretty(&check(
-            get_with_auth(&auth_mode, &url).with_context(|| "Failed to reach observability API")?,
+            get(&url).with_context(|| "Failed to reach observability API")?,
         )?)
     }
 }
@@ -356,10 +349,9 @@ impl CliCommand for ProduceCommand {
                 p.parse::<u32>().context("--partition must be an integer")?,
             );
         }
-        let auth_mode = AuthMode::detect();
         let url = explorer_url(resource, "/produce");
         print_pretty(&check(
-            post_with_auth(&auth_mode, &url, body)
+            post(&url, body)
                 .with_context(|| "Failed to reach observability API")?,
         )?)
     }
@@ -378,10 +370,9 @@ impl CliCommand for ConsumerGroupsCommand {
     }
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
         let resource = matches.get_one::<String>("resource").context("--resource is required")?;
-        let auth_mode = AuthMode::detect();
         let url = explorer_url(resource, "/consumer-groups");
         print_pretty(&check(
-            get_with_auth(&auth_mode, &url).with_context(|| "Failed to reach observability API")?,
+            get(&url).with_context(|| "Failed to reach observability API")?,
         )?)
     }
 }
@@ -418,10 +409,9 @@ impl CliCommand for ResetOffsetsCommand {
         let target = matches.get_one::<String>("target").context("--target is required")?;
         validate_reset_target(target)?;
         let body = serde_json::json!({ "topicName": topic, "target": target });
-        let auth_mode = AuthMode::detect();
         let url = explorer_url(resource, &format!("/consumer-groups/{}/offsets", urlencoding::encode(group)));
         print_pretty(&check(
-            post_with_auth(&auth_mode, &url, body)
+            post(&url, body)
                 .with_context(|| "Failed to reach observability API")?,
         )?)
     }

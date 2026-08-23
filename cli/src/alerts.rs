@@ -10,8 +10,7 @@ use crate::{
     constants::get_observability_api_url,
     core::{
         command::command,
-        hmac::AuthMode,
-        http_client::{delete_with_auth, get_with_auth, post_with_auth},
+        http_client::{delete, get, post},
         validate::{require_integration, require_manifest},
     },
 };
@@ -179,8 +178,7 @@ impl CliCommand for CreateCommand {
         }
 
         let url = format!("{}/alert-rules", get_observability_api_url());
-        let auth_mode = AuthMode::detect();
-        let response = post_with_auth(&auth_mode, &url, body)
+        let response = post(&url, body)
             .with_context(|| "Failed to reach observability API")?;
 
         let status = response.status();
@@ -240,8 +238,7 @@ impl CliCommand for DeleteCommand {
             get_observability_api_url(),
             urlencoding::encode(id)
         );
-        let auth_mode = AuthMode::detect();
-        let response = delete_with_auth(&auth_mode, &url)
+        let response = delete(&url)
             .with_context(|| "Failed to reach observability API")?;
 
         let status = response.status();
@@ -284,9 +281,7 @@ fn list_alerts(matches: &ArgMatches) -> Result<()> {
         url.push_str(&format!("&serviceId={}", urlencoding::encode(s)));
     }
 
-    let auth_mode = AuthMode::detect();
-    let response =
-        get_with_auth(&auth_mode, &url).with_context(|| "Failed to reach observability API")?;
+    let response = get(&url).with_context(|| "Failed to reach observability API")?;
 
     let status = response.status();
     if !status.is_success() {

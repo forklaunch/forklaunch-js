@@ -6,8 +6,7 @@ use crate::{
     constants::get_observability_api_url,
     core::{
         command::command,
-        hmac::AuthMode,
-        http_client::post_with_auth,
+        http_client::post,
         validate::{require_integration, require_manifest},
     },
 };
@@ -91,8 +90,7 @@ impl CliCommand for QueryCommand {
         }
 
         let url = format!("{}/monitoring/promql", get_observability_api_url());
-        let auth_mode = AuthMode::detect();
-        let response = post_with_auth(&auth_mode, &url, body)
+        let response = post(&url, body)
             .with_context(|| "Failed to reach observability API")?;
 
         let status = response.status();

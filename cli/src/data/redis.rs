@@ -6,8 +6,7 @@ use crate::{
     constants::get_observability_api_url,
     core::{
         command::command,
-        hmac::AuthMode,
-        http_client::{delete_with_auth, get_with_auth, patch_with_auth, post_with_auth},
+        http_client::{delete, get, patch, post},
     },
 };
 
@@ -123,9 +122,8 @@ impl CliCommand for KeysCommand {
             url.push('?');
             url.push_str(&params.join("&"));
         }
-        let auth_mode = AuthMode::detect();
         print_pretty(&check(
-            get_with_auth(&auth_mode, &url).with_context(|| "Failed to reach observability API")?,
+            get(&url).with_context(|| "Failed to reach observability API")?,
         )?)
     }
 }
@@ -146,10 +144,9 @@ impl CliCommand for GetCommand {
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
         let resource = matches.get_one::<String>("resource").context("--resource is required")?;
         let key = matches.get_one::<String>("key").context("key is required")?;
-        let auth_mode = AuthMode::detect();
         let url = explorer_url(resource, &format!("/keys/{}", urlencoding::encode(key)));
         print_pretty(&check(
-            get_with_auth(&auth_mode, &url).with_context(|| "Failed to reach observability API")?,
+            get(&url).with_context(|| "Failed to reach observability API")?,
         )?)
     }
 }
@@ -180,10 +177,9 @@ impl CliCommand for SetCommand {
         let value = matches.get_one::<String>("value").context("value is required")?;
         let r#type = matches.get_one::<String>("type").map(String::as_str).unwrap_or("string");
         let body = serde_json::json!({ "key": key, "type": r#type, "value": value });
-        let auth_mode = AuthMode::detect();
         let url = explorer_url(resource, "/keys");
         print_pretty(&check(
-            post_with_auth(&auth_mode, &url, body)
+            post(&url, body)
                 .with_context(|| "Failed to reach observability API")?,
         )?)
     }
@@ -205,10 +201,9 @@ impl CliCommand for DeleteCommand {
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
         let resource = matches.get_one::<String>("resource").context("--resource is required")?;
         let key = matches.get_one::<String>("key").context("key is required")?;
-        let auth_mode = AuthMode::detect();
         let url = explorer_url(resource, &format!("/keys/{}", urlencoding::encode(key)));
         print_pretty(&check(
-            delete_with_auth(&auth_mode, &url)
+            delete(&url)
                 .with_context(|| "Failed to reach observability API")?,
         )?)
     }
@@ -253,10 +248,9 @@ impl CliCommand for TtlCommand {
             .transpose()
             .context("--seconds must be an integer")?;
         let body = build_ttl_body(seconds);
-        let auth_mode = AuthMode::detect();
         let url = explorer_url(resource, &format!("/keys/{}/ttl", urlencoding::encode(key)));
         print_pretty(&check(
-            patch_with_auth(&auth_mode, &url, body)
+            patch(&url, body)
                 .with_context(|| "Failed to reach observability API")?,
         )?)
     }
@@ -290,10 +284,9 @@ impl CliCommand for RunCommand {
             .map(|v| v.collect())
             .unwrap_or_default();
         let body = serde_json::json!({ "command": redis_command, "args": args });
-        let auth_mode = AuthMode::detect();
         let url = explorer_url(resource, "/redis-command");
         print_pretty(&check(
-            post_with_auth(&auth_mode, &url, body)
+            post(&url, body)
                 .with_context(|| "Failed to reach observability API")?,
         )?)
     }
