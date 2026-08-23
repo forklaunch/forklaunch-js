@@ -53,16 +53,20 @@ pub(crate) fn resource_type_to_integration_type(token: &str) -> Result<&'static 
 /// Fetches every provisioned resource for the application in a given environment.
 /// Shared by `fl infra list` and every resolving subcommand — do not duplicate this
 /// call elsewhere; both call sites must stay on this one function.
+fn application_resources_url(application_id: &str, environment: &str) -> String {
+    format!(
+        "{}/platform-resources/application/{}?environment={}",
+        get_resource_management_api_url(),
+        encode_resource_id_for_url(application_id),
+        urlencoding::encode(environment)
+    )
+}
+
 pub(crate) fn fetch_application_resources(
     application_id: &str,
     environment: &str,
 ) -> Result<Vec<ResourceListItem>> {
-    let url = format!(
-        "{}/platform-resources/application/{}?environment={}",
-        get_resource_management_api_url(),
-        application_id,
-        environment
-    );
+    let url = application_resources_url(application_id, environment);
 
     let response = get(&url).with_context(|| "Failed to reach resource-management API")?;
     let status = response.status();
@@ -262,6 +266,16 @@ mod tests {
         // string itself should not also be accepted as a CLI-facing token, to avoid
         // two spellings meaning the same thing.
         assert!(resource_type_to_integration_type("messagequeue").is_err());
+    }
+
+    #[test]
+    fn application_resources_url_encodes_application_id_and_environment() {
+        let url = application_resources_url("app/../secret", "dev&environment=production");
+        assert!(url.contains("app%2F..%2Fsecret"));
+        assert!(url.ends_with("environment=dev%26environment%3Dproduction"));
+        // exactly one `environment=` — a raw `&` in the value must not smuggle a
+        // second query parameter in.
+        assert_eq!(url.matches("environment=").count(), 1);
     }
 
     #[test]

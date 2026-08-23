@@ -213,9 +213,12 @@ fn parse_config_entries<'a, I: Iterator<Item = &'a String>>(
 }
 
 fn validate_reset_target(target: &str) -> Result<()> {
-    if target != "earliest" && target != "latest" && target.parse::<i64>().is_err() {
+    if target != "earliest"
+        && target != "latest"
+        && !matches!(target.parse::<i64>(), Ok(offset) if offset >= 0)
+    {
         bail!(
-            "--target must be 'earliest', 'latest', or a specific integer offset, got '{}'",
+            "--target must be 'earliest', 'latest', or a specific non-negative integer offset, got '{}'",
             target
         );
     }
@@ -473,7 +476,8 @@ mod tests {
         assert!(validate_reset_target("earliest").is_ok());
         assert!(validate_reset_target("latest").is_ok());
         assert!(validate_reset_target("42").is_ok());
-        assert!(validate_reset_target("-1").is_ok());
+        assert!(validate_reset_target("0").is_ok());
+        assert!(validate_reset_target("-1").is_err());
         assert!(validate_reset_target("bogus").is_err());
         assert!(validate_reset_target("").is_err());
     }

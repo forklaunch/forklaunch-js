@@ -21,8 +21,8 @@ fn parse_instance_sizes(sizes: &[&String]) -> Result<serde_json::Map<String, ser
         let (id, size) = entry
             .split_once('=')
             .with_context(|| format!("--size '{}' must be <id>=<size>", entry))?;
-        if size.is_empty() {
-            bail!("--size '{}' has an empty size value", entry);
+        if id.is_empty() || size.is_empty() {
+            bail!("--size '{}' must contain a non-empty id and size", entry);
         }
         if instance_sizes.contains_key(id) {
             bail!("--size specified more than once for id '{}'", id);
@@ -190,6 +190,9 @@ mod tests {
 
         let empty_value = "svc-1=".to_string();
         assert!(parse_instance_sizes(&[&empty_value]).is_err());
+
+        let empty_id = "=t3.medium".to_string();
+        assert!(parse_instance_sizes(&[&empty_id]).is_err());
 
         let dup_a = "svc-1=t3.medium".to_string();
         let dup_b = "svc-1=t3.large".to_string();
