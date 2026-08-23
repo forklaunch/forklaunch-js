@@ -8,12 +8,12 @@ use crate::{
     CliCommand,
     core::{
         command::command,
-        validate::{require_integration, require_manifest, resolve_auth},
+        validate::{require_auth, require_integration, require_manifest},
     },
 };
 
 use super::{
-    resource_resolver::{fetch_resource_detail, fetch_resource_metrics, require_jwt_mode, resolve},
+    resource_resolver::{fetch_resource_detail, fetch_resource_metrics, resolve},
     types::{MetricSeries, ResourceDetailResponse},
 };
 
@@ -77,8 +77,7 @@ impl CliCommand for StatusCommand {
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
-        let auth_mode = resolve_auth()?;
-        require_jwt_mode(&auth_mode)?;
+        require_auth()?;
         let (_app_root, manifest) = require_manifest(matches)?;
         let application_id = require_integration(&manifest)?;
         let environment = matches
@@ -94,7 +93,6 @@ impl CliCommand for StatusCommand {
         let json_output = matches.get_flag("json");
 
         let resolved = resolve(
-            &auth_mode,
             &manifest,
             &application_id,
             &environment,
@@ -103,7 +101,7 @@ impl CliCommand for StatusCommand {
         )?;
 
         if metrics_only {
-            let series = fetch_resource_metrics(&auth_mode, &resolved.id)?;
+            let series = fetch_resource_metrics(&resolved.id)?;
             if json_output {
                 println!("{}", serde_json::to_string_pretty(&series)?);
                 return Ok(());
@@ -113,7 +111,7 @@ impl CliCommand for StatusCommand {
             return Ok(());
         }
 
-        let detail = fetch_resource_detail(&auth_mode, &resolved.id)?;
+        let detail = fetch_resource_detail(&resolved.id)?;
 
         if json_output {
             if config_only {

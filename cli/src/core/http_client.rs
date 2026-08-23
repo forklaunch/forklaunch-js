@@ -235,16 +235,6 @@ pub fn put_with_auth(auth_mode: &AuthMode, url: &str, body: Value) -> Result<Res
     }
 }
 
-/// PATCH with auth mode dispatch (JWT or HMAC)
-pub fn patch_with_auth(auth_mode: &AuthMode, url: &str, body: Value) -> Result<Response> {
-    match auth_mode {
-        AuthMode::Jwt => patch(url, body),
-        AuthMode::Hmac { secret_key } => {
-            make_hmac_request(secret_key, Method::PATCH, url, Some(body))
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -9,8 +9,7 @@ use crate::{
     constants::get_observability_api_url,
     core::{
         command::command,
-        hmac::AuthMode,
-        http_client::{get_with_auth, post_with_auth},
+        http_client::{get, post},
         validate::{require_integration, require_manifest},
     },
     CliCommand,
@@ -133,9 +132,7 @@ fn fetch_application_metrics(
         urlencoding::encode(chart_type),
     );
 
-    let auth_mode = AuthMode::detect();
-    let response =
-        get_with_auth(&auth_mode, &url).with_context(|| "Failed to reach observability API")?;
+    let response = get(&url).with_context(|| "Failed to reach observability API")?;
 
     if !response.status().is_success() {
         let status = response.status();
@@ -232,8 +229,7 @@ fn fetch_promql(
         "timeRange": time_range,
     });
 
-    let auth_mode = AuthMode::detect();
-    let response = post_with_auth(&auth_mode, &url, body)
+    let response = post(&url, body)
         .with_context(|| "Failed to reach observability API")?;
 
     if !response.status().is_success() {

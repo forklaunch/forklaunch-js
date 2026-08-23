@@ -8,7 +8,7 @@ use crate::{
     constants::{get_platform_ui_url, get_resource_management_api_url},
     core::{
         hmac::AuthMode,
-        http_client::{patch_with_auth, post_with_auth},
+        http_client::{patch, post},
     },
     deploy::utils::stream_deployment_status,
 };
@@ -127,7 +127,7 @@ fn print_config_diff(stdout: &mut StandardStream, current: &ResourceConfig, requ
 /// distribution metadata changed, otherwise calls `POST /deploy` and polls to
 /// completion — printing the dashboard URL before polling starts so a dropped
 /// connection never leaves the user unable to check on a live mutation.
-pub(crate) fn run_mutation(auth_mode: &AuthMode, req: MutationRequest) -> Result<()> {
+pub(crate) fn run_mutation(req: MutationRequest) -> Result<()> {
     let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
     if is_metadata_only(&req.requested_config) {
@@ -139,7 +139,6 @@ pub(crate) fn run_mutation(auth_mode: &AuthMode, req: MutationRequest) -> Result
             return Ok(());
         }
         let updated = patch_resource(
-            auth_mode,
             &req.resource_id,
             req.distribution_strategy,
             req.primary_region,
@@ -170,7 +169,6 @@ pub(crate) fn run_mutation(auth_mode: &AuthMode, req: MutationRequest) -> Result
     }
 
     let response = deploy_resource(
-        auth_mode,
         &req.resource_id,
         Some(req.requested_config),
         req.distribution_strategy,
@@ -190,7 +188,10 @@ pub(crate) fn run_mutation(auth_mode: &AuthMode, req: MutationRequest) -> Result
     writeln!(stdout, "(Check this URL if the live status stream below is interrupted.)")?;
     writeln!(stdout)?;
 
-    stream_deployment_status(auth_mode, &response.deployment_id, &mut stdout)?;
+    // `fl infra` is JWT/session-only (resource-management has no HMAC support on
+    // these routes); `stream_deployment_status` is shared with `deploy create`,
+    // which still supports HMAC, so it takes an AuthMode — always JWT from here.
+    stream_deployment_status(&AuthMode::Jwt, &response.deployment_id, &mut stdout)?;
 
     Ok(())
 }
@@ -200,7 +201,6 @@ pub(crate) fn run_mutation(auth_mode: &AuthMode, req: MutationRequest) -> Result
 /// app/environment/region (the platform's deployment lock is scoped broader than the
 /// single resource) — surfaced as a clear retry message instead of the raw body.
 fn deploy_resource(
-    auth_mode: &AuthMode,
     resource_id: &str,
     manifest_config: Option<ResourceConfig>,
     distribution_strategy: Option<String>,
@@ -220,7 +220,7 @@ fn deploy_resource(
         snapshot_before_change,
     };
 
-    let response = post_with_auth(auth_mode, &url, serde_json::to_value(&body)?)
+    let response = post(&url, serde_json::to_value(&body)?)
         .with_context(|| "Failed to reach resource-management API")?;
     let status = response.status();
 
@@ -246,7 +246,6 @@ fn deploy_resource(
 /// no deployment row created, no polling needed. Confirmed against the platform's
 /// response schema (`ResourceDetailResponseSchema`, same shape as `GET /:resourceId`).
 fn patch_resource(
-    auth_mode: &AuthMode,
     resource_id: &str,
     distribution_strategy: Option<String>,
     primary_region: Option<String>,
@@ -262,7 +261,7 @@ fn patch_resource(
         primary_region,
     };
 
-    let response = patch_with_auth(auth_mode, &url, serde_json::to_value(&body)?)
+    let response = patch(&url, serde_json::to_value(&body)?)
         .with_context(|| "Failed to reach resource-management API")?;
     let status = response.status();
 

@@ -8,11 +8,11 @@ use crate::{
     CliCommand,
     core::{
         command::command,
-        validate::{require_integration, require_manifest, resolve_auth},
+        validate::{require_auth, require_integration, require_manifest},
     },
 };
 
-use super::resource_resolver::{fetch_application_resources, require_jwt_mode};
+use super::resource_resolver::fetch_application_resources;
 
 #[derive(Debug)]
 pub(super) struct ListCommand;
@@ -48,8 +48,7 @@ impl CliCommand for ListCommand {
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
-        let auth_mode = resolve_auth()?;
-        require_jwt_mode(&auth_mode)?;
+        require_auth()?;
         let (_app_root, manifest) = require_manifest(matches)?;
         let application_id = require_integration(&manifest)?;
         let environment = matches
@@ -58,7 +57,7 @@ impl CliCommand for ListCommand {
             .to_string();
         let json_output = matches.get_flag("json");
 
-        let resources = fetch_application_resources(&auth_mode, &application_id, &environment)?;
+        let resources = fetch_application_resources(&application_id, &environment)?;
 
         if json_output {
             println!("{}", serde_json::to_string_pretty(&resources.iter().map(|r| {
