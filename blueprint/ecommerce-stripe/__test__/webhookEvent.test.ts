@@ -8,7 +8,7 @@ import {
 } from './test-utils';
 
 /**
- * Regression test for the webhook idempotency gate (ECOM-10).
+ * Regression test for the webhook idempotency gate.
  *
  * The bug this pins: beginProcessing originally claimed events with
  * `em.insert(WebhookEvent, {...})`. em.insert() is a raw fast-path that
@@ -39,8 +39,9 @@ describe('WebhookEventService idempotency gate', () => {
   }, 30000);
 
   async function makeService() {
-    const { WebhookEventService } =
-      await import('../domain/services/webhookEvent.service');
+    const { WebhookEventService } = await import(
+      '../domain/services/webhookEvent.service'
+    );
     const em = setup.orm!.em.fork() as unknown as EntityManager;
     return {
       service: new WebhookEventService(
