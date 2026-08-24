@@ -10,12 +10,10 @@ const openTelemetryCollector = ci.resolve(tokens.OtelCollector);
 const inventoryServiceFactory = ci.scopedResolver(tokens.InventoryService);
 
 /**
- * the inventory side-effect, actually built — the module's real
- * gap this session (search/filter, checkout, PayPal, cart caching) closed
- * but the worker never had. Deliberately scoped to two side effects that
- * are provable against the real database — decrement on paid, restock on
- * cancelled — not shipping/invoicing/notifications, which need external
- * services this environment has no credentials for.
+ * Applies inventory side effects for order transitions: decrement on paid,
+ * restock on cancelled. Deliberately limited to those two, both of which are
+ * provable against the database. Shipping, invoicing and notifications would
+ * consume the same events but depend on external services.
  */
 const processOrderEvents: WorkerProcessFunction<OrderEventRecord> = async (
   events
