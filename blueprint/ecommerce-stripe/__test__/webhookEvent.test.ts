@@ -1,5 +1,5 @@
+import { randomUUID } from 'node:crypto';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { randomUUID } from 'crypto';
 import { EntityManager } from '@mikro-orm/core';
 import {
   cleanupTestDatabase,
