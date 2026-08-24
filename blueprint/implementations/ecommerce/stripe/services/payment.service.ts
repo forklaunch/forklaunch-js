@@ -30,10 +30,12 @@ export class StripePaymentService<
   SchemaValidator extends AnySchemaValidator,
   Entities extends BasePaymentEntities,
   Dto extends BasePaymentDtos = BasePaymentDtos
-> implements PaymentService {
+> implements PaymentService
+{
   basePaymentService: BasePaymentService<SchemaValidator, Entities, Dto>;
   protected readonly stripeClient: Stripe;
   protected readonly em: EntityManager;
+  protected readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
   protected readonly connect?: {
     connectedAccountId: string;
     platformFeeBps: number;
@@ -66,6 +68,7 @@ export class StripePaymentService<
   ) {
     this.stripeClient = stripeClient;
     this.em = em;
+    this.openTelemetryCollector = openTelemetryCollector;
     if (options?.connect) {
       // Validate the fee dial here rather than trusting the caller: it comes
       // from an env var, and every bad value fails SILENTLY downstream
@@ -75,13 +78,16 @@ export class StripePaymentService<
       // none, with nothing logged. A negative value does the same. Failing
       // at construction turns a silent misconfiguration into a startup error.
       const platformFeeBps = options.connect.platformFeeBps ?? 0;
+      // Upper bound is exclusive: Stripe requires application_fee_amount to be
+      // strictly less than the charge, so 10000 bps (the whole charge) is never
+      // a usable value and is rejected here rather than at the first checkout.
       if (
         !Number.isInteger(platformFeeBps) ||
         platformFeeBps < 0 ||
-        platformFeeBps > 10000
+        platformFeeBps >= 10000
       ) {
         throw new Error(
-          `Invalid Stripe platform fee: expected an integer between 0 and 10000 basis points, got ${platformFeeBps}. ` +
+          `Invalid Stripe platform fee: expected an integer from 0 to 9999 basis points, got ${platformFeeBps}. ` +
             'Check STRIPE_PLATFORM_FEE_BPS.'
         );
       }
@@ -125,11 +131,31 @@ export class StripePaymentService<
     // connected account (stripeAccount request option), so the merchant is
     // merchant-of-record and keeps the funds. The platform fee is only
     // attached when non-zero — at launch it always is zero (no markup).
-    const feeCents = this.connect
+    const requestedFeeCents = this.connect
       ? Math.round(
           (paymentDto.amountCents * this.connect.platformFeeBps) / 10000
         )
       : 0;
+    // application_fee_amount has to stay strictly below the charge. The
+    // constructor already rejects 10000 bps, but rounding can still reach the
+    // full amount on a small enough charge (1 cent at 9999 bps rounds to 1),
+    // and Stripe would reject the PaymentIntent outright. Cap it so a fee
+    // setting cannot fail a customer's checkout, and record it when it bites.
+    const feeCents = Math.min(
+      requestedFeeCents,
+      Math.max(paymentDto.amountCents - 1, 0)
+    );
+    if (feeCents !== requestedFeeCents) {
+      this.openTelemetryCollector.warn(
+        'Stripe platform fee capped below the charge amount',
+        {
+          orderId: paymentDto.orderId,
+          amountCents: paymentDto.amountCents,
+          requestedFeeCents,
+          appliedFeeCents: feeCents
+        }
+      );
+    }
     const paymentIntent = await this.stripeClient.paymentIntents.create(
       {
         amount: paymentDto.amountCents,
