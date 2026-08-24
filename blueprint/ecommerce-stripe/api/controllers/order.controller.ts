@@ -9,6 +9,7 @@ import {
   string
 } from '../../schema';
 import { OrderStatus } from '@forklaunch/interfaces-ecommerce/types';
+import { IllegalOrderTransitionError } from '@forklaunch/implementation-ecommerce-base/services';
 import { ci, tokens } from '../../bootstrapper';
 import {
   CreateOrderMapper,
@@ -94,32 +95,39 @@ export const transitionOrder = handlers.put(
   },
   async (req, res) => {
     const before = await serviceFactory().getOrder({ id: req.params.id });
+
+    let updated;
     try {
-      const updated = await serviceFactory().transitionOrder({
+      updated = await serviceFactory().transitionOrder({
         id: req.params.id,
         to: req.body.to
       });
-
-      const now = new Date();
-      await orderEventProducerFactory().enqueueJob({
-        id: randomUUID(),
-        orderId: updated.id,
-        fromStatus: before.status,
-        toStatus: updated.status,
-        items: updated.items,
-        processed: false,
-        retryCount: 0,
-        retentionAnonymizedAt: null,
-        createdAt: now,
-        updatedAt: now
-      });
-
-      res.status(200).json(updated);
     } catch (error) {
-      openTelemetryCollector.warn('Illegal order transition', error);
-      res
-        .status(400)
-        .send(error instanceof Error ? error.message : 'Illegal transition');
+      // Only a rejected transition is the caller's fault. A database that is
+      // unreachable, or a mapper that blows up, has to reach the framework
+      // error handler and surface as a 5xx; reporting it as 400 hides a
+      // service fault from every dashboard that watches for them.
+      if (error instanceof IllegalOrderTransitionError) {
+        openTelemetryCollector.warn('Illegal order transition', error);
+        return res.status(400).send(error.message);
+      }
+      throw error;
     }
+
+    const now = new Date();
+    await orderEventProducerFactory().enqueueJob({
+      id: randomUUID(),
+      orderId: updated.id,
+      fromStatus: before.status,
+      toStatus: updated.status,
+      items: updated.items,
+      processed: false,
+      retryCount: 0,
+      retentionAnonymizedAt: null,
+      createdAt: now,
+      updatedAt: now
+    });
+
+    res.status(200).json(updated);
   }
 );
