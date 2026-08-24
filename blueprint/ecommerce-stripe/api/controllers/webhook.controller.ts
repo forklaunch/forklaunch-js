@@ -134,7 +134,8 @@ export const handleStripeWebhook = handlers.post(
     // internal service holding our HMAC secret. Authenticity is instead
     // verified by hand below via stripe.webhooks.constructEvent.
     access: 'public',
-    summary: "Handle a Stripe payment webhook event (Stripe's own signature verification, not this app's HMAC)",
+    summary:
+      "Handle a Stripe payment webhook event (Stripe's own signature verification, not this app's HMAC)",
     body: unknown,
     requestHeaders: StripeWebhookHeadersSchema,
     responses: {
@@ -311,7 +312,8 @@ export const handlePaypalWebhook = handlers.post(
     // See handleStripeWebhook — same reasoning, PayPal's own transmission
     // signature is verified by hand below instead.
     access: 'public',
-    summary: "Handle a PayPal order-approval/capture-denial webhook event (PayPal's own signature verification, not this app's HMAC)",
+    summary:
+      "Handle a PayPal order-approval/capture-denial webhook event (PayPal's own signature verification, not this app's HMAC)",
     // Runs through the schema pipeline like every other endpoint now —
     // previously `unknown`, with shape validation duck-typed by hand via an
     // inline type guard (see webhook.schema.ts's PaypalWebhookEventSchema
@@ -326,10 +328,20 @@ export const handlePaypalWebhook = handlers.post(
   async (req, res) => {
     const event = req.body;
 
-    // PayPal verifies the transmission signature against its own record of
-    // what it sent (matched by transmission id) — unlike Stripe, this does
-    // not require reproducing the exact raw bytes locally, so the already-
-    // parsed body is fine to send back as `webhook_event`.
+    // Verification has to be handed the event exactly as PayPal sent it.
+    // PayPal signs `transmission_id|transmission_time|webhook_id|CRC32(body)`,
+    // so the checksum is taken over the original payload and any difference in
+    // content breaks it. req.body cannot be used: the route schema declares
+    // only id/event_type/resource, and the validator drops every field it does
+    // not declare (create_time, summary, links, ...), which is precisely the
+    // deviation PayPal's docs warn will fail verification. Parse the captured
+    // raw bytes instead and send the whole event.
+    const rawBody = (req as unknown as { rawBody?: Buffer }).rawBody;
+    if (!rawBody) {
+      res.status(400).send('Missing request body');
+      return;
+    }
+
     const verified = await paypalClient.verifyWebhookSignature({
       transmissionId: req.headers['paypal-transmission-id'],
       transmissionTime: req.headers['paypal-transmission-time'],
@@ -337,7 +349,7 @@ export const handlePaypalWebhook = handlers.post(
       certUrl: req.headers['paypal-cert-url'],
       authAlgo: req.headers['paypal-auth-algo'],
       webhookId: PAYPAL_WEBHOOK_ID,
-      webhookEvent: event
+      webhookEvent: JSON.parse(rawBody.toString('utf8'))
     });
     if (!verified) {
       // Never fall through to processing on a failed/unverifiable
