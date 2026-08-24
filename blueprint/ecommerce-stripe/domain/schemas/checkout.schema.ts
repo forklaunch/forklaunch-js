@@ -20,8 +20,7 @@ export const ShippingAddressSchema = {
 
 /**
  * Checkout's response: the order it created, plus the payment it created
- * for that order's total (ECOM-09/10 wiring — checkout no longer stops at
- * "an Order row exists").
+ * for that order's total.
  *
  * `clientSecret` is Stripe-only: Stripe.js needs the PaymentIntent's
  * client_secret client-side to actually collect the charge — the
