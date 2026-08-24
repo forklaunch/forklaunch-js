@@ -384,7 +384,10 @@ const serviceDependencies = runtimeDependencies.chain({
         // PaypalOrder; the cast bridges the two provider-specific static
         // types over one shared runtime mapper object, same as
         // StripePaymentService does internally for its own 3rd-arg type.
-        { PaymentMapper, CreatePaymentMapper } as unknown as ConstructorParameters<
+        {
+          PaymentMapper,
+          CreatePaymentMapper
+        } as unknown as ConstructorParameters<
           typeof PaypalPaymentService<
             SchemaValidator,
             PaymentMapperTypes,
@@ -394,12 +397,9 @@ const serviceDependencies = runtimeDependencies.chain({
       )
   },
   /**
-   * ECOM-12's event-emission boundary, actually implemented — previously
-   * just a comment. Redis transport only (matches TtlCache already being
-   * registered here; no new infra beyond what cart caching already needs).
-   * Only the producer side is wired here — order.controller.ts is the only
-   * local consumer of a token from this pair; the consumer/worker.ts side
-   * is scoped to a follow-up PR.
+   * The event-emission boundary. Redis transport only, which matches
+   * TtlCache already being registered here, so it needs no infrastructure
+   * beyond what cart caching already requires.
    */
   RedisWorkerOptions: {
     lifetime: Lifetime.Singleton,
