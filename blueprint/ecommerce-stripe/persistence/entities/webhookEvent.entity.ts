@@ -2,7 +2,7 @@ import { sqlBaseProperties } from '@forklaunch/blueprint-core';
 import { defineComplianceEntity, fp } from '@forklaunch/core/persistence';
 
 /**
- * The idempotency ledger for provider webhooks (ECOM-10's other half —
+ * The idempotency ledger for provider webhooks (the other half —
  * confirmPayment/failPayment finally have callers, this is what keeps
  * those callers safe against at-least-once delivery). One row per
  * (provider, provider event id) pair.

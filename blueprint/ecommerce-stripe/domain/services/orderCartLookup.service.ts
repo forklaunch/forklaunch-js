@@ -3,7 +3,7 @@ import { EntityManager } from '@mikro-orm/core';
 import { Order } from '../../persistence/entities/order.entity';
 
 /**
- * Checkout-idempotency lookup (ECOM-09/10 retry safety). `cartId` on Order
+ * Checkout-idempotency lookup (retry safety). `cartId` on Order
  * associates it with the cart it was checked out from (see order.entity.ts's
  * cartId comment) precisely so a checkout retry — e.g. after payment
  * initiation failed and the client retries with the same, deliberately
