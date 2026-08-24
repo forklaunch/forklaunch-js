@@ -208,13 +208,15 @@ export const handleStripeWebhook = handlers.post(
           );
       }
     } catch (error) {
-      // Leave the WebhookEvent row unprocessed — Stripe retries on a
-      // non-2xx response, and the next delivery will retry this same
-      // handling (confirmPayment/failPayment/transitionOrder are all
-      // themselves idempotent, so re-running is safe).
+      // Leave the WebhookEvent row unprocessed. Stripe retries on any
+      // non-2xx, and the next delivery re-runs this handling
+      // (confirmPayment/failPayment/transitionOrder are all idempotent, so
+      // re-running is safe). Rethrow rather than answering 400: the failure
+      // is ours, not the caller's, and Stripe's dashboard tells whoever is
+      // debugging a 400 to check that the endpoint is reachable, which sends
+      // them after the wrong thing. A 5xx points them at our logs.
       openTelemetryCollector.error('Stripe webhook handling failed', error);
-      res.status(400).send('Webhook handling failed');
-      return;
+      throw error;
     }
 
     await webhookEventServiceFactory().markProcessed({
@@ -388,12 +390,13 @@ export const handlePaypalWebhook = handlers.post(
           );
       }
     } catch (error) {
-      // Same reasoning as the Stripe handler: leave the row unprocessed so
-      // a PayPal retry re-runs handling, which is safe because
-      // confirmPayment/failPayment/transitionOrder are all idempotent.
+      // Same reasoning as the Stripe handler: leave the row unprocessed so a
+      // PayPal retry re-runs handling, which is safe because
+      // confirmPayment/failPayment/transitionOrder are all idempotent, and
+      // rethrow so the failure is reported as ours. PayPal retries on any
+      // non-2xx, so the status code changes nothing about redelivery.
       openTelemetryCollector.error('PayPal webhook handling failed', error);
-      res.status(400).send('Webhook handling failed');
-      return;
+      throw error;
     }
 
     await webhookEventServiceFactory().markProcessed({
