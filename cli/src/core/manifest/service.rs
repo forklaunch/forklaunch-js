@@ -82,6 +82,8 @@ config_struct!(
         pub(crate) is_messaging: bool,
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) is_twilio: bool,
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) is_cac: bool,
 
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) is_iam_configured: bool,

@@ -27,12 +27,18 @@ pub(crate) enum MessagingConfig {
     TwilioMessaging,
 }
 
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) enum CacConfig {
+    BaseCac,
+}
+
 #[derive(Debug, PartialEq, Eq, Default)]
 pub(crate) struct ModuleConfig {
     pub(crate) iam: Option<IamConfig>,
     pub(crate) billing: Option<BillingConfig>,
     pub(crate) ecommerce: Option<EcommerceConfig>,
     pub(crate) messaging: Option<MessagingConfig>,
+    pub(crate) cac: Option<CacConfig>,
 }
 
 pub(crate) fn validate_modules(
@@ -63,6 +69,9 @@ pub(crate) fn validate_modules(
             }
             Module::TwilioMessaging => {
                 global_module_config.messaging = Some(MessagingConfig::TwilioMessaging);
+            }
+            Module::BaseCac => {
+                global_module_config.cac = Some(CacConfig::BaseCac);
             }
         }
 

@@ -11,6 +11,7 @@ RUST_BACKTRACE=1 cargo run --release init application service-test-node-applicat
 RUST_BACKTRACE=1 cargo run --release init module -m iam-base -d postgresql -p service-test-node-application
 RUST_BACKTRACE=1 cargo run --release init module -m billing-base -d postgresql -p service-test-node-application
 RUST_BACKTRACE=1 cargo run --release init module -m messaging-base -d postgresql -p service-test-node-application
+RUST_BACKTRACE=1 cargo run --release init module -m cac-base -d postgresql -p service-test-node-application
 
 cd service-test-node-application/src/modules
 
@@ -23,6 +24,7 @@ RUST_BACKTRACE=1 cargo run --release init application service-test-bun-applicati
 RUST_BACKTRACE=1 cargo run --release init module -m iam-base -d postgresql -p service-test-bun-application
 RUST_BACKTRACE=1 cargo run --release init module -m billing-base -d postgresql -p service-test-bun-application
 RUST_BACKTRACE=1 cargo run --release init module -m messaging-base -d postgresql -p service-test-bun-application
+RUST_BACKTRACE=1 cargo run --release init module -m cac-base -d postgresql -p service-test-bun-application
 
 cd service-test-bun-application/src/modules
 
