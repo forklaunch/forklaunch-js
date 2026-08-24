@@ -1,6 +1,6 @@
 import { IdDto, IdsDto, RecordTimingDto } from '@forklaunch/common';
 
-/** The order lifecycle (ECOM-07). Cancellation is legal from any pre-terminal state. */
+/** The order lifecycle. Cancellation is legal from any pre-terminal state. */
 export const OrderStatus = {
   PENDING: 'pending',
   PAID: 'paid',
@@ -64,7 +64,7 @@ export type OrderDto = CreateOrderDto &
     status: OrderStatusType;
   };
 
-/** A requested status transition; the service enforces legality (ECOM-08). */
+/** A requested status transition; the service enforces legality. */
 export type TransitionOrderDto = {
   id: string;
   to: OrderStatusType;

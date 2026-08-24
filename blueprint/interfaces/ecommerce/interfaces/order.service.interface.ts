@@ -16,7 +16,7 @@ export interface OrderService<
     idsDto?: Params['IdsDto'],
     em?: EntityManager
   ) => Promise<Params['OrderDto'][]>;
-  /** Rejects illegal transitions per the ECOM-07 state machine. */
+  /** Rejects illegal transitions per the state machine. */
   transitionOrder: (
     transitionDto: Params['TransitionOrderDto'],
     em?: EntityManager

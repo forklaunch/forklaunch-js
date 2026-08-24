@@ -20,7 +20,7 @@ import { OrderMappers } from '../domain/types/order.mapper.types';
 import { Order } from '../persistence/entities';
 
 /**
- * The ECOM-07 order state machine — the legal-transition table. Cancellation
+ * The order state machine — the legal-transition table. Cancellation
  * is legal from any pre-terminal state; delivered/cancelled are terminal.
  */
 const ORDER_TRANSITIONS: Record<OrderStatusType, OrderStatusType[]> = {
@@ -100,7 +100,7 @@ export class BaseOrderService<
     );
   }
 
-  /** Status always defaults to pending on creation (ECOM-08). */
+  /** Status always defaults to pending on creation. */
   async createOrder(
     orderDto: CreateOrderDto,
     em?: EntityManager,
@@ -139,7 +139,7 @@ export class BaseOrderService<
   /**
    * Rejects illegal transitions per ORDER_TRANSITIONS. Every legal transition
    * is a single persisted state change — the event-emission-to-worker
-   * boundary (ECOM-12) hooks in at the deployable-app layer, one enqueue per
+   * boundary hooks in at the deployable-app layer, one enqueue per
    * transition.
    */
   async transitionOrder(

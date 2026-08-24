@@ -76,7 +76,7 @@ export const listOrders = handlers.get(
 );
 
 /**
- * The state-machine transition endpoint (ECOM-08/12) — rejects illegal
+ * The state-machine transition endpoint — rejects illegal
  * transitions with a 400. Each successful transition enqueues an
  * OrderEventRecord — the actual event-emission boundary worker.ts consumes,
  * previously just a comment here rather than real code.
