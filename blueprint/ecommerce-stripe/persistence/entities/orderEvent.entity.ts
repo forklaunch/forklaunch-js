@@ -7,10 +7,9 @@ import { defineComplianceEntity, fp } from '@forklaunch/core/persistence';
 import type { InferEntity } from '@mikro-orm/core';
 
 /**
- * The event-emission boundary, finally implemented — previously
- * just a comment in order.service.ts. One row per order transition,
- * consumed by worker.ts to drive side effects (inventory adjustment today;
- * shipping/invoices/notifications are future consumers of the same event).
+ * The event-emission boundary: one row per order transition, consumed by
+ * worker.ts to drive side effects. Inventory adjustment is the only consumer
+ * today; shipping, invoices and notifications would read the same event.
  */
 export const OrderEventRecord = defineComplianceEntity({
   name: 'OrderEventRecord',
