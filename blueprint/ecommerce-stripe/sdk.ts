@@ -19,7 +19,6 @@ import {
   updateVariant
 } from './api/controllers';
 
-//! SDK surface is built up incrementally as each entity's PR lands.
 export type EcommerceSdk = {
   product: {
     createProduct: typeof createProduct;

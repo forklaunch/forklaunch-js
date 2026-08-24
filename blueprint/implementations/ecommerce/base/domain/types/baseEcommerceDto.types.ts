@@ -30,5 +30,3 @@ export type BaseInventoryDtos = {
   CreateInventoryMapper: CreateInventoryDto;
   UpdateInventoryMapper: UpdateInventoryDto;
 };
-
-// Remaining entities' Dto aggregates are added incrementally as each PR lands.

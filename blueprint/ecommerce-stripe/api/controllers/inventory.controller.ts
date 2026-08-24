@@ -27,7 +27,7 @@ export const getInventory = handlers.get(
   }
 );
 
-/** Manual stock adjustment (ECOM-04) — guards against oversell at the service layer. */
+/** Manual stock adjustment — guards against oversell at the service layer. */
 export const adjustStock = handlers.put(
   schemaValidator,
   '/adjust',

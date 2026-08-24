@@ -40,7 +40,7 @@ export type UpdateProductDto = Partial<CreateProductDto> & IdDto;
 export type ProductDto = CreateProductDto & IdDto & Partial<RecordTimingDto>;
 
 /**
- * Catalog search/filter (ECOM-03). `ids` narrows to specific products,
+ * Catalog search/filter. `ids` narrows to specific products,
  * everything else is optional and additive. Price/stock/option filters are
  * variant-level under the hood (Product itself carries no price) — a
  * product matches if at least one of its variants satisfies them.

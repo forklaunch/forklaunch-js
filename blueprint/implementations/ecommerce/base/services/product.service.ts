@@ -57,7 +57,7 @@ export class BaseProductService<
   }
 
   /**
-   * Product-level half of catalog search/filter (ECOM-03): `ids` and
+   * Product-level half of catalog search/filter: `ids` and
    * `title`. Price/stock/option-value filters are variant-level and are
    * resolved one layer up, at the deployable app's controller — this
    * service only knows about Product, not Variant/Inventory — which then
@@ -176,13 +176,18 @@ export class BaseProductService<
       em ?? this.em,
       ...args
     );
-    const updatedProduct = await (em ?? this.em).transactional(async (innerEm) => {
-      return await innerEm.upsert(product);
-    });
+    const updatedProduct = await (em ?? this.em).transactional(
+      async (innerEm) => {
+        return await innerEm.upsert(product);
+      }
+    );
     return this.mappers.ProductMapper.toDto(updatedProduct);
   }
 
-  async deleteProduct(idDto: { id: string }, em?: EntityManager): Promise<void> {
+  async deleteProduct(
+    idDto: { id: string },
+    em?: EntityManager
+  ): Promise<void> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info('Deleting product', idDto);
     }

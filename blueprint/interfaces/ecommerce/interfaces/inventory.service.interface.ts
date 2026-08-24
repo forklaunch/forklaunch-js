@@ -4,7 +4,7 @@ import { InventoryServiceParameters } from '../types/inventory.service.types';
 export interface InventoryService<
   Params extends InventoryServiceParameters = InventoryServiceParameters
 > {
-  /** Called once per variant at catalog-import time (ECOM-04/import door). */
+  /** Called once per variant at catalog-import time (import door). */
   createInventory: (
     inventoryDto: Params['CreateInventoryDto'],
     em?: EntityManager

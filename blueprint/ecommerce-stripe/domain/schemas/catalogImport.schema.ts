@@ -1,11 +1,4 @@
-import {
-  array,
-  boolean,
-  number,
-  optional,
-  record,
-  string
-} from '../../schema';
+import { array, boolean, number, optional, record, string } from '../../schema';
 
 /**
  * Request schemas for the bulk catalog-import endpoint.
@@ -33,7 +26,7 @@ export const ImportVariantSchema = {
   priceCents: number,
   compareAtPriceCents: optional(number),
   requiresShipping: optional(boolean),
-  /** Seed stock — no reservation semantics in v1 (ECOM-04). */
+  /** Seed stock — no reservation semantics in v1. */
   initialStock: optional(number)
 };
 

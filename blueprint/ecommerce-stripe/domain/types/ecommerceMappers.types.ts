@@ -25,8 +25,14 @@ export type ProductMapperTypes = {
 };
 export type ProductDtoTypes = {
   ProductMapper: Schema<typeof ProductMapper.schema, SchemaValidator>;
-  CreateProductMapper: Schema<typeof CreateProductMapper.schema, SchemaValidator>;
-  UpdateProductMapper: Schema<typeof UpdateProductMapper.schema, SchemaValidator>;
+  CreateProductMapper: Schema<
+    typeof CreateProductMapper.schema,
+    SchemaValidator
+  >;
+  UpdateProductMapper: Schema<
+    typeof UpdateProductMapper.schema,
+    SchemaValidator
+  >;
 };
 
 // variant
@@ -37,8 +43,14 @@ export type VariantMapperTypes = {
 };
 export type VariantDtoTypes = {
   VariantMapper: Schema<typeof VariantMapper.schema, SchemaValidator>;
-  CreateVariantMapper: Schema<typeof CreateVariantMapper.schema, SchemaValidator>;
-  UpdateVariantMapper: Schema<typeof UpdateVariantMapper.schema, SchemaValidator>;
+  CreateVariantMapper: Schema<
+    typeof CreateVariantMapper.schema,
+    SchemaValidator
+  >;
+  UpdateVariantMapper: Schema<
+    typeof UpdateVariantMapper.schema,
+    SchemaValidator
+  >;
 };
 
 // inventory
@@ -58,8 +70,6 @@ export type InventoryDtoTypes = {
     SchemaValidator
   >;
 };
-
-// Remaining entities' mapper/DTO types are added incrementally as each PR lands.
 
 // TS2883 workaround. The dependency container infers through the Base*Service
 // generics, and without at least one of these mapper types nameable here, tsc

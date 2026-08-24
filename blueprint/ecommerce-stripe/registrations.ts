@@ -129,18 +129,15 @@ const environmentConfig = configInjector.chain({
 });
 
 //! defines the runtime dependencies for the application — pure infra, no
-//! entity-specific services yet. Entity services are added incrementally,
-//! one `.chain()` per PR, as each entity lands (same multi-step chain
-//! pattern this file already uses above: configInjector -> environmentConfig
-//! -> runtimeDependencies), so every intermediate PR stays independently
-//! buildable rather than referencing services that don't exist yet.
+//! entity-specific services. Same multi-step chain pattern this file uses
+//! above: configInjector -> environmentConfig -> runtimeDependencies.
 const runtimeDependencies = environmentConfig.chain({
   /**
-   * Cart's fast/temporary-state layer (ECOM-06's original design) — a
-   * read-through cache in front of Postgres, which stays the source of
-   * truth. 30 minutes matches a typical shopping-session/abandonment
-   * window: long enough to serve an active session from cache, short
-   * enough to self-evict abandoned carts rather than accumulate forever.
+   * Cart's fast/temporary-state layer: a read-through cache in front of
+   * Postgres, which stays the source of truth. 30 minutes matches a typical
+   * shopping-session/abandonment window: long enough to serve an active
+   * session from cache, short enough to self-evict abandoned carts rather
+   * than accumulate forever.
    */
   TtlCache: {
     lifetime: Lifetime.Singleton,
@@ -184,11 +181,15 @@ const runtimeDependencies = environmentConfig.chain({
 });
 
 //! defines the service dependencies for the application — one `.chain()`
-//! link per entity, added incrementally as each entity's PR lands.
+//! link per entity.
 const serviceDependencies = runtimeDependencies.chain({
   ProductService: {
     lifetime: Lifetime.Scoped,
-    type: BaseProductService<SchemaValidator, ProductMapperTypes, ProductDtoTypes>,
+    type: BaseProductService<
+      SchemaValidator,
+      ProductMapperTypes,
+      ProductDtoTypes
+    >,
     factory: ({ EntityManager, OtelCollector }, context, resolve) =>
       new BaseProductService(
         context.entityManagerOptions
@@ -201,7 +202,11 @@ const serviceDependencies = runtimeDependencies.chain({
   },
   VariantService: {
     lifetime: Lifetime.Scoped,
-    type: BaseVariantService<SchemaValidator, VariantMapperTypes, VariantDtoTypes>,
+    type: BaseVariantService<
+      SchemaValidator,
+      VariantMapperTypes,
+      VariantDtoTypes
+    >,
     factory: ({ EntityManager, OtelCollector }, context, resolve) =>
       new BaseVariantService(
         context?.entityManagerOptions
