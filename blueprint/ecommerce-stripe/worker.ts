@@ -10,7 +10,7 @@ const openTelemetryCollector = ci.resolve(tokens.OtelCollector);
 const inventoryServiceFactory = ci.scopedResolver(tokens.InventoryService);
 
 /**
- * ECOM-05/12's inventory side-effect, actually built — the module's real
+ * the inventory side-effect, actually built — the module's real
  * gap this session (search/filter, checkout, PayPal, cart caching) closed
  * but the worker never had. Deliberately scoped to two side effects that
  * are provable against the real database — decrement on paid, restock on
@@ -104,4 +104,6 @@ const orderEventConsumerFactory = ci.resolve(tokens.OrderEventConsumer);
 const consumer = orderEventConsumerFactory(processOrderEvents, processFailures);
 
 consumer.start();
-openTelemetryCollector.info('Ecommerce worker started, consuming order-events queue');
+openTelemetryCollector.info(
+  'Ecommerce worker started, consuming order-events queue'
+);
