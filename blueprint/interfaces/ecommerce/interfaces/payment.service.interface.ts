@@ -4,7 +4,7 @@ import { PaymentServiceParameters } from '../types/payment.service.types';
 export interface PaymentService<
   Params extends PaymentServiceParameters = PaymentServiceParameters
 > {
-  /** Creates a pending payment and initiates it with the provider (ECOM-10). */
+  /** Creates a pending payment and initiates it with the provider. */
   createPayment: (
     paymentDto: Params['CreatePaymentDto'],
     em?: EntityManager
@@ -18,7 +18,7 @@ export interface PaymentService<
     confirmDto: Params['ConfirmPaymentDto'],
     em?: EntityManager
   ) => Promise<Params['PaymentDto']>;
-  /** Failed payment — the seam dunning (ECOM-20) hooks into later. */
+  /** Failed payment — the seam dunning hooks into later. */
   failPayment: (
     failDto: Params['FailPaymentDto'],
     em?: EntityManager
