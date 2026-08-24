@@ -1,10 +1,13 @@
 import { sqlBaseProperties } from '@forklaunch/blueprint-core';
-import { OrderItemDto, OrderStatusType } from '@forklaunch/interfaces-ecommerce/types';
+import {
+  OrderItemDto,
+  OrderStatusType
+} from '@forklaunch/interfaces-ecommerce/types';
 import { defineComplianceEntity, fp } from '@forklaunch/core/persistence';
 import type { InferEntity } from '@mikro-orm/core';
 
 /**
- * The ECOM-12 event-emission boundary, finally implemented — previously
+ * The event-emission boundary, finally implemented — previously
  * just a comment in order.service.ts. One row per order transition,
  * consumed by worker.ts to drive side effects (inventory adjustment today;
  * shipping/invoices/notifications are future consumers of the same event).
