@@ -243,13 +243,12 @@ pub(crate) const HYPER_EXPRESS_VERSION: &str = "~1.2.39";
 pub(crate) const BILLING_BASE_VERSION: &str = "~1.0.32";
 // @forklaunch/implementation-billing-stripe
 pub(crate) const BILLING_STRIPE_VERSION: &str = "~1.2.2";
+// @forklaunch/implementation-ecommerce-base
 pub(crate) const ECOMMERCE_BASE_VERSION: &str = "~1.0.5";
-// NOTE: implementation-ecommerce-stripe / -paypal are not published to npm
-// yet. Scaffolded projects cannot install until the first release goes out;
-// bump these to the published versions at that point.
-pub(crate) const ECOMMERCE_STRIPE_VERSION: &str = "~1.0.0";
+// @forklaunch/implementation-ecommerce-paypal
 pub(crate) const ECOMMERCE_PAYPAL_VERSION: &str = "~1.0.0";
-pub(crate) const ECOMMERCE_INTERFACES_VERSION: &str = "~1.0.5";
+// @forklaunch/implementation-ecommerce-stripe
+pub(crate) const ECOMMERCE_STRIPE_VERSION: &str = "~1.0.0";
 // @forklaunch/implementation-iam-base
 pub(crate) const IAM_BASE_VERSION: &str = "~1.0.32";
 // @forklaunch/implementation-messaging-base
@@ -270,6 +269,8 @@ pub(crate) const INFRASTRUCTURE_REDIS_VERSION: &str = "~1.4.10";
 pub(crate) const INFRASTRUCTURE_S3_VERSION: &str = "~1.4.10";
 // @forklaunch/interfaces-billing
 pub(crate) const BILLING_INTERFACES_VERSION: &str = "~1.0.31";
+// @forklaunch/interfaces-ecommerce
+pub(crate) const ECOMMERCE_INTERFACES_VERSION: &str = "~1.0.5";
 // @forklaunch/interfaces-iam
 pub(crate) const IAM_INTERFACES_VERSION: &str = "~1.0.30";
 // @forklaunch/interfaces-messaging
