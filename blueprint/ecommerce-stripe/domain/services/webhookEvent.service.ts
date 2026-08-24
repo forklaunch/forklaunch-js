@@ -1,6 +1,9 @@
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
-import { EntityManager, UniqueConstraintViolationException } from '@mikro-orm/core';
+import {
+  EntityManager,
+  UniqueConstraintViolationException
+} from '@mikro-orm/core';
 import { WebhookEvent } from '../../persistence/entities/webhookEvent.entity';
 
 export type WebhookEventOutcome =
@@ -13,7 +16,7 @@ export type WebhookEventOutcome =
   | 'retry';
 
 /**
- * The idempotency gate for provider webhooks (ECOM-10) — Stripe and PayPal
+ * The idempotency gate for provider webhooks — Stripe and PayPal
  * both deliver at-least-once, so the same event id can arrive more than
  * once. `beginProcessing` is the insert-first half: it claims an event
  * (inserting a WebhookEvent row) *before* any business logic runs, so two
