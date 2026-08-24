@@ -70,6 +70,7 @@ This directory contains internal planning documents, implementation specs, and t
   - Code-set refresh pipeline, EDI transaction set list, clearinghouse choice (Stedi), and success-metric targets benchmarked against MGMA/HFMA industry data — see §15 Sources
   - Executive summary up top; explicit open questions flag the LCD/CPT licensing coupling and unvalidated phase-timeline estimates rather than leaving them implicit
   - §14 breaks delivery into one PR per phase (six PRs total), flagging Phase 2's PR as by far the largest since it carries the claim engine, all three scrubbing layers, and the full CPT-readiness build
+- **[cac_objective.md](cac_objective.md)** - One-page plain-language summary of what the `cac-base` module does and how it works, for anyone who wants the shape of it without reading the full plan
 
 ### Release & Deploy Implementation
 - **[release-deploy-implementation.md](release-deploy-implementation.md)** - Implementation plan for release and deploy CLI commands
