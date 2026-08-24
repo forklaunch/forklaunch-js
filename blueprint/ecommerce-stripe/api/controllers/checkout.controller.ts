@@ -13,7 +13,7 @@ const shippingServiceFactory = ci.scopedResolver(tokens.ShippingService);
 const HMAC_SECRET_KEY = ci.resolve(tokens.HMAC_SECRET_KEY);
 
 /**
- * The unified checkout orchestration (ECOM-09): cart -> order in one call,
+ * The unified checkout orchestration: cart -> order in one call,
  * with stock validated up front so a customer never pays for something
  * that's not actually there. Tax (Stripe Tax) and shipping (flat-rate) are
  * both real, not stubs — a shipping address is required because both need
