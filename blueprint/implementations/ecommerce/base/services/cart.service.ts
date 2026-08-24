@@ -31,7 +31,10 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return Promise.race([
     promise,
     new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(`Cache operation timed out after ${ms}ms`)), ms)
+      setTimeout(
+        () => reject(new Error(`Cache operation timed out after ${ms}ms`)),
+        ms
+      )
     )
   ]);
 }
@@ -164,7 +167,7 @@ export class BaseCartService<
 
   /**
    * Out-of-stock items are allowed in the cart — the check happens at
-   * checkout, not here (per ECOM-06).
+   * checkout, not here.
    */
   async addItem(
     addItemDto: AddCartItemDto,
