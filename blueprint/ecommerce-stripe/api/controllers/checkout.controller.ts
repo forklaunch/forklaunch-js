@@ -1,4 +1,10 @@
-import { enum_, handlers, optional, schemaValidator, string } from '../../schema';
+import {
+  enum_,
+  handlers,
+  optional,
+  schemaValidator,
+  string
+} from '../../schema';
 import {
   CheckoutResultSchema,
   ShippingAddressSchema
@@ -34,10 +40,10 @@ const HMAC_SECRET_KEY = ci.resolve(tokens.HMAC_SECRET_KEY);
 const CHECKOUT_CURRENCY = 'usd';
 
 /**
- * The unified checkout orchestration (ECOM-09/10): cart -> order -> payment
+ * The unified checkout orchestration: cart -> order -> payment
  * in one call, with stock validated up front so a customer never pays for
  * something that's not actually there. Tax (Stripe Tax) and shipping
- * (flat-rate) are both real, not stubs — a shipping address is required
+ * (flat-rate) both run for real, which is why a shipping address is required
  * because both need one.
  *
  * Order creation and payment creation are two separate calls (Payment.
@@ -77,7 +83,7 @@ export const checkout = handlers.post(
       return;
     }
 
-    // Checkout idempotency (ECOM-09/10 retry safety). If this cart already
+    // Checkout idempotency (retry safety). If this cart already
     // has a still-PENDING order — e.g. an earlier checkout call for it got
     // as far as creating the order but never got as far as (or failed at)
     // creating the payment, see the payment try/catch below — reuse that
@@ -92,9 +98,7 @@ export const checkout = handlers.post(
     // succeeded or was cancelled. OrderCartLookupService's query already
     // encodes this by filtering on status = PENDING, not just cartId.
     const existingPendingOrderId =
-      await orderCartLookupServiceFactory().findPendingOrderIdByCartId(
-        cart.id
-      );
+      await orderCartLookupServiceFactory().findPendingOrderIdByCartId(cart.id);
 
     let order;
     if (existingPendingOrderId) {
