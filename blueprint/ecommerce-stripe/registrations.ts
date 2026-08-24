@@ -286,12 +286,9 @@ const serviceDependencies = runtimeDependencies.chain({
       )
   },
   /**
-   * the event-emission boundary, actually implemented — previously
-   * just a comment. Redis transport only (matches TtlCache already being
-   * registered here; no new infra beyond what cart caching already needs).
-   * Only the producer side is wired here — order.controller.ts is the only
-   * local consumer of a token from this pair; the consumer/worker.ts side
-   * is scoped to a follow-up PR.
+   * The event-emission boundary. Redis transport only, which matches
+   * TtlCache already being registered here, so it needs no infrastructure
+   * beyond what cart caching already requires.
    */
   RedisWorkerOptions: {
     lifetime: Lifetime.Singleton,
