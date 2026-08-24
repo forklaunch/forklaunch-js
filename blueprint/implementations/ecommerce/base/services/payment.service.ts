@@ -134,10 +134,18 @@ export class BasePaymentService<
       this.mappers.PaymentMapper.entity as typeof Payment,
       { providerRef: failDto.providerRef }
     );
-    entityManager.assign(payment, { status: PaymentStatus.FAILED });
-    await entityManager.transactional(async (innerEm) => {
-      await innerEm.persist(payment);
-    });
+    // A payment that already succeeded stays succeeded. Stripe does not
+    // guarantee event ordering, so a payment_failed for an earlier attempt can
+    // arrive after the payment_intent.succeeded that settled the charge;
+    // without this guard that late event marks a paid payment FAILED, and the
+    // order is left looking unpaid against money that was actually taken.
+    // confirmPayment guards the same way for the same reason.
+    if (payment.status !== PaymentStatus.SUCCEEDED) {
+      entityManager.assign(payment, { status: PaymentStatus.FAILED });
+      await entityManager.transactional(async (innerEm) => {
+        await innerEm.persist(payment);
+      });
+    }
     return this.mappers.PaymentMapper.toDto(
       payment as InferEntity<MapperEntities['PaymentMapper']>
     );
