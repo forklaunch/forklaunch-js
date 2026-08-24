@@ -600,6 +600,9 @@ pub(crate) fn get_service_module_cache(service_type: &Module) -> Option<String> 
         Module::BaseMessaging | Module::TwilioMessaging => {
             Some(Infrastructure::Redis.to_string())
         }
+        // The ecommerce blueprint reads REDIS_URL at startup for both the cart
+        // cache and the order-event queue, and exits if it is unset.
+        Module::StripeEcommerce => Some(Infrastructure::Redis.to_string()),
         _ => None,
     }
 }
@@ -616,3 +619,37 @@ pub(crate) const DIRS_TO_IGNORE: &[&str] = &[
     "core",
     "client-sdk",
 ];
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Every module whose blueprint reads REDIS_URL at startup must declare a
+    /// cache resource, otherwise `init module` writes a manifest with no Redis
+    /// in it and the scaffolded project cannot boot once deployed.
+    #[test]
+    fn modules_needing_redis_declare_a_cache_resource() {
+        for module in [
+            Module::BaseBilling,
+            Module::StripeBilling,
+            Module::BaseMessaging,
+            Module::TwilioMessaging,
+            Module::StripeEcommerce,
+        ] {
+            assert_eq!(
+                get_service_module_cache(&module),
+                Some(Infrastructure::Redis.to_string()),
+                "{module:?} needs a Redis cache resource in its manifest"
+            );
+        }
+    }
+
+    /// The iam modules wire no cache, so the helper must keep returning None
+    /// for them rather than handing every module a Redis resource it will
+    /// never use.
+    #[test]
+    fn modules_without_a_cache_declare_none() {
+        assert_eq!(get_service_module_cache(&Module::BaseIam), None);
+        assert_eq!(get_service_module_cache(&Module::BetterAuthIam), None);
+    }
+}
