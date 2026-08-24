@@ -1,5 +1,8 @@
 import { defineComplianceEntity, fp } from '@forklaunch/core/persistence';
-import { ProductImage, ProductOption } from '@forklaunch/interfaces-ecommerce/types';
+import {
+  ProductImage,
+  ProductOption
+} from '@forklaunch/interfaces-ecommerce/types';
 
 /**
  * Base template entities — the typing scaffolds the generic base services
@@ -9,8 +12,6 @@ import { ProductImage, ProductOption } from '@forklaunch/interfaces-ecommerce/ty
  * Catalog data (products, variants, stock) carries no PII/PCI, so every field
  * is compliance('none'). PII/PCI tagging becomes relevant with customer/order
  * entities in later stages.
- *
- * Added incrementally as each entity's PR lands.
  */
 export const Product = defineComplianceEntity({
   name: 'Product',
@@ -37,7 +38,10 @@ export const Variant = defineComplianceEntity({
     externalId: fp.string().compliance('none'),
     sku: fp.string().nullable().compliance('none'),
     title: fp.string().compliance('none'),
-    optionValues: fp.json<Record<string, string>>().nullable().compliance('none'),
+    optionValues: fp
+      .json<Record<string, string>>()
+      .nullable()
+      .compliance('none'),
     priceCents: fp.integer().compliance('none'),
     compareAtPriceCents: fp.integer().nullable().compliance('none'),
     requiresShipping: fp.boolean().compliance('none')

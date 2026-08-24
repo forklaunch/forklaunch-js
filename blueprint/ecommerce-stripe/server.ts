@@ -39,7 +39,6 @@ const port = ci.resolve(tokens.PORT);
 const version = ci.resolve(tokens.VERSION);
 const docsPath = ci.resolve(tokens.DOCS_PATH);
 
-//! routes are mounted here incrementally as each entity's PR lands.
 app.use(productRouter);
 app.use(variantRouter);
 app.use(inventoryRouter);

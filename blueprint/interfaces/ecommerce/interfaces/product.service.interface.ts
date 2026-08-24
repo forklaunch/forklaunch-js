@@ -26,7 +26,7 @@ export interface ProductService<
     em?: EntityManager
   ) => Promise<Params['ProductDto']>;
   deleteProduct: (idDto: Params['IdDto'], em?: EntityManager) => Promise<void>;
-  /** Catalog search/filter (ECOM-03) — all fields optional and combinable. */
+  /** Catalog search/filter — all fields optional and combinable. */
   listProducts: (
     searchDto?: Params['SearchDto'],
     em?: EntityManager

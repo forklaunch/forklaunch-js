@@ -13,7 +13,6 @@ const schemas = mapServiceSchemas(
     InventorySchemas: BaseInventoryServiceSchemas<SchemaValidator>,
     ProductSchemas: BaseProductServiceSchemas<SchemaValidator>,
     VariantSchemas: BaseVariantServiceSchemas<SchemaValidator>
-    // Remaining entities' schemas are added incrementally as each PR lands.
   },
   {
     validator: schemaValidator,

@@ -44,7 +44,9 @@ import {
 import { CreateVariantSchema as ZodCreateVariantSchema } from '../domain/schemas/zod/variant.schema';
 
 const zodUpdateProductSchema = ZodUpdateProductSchema({ uuidId: false });
-const typeboxUpdateProductSchema = TypeboxUpdateProductSchema({ uuidId: false });
+const typeboxUpdateProductSchema = TypeboxUpdateProductSchema({
+  uuidId: false
+});
 const zodProductSchema = ZodProductSchema({ uuidId: false });
 const typeboxProductSchema = TypeboxProductSchema({ uuidId: false });
 
@@ -52,7 +54,9 @@ const sampleOptions = [{ name: 'Size', isPackQuantity: false, values: ['S'] }];
 const sampleImages = [{ src: 'https://example.com/a.jpg', position: 1 }];
 
 const zodUpdateVariantSchema = ZodUpdateVariantSchema({ uuidId: false });
-const typeboxUpdateVariantSchema = TypeboxUpdateVariantSchema({ uuidId: false });
+const typeboxUpdateVariantSchema = TypeboxUpdateVariantSchema({
+  uuidId: false
+});
 const zodVariantSchema = ZodVariantSchema({ uuidId: false });
 const typeboxVariantSchema = TypeboxVariantSchema({ uuidId: false });
 
@@ -62,9 +66,6 @@ const typeboxUpdateInventorySchema = TypeboxUpdateInventorySchema({
 });
 const zodInventorySchema = ZodInventorySchema({ uuidId: false });
 const typeboxInventorySchema = TypeboxInventorySchema({ uuidId: false });
-
-// Remaining entities' sample data + schema instantiations are added
-// incrementally as each entity's PR lands.
 
 describe('schema equality', () => {
   it('should be equal for product', () => {
@@ -104,14 +105,18 @@ describe('schema equality', () => {
 
     expect(
       isTrue(
-        testSchemaEquality<ProductDto>()(zodProductSchema, typeboxProductSchema, {
-          id: 'test',
-          externalId: 'ext-1',
-          handle: 'test-product',
-          title: 'Test Product',
-          options: sampleOptions,
-          images: sampleImages
-        })
+        testSchemaEquality<ProductDto>()(
+          zodProductSchema,
+          typeboxProductSchema,
+          {
+            id: 'test',
+            externalId: 'ext-1',
+            handle: 'test-product',
+            title: 'Test Product',
+            options: sampleOptions,
+            images: sampleImages
+          }
+        )
       )
     ).toBeTruthy();
   });
@@ -151,13 +156,17 @@ describe('schema equality', () => {
 
     expect(
       isTrue(
-        testSchemaEquality<VariantDto>()(zodVariantSchema, typeboxVariantSchema, {
-          id: 'test',
-          productId: 'prod-1',
-          externalId: 'var-1',
-          title: 'Black',
-          priceCents: 1999
-        })
+        testSchemaEquality<VariantDto>()(
+          zodVariantSchema,
+          typeboxVariantSchema,
+          {
+            id: 'test',
+            productId: 'prod-1',
+            externalId: 'var-1',
+            title: 'Black',
+            priceCents: 1999
+          }
+        )
       )
     ).toBeTruthy();
   });
@@ -203,6 +212,4 @@ describe('schema equality', () => {
       )
     ).toBeTruthy();
   });
-
-  // Remaining entities' equality tests are added incrementally as each PR lands.
 });

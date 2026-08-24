@@ -1,4 +1,10 @@
-import { array, handlers, IdSchema, schemaValidator, string } from '../../schema';
+import {
+  array,
+  handlers,
+  IdSchema,
+  schemaValidator,
+  string
+} from '../../schema';
 import { ProductSearchQuerySchema } from '../../domain/schemas/productSearch.schema';
 import { ci, tokens } from '../../bootstrapper';
 import {
@@ -58,9 +64,7 @@ export const getProductByHandle = handlers.get(
     responses: { 200: ProductMapper.schema }
   },
   async (req, res) => {
-    res
-      .status(200)
-      .json(await serviceFactory().getProductByHandle(req.params));
+    res.status(200).json(await serviceFactory().getProductByHandle(req.params));
   }
 );
 
@@ -98,7 +102,7 @@ export const deleteProduct = handlers.delete(
 );
 
 /**
- * Catalog search/filter (ECOM-03). `ids`/`title` are product-level and
+ * Catalog search/filter. `ids`/`title` are product-level and
  * resolved directly by the product service. `minPriceCents`/`maxPriceCents`/
  * `inStock`/`optionName`+`optionValue` are variant-level — Product itself
  * carries no price — so they're resolved here by narrowing variants first,
@@ -110,7 +114,8 @@ export const listProducts = handlers.get(
   {
     name: 'List Products',
     access: 'internal',
-    summary: 'List/search products, optionally filtered by title, price, stock, or a variant option value',
+    summary:
+      'List/search products, optionally filtered by title, price, stock, or a variant option value',
     auth: { hmac: { secretKeys: { default: HMAC_SECRET_KEY } } },
     query: ProductSearchQuerySchema,
     responses: { 200: array(ProductMapper.schema) }

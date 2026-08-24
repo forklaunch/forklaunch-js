@@ -20,5 +20,3 @@ export type BaseInventoryEntities = {
   CreateInventoryMapper: { '~entity': (typeof Inventory)['~entity'] };
   UpdateInventoryMapper: { '~entity': (typeof Inventory)['~entity'] };
 };
-
-// Remaining entities' Entity aggregates are added incrementally as each PR lands.
