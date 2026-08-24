@@ -23,7 +23,7 @@ import { StripePaymentMappers } from '../domain/types/payment.mapper.types';
  * Wraps BasePaymentService with real Stripe PaymentIntent calls — the base
  * does DB persistence, this class calls the provider API and delegates
  * persistence back to base (same split as StripePlanService/BasePlanService
- * in billing). Fills the ECOM-10 payment seam: PaymentIntent drives the order
+ * in billing). Fills the payment seam: PaymentIntent drives the order
  * toward paid; confirmation is idempotent and driven by the webhook.
  */
 export class StripePaymentService<
@@ -94,7 +94,7 @@ export class StripePaymentService<
     return this.basePaymentService.confirmPayment(confirmDto, em);
   }
 
-  /** Failed payment emits the event dunning (ECOM-20) hooks into, at the deployable-app layer. */
+  /** Failed payment emits the event dunning hooks into, at the deployable-app layer. */
   async failPayment(
     failDto: FailPaymentDto,
     em?: EntityManager
