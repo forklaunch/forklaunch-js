@@ -16,7 +16,7 @@ with inventory that can't oversell and payments through Stripe or PayPal.
 cp .env.example .env.local   # then fill it in — every variable is explained there
 pnpm install
 pnpm dev                     # runs migrate:up, then serves on http://localhost:8000
-pnpm worker                  # separate process — see below
+pnpm dev:worker              # separate process — see below
 ```
 
 `pnpm dev` applies the committed migration (8 tables) before starting; run
@@ -25,6 +25,10 @@ pnpm worker                  # separate process — see below
 **The worker is not optional.** Order transitions publish events to Redis, and
 the worker is what consumes them to adjust inventory. Without it running,
 orders will reach `paid` but stock never decrements.
+
+It is a second process in production too, not just in development. Deploy
+`pnpm start` and `pnpm start:worker` alongside each other; running only the
+former gives you an API that takes orders and never adjusts stock.
 
 ## Getting your payment credentials
 
@@ -64,9 +68,18 @@ POST /webhook/stripe   provider confirms → order becomes `paid`
 Orders move `pending → paid → fulfilled → shipped → delivered`. `cancelled` is
 reachable from `pending`, `paid` and `fulfilled` — but **not** once an order is
 `shipped`, which can only go on to `delivered`. Illegal transitions are
-rejected. Stock is validated at checkout so a customer never pays for an
-out-of-stock item, and the decrement itself is an atomic conditional update, so
-concurrent orders can't oversell.
+rejected.
+
+Stock is checked at checkout, and the decrement the worker performs on `paid`
+is an atomic conditional update, so stock can never go negative.
+
+**Stock is not reserved at checkout, though.** The check is a read, and the
+decrement happens later, when payment is confirmed. Two orders for the last
+unit will both pass the check and both be charged; the first decrement
+succeeds and the second fails its condition. Nothing oversells the database,
+but a customer can be charged for an order that cannot be fulfilled, and today
+that surfaces only as a worker error in the logs. If you are selling scarce
+stock, reserve at checkout rather than relying on this.
 
 ## Choosing a payment provider
 
