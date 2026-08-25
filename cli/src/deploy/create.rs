@@ -35,11 +35,34 @@ struct CreateDeploymentRequest {
     #[serde(rename = "forceRefresh")]
     #[serde(skip_serializing_if = "Option::is_none")]
     force_refresh: Option<bool>,
+    #[serde(rename = "clusterType")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    cluster_type: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
 struct CreateDeploymentResponse {
     id: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct ClusterOption {
+    #[serde(rename = "clusterType")]
+    cluster_type: String,
+    label: String,
+    description: String,
+    available: bool,
+    #[serde(rename = "unavailableReason")]
+    unavailable_reason: Option<String>,
+    #[serde(rename = "estimatedMonthlyUsd")]
+    estimated_monthly_usd: f64,
+}
+
+#[derive(Debug, Deserialize)]
+struct ClusterSelectionRequired {
+    message: String,
+    #[serde(rename = "clusterOptions")]
+    cluster_options: Vec<ClusterOption>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -527,6 +550,12 @@ impl CliCommand for CreateCommand {
                     .help("Force a full deployment with Pulumi state refresh"),
             )
             .arg(
+                Arg::new("cluster-type")
+                    .long("cluster-type")
+                    .value_parser(["platform-shared", "org-shared", "dedicated"])
+                    .help("Cluster placement for the app's FIRST deploy to this environment/region: platform-shared (cheapest, ForkLaunch-managed hosts), org-shared (your org's shared hosts), or dedicated (your own cluster)"),
+            )
+            .arg(
                 Arg::new("node-env")
                     .long("node-env")
                     .value_parser(["production", "development"])
@@ -639,7 +668,7 @@ impl CliCommand for CreateCommand {
             }
         }
 
-        let request_body = CreateDeploymentRequest {
+        let mut request_body = CreateDeploymentRequest {
             application_id: application_id.clone(),
             release_version: release_version.clone(),
             environment: environment.clone(),
@@ -651,6 +680,7 @@ impl CliCommand for CreateCommand {
                     .unwrap_or_else(|| "centralized".to_string()),
             ),
             force_refresh: if matches.get_flag("full") { Some(true) } else { None },
+            cluster_type: matches.get_one::<String>("cluster-type").cloned(),
         };
 
         if dry_run {
@@ -917,6 +947,68 @@ impl CliCommand for CreateCommand {
                     writeln!(stdout, "  {}", dashboard_url)?;
                 }
                 break;
+            } else if status.as_u16() == 428 {
+                // First-deploy cluster selection: the platform wants an explicit
+                // placement choice, and sends the options with cost estimates.
+                let error_text = response.text().unwrap_or_default();
+                let selection_required: ClusterSelectionRequired =
+                    serde_json::from_str(&error_text).with_context(|| {
+                        format!("Failed to parse cluster selection response: {}", error_text)
+                    })?;
+
+                writeln!(stdout)?;
+                log_header!(stdout, Color::Cyan, "First deploy — choose a cluster");
+                writeln!(stdout)?;
+                writeln!(stdout, "  This is the first deployment of this application to {} ({}).", environment, region)?;
+                writeln!(stdout, "  Pick where its compute should run (estimates are monthly, compute only):")?;
+                writeln!(stdout)?;
+                for opt in &selection_required.cluster_options {
+                    let availability = if opt.available {
+                        format!("~${:.2}/mo", opt.estimated_monthly_usd)
+                    } else {
+                        "unavailable".to_string()
+                    };
+                    writeln!(stdout, "  • {:<32} {}", opt.label, availability)?;
+                    writeln!(stdout, "      {}", opt.description)?;
+                    if let Some(reason) = &opt.unavailable_reason {
+                        writeln!(stdout, "      ({})", reason)?;
+                    }
+                }
+                writeln!(stdout)?;
+
+                let available: Vec<&ClusterOption> = selection_required
+                    .cluster_options
+                    .iter()
+                    .filter(|o| o.available)
+                    .collect();
+                if available.is_empty() {
+                    bail!("No cluster options are available: {}", selection_required.message);
+                }
+
+                if !std::io::IsTerminal::is_terminal(&std::io::stdin()) {
+                    bail!(
+                        "Cluster selection required. Re-run with --cluster-type <{}>",
+                        available
+                            .iter()
+                            .map(|o| o.cluster_type.as_str())
+                            .collect::<Vec<_>>()
+                            .join("|")
+                    );
+                }
+
+                let items: Vec<String> = available
+                    .iter()
+                    .map(|o| format!("{} (~${:.2}/mo)", o.label, o.estimated_monthly_usd))
+                    .collect();
+                let selection = Select::with_theme(&ColorfulTheme::default())
+                    .with_prompt("Cluster type for this application")
+                    .items(&items)
+                    .default(0)
+                    .interact()?;
+                request_body.cluster_type = Some(available[selection].cluster_type.clone());
+                log_ok!(stdout, "Selected cluster: {}", available[selection].cluster_type);
+                writeln!(stdout)?;
+                continue;
             } else if status.as_u16() == 400 {
                 let error_text = response.text().unwrap_or_default();
 
