@@ -257,6 +257,7 @@ impl CliCommand for ModuleCommand {
             is_twilio: module.clone() == Module::TwilioMessaging,
             is_cac: module.clone() == Module::BaseCac,
             is_ecommerce: module.clone() == Module::StripeEcommerce,
+            ships_worker: module.clone() == Module::StripeEcommerce,
 
             is_iam_configured: manifest_data.projects.iter().any(|project_entry| {
                 if project_entry.name == "iam" {

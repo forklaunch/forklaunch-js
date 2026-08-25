@@ -959,6 +959,7 @@ impl CliCommand for ApplicationCommand {
                 is_twilio: template_dir.module_id == Some(Module::TwilioMessaging),
                 is_cac: template_dir.module_id == Some(Module::BaseCac),
                 is_ecommerce: template_dir.module_id == Some(Module::StripeEcommerce),
+                ships_worker: template_dir.module_id == Some(Module::StripeEcommerce),
 
                 is_iam_configured: data.projects.iter().any(|project_entry| {
                     if project_entry.name == "iam" {
