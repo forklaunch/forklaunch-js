@@ -328,14 +328,16 @@ pub fn extract_env_vars_from_source(source_code: &str) -> Result<Vec<EnvVarUsage
 /// Folds every sighting of one variable into a single declared optionality.
 ///
 /// This is the rule that decides how a name used inconsistently across files
-/// resolves. Untyped sightings (`None`) abstain: a bare `process.env.X` read in
-/// a config file has no opinion on whether `X` is optional, and letting it vote
-/// "required" would silently override a correct `optional(...)` declaration
-/// elsewhere in the same project.
+/// resolves: a variable is optional only when *every* sighting of it says so.
 ///
-/// Among sightings that *do* carry a type, required wins: a name declared
-/// optional in one place and required in another is required, because the
-/// required reader is the one that breaks when the value is missing.
+/// Among sightings that carry a type, required wins — a name declared optional
+/// in one place and required in another is required, because the required
+/// reader is the one that breaks when the value is missing.
+///
+/// An untyped sighting (`None`) also counts as required. A bare `process.env.X`
+/// read outside any config injector carries no declared type, so the scanner
+/// cannot see whether that reader copes with a missing value, and an undeclared
+/// read is exactly the case this design refuses to guess about.
 ///
 /// Applied twice, with the same rule both times: once per project as sightings
 /// are folded into variables, and again in `determine_env_var_scopes` when a
@@ -648,8 +650,10 @@ mod tests {
     }
 
     #[test]
-    fn test_bare_read_outside_config_injector_abstains() {
-        // No enclosing type, so the sighting has no opinion on optionality.
+    fn test_bare_read_outside_config_injector_carries_no_type() {
+        // No enclosing type, so the sighting records none. `fold_optionality`
+        // is what turns an untyped sighting into "required"; at this level it is
+        // simply absent.
         let source = r#"
         const url = getEnvVar('BETTER_AUTH_URL');
         "#;
