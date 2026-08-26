@@ -1,3 +1,5 @@
+set -e
+
 if [ -d "output/init-library" ]; then
     rm -rf output/init-library
 fi

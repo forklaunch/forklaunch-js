@@ -60,6 +60,39 @@ impl CliCommand for CreateCommand {
                 .help("Application description"),
         )
         .arg(
+            // Placement: where this app's compute lands. Set here so the
+            // first deploy has nothing to ask.
+            Arg::new("cluster_type")
+                .long("cluster-type")
+                .value_parser(["platform-shared", "org-shared", "dedicated"])
+                .help(
+                    "Cluster placement: platform-shared (cheapest, cross-tenant hosts), \
+                     org-shared (your org's hosts), or dedicated (your own cluster)",
+                ),
+        )
+        .arg(
+            // Compliance: what rules the app's DATA is under. A separate rail
+            // from placement — it constrains which placements are allowed,
+            // because compliance-scoped apps cannot run on cross-tenant compute.
+            Arg::new("compliance_framework")
+                .long("compliance-framework")
+                .action(ArgAction::Append)
+                .value_parser(["HIPAA", "PCI-DSS", "SOC 2", "GDPR", "CCPA"])
+                .help(
+                    "Framework this application is scoped to; repeatable. \
+                     Compliance-scoped apps cannot run on cross-tenant compute",
+                ),
+        )
+        .arg(
+            // Managed mode: how MANY of this app run. A third, independent
+            // rail — a managed app still has a placement and still declares
+            // its frameworks.
+            Arg::new("managed")
+                .long("managed")
+                .action(ArgAction::SetTrue)
+                .help("Deploy one instance per customer rather than one shared deployment"),
+        )
+        .arg(
             Arg::new("no_integrate")
                 .long("no-integrate")
                 .action(ArgAction::SetTrue)
@@ -98,6 +131,16 @@ impl CliCommand for CreateCommand {
             .cloned()
             .unwrap_or_else(|| manifest.app_description.clone());
 
+        // Three independent rails, all settled at creation so the first deploy
+        // has nothing to ask: WHERE it runs, what rules its data is under, and
+        // how many of it run.
+        let cluster_type = matches.get_one::<String>("cluster_type").cloned();
+        let compliance_frameworks: Vec<String> = matches
+            .get_many::<String>("compliance_framework")
+            .map(|values| values.cloned().collect())
+            .unwrap_or_default();
+        let managed = matches.get_flag("managed");
+
         let api_url = get_platform_management_api_url();
         let client = Client::new();
 
@@ -117,13 +160,28 @@ impl CliCommand for CreateCommand {
         let create_response = client
             .post(format!("{}/applications/", api_url))
             .bearer_auth(&token)
-            .json(&serde_json::json!({
-                "name": name,
-                "description": description,
-                "userId": me.id,
-                "organizationId": me.organization_id,
-                "isDeleted": false
-            }))
+            .json(&{
+                let mut body = serde_json::json!({
+                    "name": name,
+                    "description": description,
+                    "userId": me.id,
+                    "organizationId": me.organization_id,
+                    "isDeleted": false
+                });
+                // Omitted rather than sent as null: an undeclared app is
+                // unconstrained, which is not the same as declaring "none".
+                if let Some(cluster_type) = &cluster_type {
+                    body["clusterType"] = serde_json::json!(cluster_type);
+                }
+                if !compliance_frameworks.is_empty() {
+                    body["complianceFrameworks"] =
+                        serde_json::json!(compliance_frameworks);
+                }
+                if managed {
+                    body["managedMode"] = serde_json::json!(true);
+                }
+                body
+            })
             .send()
             .with_context(|| ERROR_FAILED_TO_SEND_REQUEST)?;
 

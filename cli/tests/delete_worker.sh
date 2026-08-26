@@ -1,3 +1,5 @@
+set -e
+
 if [ -d "output/delete-worker" ]; then
     rm -rf output/delete-worker
 fi

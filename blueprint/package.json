@@ -11,6 +11,8 @@
     "iam-better-auth",
     "billing-base",
     "billing-stripe",
+    "messaging-base",
+    "messaging-twilio",
     "sample-worker",
     "monitoring",
     "implementations/**/*",

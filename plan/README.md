@@ -59,6 +59,16 @@ This directory contains internal planning documents, implementation specs, and t
 
 ## Contents
 
+### Medical Coding / Billing Platform
+- **[MEDICAL-CODING-IMPLEMENTATION-PLAN.md](MEDICAL-CODING-IMPLEMENTATION-PLAN.md)** - Free-first implementation plan for a HIPAA-compliant medical coding/billing service
+  - Built as an app-level service following the `billing-base`/`iam-base` architectural pattern (compliance-classified entities, RBAC, tenant isolation) — not a new CLI module
+  - Launches on free code sets (ICD-10, HCPCS); the paid AMA CPT license itself stays deferred until a hospital confirms as a paying client — but per founder direction, `CptCodeProvider`'s engineering is built to full readiness in Phase 2, in parallel with the mock-code work, so enabling CPT later is a flag flip against finished code, not new engineering
+  - CPT license gating modeled as a feature flag reusing the existing `hasFeatureChecks`/`surfaceFeatures` guard, so no framework changes are needed
+  - Phased delivery plan (Phase 0-6) and AMA licensing timeline (~4-6 weeks, trigger-based)
+  - Claim scrubbing engine corrected to three distinct rule layers (NCCI PTP, NCCI MUE, LCD/NCD medical necessity) after domain research found the source doc's original single-check design conflated unrelated CMS mechanisms
+  - Code-set refresh pipeline, EDI transaction set list, clearinghouse choice (Stedi), and success-metric targets benchmarked against MGMA/HFMA industry data — see §14 Sources
+  - Executive summary up top; explicit open questions flag the LCD/CPT licensing coupling and unvalidated phase-timeline estimates rather than leaving them implicit
+
 ### Release & Deploy Implementation
 - **[release-deploy-implementation.md](release-deploy-implementation.md)** - Implementation plan for release and deploy CLI commands
   - 4 new CLI commands: `integrate`, `openapi export`, `release create`, `deploy create`

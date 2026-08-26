@@ -1,3 +1,5 @@
+set -e
+
 echo "Testing environment validate command..."
 
 if [ -d "output/environment-validate" ]; then
@@ -33,7 +35,10 @@ RUST_BACKTRACE=1 cargo run --release init service custom-svc \
 cd env-test-app
 
 echo "Testing environment validate (expecting missing variables)..."
-RUST_BACKTRACE=1 cargo run --release environment validate
+# validate exits nonzero when variables are missing — that is the expected
+# outcome of this invocation, not a test failure.
+RUST_BACKTRACE=1 cargo run --release environment validate \
+    || echo "[EXPECTED] validate reported missing variables"
 
 # Create some .env files with partial variables
 echo "Creating partial .env files..."
@@ -46,6 +51,8 @@ echo "HOST=localhost" > src/modules/iam/.env.local
 echo "HMAC_SECRET_KEY=test-secret" >> src/modules/iam/.env.local
 
 echo "Testing environment validate after adding some variables..."
-RUST_BACKTRACE=1 cargo run --release environment validate
+# Still nonzero by design: only partial variables were added above.
+RUST_BACKTRACE=1 cargo run --release environment validate \
+    || echo "[EXPECTED] validate reported remaining missing variables"
 
 echo "Environment validate test completed!"

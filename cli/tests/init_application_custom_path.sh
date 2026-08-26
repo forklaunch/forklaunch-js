@@ -1,3 +1,5 @@
+set -e
+
 rm -rf output/init-application-custom-path
 
 mkdir -p output/init-application-custom-path

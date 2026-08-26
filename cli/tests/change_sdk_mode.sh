@@ -1,3 +1,5 @@
+set -e
+
 if [ -d "output/change-sdk-mode" ]; then
     rm -rf output/change-sdk-mode
 fi
