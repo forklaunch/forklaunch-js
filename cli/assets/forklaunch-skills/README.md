@@ -1,8 +1,39 @@
 # ForkLaunch Skills for Claude Code
 
-Skills that teach Claude Code (and developers) how to build with ForkLaunch.
+Skills that teach Claude Code (and developers) how to build with, and operate, ForkLaunch.
+
+## Agent Behavior (applies to every skill, not just the one you're reading)
+
+**CLI-first, API-fallback.** For anything that talks to the ForkLaunch control plane —
+deployments, logs, alerts, infrastructure, issues — try the matching `fl` command first. Only
+call the platform API directly if no CLI command covers the action yet, or the CLI command fails.
+The CLI already handles auth (`fl login`), retries, and consistent output; a raw API call skips
+all of that.
+
+**Every operation ends with a plain-language summary — not something the user has to ask for.**
+Whatever technical work happened above it (commands run, files changed, errors seen), close with
+a few short sentences a non-technical person could read and understand: what you were doing, what
+happened, and whether it's fixed or still needs their input. No jargon, no unexplained acronyms,
+no file paths or stack traces in this part — those already exist above it for anyone who wants
+them. If a friend or family member with no coding background read only this last part, they
+should be able to tell what happened. If a result is uncertain or partial, say that plainly too —
+"I couldn't confirm X" is a better summary than skipping X.
+
+**Keep the CLI and skills in sync.** `forklaunch` self-updates its own binary automatically on
+each run (comparing against the version pinned in `manifest.toml`), but the skill pack a project
+already has on disk (`.claude/skills/`, `AGENTS.md`, etc.) is a static copy from whenever
+`forklaunch context` last ran — it does **not** refresh itself. After a CLI version change, or if
+a skill's instructions stop matching what a command actually does (a flag that no longer exists,
+an error message that reads differently), re-run `forklaunch context` to pull the current skill
+pack before continuing. If a command you were told to run turns out to be missing or renamed,
+don't guess at flags — re-sync the skill pack first, since the instructions you have may simply be
+stale.
 
 ## Available Skills
+
+### Operating a Deployed App
+- `/investigator` — Diagnose a running ForkLaunch app: is it up, why did a deploy fail, why isn't
+  a change showing, where are the errors. Start here for "something's wrong."
 
 ### Building & Scaffolding
 - `/studio` — Fast app generation: greenfield, existing Next.js, backend migration.
