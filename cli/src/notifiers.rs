@@ -2,17 +2,19 @@ use std::io::Write;
 
 use anyhow::{Context, Result, bail};
 use clap::{Arg, ArgAction, ArgMatches, Command};
+use create::CreateCommand;
+use delete::DeleteCommand;
 use serde::{Deserialize, Serialize};
-use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
+use termcolor::{ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 use crate::{
     CliCommand,
     constants::get_observability_api_url,
-    core::{
-        command::command,
-        http_client::{delete, get, post},
-    },
+    core::{command::command, http_client::get},
 };
+
+mod create;
+mod delete;
 
 // ── Top-level command ─────────────────────────────────────────────────────────
 
@@ -57,136 +59,6 @@ impl CliCommand for NotifiersCommand {
             Some(("delete", sub_matches)) => self.delete.handler(sub_matches),
             _ => list_notifiers(matches),
         }
-    }
-}
-
-// ── Create sub-subcommand ─────────────────────────────────────────────────────
-
-#[derive(Debug)]
-struct CreateCommand;
-
-impl CreateCommand {
-    fn new() -> Self {
-        Self
-    }
-}
-
-impl CliCommand for CreateCommand {
-    fn command(&self) -> Command {
-        command("create", "Create a notifier config")
-            .arg(
-                Arg::new("slack_webhook_url")
-                    .long("slack-webhook")
-                    .help("Slack incoming webhook URL to notify"),
-            )
-            .arg(
-                Arg::new("email")
-                    .long("email")
-                    .help("Email address to notify"),
-            )
-    }
-
-    fn handler(&self, matches: &ArgMatches) -> Result<()> {
-        let service = matches.get_one::<String>("service");
-        let slack = matches.get_one::<String>("slack_webhook_url");
-        let email = matches.get_one::<String>("email");
-        let json_output = matches.get_flag("json");
-
-        if slack.is_none() && email.is_none() {
-            bail!("Provide at least one of --slack-webhook or --email");
-        }
-
-        let mut body = serde_json::json!({});
-        if let Some(s) = service {
-            body["serviceName"] = serde_json::Value::String(s.clone());
-        }
-        if let Some(s) = slack {
-            body["slackWebhookUrl"] = serde_json::Value::String(s.clone());
-        }
-        if let Some(e) = email {
-            body["email"] = serde_json::Value::String(e.clone());
-        }
-
-        let url = format!("{}/notifier-configs", get_observability_api_url());
-        let response = post(&url, body)
-            .with_context(|| "Failed to reach observability API")?;
-
-        let status = response.status();
-        if !status.is_success() {
-            bail!(
-                "Failed to create notifier config ({}): {}",
-                status,
-                response.text().unwrap_or_default()
-            );
-        }
-
-        let config: NotifierConfig = response
-            .json()
-            .with_context(|| "Failed to parse notifier config response")?;
-
-        if json_output {
-            println!("{}", serde_json::to_string_pretty(&config)?);
-        } else {
-            let mut stdout = StandardStream::stdout(ColorChoice::Always);
-            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true))?;
-            write!(stdout, "  Created")?;
-            stdout.reset()?;
-            writeln!(stdout, "  notifier config {}", config.id)?;
-        }
-
-        Ok(())
-    }
-}
-
-// ── Delete sub-subcommand ─────────────────────────────────────────────────────
-
-#[derive(Debug)]
-struct DeleteCommand;
-
-impl DeleteCommand {
-    fn new() -> Self {
-        Self
-    }
-}
-
-impl CliCommand for DeleteCommand {
-    fn command(&self) -> Command {
-        command("delete", "Delete a notifier config").arg(
-            Arg::new("id")
-                .required(true)
-                .help("The notifier config ID to delete"),
-        )
-    }
-
-    fn handler(&self, matches: &ArgMatches) -> Result<()> {
-        let id = matches
-            .get_one::<String>("id")
-            .context("notifier config id is required")?;
-
-        let url = format!(
-            "{}/notifier-configs/{}",
-            get_observability_api_url(),
-            urlencoding::encode(id)
-        );
-        let response = delete(&url)
-            .with_context(|| "Failed to reach observability API")?;
-
-        let status = response.status();
-        if !status.is_success() {
-            bail!(
-                "Failed to delete notifier config ({}): {}",
-                status,
-                response.text().unwrap_or_default()
-            );
-        }
-
-        let mut stdout = StandardStream::stdout(ColorChoice::Always);
-        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true))?;
-        write!(stdout, "  Deleted")?;
-        stdout.reset()?;
-        writeln!(stdout, "  notifier config {}", id)?;
-
-        Ok(())
     }
 }
 
