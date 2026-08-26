@@ -68,6 +68,40 @@ Confirms whether a deployment is actually running, still in progress, or failed 
 assuming an application-level bug. A failed or stuck deployment explains "nothing is happening"
 far more often than application code does.
 
+**`deploy info` showing `completed` does not mean the service is healthy yet.** There's a real gap
+between the infrastructure update finishing and the service actually reaching steady state — the
+new task still has to start, pass its health check, and register healthy. Checking `app services`
+or `observe status` in that window can show an `error`/unhealthy service that resolves itself
+within a minute or two with no action taken. If you see this right after a deploy completes, wait
+briefly and recheck before treating it as a real failure — don't chase logs or roll back based on a
+status snapshot taken seconds after `completed`.
+
+**Critical known gap: `completed` + `running` can both be lying — a deploy can silently roll back
+and nothing here detects it.** This is different from the transient window above and does *not*
+resolve itself. If a new task never becomes healthy, ECS's own deployment circuit breaker rolls
+back to the previous task automatically — but `deploy info` still reports the deployment as
+`completed` (it's reporting on the infrastructure update succeeding, not on the resulting task
+staying healthy), and `app services` still reports the new version as `running`. The app is
+actually still serving the *old* code. Confirmed by direct reproduction: a release whose container
+crashed at boot showed `completed`/`running` throughout, with zero trace of the crash in any
+`observe logs` query (default or `--source cloudwatch`, with or without `--since`) — the only way
+to catch it was hitting the live URL directly and noticing the response didn't match what the new
+code should do. If the user says "I deployed a fix and it's not showing up" and everything above
+reports healthy, don't stop there — hit the service's actual endpoint (see
+[Did my change actually land?](#did-my-change-actually-land)) and check whether the *behavior*
+matches the new release, not just its reported status. Say this plainly if you hit it: "the
+platform reports this deploy as successful, but the running behavior doesn't match — this looks
+like a silent rollback the tooling can't currently detect."
+
+**Known CLI gap: no way to see a deployment's own build/infra log stream.** The dashboard has a
+live "Deployment Logs" panel (the full Pulumi/build output, with info/warn/error counts) for every
+deployment, successful or not. The CLI has nothing equivalent — `deploy info` on a **successful**
+deployment returns only status and timestamps, no logs at all. It only surfaces log content when a
+deployment *failed* (the error field happens to include a tail of stdout/stderr), and even then
+it's a snapshot, not the full stream. If you need to see what actually happened during a successful
+deploy, or need the full unabridged output of a failed one, say so plainly: "the CLI doesn't expose
+deployment logs — check the dashboard's Deployment Logs panel for this."
+
 If a deployment failed and the user wants to go back to a known-good version:
 
 ```bash
@@ -155,6 +189,16 @@ application looks healthy but is slow, timing out, or erroring against its own d
 that's a strong signal to check whether the database/cache itself is saturated before assuming
 application code.
 
+**Known platform gap: this can come back completely broken, even for a real, working database.**
+`infra list` can show a resource with `serviceName: null`, `region: "_TEMPLATE_"`, and
+`status: "template"` — a placeholder record that was never linked to the actual provisioned
+resource after deploy. When that happens, `infra status <project>:<type>` fails to resolve the
+project by name at all ("no resource found"), and even bypassing that with `--resource-id
+<id-from-infra-list>` returns no real metric data — the record itself is just never populated,
+independent of whether the underlying database is actually fine. Don't take this as evidence the
+database is broken; it means the platform can't report on it right now. Say so plainly rather than
+guessing at database health from a template placeholder.
+
 ## Dead-letter queue (failed background jobs)
 
 ```bash
@@ -210,6 +254,15 @@ feature flag) doesn't seem to be reflected in the running app. Diagnosis order:
    *latest* one, not superseded or still in progress.
 2. `forklaunch observe logs -e <environment> -s <service> --source cloudwatch` — check the
    service's actual boot logs for the config value in question, if it's ever logged at startup.
+2.5. `forklaunch config pull -e <environment> -r <region> -s <service> -o <file>` — pulls the
+   **actual, unmasked** current values (secrets included) for that scope, not just the ones the
+   user set explicitly. This matters because the value a service actually uses may not be the one
+   you'd expect: a connection-string var (e.g. `DB_URL`) can embed its own credential that's
+   independent of a discrete var (e.g. `DB_PASSWORD`) sitting right next to it — confirmed
+   empirically: overriding `DB_PASSWORD` alone had zero effect because the app's ORM used `DB_URL`,
+   which carries a separately-managed password. If "my override didn't do anything" doesn't make
+   sense, pull the real values and check whether a broader var is actually in control. Delete the
+   pulled file afterward — it contains real secrets, don't leave it lying around.
 3. **Known CLI gap:** the platform has a dedicated API
    (`GET /services/:id/runtime-status`) that directly answers "does the config the platform has
    pushed match what's running on the live task" (`configPushedAt` vs. the running task's start
