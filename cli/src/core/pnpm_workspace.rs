@@ -116,6 +116,17 @@ fn sanitize_minimum_release_age_exclude(pnpm_workspace: &mut PnpmWorkspace) {
     *entries = normalized;
 }
 
+/// Pin explicitly rather than leave unset: pnpm >=11.2 defaults
+/// minimumReleaseAge to 1440 (24h), but a scaffold's local `pnpm install`
+/// may run on an older pnpm with no age gate at all, resolving versions the
+/// deploy pipeline's newer pnpm then rejects from an already-locked
+/// lockfile. Setting it explicitly makes local resolution skip too-new
+/// versions the same way deploy does, so the generated lockfile is already
+/// compliant. Same value as forklaunch-platform's own pnpm-workspace.yaml.
+fn default_other() -> BTreeMap<String, Value> {
+    BTreeMap::from([("minimumReleaseAge".to_string(), Value::Number(1440.into()))])
+}
+
 pub(crate) fn generate_pnpm_workspace(
     application_path: &str,
     additional_projects: &Vec<ProjectEntry>,
@@ -130,7 +141,7 @@ pub(crate) fn generate_pnpm_workspace(
         content: to_string(&PnpmWorkspace {
             packages: additional_projects.iter().map(|p| p.name.clone()).collect(),
             allow_builds: Some(default_allow_builds()),
-            other: BTreeMap::new(),
+            other: default_other(),
         })
         .with_context(|| ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE)?,
         context: None,
@@ -234,5 +245,14 @@ mod tests {
         let mut ws: PnpmWorkspace = from_str("packages:\n- core\n").unwrap();
         sanitize_minimum_release_age_exclude(&mut ws);
         assert!(!to_string(&ws).unwrap().contains("minimumReleaseAgeExclude"));
+    }
+
+    #[test]
+    fn test_generate_pnpm_workspace_pins_minimum_release_age() {
+        let dir = tempfile::tempdir().unwrap();
+        let rendered = generate_pnpm_workspace(dir.path().to_str().unwrap(), &Vec::new())
+            .unwrap()
+            .unwrap();
+        assert!(rendered.content.contains("minimumReleaseAge: 1440"));
     }
 }

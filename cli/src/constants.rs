@@ -512,6 +512,7 @@ pub(crate) const ERROR_FAILED_TO_CREATE_LICENSE: &str =
     "Failed to create license file. Please check your target directory is writable.";
 pub(crate) const ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE: &str =
     "Failed to generate pnpm-workspace.yaml.";
+pub(crate) const ERROR_FAILED_TO_GENERATE_BUNFIG: &str = "Failed to generate bunfig.toml.";
 pub(crate) const ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE: &str =
     "Failed to add project metadata to docker compose yaml.";
 pub(crate) const ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST: &str =
