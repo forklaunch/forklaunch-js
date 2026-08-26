@@ -8,13 +8,13 @@ use crate::{
     CliCommand,
     core::{
         command::command,
-        validate::{require_integration, require_manifest, resolve_auth},
+        validate::{require_auth, require_integration, require_manifest},
     },
 };
 
 use super::{
-    resource_resolver::{fetch_resource_detail, require_jwt_mode, resolve},
-    types::ResourceDetailResponse,
+    resource_resolver::{fetch_resource_detail, fetch_resource_metrics, resolve},
+    types::{MetricSeries, ResourceDetailResponse},
 };
 
 #[derive(Debug)]
@@ -62,6 +62,13 @@ impl CliCommand for StatusCommand {
                 .action(ArgAction::SetTrue),
         )
         .arg(
+            Arg::new("metrics")
+                .long("metrics")
+                .help("Show CPU%/memory%/connection-count utilization instead of the status view")
+                .action(ArgAction::SetTrue)
+                .conflicts_with("config"),
+        )
+        .arg(
             Arg::new("json")
                 .long("json")
                 .help("Output raw JSON instead of formatted terminal output")
@@ -70,8 +77,7 @@ impl CliCommand for StatusCommand {
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
-        let auth_mode = resolve_auth()?;
-        require_jwt_mode(&auth_mode)?;
+        require_auth()?;
         let (_app_root, manifest) = require_manifest(matches)?;
         let application_id = require_integration(&manifest)?;
         let environment = matches
@@ -83,10 +89,10 @@ impl CliCommand for StatusCommand {
             .expect("<resource> is required");
         let resource_id_override = matches.get_one::<String>("resource_id").map(String::as_str);
         let config_only = matches.get_flag("config");
+        let metrics_only = matches.get_flag("metrics");
         let json_output = matches.get_flag("json");
 
         let resolved = resolve(
-            &auth_mode,
             &manifest,
             &application_id,
             &environment,
@@ -94,7 +100,18 @@ impl CliCommand for StatusCommand {
             resource_id_override,
         )?;
 
-        let detail = fetch_resource_detail(&auth_mode, &resolved.id)?;
+        if metrics_only {
+            let series = fetch_resource_metrics(&resolved.id)?;
+            if json_output {
+                println!("{}", serde_json::to_string_pretty(&series)?);
+                return Ok(());
+            }
+            let mut stdout = StandardStream::stdout(ColorChoice::Always);
+            print_metrics(&mut stdout, &series)?;
+            return Ok(());
+        }
+
+        let detail = fetch_resource_detail(&resolved.id)?;
 
         if json_output {
             if config_only {
@@ -174,4 +191,84 @@ fn print_config(stdout: &mut StandardStream, detail: &ResourceDetailResponse) ->
     writeln!(stdout)?;
 
     Ok(())
+}
+
+fn print_metrics(stdout: &mut StandardStream, series: &[MetricSeries]) -> Result<()> {
+    writeln!(stdout)?;
+    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)).set_bold(true))?;
+    writeln!(stdout, "Utilization")?;
+    stdout.reset()?;
+    writeln!(stdout)?;
+
+    if series.is_empty() {
+        writeln!(stdout, "  No metric data for this period.")?;
+        writeln!(stdout)?;
+        return Ok(());
+    }
+
+    for s in series {
+        // timestamps/values are parallel arrays ordered oldest-to-newest; the
+        // last entry is the most recent datapoint.
+        match (s.timestamps.last(), s.values.last()) {
+            (Some(ts), Some(v)) => {
+                writeln!(stdout, "  {:<24} {:<12.2}  (as of {})", s.label, v, ts)?;
+            }
+            _ => {
+                writeln!(stdout, "  {:<24} no data in this period", s.label)?;
+            }
+        }
+    }
+    writeln!(stdout)?;
+
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn status_cmd() -> Command {
+        StatusCommand::new().command().version("0.0.0-test")
+    }
+
+    #[test]
+    fn command_definition_is_valid() {
+        status_cmd().debug_assert();
+    }
+
+    #[test]
+    fn metrics_and_config_are_mutually_exclusive() {
+        assert!(
+            status_cmd()
+                .try_get_matches_from([
+                    "status", "svc:database", "-e", "dev", "--metrics", "--config"
+                ])
+                .is_err()
+        );
+        assert!(
+            status_cmd()
+                .try_get_matches_from(["status", "svc:database", "-e", "dev", "--metrics"])
+                .is_ok()
+        );
+    }
+
+    #[test]
+    fn metric_series_deserializes() {
+        let json = r#"{
+            "id": "CPUUtilization",
+            "label": "CPUUtilization",
+            "timestamps": ["2024-01-15T10:00:00Z", "2024-01-15T10:05:00Z"],
+            "values": [12.3, 15.7]
+        }"#;
+        let series: MetricSeries = serde_json::from_str(json).unwrap();
+        assert_eq!(series.values.last(), Some(&15.7));
+        assert_eq!(series.timestamps.last().map(String::as_str), Some("2024-01-15T10:05:00Z"));
+    }
+
+    #[test]
+    fn metric_series_list_deserializes_bare_array() {
+        let json = r#"[{"id":"a","label":"a","timestamps":[],"values":[]}]"#;
+        let series: Vec<MetricSeries> = serde_json::from_str(json).unwrap();
+        assert_eq!(series.len(), 1);
+    }
 }

@@ -6,13 +6,13 @@ use crate::{
     CliCommand,
     core::{
         command::command,
-        validate::{require_integration, require_manifest, resolve_auth},
+        validate::{require_auth, require_integration, require_manifest},
     },
 };
 
 use super::{
     lifecycle::call_lifecycle_action,
-    resource_resolver::{fetch_resource_detail, require_jwt_mode, resolve},
+    resource_resolver::{fetch_resource_detail, resolve},
 };
 
 #[derive(Debug)]
@@ -55,8 +55,7 @@ impl CliCommand for StopCommand {
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
-        let auth_mode = resolve_auth()?;
-        require_jwt_mode(&auth_mode)?;
+        require_auth()?;
         let (_app_root, manifest) = require_manifest(matches)?;
         let application_id = require_integration(&manifest)?;
         let environment = matches
@@ -70,7 +69,6 @@ impl CliCommand for StopCommand {
         let skip_confirm = matches.get_flag("yes");
 
         let resolved = resolve(
-            &auth_mode,
             &manifest,
             &application_id,
             &environment,
@@ -78,7 +76,7 @@ impl CliCommand for StopCommand {
             resource_id_override,
         )?;
 
-        let detail = fetch_resource_detail(&auth_mode, &resolved.id)?;
+        let detail = fetch_resource_detail(&resolved.id)?;
 
         if !skip_confirm {
             let confirmed = Confirm::with_theme(&ColorfulTheme::default())
@@ -95,7 +93,7 @@ impl CliCommand for StopCommand {
             }
         }
 
-        let result = call_lifecycle_action(&auth_mode, &resolved.id, "stop")?;
+        let result = call_lifecycle_action(&resolved.id, "stop")?;
         println!("{}", result.message);
 
         Ok(())

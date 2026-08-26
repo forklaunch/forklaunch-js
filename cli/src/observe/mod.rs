@@ -6,12 +6,14 @@ use crate::{CliCommand, core::command::command};
 mod issues;
 mod logs;
 mod metrics;
+mod query;
 mod status;
 mod traces;
 
 use issues::IssuesCommand;
 use logs::LogsCommand;
 use metrics::MetricsCommand;
+use query::QueryCommand;
 use status::StatusCommand;
 use traces::TracesCommand;
 
@@ -22,6 +24,7 @@ pub(crate) struct ObserveCommand {
     metrics: MetricsCommand,
     traces: TracesCommand,
     issues: IssuesCommand,
+    query: QueryCommand,
 }
 
 impl ObserveCommand {
@@ -32,6 +35,7 @@ impl ObserveCommand {
             metrics: MetricsCommand::new(),
             traces: TracesCommand::new(),
             issues: IssuesCommand::new(),
+            query: QueryCommand::new(),
         }
     }
 }
@@ -47,6 +51,7 @@ impl CliCommand for ObserveCommand {
         .subcommand(self.metrics.command())
         .subcommand(self.traces.command())
         .subcommand(self.issues.command())
+        .subcommand(self.query.command())
         .subcommand_required(true)
     }
 
@@ -57,6 +62,7 @@ impl CliCommand for ObserveCommand {
             Some(("metrics", sub_matches)) => self.metrics.handler(sub_matches),
             Some(("traces", sub_matches)) => self.traces.handler(sub_matches),
             Some(("issues", sub_matches)) => self.issues.handler(sub_matches),
+            Some(("query", sub_matches)) => self.query.handler(sub_matches),
             _ => unreachable!(),
         }
     }

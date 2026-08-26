@@ -3,7 +3,7 @@ use percent_encoding::{AsciiSet, CONTROLS, utf8_percent_encode};
 
 use crate::{
     constants::get_resource_management_api_url,
-    core::{hmac::AuthMode, http_client::get_with_auth, manifest::application::ApplicationManifestData},
+    core::{http_client::get, manifest::application::ApplicationManifestData},
 };
 
 use super::types::{ApplicationResourcesResponse, ResourceDetailResponse, ResourceListItem};
@@ -36,20 +36,6 @@ pub(crate) fn encode_resource_id_for_url(resource_id: &str) -> String {
     utf8_percent_encode(resource_id, PATH_SEGMENT).to_string()
 }
 
-/// `fl infra` is JWT/session-only in v1 — resource-management's routes have no HMAC
-/// support (`AccessLevel` forbids RBAC on `internal`-only routes, so adding it would
-/// give any HMAC-secret holder unrestricted mutate access). CI/automation support is
-/// tracked as a v2 item in TODOS.md, not attempted here.
-pub(crate) fn require_jwt_mode(auth_mode: &AuthMode) -> Result<()> {
-    if auth_mode.is_hmac() {
-        bail!(
-            "fl infra commands are not supported in CI/HMAC mode yet — JWT/session auth is required. \
-             See TODOS.md for CI support tracking."
-        );
-    }
-    Ok(())
-}
-
 /// Maps the CLI's friendly resource-type token (matching `ResourceInventory`'s field
 /// names) to the platform's exact `IntegrationType` string.
 pub(crate) fn resource_type_to_integration_type(token: &str) -> Result<&'static str> {
@@ -67,20 +53,22 @@ pub(crate) fn resource_type_to_integration_type(token: &str) -> Result<&'static 
 /// Fetches every provisioned resource for the application in a given environment.
 /// Shared by `fl infra list` and every resolving subcommand — do not duplicate this
 /// call elsewhere; both call sites must stay on this one function.
+fn application_resources_url(application_id: &str, environment: &str) -> String {
+    format!(
+        "{}/platform-resources/application/{}?environment={}",
+        get_resource_management_api_url(),
+        encode_resource_id_for_url(application_id),
+        urlencoding::encode(environment)
+    )
+}
+
 pub(crate) fn fetch_application_resources(
-    auth_mode: &AuthMode,
     application_id: &str,
     environment: &str,
 ) -> Result<Vec<ResourceListItem>> {
-    let url = format!(
-        "{}/platform-resources/application/{}?environment={}",
-        get_resource_management_api_url(),
-        application_id,
-        environment
-    );
+    let url = application_resources_url(application_id, environment);
 
-    let response = get_with_auth(auth_mode, &url)
-        .with_context(|| "Failed to reach resource-management API")?;
+    let response = get(&url).with_context(|| "Failed to reach resource-management API")?;
     let status = response.status();
 
     if !status.is_success() {
@@ -100,18 +88,14 @@ pub(crate) fn fetch_application_resources(
 /// Shared by `status`'s full view, `status --config`'s narrower view, and the
 /// mutation commands' pre-change diff — all are the same underlying `GET
 /// /:resourceId` call, differing only in what they do with the result.
-pub(crate) fn fetch_resource_detail(
-    auth_mode: &AuthMode,
-    resource_id: &str,
-) -> Result<ResourceDetailResponse> {
+pub(crate) fn fetch_resource_detail(resource_id: &str) -> Result<ResourceDetailResponse> {
     let url = format!(
         "{}/platform-resources/{}",
         get_resource_management_api_url(),
         encode_resource_id_for_url(resource_id)
     );
 
-    let response =
-        get_with_auth(auth_mode, &url).with_context(|| "Failed to reach resource-management API")?;
+    let response = get(&url).with_context(|| "Failed to reach resource-management API")?;
     let status = response.status();
 
     if !status.is_success() {
@@ -124,6 +108,32 @@ pub(crate) fn fetch_resource_detail(
     response
         .json()
         .with_context(|| "Failed to parse resource detail response")
+}
+
+/// Fetches CloudWatch utilization metrics (CPU%, memory%, connection count) for a
+/// resolved resource id — the series backing `fl infra status --metrics`.
+pub(crate) fn fetch_resource_metrics(
+    resource_id: &str,
+) -> Result<Vec<super::types::MetricSeries>> {
+    let url = format!(
+        "{}/platform-resources/{}/metrics",
+        get_resource_management_api_url(),
+        encode_resource_id_for_url(resource_id)
+    );
+
+    let response = get(&url).with_context(|| "Failed to reach resource-management API")?;
+    let status = response.status();
+
+    if !status.is_success() {
+        let body = response
+            .text()
+            .unwrap_or_else(|_| "unknown error".to_string());
+        bail!("resource-management API returned {} — {}", status, body);
+    }
+
+    response
+        .json()
+        .with_context(|| "Failed to parse resource metrics response")
 }
 
 /// A resolved `<project>:<type>` identifier, ready to address a specific platform
@@ -141,7 +151,6 @@ pub(crate) struct ResolvedResource {
 /// that resource for that project (no network) -> fetch and filter against the
 /// platform's live resource list (network) -> disambiguate.
 pub(crate) fn resolve(
-    auth_mode: &AuthMode,
     manifest: &ApplicationManifestData,
     application_id: &str,
     environment: &str,
@@ -182,7 +191,7 @@ pub(crate) fn resolve(
         );
     }
 
-    let resources = fetch_application_resources(auth_mode, application_id, environment)?;
+    let resources = fetch_application_resources(application_id, environment)?;
     let matches: Vec<&ResourceListItem> = resources
         .iter()
         .filter(|r| {
@@ -235,20 +244,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn require_jwt_mode_allows_jwt() {
-        assert!(require_jwt_mode(&AuthMode::Jwt).is_ok());
-    }
-
-    #[test]
-    fn require_jwt_mode_rejects_hmac() {
-        let hmac = AuthMode::Hmac {
-            secret_key: "test".to_string(),
-        };
-        let err = require_jwt_mode(&hmac).unwrap_err();
-        assert!(err.to_string().contains("CI/HMAC mode"));
-    }
-
-    #[test]
     fn resource_type_maps_all_known_tokens() {
         assert_eq!(resource_type_to_integration_type("database").unwrap(), "database");
         assert_eq!(resource_type_to_integration_type("cache").unwrap(), "cache");
@@ -271,6 +266,16 @@ mod tests {
         // string itself should not also be accepted as a CLI-facing token, to avoid
         // two spellings meaning the same thing.
         assert!(resource_type_to_integration_type("messagequeue").is_err());
+    }
+
+    #[test]
+    fn application_resources_url_encodes_application_id_and_environment() {
+        let url = application_resources_url("app/../secret", "dev&environment=production");
+        assert!(url.contains("app%2F..%2Fsecret"));
+        assert!(url.ends_with("environment=dev%26environment%3Dproduction"));
+        // exactly one `environment=` — a raw `&` in the value must not smuggle a
+        // second query parameter in.
+        assert_eq!(url.matches("environment=").count(), 1);
     }
 
     #[test]

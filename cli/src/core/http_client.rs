@@ -122,6 +122,11 @@ pub fn patch(url: &str, body: Value) -> Result<Response> {
     make_authenticated_request(Method::PATCH, url, Some(body))
 }
 
+/// Helper to make a DELETE request with authentication
+pub fn delete(url: &str) -> Result<Response> {
+    make_authenticated_request(Method::DELETE, url, None)
+}
+
 /// Extract the path component from a full URL (e.g. "https://host:port/path?q" -> "/path?q")
 fn extract_url_path(url: &str) -> Result<String> {
     // Find the start of the path after scheme://host(:port)
@@ -226,16 +231,6 @@ pub fn put_with_auth(auth_mode: &AuthMode, url: &str, body: Value) -> Result<Res
         AuthMode::Jwt => put(url, body),
         AuthMode::Hmac { secret_key } => {
             make_hmac_request(secret_key, Method::PUT, url, Some(body))
-        }
-    }
-}
-
-/// PATCH with auth mode dispatch (JWT or HMAC)
-pub fn patch_with_auth(auth_mode: &AuthMode, url: &str, body: Value) -> Result<Response> {
-    match auth_mode {
-        AuthMode::Jwt => patch(url, body),
-        AuthMode::Hmac { secret_key } => {
-            make_hmac_request(secret_key, Method::PATCH, url, Some(body))
         }
     }
 }

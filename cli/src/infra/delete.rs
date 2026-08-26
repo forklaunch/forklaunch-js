@@ -6,13 +6,13 @@ use crate::{
     CliCommand,
     core::{
         command::command,
-        validate::{require_integration, require_manifest, resolve_auth},
+        validate::{require_auth, require_integration, require_manifest},
     },
 };
 
 use super::{
     lifecycle::call_lifecycle_action,
-    resource_resolver::{fetch_resource_detail, require_jwt_mode, resolve},
+    resource_resolver::{fetch_resource_detail, resolve},
 };
 
 #[derive(Debug)]
@@ -58,8 +58,7 @@ impl CliCommand for DeleteCommand {
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
-        let auth_mode = resolve_auth()?;
-        require_jwt_mode(&auth_mode)?;
+        require_auth()?;
         let (_app_root, manifest) = require_manifest(matches)?;
         let application_id = require_integration(&manifest)?;
         let environment = matches
@@ -73,7 +72,6 @@ impl CliCommand for DeleteCommand {
         let skip_confirm = matches.get_flag("yes");
 
         let resolved = resolve(
-            &auth_mode,
             &manifest,
             &application_id,
             &environment,
@@ -81,7 +79,7 @@ impl CliCommand for DeleteCommand {
             resource_id_override,
         )?;
 
-        let detail = fetch_resource_detail(&auth_mode, &resolved.id)?;
+        let detail = fetch_resource_detail(&resolved.id)?;
 
         if !skip_confirm {
             println!(
@@ -102,7 +100,7 @@ impl CliCommand for DeleteCommand {
             }
         }
 
-        let result = call_lifecycle_action(&auth_mode, &resolved.id, "delete")?;
+        let result = call_lifecycle_action(&resolved.id, "delete")?;
         println!("{}", result.message);
 
         Ok(())

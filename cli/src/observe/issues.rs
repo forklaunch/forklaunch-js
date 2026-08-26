@@ -10,8 +10,7 @@ use crate::{
     constants::get_observability_api_url,
     core::{
         command::command,
-        hmac::AuthMode,
-        http_client::{get_with_auth, post_with_auth},
+        http_client::{get, post},
         validate::{require_integration, require_manifest},
     },
 };
@@ -21,12 +20,14 @@ use crate::{
 #[derive(Debug)]
 pub(super) struct IssuesCommand {
     ack: AckCommand,
+    resolve: ResolveCommand,
 }
 
 impl IssuesCommand {
     pub(super) fn new() -> Self {
         Self {
             ack: AckCommand::new(),
+            resolve: ResolveCommand::new(),
         }
     }
 }
@@ -72,11 +73,13 @@ impl CliCommand for IssuesCommand {
                 .global(true),
         )
         .subcommand(self.ack.command())
+        .subcommand(self.resolve.command())
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
         match matches.subcommand() {
             Some(("ack", sub_matches)) => self.ack.handler(sub_matches),
+            Some(("resolve", sub_matches)) => self.resolve.handler(sub_matches),
             _ => list_issues(matches),
         }
     }
@@ -110,6 +113,42 @@ impl CliCommand for AckCommand {
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
         acknowledge_issue(matches)
+    }
+}
+
+// ── Resolve sub-subcommand ───────────────────────────────────────────────────
+
+#[derive(Debug)]
+struct ResolveCommand;
+
+impl ResolveCommand {
+    fn new() -> Self {
+        Self
+    }
+}
+
+impl CliCommand for ResolveCommand {
+    fn command(&self) -> Command {
+        // base_path and json are inherited from the parent `issues` command as
+        // global args — no need to redeclare them here.
+        command(
+            "resolve",
+            "Resolve an issue (mark as closed/fixed) — distinct from `ack`, which only marks it as seen and leaves it open",
+        )
+        .arg(
+            Arg::new("id")
+                .required(true)
+                .help("The issue ID to resolve"),
+        )
+        .arg(
+            Arg::new("resolved_by")
+                .long("resolved-by")
+                .help("User resolving the issue (defaults to FORKLAUNCH_USER env var, then OS user)"),
+        )
+    }
+
+    fn handler(&self, matches: &ArgMatches) -> Result<()> {
+        resolve_issue(matches)
     }
 }
 
@@ -162,9 +201,7 @@ fn fetch_issues(
         url.push_str(&format!("&status={}", urlencoding::encode(st)));
     }
 
-    let auth_mode = AuthMode::detect();
-    let response =
-        get_with_auth(&auth_mode, &url).with_context(|| "Failed to reach observability API")?;
+    let response = get(&url).with_context(|| "Failed to reach observability API")?;
 
     if !response.status().is_success() {
         let http_status = response.status();
@@ -205,6 +242,32 @@ fn acknowledge_issue(matches: &ArgMatches) -> Result<()> {
     Ok(())
 }
 
+// ── Resolve handler ───────────────────────────────────────────────────────────
+
+fn resolve_issue(matches: &ArgMatches) -> Result<()> {
+    let (_app_root, manifest) = require_manifest(matches)?;
+    let application_id = require_integration(&manifest)?;
+    let issue_id = matches
+        .get_one::<String>("id")
+        .context("issue id is required")?
+        .to_string();
+    let resolved_by = matches
+        .get_one::<String>("resolved_by")
+        .cloned()
+        .unwrap_or_else(|| resolve_current_user(&application_id));
+    let json_output = matches.get_flag("json");
+
+    let response = post_resolve(&issue_id, &resolved_by)?;
+
+    if json_output {
+        println!("{}", serde_json::to_string_pretty(&response)?);
+    } else {
+        print_resolve_result(&issue_id, &resolved_by, &response)?;
+    }
+
+    Ok(())
+}
+
 /// Best-effort attempt to identify the current user for the default
 /// `--acknowledged-by` value. Falls back gracefully to "unknown" so that the
 /// acknowledge POST can still proceed without forcing the user to supply the
@@ -231,8 +294,7 @@ fn post_acknowledge(issue_id: &str, acknowledged_by: &str) -> Result<AckResponse
     );
 
     let body = serde_json::json!({ "acknowledgedBy": acknowledged_by });
-    let auth_mode = AuthMode::detect();
-    let response = post_with_auth(&auth_mode, &url, body)
+    let response = post(&url, body)
         .with_context(|| "Failed to reach observability API")?;
 
     if !response.status().is_success() {
@@ -246,6 +308,31 @@ fn post_acknowledge(issue_id: &str, acknowledged_by: &str) -> Result<AckResponse
     response
         .json()
         .with_context(|| "Failed to parse acknowledge response")
+}
+
+fn post_resolve(issue_id: &str, resolved_by: &str) -> Result<ResolveResponse> {
+    let api_url = get_observability_api_url();
+    let url = format!(
+        "{}/issues/{}/resolve",
+        api_url,
+        urlencoding::encode(issue_id)
+    );
+
+    let body = serde_json::json!({ "resolvedBy": resolved_by });
+    let response = post(&url, body)
+        .with_context(|| "Failed to reach observability API")?;
+
+    if !response.status().is_success() {
+        let http_status = response.status();
+        let body = response
+            .text()
+            .unwrap_or_else(|_| "unknown error".to_string());
+        anyhow::bail!("Observability API returned {} — {}", http_status, body);
+    }
+
+    response
+        .json()
+        .with_context(|| "Failed to parse resolve response")
 }
 
 // ── Display ───────────────────────────────────────────────────────────────────
@@ -342,6 +429,19 @@ fn print_ack_result(issue_id: &str, acknowledged_by: &str, _response: &AckRespon
     Ok(())
 }
 
+fn print_resolve_result(issue_id: &str, resolved_by: &str, _response: &ResolveResponse) -> Result<()> {
+    let mut stdout = StandardStream::stdout(ColorChoice::Always);
+
+    writeln!(stdout)?;
+    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true))?;
+    write!(stdout, "  Resolved")?;
+    stdout.reset()?;
+    writeln!(stdout, "  issue {} by {}", issue_id, resolved_by)?;
+    writeln!(stdout)?;
+
+    Ok(())
+}
+
 fn severity_color(severity: &str) -> Color {
     match severity.to_uppercase().as_str() {
         "ERROR" => Color::Red,
@@ -408,6 +508,19 @@ struct AckResponse {
     extra: serde_json::Value,
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ResolveResponse {
+    #[serde(default)]
+    id: Option<String>,
+    #[serde(default)]
+    resolved_at: Option<String>,
+    #[serde(default)]
+    resolved_by: Option<String>,
+    #[serde(flatten)]
+    extra: serde_json::Value,
+}
+
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
@@ -446,6 +559,23 @@ mod tests {
                 .try_get_matches_from(["issues", "ack", "issue-123"])
                 .is_ok()
         );
+    }
+
+    #[test]
+    fn resolve_does_not_require_environment() {
+        assert!(
+            issues_cmd()
+                .try_get_matches_from(["issues", "resolve", "issue-123"])
+                .is_ok()
+        );
+    }
+
+    #[test]
+    fn resolve_response_deserializes_partial() {
+        let json = r#"{"id": "iss-001", "resolvedAt": "2024-01-15T10:05:00Z", "resolvedBy": "alice"}"#;
+        let response: ResolveResponse = serde_json::from_str(json).unwrap();
+        assert_eq!(response.id.as_deref(), Some("iss-001"));
+        assert_eq!(response.resolved_by.as_deref(), Some("alice"));
     }
 
     #[test]

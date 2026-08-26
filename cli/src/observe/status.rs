@@ -11,8 +11,7 @@ use crate::{
     constants::get_observability_api_url,
     core::{
         command::command,
-        hmac::AuthMode,
-        http_client::get_with_auth,
+        http_client::get,
         validate::{require_integration, require_manifest},
     },
 };
@@ -85,9 +84,7 @@ fn fetch_application_monitoring(
         api_url, application_id, environment
     );
 
-    let auth_mode = AuthMode::detect();
-    let response =
-        get_with_auth(&auth_mode, &url).with_context(|| "Failed to reach observability API")?;
+    let response = get(&url).with_context(|| "Failed to reach observability API")?;
     let status = response.status();
 
     if !status.is_success() {

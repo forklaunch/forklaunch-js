@@ -5,13 +5,13 @@ use crate::{
     CliCommand,
     core::{
         command::command,
-        validate::{require_integration, require_manifest, resolve_auth},
+        validate::{require_auth, require_integration, require_manifest},
     },
 };
 
 use super::{
     mutation::{MutationRequest, nothing_to_change, run_mutation},
-    resource_resolver::{fetch_resource_detail, require_jwt_mode, resolve},
+    resource_resolver::{fetch_resource_detail, resolve},
     types::ResourceConfig,
 };
 
@@ -108,8 +108,7 @@ impl CliCommand for ConfigSetCommand {
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
-        let auth_mode = resolve_auth()?;
-        require_jwt_mode(&auth_mode)?;
+        require_auth()?;
         let (_app_root, manifest) = require_manifest(matches)?;
         let application_id = require_integration(&manifest)?;
         let environment = matches
@@ -142,7 +141,6 @@ impl CliCommand for ConfigSetCommand {
         }
 
         let resolved = resolve(
-            &auth_mode,
             &manifest,
             &application_id,
             &environment,
@@ -150,24 +148,21 @@ impl CliCommand for ConfigSetCommand {
             resource_id_override,
         )?;
 
-        let current = fetch_resource_detail(&auth_mode, &resolved.id)?;
+        let current = fetch_resource_detail(&resolved.id)?;
 
-        run_mutation(
-            &auth_mode,
-            MutationRequest {
-                resource_id: resolved.id,
-                current,
-                requested_config,
-                distribution_strategy,
-                primary_region,
-                snapshot_before_change: if matches.get_flag("snapshot_before_change") {
-                    Some(true)
-                } else {
-                    None
-                },
-                skip_confirm: matches.get_flag("yes"),
-                dry_run: matches.get_flag("dry_run"),
+        run_mutation(MutationRequest {
+            resource_id: resolved.id,
+            current,
+            requested_config,
+            distribution_strategy,
+            primary_region,
+            snapshot_before_change: if matches.get_flag("snapshot_before_change") {
+                Some(true)
+            } else {
+                None
             },
-        )
+            skip_confirm: matches.get_flag("yes"),
+            dry_run: matches.get_flag("dry_run"),
+        })
     }
 }
