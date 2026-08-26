@@ -250,7 +250,7 @@ pub(crate) const MESSAGING_BASE_VERSION: &str = "~1.0.0";
 // @forklaunch/implementation-messaging-twilio
 pub(crate) const MESSAGING_TWILIO_VERSION: &str = "~1.0.0";
 // @forklaunch/implementation-cac-base
-pub(crate) const CAC_BASE_VERSION: &str = "~1.0.0";
+pub(crate) const CAC_BASE_VERSION: &str = "~0.1.0";
 // @forklaunch/implementation-worker-bullmq
 pub(crate) const WORKER_BULLMQ_VERSION: &str = "~1.0.31";
 // @forklaunch/implementation-worker-redis
@@ -270,7 +270,7 @@ pub(crate) const IAM_INTERFACES_VERSION: &str = "~1.0.30";
 // @forklaunch/interfaces-messaging
 pub(crate) const MESSAGING_INTERFACES_VERSION: &str = "~1.0.0";
 // @forklaunch/interfaces-cac
-pub(crate) const CAC_INTERFACES_VERSION: &str = "~1.0.0";
+pub(crate) const CAC_INTERFACES_VERSION: &str = "~0.1.0";
 // @forklaunch/interfaces-worker
 pub(crate) const WORKER_INTERFACES_VERSION: &str = "~1.0.29";
 // @forklaunch/internal

@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/interfaces-cac",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Computer-assisted coding interfaces for forklaunch",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
