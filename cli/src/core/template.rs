@@ -218,5 +218,8 @@ pub(crate) fn get_routers_from_standard_package(package: Module) -> Option<Vec<S
             String::from("webhook"),
             String::from("catalogImport"),
         ]),
+        // Skeleton only so far — patient/encounter/claim/eligibility/remittance/
+        // codeSet routers land in later phases (see plan/cac/), not this PR.
+        Module::BaseCac => None,
     }
 }

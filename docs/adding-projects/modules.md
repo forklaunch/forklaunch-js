@@ -50,12 +50,13 @@ By default, you will not need to run any scripts to get going, but if your modul
 | `iam-better-auth` | Better auth implementation for IAM | BetterAuth integration for advanced authentication features |
 | `messaging-base` | Messaging hooks only | Base messaging infrastructure with an extensible delivery provider interface |
 | `messaging-twilio` | Twilio SMS implementation | Twilio-backed SMS sending with delivery-status webhook handling |
+| `cac-base` | Computer-assisted coding hooks only | Base medical claim coding/scrubbing infrastructure with an extensible procedure code-set provider interface |
 
 ### Init Command Options
 
 | Option | Short | Description | Valid Values |
 | :----- | :---- | :---------- | :----------- |
-| `--module` | `-m` | The module type to initialize | `billing-base`, `billing-stripe`, `iam-base`, `iam-better-auth`, `messaging-base`, `messaging-twilio` |
+| `--module` | `-m` | The module type to initialize | `billing-base`, `billing-stripe`, `iam-base`, `iam-better-auth`, `messaging-base`, `messaging-twilio`, `cac-base` |
 | `--database` | `-d` | The database to use | `postgresql`, `mysql`, `mariadb`, `mssql`, `mongodb`, `libsql`, `sqlite`, `better-sqlite` |
 | `--path` | `-p` | The application path to initialize the module in | Any valid directory path |
 | `--dryrun` | `-n` | Dry run the command | Flag (no value) |

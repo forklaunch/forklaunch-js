@@ -50,7 +50,8 @@ use crate::{
                 AJV_VERSION, APP_BILLING_VERSION, APP_CORE_VERSION, APP_IAM_VERSION,
                 APP_MONITORING_VERSION, BETTER_AUTH_MIKRO_ORM_VERSION, BETTER_AUTH_VERSION,
                 BETTER_SQLITE3_VERSION, BILLING_BASE_VERSION, BILLING_INTERFACES_VERSION,
-                BILLING_STRIPE_VERSION, BIOME_VERSION, COMMON_VERSION, CORE_VERSION,
+                BILLING_STRIPE_VERSION, BIOME_VERSION, CAC_BASE_VERSION, CAC_INTERFACES_VERSION,
+                COMMON_VERSION, CORE_VERSION,
                 DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION, HYPER_EXPRESS_VERSION,
                 IAM_BASE_VERSION, IAM_INTERFACES_VERSION, INFRASTRUCTURE_REDIS_VERSION,
                 MESSAGING_BASE_VERSION, MESSAGING_INTERFACES_VERSION, MESSAGING_TWILIO_VERSION,
@@ -326,12 +327,12 @@ pub(crate) fn generate_service_package_json(
         keywords: Some(vec![]),
         license: Some(manifest_data.license.to_string()),
         author: Some(manifest_data.author.to_string()),
-        main: main_override.or_else(|| if manifest_data.is_iam || manifest_data.is_billing || manifest_data.is_messaging {
+        main: main_override.or_else(|| if manifest_data.is_iam || manifest_data.is_billing || manifest_data.is_messaging || manifest_data.is_cac {
             Some("./dist/index.js".to_string())
         } else {
             None
         }),
-        types: types_override.unwrap_or(if manifest_data.is_iam || manifest_data.is_billing || manifest_data.is_messaging {
+        types: types_override.unwrap_or(if manifest_data.is_iam || manifest_data.is_billing || manifest_data.is_messaging || manifest_data.is_cac {
             Some("./dist/index.d.ts".to_string())
         } else {
             None
@@ -473,6 +474,16 @@ pub(crate) fn generate_service_package_json(
                 },
                 forklaunch_interfaces_messaging: if manifest_data.is_messaging {
                     Some(MESSAGING_INTERFACES_VERSION.to_string())
+                } else {
+                    None
+                },
+                forklaunch_implementation_cac_base: if manifest_data.is_cac {
+                    Some(CAC_BASE_VERSION.to_string())
+                } else {
+                    None
+                },
+                forklaunch_interfaces_cac: if manifest_data.is_cac {
+                    Some(CAC_INTERFACES_VERSION.to_string())
                 } else {
                     None
                 },
@@ -811,6 +822,7 @@ impl CliCommand for ServiceCommand {
             is_iam: false,
             is_billing: false,
             is_messaging: false,
+            is_cac: false,
             is_cache_enabled: infrastructure.contains(&Infrastructure::Redis),
             platform_application_id: manifest_data.platform_application_id.clone(),
             platform_organization_id: manifest_data.platform_organization_id.clone(),

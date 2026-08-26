@@ -186,6 +186,8 @@ pub(crate) struct ProjectDependencies {
     pub(crate) forklaunch_implementation_messaging_base: Option<String>,
     pub(crate) forklaunch_implementation_messaging_twilio: Option<String>,
     pub(crate) forklaunch_interfaces_messaging: Option<String>,
+    pub(crate) forklaunch_implementation_cac_base: Option<String>,
+    pub(crate) forklaunch_interfaces_cac: Option<String>,
     pub(crate) forklaunch_implementation_worker_bullmq: Option<String>,
     pub(crate) forklaunch_implementation_worker_redis: Option<String>,
     pub(crate) forklaunch_implementation_worker_database: Option<String>,
@@ -283,6 +285,12 @@ impl Serialize for ProjectDependencies {
         }
         if let Some(ref v) = self.forklaunch_interfaces_messaging {
             map.serialize_entry("@forklaunch/interfaces-messaging", v)?;
+        }
+        if let Some(ref v) = self.forklaunch_implementation_cac_base {
+            map.serialize_entry("@forklaunch/implementation-cac-base", v)?;
+        }
+        if let Some(ref v) = self.forklaunch_interfaces_cac {
+            map.serialize_entry("@forklaunch/interfaces-cac", v)?;
         }
         if let Some(ref v) = self.forklaunch_implementation_worker_bullmq {
             map.serialize_entry("@forklaunch/implementation-worker-bullmq", v)?;
@@ -552,6 +560,12 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
                         }
                         "@forklaunch/interfaces-messaging" => {
                             deps.forklaunch_interfaces_messaging = Some(value)
+                        }
+                        "@forklaunch/implementation-cac-base" => {
+                            deps.forklaunch_implementation_cac_base = Some(value)
+                        }
+                        "@forklaunch/interfaces-cac" => {
+                            deps.forklaunch_interfaces_cac = Some(value)
                         }
                         "@forklaunch/implementation-worker-bullmq" => {
                             deps.forklaunch_implementation_worker_bullmq = Some(value)

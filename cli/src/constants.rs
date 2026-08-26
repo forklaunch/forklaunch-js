@@ -385,6 +385,11 @@ choice! {
             id: "messaging-twilio",
             description: Some("twilio sms implementation for messaging"),
             exclusive_files: Some(&["messaging-twilio"]),
+        },
+        BaseCac = Choice {
+            id: "cac-base",
+            description: Some("computer-assisted coding hooks only"),
+            exclusive_files: Some(&["cac-base"]),
         }
     }
 
@@ -566,6 +571,7 @@ pub(crate) fn get_service_module_name(service_type: &Module) -> String {
         Module::BaseIam | Module::BetterAuthIam => "iam".to_string(),
         Module::StripeEcommerce => "ecommerce".to_string(),
         Module::BaseMessaging | Module::TwilioMessaging => "messaging".to_string(),
+        Module::BaseCac => "cac".to_string(),
     }
 }
 
@@ -579,6 +585,7 @@ pub(crate) fn get_service_module_description(name: &str, service_type: &Module) 
             Module::BaseIam | Module::BetterAuthIam => "identity and access management APIs",
             Module::StripeEcommerce => "ecommerce service APIs",
             Module::BaseMessaging | Module::TwilioMessaging => "messaging service APIs",
+            Module::BaseCac => "computer-assisted coding service APIs",
         }
     )
 }

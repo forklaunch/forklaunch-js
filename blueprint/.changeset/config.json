@@ -15,6 +15,7 @@
     "@forklaunch/blueprint-iam-better-auth",
     "@forklaunch/blueprint-messaging-base",
     "@forklaunch/blueprint-messaging-twilio",
+    "@forklaunch/blueprint-cac-base",
     "@forklaunch/blueprint-core",
     "@forklaunch/blueprint-monitoring"
   ]
