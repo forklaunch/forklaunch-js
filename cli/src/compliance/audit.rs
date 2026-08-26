@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     fs,
     io::Write,
     path::{Path, PathBuf},
@@ -13,7 +14,7 @@ use crate::{
     CliCommand,
     constants::get_platform_management_api_url,
     core::{
-        ast::infrastructure::compliance::scan_all_compliance,
+        ast::infrastructure::compliance::{scan_all_compliance, scan_entity_compliance},
         command::command,
         hmac::AuthMode,
         http_client::post_with_auth,
@@ -108,6 +109,13 @@ impl CliCommand for AuditCommand {
                     (Default::default(), Default::default())
                 });
 
+        // Which module owns each entity, and whether that module actually wires a
+        // FieldEncryptor. Encryption at rest is NOT implied by the classification
+        // alone: `EncryptedType` falls back to writing plaintext when no encryptor
+        // is registered, silently. Without this, the report can only restate the
+        // tag it was given.
+        let module_ctx = scan_module_encryption_context(&modules_path_buf);
+
         let mut entity_names: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
         entity_names.extend(field_classifications.keys().cloned());
         entity_names.extend(retention_policies.keys().cloned());
@@ -120,11 +128,19 @@ impl CliCommand for AuditCommand {
                     .map(|fields| {
                         fields
                             .iter()
-                            .map(|(field_name, classification)| FieldReport {
-                                name: field_name.clone(),
-                                compliance: classification.clone(),
-                                encrypted: classification == "phi"
-                                    || classification == "pci",
+                            .map(|(field_name, classification)| {
+                                // All three classified levels encrypt (the framework's
+                                // `wrapClassified` applies EncryptedType to pii/phi/pci
+                                // alike) — but only if the owning module registered an
+                                // encryptor.
+                                let encrypts = classification_encrypts(classification);
+                                let protected = encrypts
+                                    && module_ctx.entity_is_protected(&name);
+                                FieldReport {
+                                    name: field_name.clone(),
+                                    compliance: classification.clone(),
+                                    encrypted: protected,
+                                }
                             })
                             .collect()
                     })
@@ -138,6 +154,7 @@ impl CliCommand for AuditCommand {
                         action: r.action.clone(),
                     });
                 EntityReport {
+                    module: module_ctx.entity_module.get(&name).cloned(),
                     name,
                     fields: field_reports,
                     retention,
@@ -171,6 +188,7 @@ impl CliCommand for AuditCommand {
         let report = ComplianceReport {
             generated_at: chrono::Utc::now().to_rfc3339(),
             routes,
+            modules: module_ctx.module_reports(),
             entities,
             local_findings,
             secrets: SecretsReport {
@@ -300,6 +318,7 @@ fn upload_to_platform(
 
     let body = serde_json::json!({
         "routes": report.routes,
+        "modules": report.modules,
         "entities": report.entities,
         "secrets": report.secrets,
         "dataResidency": report.data_residency,
@@ -640,7 +659,11 @@ fn print_entities(out: &mut StandardStream, report: &ComplianceReport) -> Result
                 _ => Color::Green,
             };
 
-            let needs_encryption = field.compliance == "phi" || field.compliance == "pci";
+            // Every classified level encrypts, so any of them can be genuinely
+            // unprotected — previously this excluded pii, which (together with
+            // `encrypted` being derived from the same predicate) made the
+            // UNENCRYPTED branch below unreachable.
+            let needs_encryption = classification_encrypts(&field.compliance);
             let status = if needs_encryption && field.encrypted {
                 ("✓", Color::Green)
             } else if needs_encryption && !field.encrypted {
@@ -827,6 +850,10 @@ fn format_key(key: &str) -> String {
 struct ComplianceReport {
     generated_at: String,
     routes: Vec<RouteReport>,
+    /// Per-module encryption wiring. A module here with
+    /// `encryptorRegistered: false` and a non-zero classified field count is
+    /// storing classified data in plaintext.
+    modules: Vec<ModuleReport>,
     entities: Vec<EntityReport>,
     local_findings: Vec<super::checks::LocalFinding>,
     secrets: SecretsReport,
@@ -842,10 +869,147 @@ struct RouteReport {
     access: Option<String>,
 }
 
+/// Whether a classification level causes the framework to encrypt the column.
+/// `wrapClassified` applies `EncryptedType` to every classified level — pii is
+/// NOT an exception (it was previously treated as one, which reported encrypted
+/// data as unprotected and could never observe an actually-unprotected field).
+fn classification_encrypts(classification: &str) -> bool {
+    matches!(classification, "pii" | "phi" | "pci")
+}
+
+/// Per-module encryption wiring: entity ownership plus whether the module
+/// registers a `FieldEncryptor`.
+#[derive(Default)]
+struct ModuleEncryptionContext {
+    /// entity name -> owning module name
+    entity_module: HashMap<String, String>,
+    /// module name -> registers a FieldEncryptor
+    module_registers_encryptor: HashMap<String, bool>,
+    /// module name -> number of classified (pii/phi/pci) fields it declares
+    module_classified_fields: HashMap<String, usize>,
+}
+
+impl ModuleEncryptionContext {
+    /// True when the entity's module wires an encryptor. Unknown ownership is
+    /// treated as unprotected: claiming protection we cannot prove is the
+    /// failure mode that made this report untrustworthy in the first place.
+    fn entity_is_protected(&self, entity: &str) -> bool {
+        self.entity_module
+            .get(entity)
+            .and_then(|m| self.module_registers_encryptor.get(m))
+            .copied()
+            .unwrap_or(false)
+    }
+
+    /// Serializable per-module view for the report.
+    fn module_reports(&self) -> Vec<ModuleReport> {
+        let mut out: Vec<ModuleReport> = self
+            .module_registers_encryptor
+            .iter()
+            .map(|(name, registered)| ModuleReport {
+                name: name.clone(),
+                encryptor_registered: *registered,
+                classified_field_count: self
+                    .module_classified_fields
+                    .get(name)
+                    .copied()
+                    .unwrap_or(0),
+            })
+            .collect();
+        out.sort_by(|a, b| a.name.cmp(&b.name));
+        out
+    }
+
+    /// Modules that declare classified fields but never register an encryptor —
+    /// those columns are silently written in plaintext.
+    fn unprotected_modules(&self) -> Vec<(String, usize)> {
+        let mut out: Vec<(String, usize)> = self
+            .module_classified_fields
+            .iter()
+            .filter(|(m, count)| {
+                **count > 0
+                    && !self
+                        .module_registers_encryptor
+                        .get(*m)
+                        .copied()
+                        .unwrap_or(false)
+            })
+            .map(|(m, count)| (m.clone(), *count))
+            .collect();
+        out.sort_by(|a, b| a.0.cmp(&b.0));
+        out
+    }
+}
+
+/// Detect, per module, which entities it owns and whether it registers a
+/// FieldEncryptor. Registration is looked for in the module's mikro-orm config
+/// and its DI registrations — the two places the platform wires one.
+fn scan_module_encryption_context(modules_path: &Path) -> ModuleEncryptionContext {
+    let mut ctx = ModuleEncryptionContext::default();
+    let Ok(entries) = fs::read_dir(modules_path) else {
+        return ctx;
+    };
+
+    for entry in entries.flatten() {
+        let project_path = entry.path();
+        if !project_path.is_dir() {
+            continue;
+        }
+        let Some(module_name) = project_path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .map(|s| s.to_string())
+        else {
+            continue;
+        };
+
+        let registers = ["mikro-orm.config.ts", "registrations.ts"].iter().any(|f| {
+            fs::read_to_string(project_path.join(f))
+                .map(|c| c.contains("registerEncryptor"))
+                .unwrap_or(false)
+        });
+        ctx.module_registers_encryptor
+            .insert(module_name.clone(), registers);
+
+        let Ok(entities) = scan_entity_compliance(&project_path) else {
+            continue;
+        };
+        for entity in entities {
+            let classified = entity
+                .field_classifications
+                .values()
+                .filter(|c| classification_encrypts(c))
+                .count();
+            *ctx.module_classified_fields
+                .entry(module_name.clone())
+                .or_insert(0) += classified;
+            ctx.entity_module
+                .insert(entity.entity_name.clone(), module_name.clone());
+        }
+    }
+
+    ctx
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ModuleReport {
+    name: String,
+    /// The module wires a FieldEncryptor. When false, any classified field it
+    /// declares is written to the database in plaintext.
+    encryptor_registered: bool,
+    /// Classified (pii/phi/pci) fields declared by this module.
+    classified_field_count: usize,
+}
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct EntityReport {
     name: String,
+    /// Module that declares this entity — lets a consumer attribute an
+    /// unprotected field to the module whose wiring caused it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    module: Option<String>,
     fields: Vec<FieldReport>,
     #[serde(skip_serializing_if = "Option::is_none")]
     retention: Option<RetentionReport>,
