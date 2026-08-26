@@ -75,7 +75,8 @@ impl CliCommand for CreateCommand {
         writeln!(stdout)?;
         writeln!(
             stdout,
-            "  Once done, run `fl cloud-account link --role-arn <arn>` to complete setup."
+            "  Once done, run `fl cloud-account link {} --role-arn <arn>` to complete setup.",
+            result.account.id
         )?;
         writeln!(stdout)?;
 
