@@ -68,7 +68,7 @@
   "dependencies": {
     "@forklaunch/core": "^1.5.15",
     "@forklaunch/interfaces-worker": "workspace:^",
-    "@forklaunch/internal": "^1.2.24",
+    "@forklaunch/internal": "^1.2.25",
     "@sinclair/typebox": "^0.34.52",
     "kafkajs": "^2.2.4",
     "zod": "^4.4.3"
@@ -76,7 +76,7 @@
   "devDependencies": {
     "@typescript/native-preview": "7.0.0-dev.20260707.2",
     "depcheck": "^1.4.7",
-    "eslint": "^10.8.1",
+    "eslint": "^10.9.0",
     "prettier": "^3.9.6",
     "typedoc": "^0.28.20",
     "typescript-eslint": "^8.67.0"

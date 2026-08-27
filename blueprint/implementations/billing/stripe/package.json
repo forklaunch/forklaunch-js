@@ -79,12 +79,12 @@
     "@forklaunch/core": "^1.5.15",
     "@forklaunch/implementation-billing-base": "workspace:^",
     "@forklaunch/interfaces-billing": "workspace:^",
-    "@forklaunch/internal": "^1.2.24",
+    "@forklaunch/internal": "^1.2.25",
     "@forklaunch/validator": "^1.2.24",
-    "@mikro-orm/core": "^7.1.11",
+    "@mikro-orm/core": "^7.1.13",
     "@sinclair/typebox": "^0.34.52",
     "ajv": "^8.20.0",
-    "stripe": "^22.4.0",
+    "stripe": "^22.5.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -92,8 +92,8 @@
     "depcheck": "^1.4.7",
     "prettier": "^3.9.6",
     "typedoc": "^0.28.20",
-    "@mikro-orm/sqlite": "^7.1.11",
-    "uuid": "^14.0.1"
+    "@mikro-orm/sqlite": "^7.1.13",
+    "uuid": "^14.0.2"
   },
   "publishConfig": {
     "access": "public"

@@ -50,7 +50,7 @@
   },
   "dependencies": {
     "@forklaunch/common": "^1.2.23",
-    "@mikro-orm/core": "^7.1.11"
+    "@mikro-orm/core": "^7.1.13"
   },
   "devDependencies": {
     "@typescript/native-preview": "7.0.0-dev.20260707.2",

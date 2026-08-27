@@ -60,9 +60,9 @@
     "@forklaunch/common": "^1.2.23",
     "@forklaunch/core": "^1.5.15",
     "@forklaunch/interfaces-ecommerce": "workspace:^",
-    "@forklaunch/internal": "^1.2.24",
+    "@forklaunch/internal": "^1.2.25",
     "@forklaunch/validator": "^1.2.24",
-    "@mikro-orm/core": "^7.1.11",
+    "@mikro-orm/core": "^7.1.13",
     "@sinclair/typebox": "^0.34.52",
     "ajv": "^8.20.0",
     "zod": "^4.4.3"
