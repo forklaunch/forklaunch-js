@@ -1,5 +1,24 @@
 # @forklaunch/hyper-express
 
+## 1.2.40
+
+### Patch Changes
+
+- Declare uWebSockets.js as a peer dependency so projects install on pnpm 11.
+
+  pnpm 11 blocks git-resolved subdependencies (ERR_PNPM_EXOTIC_SUBDEP), and
+  uWebSockets.js ships only from GitHub. While this package declared it as a
+  dependency, every consumer inherited a blocked edge and could not install at
+  all on pnpm 11.
+
+  Declaring it as a peer removes that edge; the consuming project depends on
+  uWebSockets.js directly, which pnpm permits. The ForkLaunch CLI now emits it
+  alongside @forklaunch/hyper-express in generated projects. It is also a
+  devDependency here so this package still builds and typechecks against it.
+
+  Adding the direct dependency without moving this one does NOT work — the
+  subdependency edge is what pnpm rejects, so it has to stop being a dependency.
+
 ## 1.2.34
 
 ### Patch Changes

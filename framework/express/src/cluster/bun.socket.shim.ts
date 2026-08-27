@@ -2,6 +2,7 @@
 
 import type {
   AddressInfo,
+  SetKeepAliveOptions,
   Socket,
   SocketConnectOpts,
   SocketReadyState
@@ -321,7 +322,23 @@ export class BunSocketShim extends Duplex implements Socket {
     return this;
   }
 
-  setKeepAlive(enable: boolean = false, initialDelay: number = 0): this {
+  // @types/node 26.4 added a `setKeepAlive(options: SetKeepAliveOptions)`
+  // overload alongside the positional form, so the shim has to satisfy both or
+  // it stops being assignable to Socket — which also cascades into `connect`
+  // returning something that no longer structurally matches.
+  setKeepAlive(options: SetKeepAliveOptions): this;
+  setKeepAlive(
+    enable?: boolean,
+    initialDelay?: number,
+    interval?: number,
+    count?: number
+  ): this;
+  setKeepAlive(
+    _enableOrOptions?: boolean | SetKeepAliveOptions,
+    _initialDelay?: number,
+    _interval?: number,
+    _count?: number
+  ): this {
     return this;
   }
 
