@@ -46,7 +46,7 @@
     "@forklaunch/core": "^1.5.15",
     "@forklaunch/implementation-ecommerce-base": "workspace:^",
     "@forklaunch/interfaces-ecommerce": "workspace:^",
-    "@forklaunch/internal": "^1.2.24",
+    "@forklaunch/internal": "^1.2.25",
     "@forklaunch/validator": "^1.2.24",
     "@mikro-orm/core": "^7.1.11",
     "@sinclair/typebox": "^0.34.52",

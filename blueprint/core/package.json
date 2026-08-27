@@ -29,7 +29,7 @@
     "@mikro-orm/core": "^7.1.11",
     "@mikro-orm/mongodb": "^7.1.11",
     "@sinclair/typebox": "^0.34.52",
-    "uuid": "^14.0.1",
+    "uuid": "^14.0.2",
     "zod": "^4.4.3"
   },
   "devDependencies": {

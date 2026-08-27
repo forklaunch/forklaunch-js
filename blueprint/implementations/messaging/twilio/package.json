@@ -79,7 +79,7 @@
     "@forklaunch/core": "^1.5.15",
     "@forklaunch/implementation-messaging-base": "workspace:^",
     "@forklaunch/interfaces-messaging": "workspace:^",
-    "@forklaunch/internal": "^1.2.24",
+    "@forklaunch/internal": "^1.2.25",
     "@forklaunch/validator": "^1.2.24",
     "@mikro-orm/core": "^7.1.11",
     "@sinclair/typebox": "^0.34.52",
@@ -92,7 +92,7 @@
     "prettier": "^3.9.6",
     "typedoc": "^0.28.20",
     "@mikro-orm/sqlite": "^7.1.11",
-    "uuid": "^14.0.1"
+    "uuid": "^14.0.2"
   },
   "publishConfig": {
     "access": "public"
