@@ -7,6 +7,7 @@ packages:
 - monitoring
 - billing-base
 - billing-stripe
+- cac-base
 - ecommerce-stripe
 - iam-base
 - iam-better-auth
@@ -14,12 +15,14 @@ packages:
 - messaging-twilio
 - sample-worker
 - interfaces/billing
+- interfaces/cac
 - interfaces/ecommerce
 - interfaces/iam
 - interfaces/messaging
 - interfaces/worker
 - implementations/billing/base
 - implementations/billing/stripe
+- implementations/cac/base
 - implementations/messaging/base
 - implementations/messaging/twilio
 - implementations/ecommerce/base
