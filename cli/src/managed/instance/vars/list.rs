@@ -9,7 +9,7 @@ use crate::{
     core::command::command,
     managed::{
         client::{Missing, extract_list, get_value, require_managed_mode, resolve_managed_auth},
-        types::{InstanceVariable, SetState, dash, yes_no},
+        types::{InstanceVariable, SetState, dash, required_cell},
     },
 };
 
@@ -128,7 +128,7 @@ impl CliCommand for ListCommand {
                 dash(&variable.kind),
                 dash(&variable.scope),
                 dash(&variable.service_name),
-                yes_no(&variable.required),
+                required_cell(&variable.kind, &variable.required),
                 value_column(variable),
             )?;
         }

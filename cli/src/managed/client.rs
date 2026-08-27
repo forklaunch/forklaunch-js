@@ -332,11 +332,10 @@ pub(super) fn patch_json<T: serde::de::DeserializeOwned>(
 /// Takes no `&AuthMode` for the same reason as `patch_json` — see its note.
 ///
 /// Returns `Option<Value>` rather than deserializing into a type because the variable
-/// upsert routes are being written in parallel with this CLI and it is not yet settled
-/// whether they answer `200` with the stored record or `204` with nothing. Both are
-/// reasonable for an upsert, and a CLI that failed with "expected value at line 1
-/// column 1" against the second would be reporting a parse error for a request that
-/// completely succeeded.
+/// upsert routes answer `200` with a bare string (`'Variable set'`), not JSON — and a
+/// CLI that failed with "expected value at line 1 column 1" would be reporting a parse
+/// error for a request that completely succeeded. Staying tolerant also covers a server
+/// that later returns the stored record, or `204` with nothing.
 pub(super) fn put_json_optional(
     path: &str,
     body: Value,

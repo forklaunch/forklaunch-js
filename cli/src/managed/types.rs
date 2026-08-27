@@ -124,10 +124,10 @@ pub(super) const GENERATOR_TYPES: &[&str] = &[
 
 /// One variable a template declares, as the control plane reports it.
 ///
-/// Every field is optional for the same reason `ManagedInstance`'s are: the
-/// `/managed-mode` variable routes are being written in parallel with this CLI, and a
-/// field this CLI has not been told about should render as a blank column rather than
-/// failing the whole command.
+/// Mirrors the control plane's `TemplateVariableSchema`, where `key`, `scope`, `kind`
+/// and `required` are non-optional and the rest are not. Everything is `Option` here
+/// anyway, for the same reason `ManagedInstance`'s fields are: a field a future server
+/// stops sending should render as a blank column rather than failing the whole command.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct TemplateVariable {
@@ -139,10 +139,12 @@ pub(super) struct TemplateVariable {
     pub(super) scope: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(super) service_name: Option<String>,
-    /// Set for `static` only. Masked on output unless `--reveal` is passed — see
-    /// `template::vars::list`.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub(super) value: Option<String>,
+    // There is deliberately NO `value` field. The control plane's
+    // `TemplateVariableSchema` omits it on both the managed-apps handler and the
+    // `/managed-mode` proxy: a `static` value can be a credential shared by every
+    // instance, and a list endpoint is the wrong place to hand one back. Adding the
+    // field here would only ever deserialize to `None` and invite a column that is
+    // always blank.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(super) generator_type: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -170,10 +172,10 @@ pub(super) struct InstanceVariable {
     pub(super) required: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(super) description: Option<String>,
-    /// Whether this instance has a value for a `custom` variable. The aliases exist
-    /// because the endpoint is still being written and the obvious names for this field
-    /// are all in play; accepting each of them beats rendering every variable as
-    /// MISSING because the server picked a different one.
+    /// Whether this instance has a value for a `custom` variable. The control plane's
+    /// `InstanceVariableStatusSchema` calls it `isSet`; the other two aliases are kept
+    /// because they were the plausible alternatives while this was being written, and
+    /// reading only one name would render every variable MISSING if it ever changed.
     #[serde(
         default,
         alias = "isSet",
@@ -232,10 +234,54 @@ pub(super) fn dash(value: &Option<String>) -> &str {
 
 /// Renders an optional boolean for a table cell, where "the server did not say" and
 /// "the server said false" are different facts.
-pub(super) fn yes_no(value: &Option<bool>) -> &'static str {
+fn yes_no(value: &Option<bool>) -> &'static str {
     match value {
         Some(true) => "yes",
         Some(false) => "no",
         None => "-",
+    }
+}
+
+/// Renders the REQUIRED column.
+///
+/// `required` only means anything for `custom` — the CLI refuses `--required` on the
+/// other two kinds, because a static variable always has a value and a generated one is
+/// always derivable, so neither can be missing at launch. The control plane nonetheless
+/// sends `required: false` on every row, since its schema declares the field
+/// non-optional. Printing "no" against a static variable would imply the flag means
+/// something there, so those rows get a dash instead.
+pub(super) fn required_cell(kind: &Option<String>, required: &Option<bool>) -> &'static str {
+    match kind.as_deref() {
+        Some("custom") => yes_no(required),
+        _ => "-",
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn required_reads_as_a_dash_for_the_kinds_it_cannot_apply_to() {
+        // The control plane sends `required: false` on every row because its schema
+        // declares the field non-optional; only `custom` rows should render it.
+        for kind in ["static", "generated"] {
+            assert_eq!(
+                required_cell(&Some(kind.to_string()), &Some(false)),
+                "-",
+                "{}",
+                kind
+            );
+        }
+        assert_eq!(
+            required_cell(&Some("custom".to_string()), &Some(true)),
+            "yes"
+        );
+        assert_eq!(
+            required_cell(&Some("custom".to_string()), &Some(false)),
+            "no"
+        );
+        // A kind the CLI has not been told about should not claim to know either.
+        assert_eq!(required_cell(&None, &Some(true)), "-");
     }
 }

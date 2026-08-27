@@ -202,6 +202,9 @@ impl CliCommand for SetCommand {
              warning — `--value` with `--kind generated` almost always means the wrong kind\n\
              was chosen, and silently dropping the value would publish a template that hands\n\
              every customer a secret nobody meant to share.\n\n\
+             A `static` value cannot be read back afterwards — `vars list` reports that one is\n\
+             set, not what it is. Setting it again is how you change it, and is the only way\n\
+             to correct a typo in one.\n\n\
              Examples:\n\
              \x20 vars set --slug clinic --key LOG_LEVEL --kind static --value info\n\
              \x20 vars set --slug clinic --key SESSION_SECRET --kind generated --generator 32-bytes-base64\n\
