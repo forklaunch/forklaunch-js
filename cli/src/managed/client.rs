@@ -8,7 +8,7 @@ use crate::{
     constants::{ERROR_FAILED_TO_SEND_REQUEST, get_platform_management_api_url},
     core::{
         hmac::AuthMode,
-        http_client::{delete, get_with_auth, patch, post_unauthenticated, post_with_auth},
+        http_client::{delete, get_with_auth, patch, post_unauthenticated, post_with_auth, put},
         validate::resolve_auth,
     },
 };
@@ -325,6 +325,33 @@ pub(super) fn patch_json<T: serde::de::DeserializeOwned>(
     response
         .json()
         .with_context(|| format!("Failed to parse the response from {}", url))
+}
+
+/// PUT, tolerating a response with no body.
+///
+/// Takes no `&AuthMode` for the same reason as `patch_json` — see its note.
+///
+/// Returns `Option<Value>` rather than deserializing into a type because the variable
+/// upsert routes are being written in parallel with this CLI and it is not yet settled
+/// whether they answer `200` with the stored record or `204` with nothing. Both are
+/// reasonable for an upsert, and a CLI that failed with "expected value at line 1
+/// column 1" against the second would be reporting a parse error for a request that
+/// completely succeeded.
+pub(super) fn put_json_optional(
+    path: &str,
+    body: Value,
+    missing: Missing,
+) -> Result<Option<Value>> {
+    let url = managed_url(path);
+    let response = put(&url, body).with_context(|| ERROR_FAILED_TO_SEND_REQUEST)?;
+    let response = ensure_success(response, missing)?;
+    let text = response
+        .text()
+        .with_context(|| format!("Failed to read the response from {}", url))?;
+    if text.trim().is_empty() {
+        return Ok(None);
+    }
+    Ok(serde_json::from_str(&text).ok())
 }
 
 /// POST with NO credentials attached.
