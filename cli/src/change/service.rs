@@ -869,6 +869,32 @@ export type {pascal_case_name}EventRecord = InferEntity<
         },
     );
 
+    // mikro-orm.config.ts discovers entities through
+    // `import * as entities from './persistence/entities'`, so an entity that
+    // the barrel file does not re-export is invisible to the ORM: no migration
+    // is ever generated for it and the DatabaseWorkerConsumer has no table to
+    // read. Re-export it, the way the `init worker` template does.
+    let entities_index_path = entities_dir.join("index.ts");
+    let event_entity_export = format!("export * from './{camel_case_name}EventRecord.entity';");
+    let entities_index_content = rendered_templates_cache
+        .get(&entities_index_path)?
+        .map(|template| template.content);
+    let updated_entities_index = match entities_index_content {
+        Some(content) if content.contains(&format!("{camel_case_name}EventRecord.entity")) => None,
+        Some(content) => Some(format!("{}\n{}\n", content.trim_end(), event_entity_export)),
+        None => Some(format!("{event_entity_export}\n")),
+    };
+    if let Some(content) = updated_entities_index {
+        rendered_templates_cache.insert(
+            entities_index_path.to_string_lossy().to_string(),
+            RenderedTemplate {
+                path: entities_index_path.clone(),
+                content,
+                context: None,
+            },
+        );
+    }
+
     // Generate the event record interface type file
     let types_dir = base_path.join("domain").join("types");
     let event_record_types_path =
