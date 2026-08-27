@@ -6,6 +6,7 @@ import {
 } from '@forklaunch/blueprint-core';
 import { setupRls, setupTenantFilter } from '@forklaunch/core/persistence';
 import { codeSetRouter } from './api/routes/codeSet.routes';
+import { codeValidationRouter } from './api/routes/codeValidation.routes';
 import { complianceRouter } from './api/routes/compliance.routes';
 import { ci, tokens } from './bootstrapper';
 import { cacSdkClient } from './sdk';
@@ -40,6 +41,7 @@ const docsPath = ci.resolve(tokens.DOCS_PATH);
 
 //! mounts the routes to the app
 app.use(codeSetRouter);
+app.use(codeValidationRouter);
 app.use(complianceRouter);
 
 //! registers the sdk client

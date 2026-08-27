@@ -69,7 +69,6 @@ const mikroOrmOptionsConfig = defineConfig({
   user: validConfigInjector.resolve(tokens.DB_USER),
   password: validConfigInjector.resolve(tokens.DB_PASSWORD),
   port: validConfigInjector.resolve(tokens.DB_PORT),
-  // No entities yet — phase 1 adds Patient/Claim/etc (plan/cac/ §4).
   entities: Object.values(entities),
   discovery: {
     getMappedType(type: string, platform: Platform) {

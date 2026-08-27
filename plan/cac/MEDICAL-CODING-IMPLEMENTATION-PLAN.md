@@ -14,7 +14,7 @@
 - **Free-first still describes what ships fully built, usable by anyone with zero license:** ICD-10-CM, HCPCS, NCCI, and LCD/NCD-shaped scrubbing, using mock procedure codes — built, tested, and now also demoable through a lightweight validation UI in the separate `forklaunch-platform` repo (§10).
 - **What research corrected:** the source doc conflated NCCI code-conflict rules with diagnosis-procedure medical necessity. These are two separate CMS mechanisms with different data, cadences, and denial codes — the scrubbing engine has three distinct rule layers instead of one (§6).
 - **What's still open, not just deferred:** the Phase 0–4 week estimates are inherited from the source doc and unvalidated against actual team capacity (§11); a *meaningful* real LCD/NCD crosswalk can't exist until whichever downstream customer wires in real CPT does so themselves, even though the LCD data itself is free (§6, §12); and the `forklaunch-platform` validation UI's scope and hosting haven't been explored yet (§10, §12).
-- **How it ships:** one PR per phase, six PRs total — see §14 for the breakdown. PR 1 carries the CLI module registration and blueprint package skeleton and is already merged; PR 3 (Phase 2) remains the largest overall, now carrying the real-CPT extension point as ready-now scope rather than a deferred activation step.
+- **How it ships:** one PR per phase, six PRs total — see §14 for the breakdown. PR 1 (CLI module registration + blueprint skeleton) is merged; PR 2 (all §4 entities, the ICD-10-CM/HCPCS loaders, and the `refresh-code-sets.ts` ETL shape) is implemented alongside this plan revision. PR 3 (Phase 2) remains the largest overall, now carrying the real-CPT extension point as ready-now scope rather than a deferred activation step.
 - **Where to start:** §13 Immediate next steps.
 
 ---
@@ -390,11 +390,11 @@ Since ForkLaunch doesn't operate a hospital-facing billing product itself (§1, 
 
 1. ~~Register `Module::BaseCac` in the CLI and scaffold the three blueprint packages~~ — **done.** PR 1 merged.
 2. ~~Rewrite this plan to reflect the resolved business model (§1, §2)~~ — **done, this revision.**
-3. Explore `forklaunch-platform`'s structure and scope the validation UI (§10, §12 item 10) — not yet started.
-4. Run a sizing session against §11's phase estimates with whoever will actually staff this, before quoting any timeline externally (§12, item 5).
-5. Create a Stedi sandbox account (free) and request API credentials (§8).
-6. Finalize the `cac-base` entity schema (§4) — including the SSN/surrogate-ID decision.
-7. Extend the existing ICD-10 loader to HCPCS using the same pattern; stand up the `refresh-code-sets.ts` ETL shape (§7) even before its first scheduled run.
+3. ~~Finalize the `cac-base` entity schema (§4)~~ — **done.** All §4 entities implemented (compliance-classified via `defineComplianceEntity`, tenant-scoped via `organizationId`), including the SSN/surrogate-ID decision (`Patient.mrn` as the internal reference, `ssn` nullable/`phi`).
+4. ~~Extend the ICD-10 loader to HCPCS; stand up the `refresh-code-sets.ts` ETL shape (§7)~~ — **done.** `CodeSetLoaderService` (generic batch upsert) + `Icd10Code`/`HcpcsCode` reference tables + `loadIcd10Codes`/`loadHcpcsCodes` + the `refresh-code-sets.ts` entrypoint script are implemented and unit-tested. Pointed at local CSV fixtures today (`ICD10_SOURCE_PATH`/`HCPCS_SOURCE_PATH`) — wiring a real CMS/CDC feed (or S3) is a follow-up config change, not new ETL code, per §7.
+5. Explore `forklaunch-platform`'s structure and scope the validation UI (§10, §12 item 10) — not yet started.
+6. Run a sizing session against §11's phase estimates with whoever will actually staff this, before quoting any timeline externally (§12, item 5).
+7. Create a Stedi sandbox account (free) and request API credentials (§8).
 8. Get a coding/compliance SME to define the mock LCD/NCD crosswalk *and* the synthetic CPT-shaped fixture (§12, item 3) — both block Phase 2 and need lead time, so line this up now rather than discovering the gap mid-phase.
 9. Build the scrubbing rules engine against `MockProcedureCodeProvider`, implementing all **three** rule layers from §6 — **and, since adopting customers need it immediately rather than after a trigger, build the real-CPT extension point's reference adapter and downstream documentation to genuine readiness in the same phase (§5).**
 
@@ -407,13 +407,13 @@ One PR per phase from §11, mapped 1:1 — six PRs total (the `forklaunch-platfo
 | PR | Phase | Scope |
 |---|---|---|
 | PR 1 | Phase 0 | **CLI module registration + blueprint package skeleton (§3) — implemented and merged**, as two commits (CLI wiring, then the three blueprint packages). Stedi sandbox, HIPAA hosting/BAA, and synthetic test dataset are business/ops tasks still outstanding, not engineering |
-| PR 2 | Phase 1 | Code validation — all §4 entities, ICD-10-CM + HCPCS loaders, `refresh-code-sets.ts` ETL shape |
+| PR 2 | Phase 1 | **Code validation — implemented.** All §4 entities (+ `Icd10Code`/`HcpcsCode` reference tables), a hand-written schema migration, the `CodeSetLoaderService` ETL shape with ICD-10-CM/HCPCS loaders, `refresh-code-sets.ts`, and free-code-set validation endpoints (`GET /codeValidation/icd10/:code`, `/hcpcs/:code`) — the surface §10's `forklaunch-platform` UI calls |
 | PR 3 | Phase 2 | Claim engine, three-layer scrubbing, **and** the real-CPT extension point (reference adapter + tests against the synthetic CPT-shaped fixture) built to genuine readiness (§5) |
 | PR 4 | Phase 3 | Eligibility & remittance — 270/271, 835, 277CA/999, denial worklist |
 | PR 5 | Phase 4 | Analytics dashboard + RBAC/audit verification pass (external security review sits outside any PR, and is each adopter's own responsibility for their own deployment — §9) |
 | PR 6 | Phase 5 | Downstream-builder documentation & extension-point hardening — the README/docs explaining how to implement a real `CodeSetProvider` against a customer's own licensed CPT feed (§5, item 5), plus any polish on the reference adapter surfaced by real integration questions. No AMA contact and no "flip a flag for our own client" step — ForkLaunch doesn't operate that relationship (§2) |
 
-**PR 1 is already merged.** **PR 3 remains the largest engineering PR overall** — it carries the claim builder, all three scrubbing layers (NCCI PTP, NCCI MUE, LCD/NCD), the clearinghouse submission path, *and* the entire real-CPT extension point build (§5's readiness bar), all as ready-now scope rather than deferred activation work. Both PR 1 and PR 3 should land as a sequence of reviewable commits/checkpoints within the PR rather than a single undifferentiated diff.
+**PR 1 is already merged; PR 2 is implemented.** **PR 3 remains the largest engineering PR overall** — it carries the claim builder, all three scrubbing layers (NCCI PTP, NCCI MUE, LCD/NCD), the clearinghouse submission path, *and* the entire real-CPT extension point build (§5's readiness bar), all as ready-now scope rather than deferred activation work. Both PR 1 and PR 3 should land as a sequence of reviewable commits/checkpoints within the PR rather than a single undifferentiated diff.
 
 This count is a working estimate, same caveat as §11 and §12 item 5 — it should flex with whatever the sizing session decides, not be treated as fixed.
 

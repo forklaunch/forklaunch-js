@@ -18,6 +18,7 @@ import { MockProcedureCodeProvider } from '@forklaunch/implementation-cac-base/s
 import { ForkOptions } from '@mikro-orm/core';
 import { EntityManager, MikroORM } from '@mikro-orm/postgresql';
 import mikroOrmOptionsConfig from './mikro-orm.config';
+import { CodeValidationService } from './services/codeValidation.service';
 
 //! defines the configuration schema for the application
 const configInjector = createConfigInjector(schemaValidator, {
@@ -129,18 +130,34 @@ const serviceDependencies = runtimeDependencies.chain({
   CodeSetProvider: {
     lifetime: Lifetime.Singleton,
     type: MockProcedureCodeProvider,
-    // Skeleton-phase default — every org resolves to the free mock provider
-    // until CodeSetLicense (phase 1) and the license feature-gate (phase 2)
-    // exist to swap in CptCodeProvider. See plan/cac/ §5.
+    // Every org resolves to the free mock provider until the phase 2
+    // feature gate (§5) reads CodeSetLicense and swaps in a real connector
+    // for organizations that have wired one up. See plan/cac/ §5.
     factory: ({ OtelCollector }) => new MockProcedureCodeProvider(OtelCollector)
+  },
+  CodeValidationService: {
+    lifetime: Lifetime.Scoped,
+    type: CodeValidationService,
+    factory: ({ EntityManager, OtelCollector }) =>
+      new CodeValidationService(EntityManager, OtelCollector)
   },
   ComplianceDataService: {
     lifetime: Lifetime.Singleton,
     type: ComplianceDataService,
-    // No entities registered yet (phase 1 adds Patient/Claim/etc — see
-    // plan/cac/ §4), so there is nothing to erase/export against yet.
+    // Erase/export requests are keyed by the Patient record itself — the
+    // three entities below are the only ones with a *direct* field back to
+    // a patient id. Diagnosis/Charge/Remittance/Denial only reach a patient
+    // by walking through Encounter/Claim, which the framework's generic
+    // compliance service doesn't cascade through (single-hop by design) —
+    // out of scope for this phase, tracked in plan/cac/ §12 if it needs
+    // solving later.
     factory: ({ Orm, OtelCollector }) =>
-      new ComplianceDataService(Orm, OtelCollector, {})
+      new ComplianceDataService(Orm, OtelCollector, {
+        Patient: 'id',
+        Insurance: 'patient',
+        Encounter: 'patient',
+        Claim: 'patient'
+      })
   },
   RetentionService: {
     lifetime: Lifetime.Singleton,
