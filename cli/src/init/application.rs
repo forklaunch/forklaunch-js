@@ -57,7 +57,7 @@ use crate::{
                 AJV_VERSION, APP_DEV_BUILD_SCRIPT, APP_DEV_SCRIPT, APP_PREPARE_SCRIPT,
                 BETTER_AUTH_VERSION, BETTER_SQLITE3_VERSION, BIOME_VERSION, BUNRUN_VERSION,
                 COMMON_VERSION, CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION,
-                GLOBALS_VERSION, HUSKY_VERSION, HYPER_EXPRESS_VERSION, JEST_TYPES_VERSION,
+                GLOBALS_VERSION, HUSKY_VERSION, HYPER_EXPRESS_VERSION, UWEBSOCKETS_VERSION, JEST_TYPES_VERSION,
                 JEST_VERSION, LINT_STAGED_VERSION, MIKRO_ORM_CORE_VERSION,
                 MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
                 NODE_GYP_VERSION, OXLINT_VERSION, PRETTIER_VERSION,
@@ -1058,6 +1058,11 @@ impl CliCommand for ApplicationCommand {
                         },
                         forklaunch_hyper_express: if service_data.is_hyper_express {
                             Some(HYPER_EXPRESS_VERSION.to_string())
+                        } else {
+                            None
+                        },
+                        uwebsockets_js: if service_data.is_hyper_express {
+                            Some(UWEBSOCKETS_VERSION.to_string())
                         } else {
                             None
                         },

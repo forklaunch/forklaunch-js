@@ -47,7 +47,7 @@ use crate::{
                 ApplicationDevDependencies, ApplicationPackageJson, ApplicationScripts,
             },
             package_json_constants::{
-                BIOME_VERSION, ESLINT_VERSION, EXPRESS_VERSION, HYPER_EXPRESS_VERSION,
+                BIOME_VERSION, ESLINT_VERSION, EXPRESS_VERSION, HYPER_EXPRESS_VERSION, UWEBSOCKETS_VERSION,
                 JEST_TYPES_VERSION, JEST_VERSION, OXLINT_VERSION, PRETTIER_VERSION,
                 TS_JEST_VERSION, TYPEBOX_VERSION, TYPESCRIPT_ESLINT_VERSION, VITEST_VERSION,
                 ZOD_VERSION, application_build_script, application_clean_purge_script,
@@ -759,6 +759,7 @@ fn change_http_framework(
         let dependencies = project.dependencies.as_mut().unwrap();
         dependencies.forklaunch_express = None;
         dependencies.forklaunch_hyper_express = None;
+        dependencies.uwebsockets_js = None;
 
         match http_framework {
             HttpFramework::Express => {
@@ -766,6 +767,7 @@ fn change_http_framework(
             }
             HttpFramework::HyperExpress => {
                 dependencies.forklaunch_hyper_express = Some(HYPER_EXPRESS_VERSION.to_string());
+                dependencies.uwebsockets_js = Some(UWEBSOCKETS_VERSION.to_string());
             }
         }
     }

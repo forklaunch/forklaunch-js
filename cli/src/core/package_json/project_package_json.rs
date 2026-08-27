@@ -178,6 +178,7 @@ pub(crate) struct ProjectDependencies {
     pub(crate) forklaunch_core: Option<String>,
     pub(crate) forklaunch_express: Option<String>,
     pub(crate) forklaunch_hyper_express: Option<String>,
+    pub(crate) uwebsockets_js: Option<String>,
     pub(crate) forklaunch_implementation_billing_base: Option<String>,
     pub(crate) forklaunch_implementation_billing_stripe: Option<String>,
     pub(crate) forklaunch_interfaces_billing: Option<String>,
@@ -261,6 +262,11 @@ impl Serialize for ProjectDependencies {
         }
         if let Some(ref v) = self.forklaunch_hyper_express {
             map.serialize_entry("@forklaunch/hyper-express", v)?;
+        }
+        // Paired with hyper-express: it is a peer of that package, so the
+        // generated project has to depend on it directly.
+        if let Some(ref v) = self.uwebsockets_js {
+            map.serialize_entry("uWebSockets.js", v)?;
         }
         if let Some(ref v) = self.forklaunch_implementation_billing_base {
             map.serialize_entry("@forklaunch/implementation-billing-base", v)?;
@@ -537,6 +543,7 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
                         "@forklaunch/core" => deps.forklaunch_core = Some(value),
                         "@forklaunch/express" => deps.forklaunch_express = Some(value),
                         "@forklaunch/hyper-express" => deps.forklaunch_hyper_express = Some(value),
+                        "uWebSockets.js" => deps.uwebsockets_js = Some(value),
                         "@forklaunch/implementation-billing-base" => {
                             deps.forklaunch_implementation_billing_base = Some(value)
                         }

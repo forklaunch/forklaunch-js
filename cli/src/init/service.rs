@@ -52,7 +52,7 @@ use crate::{
                 BETTER_SQLITE3_VERSION, BILLING_BASE_VERSION, BILLING_INTERFACES_VERSION,
                 BILLING_STRIPE_VERSION, BIOME_VERSION, CAC_BASE_VERSION, CAC_INTERFACES_VERSION,
                 COMMON_VERSION, CORE_VERSION,
-                DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION, HYPER_EXPRESS_VERSION,
+                DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION, HYPER_EXPRESS_VERSION, UWEBSOCKETS_VERSION,
                 IAM_BASE_VERSION, IAM_INTERFACES_VERSION, INFRASTRUCTURE_REDIS_VERSION,
                 MESSAGING_BASE_VERSION, MESSAGING_INTERFACES_VERSION, MESSAGING_TWILIO_VERSION,
                 INFRASTRUCTURE_S3_VERSION, INTERNAL_VERSION, IOREDIS_VERSION, JOSE_VERSION,
@@ -417,6 +417,11 @@ pub(crate) fn generate_service_package_json(
                 },
                 forklaunch_hyper_express: if manifest_data.is_hyper_express {
                     Some(HYPER_EXPRESS_VERSION.to_string())
+                } else {
+                    None
+                },
+                uwebsockets_js: if manifest_data.is_hyper_express {
+                    Some(UWEBSOCKETS_VERSION.to_string())
                 } else {
                     None
                 },

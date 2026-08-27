@@ -50,8 +50,7 @@
     "openapi3-ts": "^4.6.1",
     "qs": "^6.15.3",
     "swagger-ui-dist": "^5.32.12",
-    "swagger-ui-express": "^5.0.1",
-    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.52.0"
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -72,5 +71,8 @@
     "typedoc": "^0.28.20",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "typescript-eslint": "^8.67.0"
+  },
+  "peerDependencies": {
+    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.52.0"
   }
 }

@@ -239,6 +239,11 @@ pub(crate) const CORE_VERSION: &str = "~1.5.15";
 pub(crate) const EXPRESS_VERSION: &str = "~1.2.39";
 // @forklaunch/hyper-express
 pub(crate) const HYPER_EXPRESS_VERSION: &str = "~1.2.39";
+// uWebSockets.js — a peer of @forklaunch/hyper-express rather than one of its
+// dependencies, so generated projects must declare it themselves. pnpm 11
+// blocks git-resolved SUBdependencies (ERR_PNPM_EXOTIC_SUBDEP); a direct one is
+// fine, and uWebSockets.js ships only from GitHub.
+pub(crate) const UWEBSOCKETS_VERSION: &str = "github:uNetworking/uWebSockets.js#v20.52.0";
 // @forklaunch/implementation-billing-base
 pub(crate) const BILLING_BASE_VERSION: &str = "~1.0.32";
 // @forklaunch/implementation-billing-stripe
