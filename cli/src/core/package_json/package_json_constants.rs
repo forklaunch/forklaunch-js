@@ -243,6 +243,12 @@ pub(crate) const HYPER_EXPRESS_VERSION: &str = "~1.2.39";
 pub(crate) const BILLING_BASE_VERSION: &str = "~1.0.32";
 // @forklaunch/implementation-billing-stripe
 pub(crate) const BILLING_STRIPE_VERSION: &str = "~1.2.2";
+// @forklaunch/implementation-ecommerce-base
+pub(crate) const ECOMMERCE_BASE_VERSION: &str = "~1.0.5";
+// @forklaunch/implementation-ecommerce-paypal
+pub(crate) const ECOMMERCE_PAYPAL_VERSION: &str = "~1.0.0";
+// @forklaunch/implementation-ecommerce-stripe
+pub(crate) const ECOMMERCE_STRIPE_VERSION: &str = "~1.0.0";
 // @forklaunch/implementation-iam-base
 pub(crate) const IAM_BASE_VERSION: &str = "~1.0.32";
 // @forklaunch/implementation-messaging-base
@@ -265,6 +271,8 @@ pub(crate) const INFRASTRUCTURE_REDIS_VERSION: &str = "~1.4.10";
 pub(crate) const INFRASTRUCTURE_S3_VERSION: &str = "~1.4.10";
 // @forklaunch/interfaces-billing
 pub(crate) const BILLING_INTERFACES_VERSION: &str = "~1.0.31";
+// @forklaunch/interfaces-ecommerce
+pub(crate) const ECOMMERCE_INTERFACES_VERSION: &str = "~1.0.5";
 // @forklaunch/interfaces-iam
 pub(crate) const IAM_INTERFACES_VERSION: &str = "~1.0.30";
 // @forklaunch/interfaces-messaging
@@ -435,15 +443,22 @@ pub(crate) fn project_test_script(
 }
 
 pub(crate) fn project_migrate_script(command: &str) -> String {
-    let base = "[ -z $DOTENV_FILE_PATH ] && export DOTENV_FILE_PATH=.env.local; NODE_OPTIONS='--import=tsx' mikro-orm migration:";
+    let env = "[ -z $DOTENV_FILE_PATH ] && export DOTENV_FILE_PATH=.env.local;";
+    let orm = "NODE_OPTIONS='--import=tsx' mikro-orm";
+    let base = format!("{} {} migration:", env, orm);
     match command {
         "create" => format!("{}{}", base, "create"),
         "down" => format!("{}{}", base, "down"),
+        // The migrations directory is named per database driver
+        // (migrations-postgresql, migrations-mysql, ...), so the guard has to
+        // glob for any of them. Checking a hardcoded `migrations/` never
+        // matched, and re-running create --initial against an existing
+        // migration is an error rather than a no-op.
         "init" => format!(
-            "if [ ! -f migrations/Migration* ]; then {}{}; fi",
+            "if ! ls migrations*/Migration* >/dev/null 2>&1; then {}{}; fi",
             base, "create --initial"
         ),
-        "up" => format!("{}{}", base, "up"),
+        "up" => format!("{}up", base),
         _ => panic!("Unsupported migration command"),
     }
 }
@@ -504,7 +519,7 @@ pub(crate) fn project_dev_local_worker_script(
 ) -> String {
     String::from(match runtime {
         Runtime::Bun => format!(
-            "{}DOTENV_FILE_PATH=.env.local bun --watch server.ts && DOTENV_FILE_PATH=.env.local bun --watch worker.ts",
+            "{}DOTENV_FILE_PATH=.env.local bun --watch server.ts & DOTENV_FILE_PATH=.env.local bun --watch worker.ts",
             if database.is_some_and(|db| db != Database::MongoDB) {
                 "DOTENV_FILE_PATH=.env.local bun run migrate:up && "
             } else {
@@ -512,7 +527,7 @@ pub(crate) fn project_dev_local_worker_script(
             }
         ),
         Runtime::Node => format!(
-            "{}DOTENV_FILE_PATH=.env.local pnpm tsx watch server.ts && DOTENV_FILE_PATH=.env.local pnpm tsx watch worker.ts",
+            "{}DOTENV_FILE_PATH=.env.local pnpm tsx watch server.ts & DOTENV_FILE_PATH=.env.local pnpm tsx watch worker.ts",
             if database.is_some_and(|db| db != Database::MongoDB) {
                 "DOTENV_FILE_PATH=.env.local pnpm migrate:up && "
             } else {

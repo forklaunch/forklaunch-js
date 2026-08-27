@@ -540,6 +540,11 @@ pub(crate) const ERROR_FAILED_TO_CREATE_DATABASE_EXPORT_INDEX_TS: &str =
     "Failed to create database export index.ts in core/persistence.";
 pub(crate) const ERROR_FAILED_TO_CREATE_LIBRARY_PACKAGE_JSON: &str =
     "Failed to create library package.json.";
+pub(crate) const ERROR_FAILED_TO_READ_STOREFRONT_MANIFEST: &str =
+    "Failed to read the storefront manifest.json. Please check the --from path is correct.";
+pub(crate) const ERROR_FAILED_TO_PARSE_STOREFRONT_MANIFEST: &str = "Failed to parse the storefront manifest.json. Please verify the file is valid json produced by the storefront capture tool.";
+pub(crate) const ERROR_STOREFRONT_PROJECT_ALREADY_EXISTS: &str = "A project directory with this name already exists. Please choose a different name or remove the existing directory.";
+pub(crate) const ERROR_FAILED_TO_COPY_STOREFRONT_SITE: &str = "Failed to copy captured storefront site assets. Please check the source site/ directory and target directory are accessible.";
 pub(crate) const ERROR_FAILED_TO_ADD_SERVICE_METADATA_TO_ARTIFACTS: &str =
     "Failed to add service metadata to artifacts.";
 pub(crate) const ERROR_FAILED_TO_UPDATE_APPLICATION_PACKAGE_JSON: &str =
@@ -600,6 +605,9 @@ pub(crate) fn get_service_module_cache(service_type: &Module) -> Option<String> 
         Module::BaseMessaging | Module::TwilioMessaging => {
             Some(Infrastructure::Redis.to_string())
         }
+        // The ecommerce blueprint reads REDIS_URL at startup for both the cart
+        // cache and the order-event queue, and exits if it is unset.
+        Module::StripeEcommerce => Some(Infrastructure::Redis.to_string()),
         _ => None,
     }
 }
@@ -616,3 +624,37 @@ pub(crate) const DIRS_TO_IGNORE: &[&str] = &[
     "core",
     "client-sdk",
 ];
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Every module whose blueprint reads REDIS_URL at startup must declare a
+    /// cache resource, otherwise `init module` writes a manifest with no Redis
+    /// in it and the scaffolded project cannot boot once deployed.
+    #[test]
+    fn modules_needing_redis_declare_a_cache_resource() {
+        for module in [
+            Module::BaseBilling,
+            Module::StripeBilling,
+            Module::BaseMessaging,
+            Module::TwilioMessaging,
+            Module::StripeEcommerce,
+        ] {
+            assert_eq!(
+                get_service_module_cache(&module),
+                Some(Infrastructure::Redis.to_string()),
+                "{module:?} needs a Redis cache resource in its manifest"
+            );
+        }
+    }
+
+    /// The iam modules wire no cache, so the helper must keep returning None
+    /// for them rather than handing every module a Redis resource it will
+    /// never use.
+    #[test]
+    fn modules_without_a_cache_declare_none() {
+        assert_eq!(get_service_module_cache(&Module::BaseIam), None);
+        assert_eq!(get_service_module_cache(&Module::BetterAuthIam), None);
+    }
+}
