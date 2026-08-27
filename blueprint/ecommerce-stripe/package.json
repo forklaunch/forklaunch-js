@@ -18,6 +18,7 @@
     "build": "tsgo -b",
     "clean": "rm -rf dist tsconfig.tsbuildinfo pnpm.lock.yaml node_modules",
     "dev": "pnpm run migrate:up && pnpm tsx watch server.ts",
+    "dev:worker": "pnpm tsx watch worker.ts",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
     "lint": "eslint . -c eslint.config.mjs",
@@ -28,8 +29,8 @@
     "migrate:up": "NODE_OPTIONS='--import=tsx' mikro-orm migration:up",
     "prepack": "pnpm run build",
     "start": "DOTENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' node dist/server.js",
-    "test": "vitest --passWithNoTests",
-    "worker": "pnpm tsx watch worker.ts"
+    "start:worker": "DOTENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' node dist/worker.js",
+    "test": "vitest --passWithNoTests"
   },
   "dependencies": {
     "@forklaunch/blueprint-core": "workspace:^",
@@ -40,8 +41,12 @@
     "@forklaunch/express": "^1.2.39",
     "@forklaunch/hyper-express": "^1.2.39",
     "@forklaunch/implementation-ecommerce-base": "workspace:^",
+    "@forklaunch/implementation-ecommerce-paypal": "workspace:^",
+    "@forklaunch/implementation-ecommerce-stripe": "workspace:^",
+    "@forklaunch/implementation-worker-redis": "workspace:^",
     "@forklaunch/infrastructure-redis": "^1.4.10",
     "@forklaunch/interfaces-ecommerce": "workspace:^",
+    "@forklaunch/interfaces-worker": "workspace:^",
     "@forklaunch/validator": "^1.2.24",
     "@mikro-orm/core": "^7.1.11",
     "@mikro-orm/migrations": "^7.1.11",
