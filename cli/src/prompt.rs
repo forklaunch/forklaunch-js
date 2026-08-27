@@ -203,8 +203,10 @@ pub(crate) fn prompt_comma_separated_list(
                         .collect::<Vec<&&str>>()
                         .as_slice(),
                 );
+                // dialoguer 0.12 takes the item iterator by value; passing a
+                // reference yields `&(T, bool)` where `(T, bool)` is required.
                 multi_select = multi_select.items_checked(
-                    &active_options
+                    active_options
                         .iter()
                         .map(|v| (*v, true))
                         .collect::<Vec<_>>(),
