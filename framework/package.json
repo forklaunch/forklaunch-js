@@ -29,8 +29,8 @@
     "@changesets/cli": "^2.31.1",
     "@types/jest": "^30.0.0",
     "@types/node": "^26.2.0",
-    "eslint": "^10.8.1",
-    "globals": "^17.9.0",
+    "eslint": "^10.9.0",
+    "globals": "^17.11.0",
     "jest": "^30.4.2",
     "lint-staged": "^17.3.0",
     "prettier": "^3.9.6",
@@ -40,7 +40,7 @@
     "typedoc": "^0.28.20",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "typescript-eslint": "^8.67.0",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   },
   "dependencies": {
     "@eslint/js": "^10.0.1"
