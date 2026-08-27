@@ -30,7 +30,7 @@
     "@forklaunch/core": "workspace:^",
     "@forklaunch/express": "workspace:^",
     "@forklaunch/hyper-express": "workspace:^",
-    "@forklaunch/hyper-express-fork": "^6.17.35",
+    "@forklaunch/hyper-express-fork": "^6.18.1",
     "@forklaunch/universal-sdk": "workspace:^",
     "@forklaunch/validator": "workspace:^",
     "@sinclair/typebox": "^0.34.52",
