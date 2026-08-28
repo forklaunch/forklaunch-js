@@ -457,8 +457,14 @@ pub(crate) fn project_migrate_script(command: &str) -> String {
         // glob for any of them. Checking a hardcoded `migrations/` never
         // matched, and re-running create --initial against an existing
         // migration is an error rather than a no-op.
+        // A module may legitimately have no entities yet — the cac skeleton
+        // ships `export {}` until its entities land — and MikroORM treats an
+        // empty entity set as a hard error ("No entities found, please use
+        // `entities` option") rather than as nothing to do. Guarding on
+        // *.entity.ts keeps migrate:init a no-op for such a module instead of
+        // failing the whole scaffold.
         "init" => format!(
-            "if ! ls migrations*/Migration* >/dev/null 2>&1; then {}{}; fi",
+            "if ! ls migrations*/Migration* >/dev/null 2>&1 && ls persistence/entities/*.entity.ts >/dev/null 2>&1; then {}{}; fi",
             base, "create --initial"
         ),
         "up" => format!("{}up", base),

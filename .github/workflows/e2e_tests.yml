@@ -97,8 +97,13 @@ jobs:
         id: pnpm-store
         run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
 
-      - name: Cache pnpm store
-        uses: actions/cache@v6
+      # Split restore/save rather than plain actions/cache, which skips its
+      # post-save step whenever the job fails. That is the wrong way round
+      # here: a red run still populates the store, and it is precisely while
+      # CI is failing that the next attempt most wants a warm cache.
+      - name: Restore pnpm store
+        id: pnpm-cache
+        uses: actions/cache/restore@v6
         with:
           path: ${{ steps.pnpm-store.outputs.path }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('cli/src/core/package_json/package_json_constants.rs') }}
@@ -149,3 +154,13 @@ jobs:
             fi
           done
           echo "[SUCCESS] All $test_count tests passed in group: ${{ matrix.name }}"
+
+      # A content-addressed store, so saving a partially populated one is safe:
+      # entries are immutable and keyed by hash, and the next run reuses
+      # whatever made it in.
+      - name: Save pnpm store
+        if: always() && steps.pnpm-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('cli/src/core/package_json/package_json_constants.rs') }}

@@ -12,7 +12,7 @@ mkdir -p output/migration-test
 cd output/migration-test
 
 echo "Initializing Application..."
-RUST_BACKTRACE=1 $FL -- init application migration-app \
+RUST_BACKTRACE=1 $FL init application migration-app \
   -p . \
   -o src/modules \
   -d postgresql \
@@ -28,13 +28,13 @@ RUST_BACKTRACE=1 $FL -- init application migration-app \
   -m
 
 echo "Initializing Service..."
-RUST_BACKTRACE=1 $FL -- init service my-service \
+RUST_BACKTRACE=1 $FL init service my-service \
   -p . \
   -d postgresql \
   -D "Original Service"
 
 echo "Migrating Service to Worker..."
-RUST_BACKTRACE=1 $FL -- change service \
+RUST_BACKTRACE=1 $FL change service \
   --path src/modules/my-service \
   --to worker \
   --type bullmq \
@@ -46,7 +46,7 @@ if [ ! -f "src/modules/my-service/worker.ts" ]; then
 fi
 
 echo "Migrating Worker to Service..."
-RUST_BACKTRACE=1 $FL -- change worker \
+RUST_BACKTRACE=1 $FL change worker \
   --path src/modules/my-service \
   --to service \
   -c
