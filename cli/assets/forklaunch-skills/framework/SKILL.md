@@ -118,13 +118,17 @@ export const deleteItem = handlers.delete(
     auth: {
       /* ... */
     },
-    responses: { 204: string, 404: string },
+    responses: { 200: string, 404: string },
   },
   async (req, res) => {
-    res.status(204).send("Deleted");
+    res.status(200).send("Deleted");
   },
 );
 ```
+
+A `204` response must never declare or send a body — use `200: string` (as above) for a
+confirmation message, or `responses: { 204: ... }` paired with `res.status(204).send()` (no
+argument) if the contract genuinely has no body.
 
 ### Response Contract Rules
 

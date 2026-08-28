@@ -170,9 +170,15 @@ reads through `EncryptedType` will either return them as-is or fail to decrypt.
 **MUST**: ship a data migration in the same change that rewrites existing rows
 through the same encryption path the entity now uses (`FieldEncryptor` /
 `EncryptionService`, under the correct per-tenant context — see the symmetry
-rule below). The migration must be idempotent: detect already-encrypted values
-(`v1:`/`v2:` prefix) and skip them. A schema-only migration that alters the
-column but leaves old plaintext values in place is not acceptable.
+rule below). The migration must be idempotent: a `v1:`/`v2:` prefix alone is
+not proof a value is already (validly) encrypted — a malformed or
+wrong-tenant-key value can carry the same prefix. Under the correct tenant
+context, attempt `FieldEncryptor.decrypt`/`EncryptionService` decryption first;
+skip the row only if that decryption authenticates and parses successfully,
+and encrypt it (even if prefixed) if decryption fails. Cover this with tests
+for plaintext values, well-formed `v1:`/`v2:` values, and malformed values
+carrying either prefix. A schema-only migration that alters the column but
+leaves old plaintext values in place is not acceptable.
 
 ## Tenant Isolation
 

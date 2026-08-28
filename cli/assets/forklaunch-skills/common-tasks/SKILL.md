@@ -190,11 +190,17 @@ export class WidgetService {
       description: string;
       status: WidgetStatusEnum;
     }>;
+    organizationId: string;
     em: EntityManager;
   }): Promise<Widget | null> {
-    const { id, data, em } = params;
-    const widget = await em.findOne(Widget, { id });
+    const { id, data, organizationId, em } = params;
+    const widget = await em.findOne(
+      Widget,
+      { id },
+      { populate: ["application"] },
+    );
     if (!widget) return null;
+    if (widget.application.organizationId !== organizationId) return null;
     em.assign(widget, data);
     return widget;
   }
@@ -312,6 +318,7 @@ export const getWidget = handlers.get(
     responses: {
       200: WidgetSchemas.WidgetResponseSchema,
       401: string,
+      403: string,
       404: string,
     },
   },
@@ -358,6 +365,7 @@ export const updateWidget = handlers.patch(
     const result = await widgetFactory().updateWidget({
       id: req.params.id,
       data: req.body,
+      organizationId: req.session.organizationId,
       em,
     });
     if (!result) {

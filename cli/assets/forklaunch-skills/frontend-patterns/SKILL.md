@@ -30,11 +30,22 @@ In ForkLaunch Studio generated apps, the client is usually `apps/client` with Vi
 
 ## Running
 
+**Legacy Next.js dashboard app** (`client/` — not Studio-generated apps, see the override above):
+
 ```bash
 cd client && pnpm install    # Install frontend deps
 cd client && pnpm dev        # Next.js dev server (default: localhost:3000)
 cd client && pnpm tsc --noEmit   # Type check (pre-existing errors in resource explorers — ignore those)
 cd client && pnpm build      # Production build
+```
+
+**Studio-generated apps** (`apps/client/` — Vite + React + TanStack Router):
+
+```bash
+cd apps/client && pnpm install
+cd apps/client && pnpm dev       # Vite dev server
+cd apps/client && pnpm tsc --noEmit
+cd apps/client && pnpm build
 ```
 
 **Prerequisite:** Backend services must be running (`docker compose up -d` + `pnpm dev` from repo root or individual modules).

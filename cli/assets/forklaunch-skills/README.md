@@ -4,11 +4,16 @@ Skills that teach Claude Code (and developers) how to build with, and operate, F
 
 ## Agent Behavior (applies to every skill, not just the one you're reading)
 
-**CLI-first, API-fallback.** For anything that talks to the ForkLaunch control plane —
-deployments, logs, alerts, infrastructure, issues — try the matching `fl` command first. Only
-call the platform API directly if no CLI command covers the action yet, or the CLI command fails.
-The CLI already handles auth (`fl login`), retries, and consistent output; a raw API call skips
-all of that.
+**CLI-first, API-fallback — but never blindly retry a mutation.** For anything that talks to the
+ForkLaunch control plane — deployments, logs, alerts, infrastructure, issues — try the matching
+`fl` command first. If no CLI command covers the action yet, or a **read-only** command fails
+(a `GET`/list/status check), falling back to a direct API call is safe — reads have no side
+effects to duplicate. If a **mutating** command fails (create, deploy, delete, anything that
+changes state), the request may have already been accepted server-side before the CLI itself
+failed (a timeout, a dropped connection) — check whether it actually landed first (the matching
+`fl ... info`/list/status command) before resubmitting through the API or retrying at all. The CLI
+already handles auth (`fl login`) and consistent output for what it covers; a raw API call skips
+that, and skips nothing about the risk of a duplicate write.
 
 **Every operation ends with a plain-language summary — not something the user has to ask for.**
 Whatever technical work happened above it (commands run, files changed, errors seen), close with

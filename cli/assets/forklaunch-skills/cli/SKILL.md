@@ -561,7 +561,9 @@ forklaunch change router --path ./src/modules/billing --add-mappers
 
 ### 3. Delete Commands (`delete`)
 
-Remove project components safely.
+Remove project components. **Destructive — get explicit user approval before running any of
+these**, and confirm the exact target (service/worker/library/router name) they approved, not just
+that "delete something" was approved.
 
 ```bash
 # Delete service
@@ -576,6 +578,11 @@ forklaunch delete library <library_name>
 # Delete router (use --path to specify the service directory)
 forklaunch delete router <router_name> --path <service_directory>
 
+# Options:
+-c, --continue         # Continue/skip the eject confirmation prompt — only pass this after
+                        # approval already covers the exact target above; it removes the CLI's
+                        # own safety prompt, not the need for yours.
+
 # Examples:
 forklaunch delete service old-billing
 forklaunch delete worker deprecated-processor
@@ -584,20 +591,32 @@ forklaunch delete router legacy-api --path ./src/modules/platform-management
 
 ### 4. Deploy Commands (`deploy`)
 
-Deploy applications to the cloud.
+Deploy applications to the cloud. `deploy` has subcommands — there is no bare `forklaunch deploy`.
+Deploying is also effectively irreversible in the moment (see rollback caveats elsewhere in this
+file) — get explicit approval for the exact release/environment/region before running `create`.
 
 ```bash
-forklaunch deploy
+forklaunch deploy create --release <version> --environment <name> --region <region>
 
-# Options:
---environment <name>    # Environment to deploy to (dev, staging, prod)
---region <region>       # AWS region
---dry-run              # Preview deployment plan
---auto-approve         # Skip confirmation prompts
+# Required:
+--release <version>     # Release version to deploy (alias: -v/--version)
+--environment <name>    # Environment name (dev, staging, production)
+--region <region>       # AWS region (e.g. us-east-1)
+
+# Other options:
+--dry-run              # Preview only — does not deploy, so it doesn't need approval on its own
+--full                 # Force a full deployment with Pulumi state refresh
+--no-wait              # Don't wait for deployment to complete
+--cluster-type <type>  # platform-shared | org-shared | dedicated (first deploy to an env/region only)
+
+# There is no --auto-approve; a missing required env var (e.g. ENCRYPTION_KEY) can still drop the
+# command into a blocking interactive prompt on a real TTY — see the ENCRYPTION_KEY notes below.
 
 # Examples:
-forklaunch deploy --environment staging --region us-east-1
-forklaunch deploy --environment production --dry-run
+forklaunch deploy create --release 1.2.0 --environment staging --region us-east-1
+forklaunch deploy create --release 1.2.0 --environment production --dry-run
+forklaunch deploy info -v <version>      # status of a deployment
+forklaunch deploy destroy ...            # tear down application infrastructure
 ```
 
 ### 5. Environment Commands (`environment`)
@@ -680,26 +699,20 @@ forklaunch integrate aws --access-key-id ... --secret-access-key ...
 
 ### 8. OpenAPI Commands (`openapi`)
 
-Generate OpenAPI specifications from your code.
+Export OpenAPI specifications from your code. There is no `generate` or `validate` subcommand —
+only `export`.
 
 ```bash
-# Generate OpenAPI specs for all services
-forklaunch openapi generate
-
-# Generate for specific service
-forklaunch openapi generate --service <service_name>
-
-# Validate OpenAPI specs
-forklaunch openapi validate
+# Export OpenAPI specs for the application
+forklaunch openapi export
 
 # Options:
---output <path>        # Output directory (default: .forklaunch/openapi)
---version <version>    # OpenAPI version (3.0, 3.1)
+-p, --path <base_path>  # Path to application root (optional)
+-o, --output <output>   # Output directory (default: .forklaunch/openapi)
 
 # Examples:
-forklaunch openapi generate
-forklaunch openapi generate --service platform-management
-forklaunch openapi validate
+forklaunch openapi export
+forklaunch openapi export --output ./specs
 ```
 
 ### 9. SDK Commands (`sdk`)
@@ -834,11 +847,15 @@ config store, because a deploy regenerates infrastructure from it:
 
 **If it has already happened**
 
-- Task definitions hold every env value in plaintext and the correct secret ARNs — they are the
-  best source of truth for reconstruction (`aws ecs describe-task-definition`).
-- Overwritten (not deleted) parameters are recoverable from history:
-  `aws ssm get-parameter-history --name <param> --with-decryption` — match by
-  `LastModifiedDate` around the push, and restore the version that predates it.
+- Task definitions hold the correct secret ARNs and non-secret env values — use them to identify
+  which keys and versions need restoring (`aws ecs describe-task-definition`). For any container
+  env entry that is itself a secret ARN reference, restore by ARN/version, not by reading the
+  plaintext value.
+- Overwritten (not deleted) parameters are recoverable from history. First list versions without
+  decrypting: `aws ssm get-parameter-history --name <param>` — match the version by
+  `LastModifiedDate` around the push. Only add `--with-decryption` for a specific parameter and
+  version you've already identified, and never paste the decrypted value into chat, logs, or a
+  committed file — pipe it straight into the restore command.
 - Fix the config store BEFORE deploying again, or the deploy will re-apply the damaged state and
   undo any ECS/IAM repair.
 

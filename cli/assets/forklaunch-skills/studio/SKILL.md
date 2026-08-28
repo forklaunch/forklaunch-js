@@ -16,7 +16,7 @@ Studio is a **backend-driven** service at `studio-orchestrator`. The planning pr
 
 ### Pipeline
 
-```
+```text
 User prompt
     ↓
 PLANNING PHASE (same harness as dashboard chat planning mode)
@@ -40,7 +40,7 @@ COMPLETE (resumable from any point via S3)
 Every phase and step checkpoints to S3. If the browser disconnects or the user navigates away, the session survives. On reconnect, the frontend loads the session state and resumes from the last checkpoint.
 
 Session state is stored at:
-```
+```text
 applications/{appId}/studio/sessions/{sessionId}/state.json
 ```
 
@@ -87,7 +87,7 @@ Studio handles three scenarios:
 
 ### Architecture
 
-```
+```text
 @forklaunch-platform/core/
 ├── prompts/planning.constants.ts    ← shared planning prompt (single source of truth)
 ├── prompts/harness.constants.ts     ← optimist/pessimist/synthesizer personas
