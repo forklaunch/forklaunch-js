@@ -87,11 +87,14 @@ crashed at boot showed `completed`/`running` throughout, with zero trace of the 
 `observe logs` query (default or `--source cloudwatch`, with or without `--since`) — the only way
 to catch it was hitting the live URL directly and noticing the response didn't match what the new
 code should do. If the user says "I deployed a fix and it's not showing up" and everything above
-reports healthy, don't stop there — hit the service's actual endpoint (see
-[Did my change actually land?](#did-my-change-actually-land)) and check whether the *behavior*
-matches the new release, not just its reported status. Say this plainly if you hit it: "the
-platform reports this deploy as successful, but the running behavior doesn't match — this looks
-like a silent rollback the tooling can't currently detect."
+reports healthy, don't stop there — but don't unilaterally send requests to the live service either:
+there's no `fl` command for this (see [Did my change actually
+land?](#did-my-change-actually-land)), and probing an arbitrary endpoint yourself risks real side
+effects on the customer's actual app (a `POST` isn't guaranteed side-effect-free). Ask the user to
+check the specific behavior the new release should show, or to confirm a safe read-only endpoint
+you can call together. Say this plainly if the reported status and the actual behavior disagree:
+"the platform reports this deploy as successful, but the running behavior doesn't match — this
+looks like a silent rollback the tooling can't currently detect."
 
 **Known CLI gap: no way to see a deployment's own build/infra log stream.** The dashboard has a
 live "Deployment Logs" panel (the full Pulumi/build output, with info/warn/error counts) for every
@@ -254,24 +257,27 @@ feature flag) doesn't seem to be reflected in the running app. Diagnosis order:
    *latest* one, not superseded or still in progress.
 2. `forklaunch observe logs -e <environment> -s <service> --source cloudwatch` — check the
    service's actual boot logs for the config value in question, if it's ever logged at startup.
-2.5. `forklaunch config pull -e <environment> -r <region> -s <service> -o <file>` — pulls the
+2.5. `forklaunch config pull -e <environment> -r <region> -s <service> -o <file>` pulls the
    **actual, unmasked** current values (secrets included) for that scope, not just the ones the
-   user set explicitly. This matters because the value a service actually uses may not be the one
-   you'd expect: a connection-string var (e.g. `DB_URL`) can embed its own credential that's
-   independent of a discrete var (e.g. `DB_PASSWORD`) sitting right next to it — confirmed
-   empirically: overriding `DB_PASSWORD` alone had zero effect because the app's ORM used `DB_URL`,
-   which carries a separately-managed password. If "my override didn't do anything" doesn't make
-   sense, pull the real values and check whether a broader var is actually in control. Delete the
-   pulled file afterward — it contains real secrets, don't leave it lying around.
+   user set explicitly — useful because the value a service actually uses may not be the one
+   you'd expect (a connection-string var like `DB_URL` can embed its own credential, independent
+   of a discrete var like `DB_PASSWORD` sitting right next to it — confirmed empirically:
+   overriding `DB_PASSWORD` alone had zero effect because the app's ORM used `DB_URL` instead).
+   **This writes real secrets to a plain file — treat it as a mutation, not a free read.** Get the
+   user's explicit go-ahead before running it, same as any other sensitive action. Write it to a
+   private temp location (e.g. `mktemp`, not a path inside the project directory), and delete it
+   immediately after you've read what you needed — never print its contents into chat or logs.
+   Note what `config pull` does **not** give you: there's no timestamp field anywhere in its
+   output, only current values — it cannot tell you *when* a value was last changed (see the gap
+   below).
 3. **Known CLI gap:** the platform has a dedicated API
    (`GET /services/:id/runtime-status`) that directly answers "does the config the platform has
    pushed match what's running on the live task" (`configPushedAt` vs. the running task's start
-   time), but **no CLI command wraps it yet**. Until one exists, the closest available signal is
-   comparing `deploy info`'s deployment timestamp against when the config was last changed
-   (`forklaunch config pull -e <environment> -r <region>` for the current pushed values) — if the config was
-   pushed *after* the latest deployment's task started, a fresh deploy is very likely the fix.
-   Say this plainly to the user rather than guessing: "the platform can answer this more directly
-   than I currently can — a new deploy will pick up the latest config regardless."
+   time), but **no CLI command wraps it yet**, and `config pull` cannot substitute for it — its
+   output has no push timestamp to compare against a deployment time. Until a real command exists,
+   there is no reliable CLI-only way to answer "did this specific config change land." Say this
+   plainly to the user rather than guessing: "the platform can answer this more directly than I
+   currently can — if you're unsure, a fresh deploy will pick up the latest config regardless."
 
 ## Reference: command → what it answers
 
