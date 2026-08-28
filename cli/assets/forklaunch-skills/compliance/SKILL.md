@@ -28,7 +28,7 @@ Use when the user asks about:
 The compliance framework is enforced at the framework level — architecturally impossible to skip:
 
 1. **`fp` property builder** — Proxy over MikroORM's `p` that requires `.compliance()` classification on every scalar field
-2. **`defineComplianceEntity`** — Validates all properties have compliance classification at compile time
+2. **`defineComplianceEntity`** — Validates all properties have compliance classification at **compile time** via `ValidateProperties<T>` generic
 3. **Access levels** — Required on every route handler (`public`, `authenticated`, `protected`, `internal`)
 4. **Field encryption** — AES-256-GCM with per-tenant HKDF key derivation for PII/PHI/PCI fields where configured
 5. **Tenant isolation** — MikroORM global filter (mandatory) + optional PostgreSQL RLS
@@ -54,6 +54,8 @@ export const UserEntity = defineComplianceEntity({
     name: fp.string().compliance("pii"),
     ssn: fp.string().nullable().compliance("phi"),
     cardNumber: fp.string().nullable().compliance("pci"),
+    loginCount: fp.integer().default(0).compliance("none"),
+    riskScore: fp.double().nullable().compliance("none"),
     role: fp.enum(() => RoleEnum).compliance("none"),
     metadata: fp.json<Metadata>().nullable().compliance("none"),
 
@@ -81,10 +83,20 @@ export const UserEntity = defineComplianceEntity({
 - **Base properties** (`createdAt`, `updatedAt`, etc.) in `defineBaseProperties` must also use `fp` with `.compliance('none')`
 - Omitting `.compliance()` on a scalar is a **compile-time error**
 
+### Numeric Builder Rules
+
+Do not write `fp.number()` unless the generated persistence package actually exports it. In current generated ForkLaunch entities:
+
+- Use `fp.integer()` for whole-number fields: counts, limits, retries, priorities, CPU/memory sizes, concurrency, age-like integer values.
+- Use `fp.double()` for decimal fields: currency amounts, percentages, scores, measurements, ratios.
+- Validator schemas still use the `number` primitive from `@<app-name>/core`; that does not imply an `fp.number()` entity builder exists.
+- If a numeric field's shape is ambiguous, copy the nearest generated entity pattern rather than inventing a builder.
+
 ### `defineComplianceEntity` vs `defineEntity`
 
 - `defineComplianceEntity` — Validates all properties have compliance classification. **Use this for all entities.**
-- `defineEntity` — No compliance validation. Only for framework internals or third-party entities.
+- `defineEntity` — No compliance validation. Only for framework internals or third-party entities. Do not import `defineEntity` from `@forklaunch/core/persistence` in Studio-generated services; recent generated persistence packages do not export it there.
+- For catalog/reference data with no sensitive fields, still use `defineComplianceEntity` and classify scalar fields as `"none"`.
 
 The return type of `defineComplianceEntity` is identical to `defineEntity` — the `ClassifiedProperty` wrapper is stripped at the type level. MikroORM sees the same entity structure.
 
@@ -147,6 +159,20 @@ EncryptionService: {
   factory: ({ ENCRYPTION_KEY }) => new EncryptionService(ENCRYPTION_KEY),
 },
 ```
+
+### Reclassifying an existing field (MUST migrate existing data)
+
+Changing a field's classification (e.g. `.compliance("none")` →
+`.compliance("pii")`) or otherwise enabling encryption on it only affects rows
+written **after** the change — rows already in the database stay plaintext, and
+reads through `EncryptedType` will either return them as-is or fail to decrypt.
+
+**MUST**: ship a data migration in the same change that rewrites existing rows
+through the same encryption path the entity now uses (`FieldEncryptor` /
+`EncryptionService`, under the correct per-tenant context — see the symmetry
+rule below). The migration must be idempotent: detect already-encrypted values
+(`v1:`/`v2:` prefix) and skip them. A schema-only migration that alters the
+column but leaves old plaintext values in place is not acceptable.
 
 ## Tenant Isolation
 

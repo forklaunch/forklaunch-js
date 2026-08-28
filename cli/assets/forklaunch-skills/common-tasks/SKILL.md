@@ -6,6 +6,20 @@ user-invokable: true
 
 # ForkLaunch Common Tasks
 
+## Studio Scaffold Note
+
+Some examples in this skill are legacy class-entity examples. In current Studio-generated services, prefer the local scaffold's generated shape:
+
+- Schemas use natural object notation from `@<app-name>/core`.
+- Nullable schema fields use sibling patterns such as `optional(string.nullable())`; do not invent `nullish(...)`.
+- Entities use `defineComplianceEntity` with `fp` builders. Do not import `defineEntity` from `@forklaunch/core/persistence`.
+- Numeric persistence fields use `fp.integer()` or `fp.double()`, not `fp.number()`.
+- `enum_` takes an enum object/record, not a readonly array.
+- Handler `responses` must match the JSON returned. If domain response schemas replace the starter `{ message }` schema, update/remove the starter handlers too, or keep separate starter schemas for legacy scaffold tests.
+- Controller calls must match service signatures. If the service expects a command object, pass `req.body` or an explicit object assembled from params/body/session, not a single primitive field.
+- Many current Studio services use schema-derived request/response DTOs directly in their service interfaces. Follow sibling generated services; do not add mappers or force entity-return services unless that module already uses mappers.
+- During live Studio repair, ignore watch-mode restart noise (`Restarting`, shutdown spam, force-kill after 5s, MaxListeners warnings) when the service starts again. Fix scoped build/type errors first.
+
 ## When to Use This Skill
 
 Use for step-by-step guides to common development tasks.
@@ -155,13 +169,18 @@ export class WidgetService {
 
   async getWidget(params: {
     id: string;
+    organizationId: string;
     em: EntityManager;
   }): Promise<Widget | null> {
-    return params.em.findOne(
+    const { id, organizationId, em } = params;
+    const widget = await em.findOne(
       Widget,
-      { id: params.id },
+      { id },
       { populate: ["application"] },
     );
+    if (!widget) return null;
+    if (widget.application.organizationId !== organizationId) return null;
+    return widget;
   }
 
   async updateWidget(params: {
@@ -298,7 +317,15 @@ export const getWidget = handlers.get(
   },
   async (req, res) => {
     const em = emFactory({ context: { tenantId: req.session.organizationId } });
-    const result = await widgetFactory().getWidget({ id: req.params.id, em });
+    const organizationId = req.session.organizationId;
+    if (!organizationId) {
+      return res.status(403).send("Organization ID not found in session");
+    }
+    const result = await widgetFactory().getWidget({
+      id: req.params.id,
+      organizationId,
+      em,
+    });
     if (!result) {
       res.status(404).send("Widget not found");
       return;
@@ -488,7 +515,7 @@ import { useRouter } from "next/navigation"
 import { useApi } from "@/lib/hooks/use-api"
 import { platformApi } from "@/lib/api"
 import { useAuth } from "@/contexts/auth-context"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -498,7 +525,6 @@ import { Plus } from "lucide-react"
 export default function WidgetsPage() {
   const router = useRouter()
   const { getToken } = useAuth()
-  const { toast } = useToast()
 
   const { data: widgets, loading, refetch } = useApi(
     async () => {

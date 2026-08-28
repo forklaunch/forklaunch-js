@@ -29,6 +29,23 @@ pack before continuing. If a command you were told to run turns out to be missin
 don't guess at flags — re-sync the skill pack first, since the instructions you have may simply be
 stale.
 
+## How to explain things (applies to every skill)
+
+Explain results as if to an **intelligent high schooler**: plain language, no
+jargon, no undefined acronyms. **Use a concrete example** — abstractions are
+where jargon hides, and an example forces you to be specific.
+
+Then the technical detail if it is needed. Then **close with a plain-English
+summary**: what changed, what it means, what is still open. Someone who skipped
+the middle should read the first and last parts and be correctly informed.
+
+**plain → technical → plain summary.** The order is not optional.
+
+Say what happened rather than what was run; never fake simplicity by dropping
+caveats; and always say what you did *not* verify.
+
+Full version in `AGENTS.md` and `CLAUDE.md`.
+
 ## Available Skills
 
 ### Operating a Deployed App
@@ -39,6 +56,8 @@ stale.
 - `/studio` — Fast app generation: greenfield, existing Next.js, backend migration.
 - `/cli` — All CLI commands: init, change, delete, deploy, release, sync, sdk, openapi. **Supply ALL flags or CLI hangs.**
 - `/quick-reference` — Cheat sheet: imports, patterns, templates, commands at a glance.
+- `/managed-provisioning` — Managed apps: templates, provisioning, the claim handover, and where each surface stops.
+- `/deployment-approvals` — Approval gating: why it is opt-in, resolution order, four-eyes, the two gates.
 
 ### Backend
 - `/backend-patterns` — Handlers, services, entities, schemas, routes, DI, auth, feature gating.
@@ -47,6 +66,9 @@ stale.
 - `/imports-and-structure` — Import layers, module structure, file naming. **Always import from `@{{app-name}}/core`.**
 - `/websockets-and-mappers` — WebSockets, real-time, log streaming, requestMapper/responseMapper.
 - `/compliance` — fp property builder, defineComplianceEntity, access levels, audit CLI, encryption, tenant isolation.
+- `/score-self-heal` — run the ForkLaunch Score during development, fix the lowest-scoring criteria from their `fix`es, re-score until the threshold passes.
+- `/security` — Auth surfaces, device flow, rate limiting, security events, secrets hygiene, HMAC, branch protection.
+- `/observability` — OTel wiring, metrics definitions, security events, alert rules, notifiers, telemetry retention.
 
 ### Frontend
 - `/frontend-patterns` — Pages, SDK client, useApi/useMutation hooks, auth, feature gating, forms, tables.
@@ -71,12 +93,28 @@ stale.
 2. **Schemas use natural notation:** `{ name: string, age: optional(number) }`. NEVER `z.object()`.
 3. **Enums use const objects:** `const X = { A: 'a' } as const`. NEVER TypeScript `enum`.
 4. **Handler `name` cannot contain slashes.** Use PascalCase: `'GetRestaurant'`.
-5. **Services return entities.** Mapping happens in controllers only.
-6. **Always `em.flush()` after mutations.**
-7. **Use `forklaunch init` for structural changes.** Don't manually create service directories.
-8. **Don't edit `manifest.toml` by hand.** Use `forklaunch change` commands.
-9. **Supply ALL CLI flags** or the CLI drops into interactive mode and hangs.
-10. **TSC for backend:** `cd src/modules/<service> && ./node_modules/.bin/tsc --noEmit`
+5. **Handler responses must match `responses[code]`.** Do not return starter `{ message }` JSON against a domain schema.
+6. **Controller calls must match service signatures.** Pass the exact command object, not one primitive field, when a service expects `{ ... }`.
+7. **Follow the local service shape.** Current Studio scaffolds often use schema-derived DTO services; do not force older mapper/entity-return examples.
+8. **Always `em.flush()` after mutations.**
+9. **Use `forklaunch init` for structural changes.** Don't manually create service directories.
+10. **Don't edit `manifest.toml` by hand.** Use `forklaunch change` commands. Note `change service --to worker` ADDS a worker and KEEPS the HTTP surface — `type = "Worker"` means "has a worker", not "is no longer a service" (see `observability-api`). Never hand-roll a `worker.ts` to avoid it.
+11. **Supply ALL CLI flags** or the CLI drops into interactive mode and hangs.
+12. **TSC for backend:** `cd src/modules/<service> && ./node_modules/.bin/tsc --noEmit`
+13. **Studio watch logs are informational.** `tsx watch` restarts, shutdown spam, force-kill messages, and MaxListeners warnings are not repair targets if the service starts again.
+
+## Studio Architecture Default
+
+In Studio planning, bias toward fat services and workers:
+
+- Start with one custom backend service as the app control plane. Pack synchronous APIs, admin endpoints, domain logic, and shared persistence into that service first.
+- If background processing is necessary, generate one worker scaffold instead of a separate service plus worker. A ForkLaunch worker scaffold creates the service/worker pair; use the service side as the control plane and the worker side for jobs. Name the worker the same product/control-plane name you would have used for the service, not a separate queue-specific name.
+- Do not split by domain nouns like parser, analytics, notifications, reports, or admin during initial generation. Put future splits in prose or scaling notes, not executable scaffold commands.
+- Only add more custom services when loading/importing a repo whose existing deployable boundaries make separation absolutely necessary.
+- Never name the custom service or worker `core`, `monitoring`, `client-sdk`, `iam`, or `billing`; those are reserved scaffold modules. Use a product-specific name such as `workspace`, `operations`, `intake`, `reports`, `patients`, or the app domain name.
+- Use a two-pass Studio decision flow: ask all user-facing questions in one grouped pass, then do one review pass that locks answers/defaults and proceeds. The first pass may ask as many questions as real requirements need; do not cap it at three or create a third decision turn. In user-facing text, call the main service the `API` or `main API`, never `core API`.
+- Studio has no external coding agent handoff. Do not emit copy/paste-to-agent instructions, skill references, or "HOW TO USE THIS PLAN" text in Studio plans.
+- Compliance boundary: ForkLaunch-hosted Bedrock model calls are BAA-protected through ForkLaunch; nothing else is. Direct AWS account services, direct Anthropic/OpenAI keys, SendGrid, Stripe, and other processors need the user's own compliance setup.
 
 ## Quick Start for New Features
 
@@ -113,7 +151,7 @@ cd src/modules/<service> && pnpm migrate:up        # Run pending migrations
 
 # Type checking
 cd src/modules/<service> && ./node_modules/.bin/tsc --noEmit   # Backend
-cd client && pnpm tsgo --noEmit                                 # Frontend
+cd client && pnpm tsc --noEmit                                  # Frontend
 
 # Tests
 cd src/modules/<service> && pnpm test   # Run module tests
