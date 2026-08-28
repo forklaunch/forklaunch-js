@@ -50,10 +50,7 @@ export function enrichBetterAuthApi<T extends BetterAuthOptions>(
     if (!isBetterAuthRequest(req)) {
       throw new Error('Invalid request');
     }
-    await toNodeHandler(auth)(
-      req as unknown as ExpressRequest,
-      res as unknown as ExpressResponse
-    );
+    await toNodeHandler(auth)(req as ExpressRequest, res as ExpressResponse);
 
     httpRequestsTotalCounter.add(1, {
       [ATTR_SERVICE_NAME]: getEnvVar('OTEL_SERVICE_NAME'),

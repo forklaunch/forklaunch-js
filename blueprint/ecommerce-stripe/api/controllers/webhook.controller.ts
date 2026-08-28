@@ -183,7 +183,7 @@ export const handleStripeWebhook = handlers.post(
     // unaffected) — Stripe's signature is computed over the exact raw
     // bytes it sent, so the already-JSON-parsed req.body (property order/
     // whitespace not guaranteed identical) cannot be used here.
-    const rawBody = (req as unknown as { rawBody?: Buffer }).rawBody;
+    const rawBody = (req as { rawBody?: Buffer }).rawBody;
     const signature = req.headers['stripe-signature'];
 
     if (!rawBody || !signature) {
@@ -371,7 +371,7 @@ export const handlePaypalWebhook = handlers.post(
     // not declare (create_time, summary, links, ...), which is precisely the
     // deviation PayPal's docs warn will fail verification. Parse the captured
     // raw bytes instead and send the whole event.
-    const rawBody = (req as unknown as { rawBody?: Buffer }).rawBody;
+    const rawBody = (req as { rawBody?: Buffer }).rawBody;
     if (!rawBody) {
       res.status(400).send('Missing request body');
       return;

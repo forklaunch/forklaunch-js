@@ -8,9 +8,9 @@ import {
   getEnvVar,
   Lifetime
 } from '@forklaunch/core/services';
-import { EntityClass, EntitySchema, Platform, TextType, Type } from '@mikro-orm/core';
+import { Platform, TextType, Type } from '@mikro-orm/core';
 import { Migrator } from '@mikro-orm/migrations';
-import { defineConfig } from '@mikro-orm/postgresql';
+import { defineConfig, type Options } from '@mikro-orm/postgresql';
 import dotenv from 'dotenv';
 import * as entities from './persistence/entities';
 
@@ -71,14 +71,13 @@ const mikroOrmOptionsConfig = defineConfig({
   port: validConfigInjector.resolve(tokens.DB_PORT),
   // No entities yet — phase 1 adds Patient/Claim/etc (plan/cac/ §4). Until
   // then `entities` is an empty module, so Object.values() widens to unknown[]
-  // and MikroORM rejects it. The annotation names the shape MikroORM accepts
-  // rather than one concrete kind, matching the generated template: modules
-  // define entities as schemas or as classes, and a cast to either one alone
-  // rejects the other.
-  entities: Object.values(entities) as (
-    | EntitySchema<any>
-    | EntityClass<Partial<any>>
-  )[],
+  // and MikroORM rejects it.
+  //
+  // Typed as MikroORM's own `entities` option rather than a hand-written union
+  // of EntitySchema | EntityClass. Modules define entities either way, so a
+  // cast to one concrete kind rejects the other — and naming the option type
+  // states the requirement directly instead of restating it with `any` in it.
+  entities: Object.values(entities) as Options['entities'],
   discovery: {
     getMappedType(type: string, platform: Platform) {
       if (type === 'string') {

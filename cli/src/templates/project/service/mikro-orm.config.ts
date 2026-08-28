@@ -4,8 +4,7 @@ import { FieldEncryptor, registerEncryptor } from '@forklaunch/core/persistence'
 import { Migrator } from '@mikro-orm/migrations{{#is_mongo}}-mongodb{{/is_mongo}}';
 import { number, SchemaValidator, string } from '@{{app_name}}/core';
 {{^is_mongo}}import { Platform, TextType, Type } from '@mikro-orm/core';{{/is_mongo}}
-import type { EntityClass, EntitySchema } from '@mikro-orm/core';
-import { defineConfig } from '@mikro-orm/{{database}}';
+import { defineConfig, type Options } from '@mikro-orm/{{database}}';
 import dotenv from 'dotenv';
 import * as entities from './persistence/entities';
 
@@ -107,11 +106,9 @@ const mikroOrmOptionsConfig = defineConfig({ {{#is_mongo}}
   // rejects, so the module fails to build the moment it is scaffolded. The
   // annotation names the shape MikroORM accepts rather than one concrete kind —
   // modules define entities as schemas or as classes, and a cast to either one
-  // alone rejects the other.
-  entities: Object.values(entities) as (
-    | EntitySchema<any>
-    | EntityClass<Partial<any>>
-  )[],
+  // alone rejects the other. Using MikroORM's own `entities` option type states
+  // that requirement directly instead of restating it with `any` in it.
+  entities: Object.values(entities) as Options['entities'],
   debug: validConfigInjector.resolve(
     tokens.NODE_ENV
   ) === 'development',

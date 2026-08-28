@@ -231,6 +231,9 @@ export class RedisTtlCache implements TtlCache {
     const values = await multiCommand.exec();
     return values
       .map((value) =>
+        // node-redis hands back `ReplyUnion`, while the parse/serialize helpers
+        // are typed against `RedisCommandRawReply`. The two unions describe the
+        // same wire values but share no member, so TypeScript sees no overlap.
         this.parseValue<T>(value as unknown as RedisCommandRawReply, compliance)
       )
       .filter(Boolean);
@@ -252,6 +255,9 @@ export class RedisTtlCache implements TtlCache {
     return {
       key: cacheRecordKey,
       value: this.parseValue<T>(
+        // node-redis hands back `ReplyUnion`, while the parse/serialize helpers
+        // are typed against `RedisCommandRawReply`. The two unions describe the
+        // same wire values but share no member, so TypeScript sees no overlap.
         value as unknown as RedisCommandRawReply,
         compliance
       ),
@@ -279,6 +285,8 @@ export class RedisTtlCache implements TtlCache {
     return values.reduce<TtlCacheRecord<T>[]>((acc, value, index) => {
       if (index % 2 === 0) {
         const maybeValue = this.parseValue<T>(
+          // `ReplyUnion` and `RedisCommandRawReply` name the same wire values
+          // through disjoint unions, so neither is assignable to the other.
           value as unknown as RedisCommandRawReply,
           compliance
         );

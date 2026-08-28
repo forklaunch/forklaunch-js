@@ -564,7 +564,7 @@ export function processContractDetailsIO<
     requestSchema: schemaValidator.compile(
       schemaValidator.schemify({
         ...(routeParams != null
-          ? { params: routeParams as unknown as ParamsDictionary }
+          ? { params: routeParams as ParamsDictionary }
           : { params: schemaValidator.unknown as ParamsObject<SV> }),
         ...(contractDetailsIO.requestHeaders != null
           ? { headers: contractDetailsIO.requestHeaders }
@@ -655,7 +655,7 @@ export function compileRouteSchemas<
         } = processContractDetailsIO(
           validator,
           versionedContractDetails,
-          contractDetails.params as unknown as P
+          contractDetails.params as P
         );
 
         if (isRecord(requestSchema)) {
@@ -709,7 +709,7 @@ export function compileRouteSchemas<
             ? contractDetails.responses
             : (validator.unknown as ResponsesObject<SV>)
       },
-      contractDetails.params as unknown as P
+      contractDetails.params as P
     );
 
     requestSchema = unversionedRequestSchema;
@@ -853,7 +853,7 @@ export function resolveRouteMiddlewares<
       RouterSession
     >,
     ...handlersCopy
-  ] as unknown as RouterHandler[];
+  ] as RouterHandler[];
 
   return {
     middlewares,
