@@ -22,7 +22,7 @@ Use when the user asks to:
 ```bash
 cd client && pnpm install    # Install frontend deps
 cd client && pnpm dev        # Next.js dev server (default: localhost:3000)
-cd client && pnpm tsgo --noEmit  # Type check (pre-existing errors in resource explorers — ignore those)
+cd client && pnpm tsc --noEmit  # Type check (pre-existing errors in resource explorers — ignore those)
 cd client && pnpm build      # Production build
 ```
 

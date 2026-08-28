@@ -60,7 +60,7 @@ cd workspace-test-app/src/modules
 CI=true pnpm install
 
 for project in core queue-worker checkout; do
-    (cd "$project" && pnpm exec tsgo --noEmit) || {
+    (cd "$project" && pnpm exec tsc --noEmit) || {
         echo "[ERROR] tsc --noEmit failed for $project"
         exit 1
     }
