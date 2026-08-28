@@ -1,5 +1,11 @@
 # @forklaunch/testing
 
+## 1.2.29
+
+### Patch Changes
+
+- Update internal package versions
+
 ## 1.2.28
 
 ### Patch Changes

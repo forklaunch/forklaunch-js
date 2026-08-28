@@ -1,5 +1,11 @@
 # @forklaunch/bunrun
 
+## 1.2.22
+
+### Patch Changes
+
+- Update internal package versions
+
 ## 1.2.20
 
 ### Patch Changes
