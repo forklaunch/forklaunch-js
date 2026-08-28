@@ -348,7 +348,10 @@ pub(crate) const TYPEDOC_VERSION: &str = "^0.28.20";
 // Project package.json scripts constants
 pub(crate) const PROJECT_BUILD_SCRIPT: &str = "tsc -b";
 pub(crate) const PROJECT_DOCS_SCRIPT: &str = "typedoc --out docs *";
-pub(crate) const PROJECT_SEED_SCRIPT: &str = "[ -z $DOTENV_FILE_PATH ] && export DOTENV_FILE_PATH=.env.local; NODE_OPTIONS='--import=tsx' mikro-orm seeder:run";
+// Guarded for the same reason as migrate:init and migrate:up: the seeder boots
+// the ORM, which rejects an empty entity set outright rather than treating it
+// as nothing to seed.
+pub(crate) const PROJECT_SEED_SCRIPT: &str = "if ls persistence/entities/*.entity.ts >/dev/null 2>&1; then [ -z $DOTENV_FILE_PATH ] && export DOTENV_FILE_PATH=.env.local; NODE_OPTIONS='--import=tsx' mikro-orm seeder:run; fi";
 
 pub(crate) fn project_retention_enforce_script(runtime: &Runtime) -> String {
     String::from(match runtime {
@@ -467,7 +470,14 @@ pub(crate) fn project_migrate_script(command: &str) -> String {
             "if ! ls migrations*/Migration* >/dev/null 2>&1 && ls persistence/entities/*.entity.ts >/dev/null 2>&1; then {}{}; fi",
             base, "create --initial"
         ),
-        "up" => format!("{}up", base),
+        // Nothing to apply when no migration exists — which is the case for a
+        // module with no entities, whose migrate:init above is itself a no-op.
+        // Without this guard MikroORM fails the whole scaffold with
+        // "No entities found" while doing nothing meaningful.
+        "up" => format!(
+            "if ls migrations*/Migration* >/dev/null 2>&1; then {}up; fi",
+            base
+        ),
         _ => panic!("Unsupported migration command"),
     }
 }

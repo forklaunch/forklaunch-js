@@ -93,9 +93,15 @@ jobs:
       # The scaffolded applications install the same dependency trees over and
       # over. Nothing cached them before, so every install refetched everything
       # from the registry — the single largest cost in these jobs.
-      - name: Resolve pnpm store path
-        id: pnpm-store
-        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+      # Pinned rather than read back from `pnpm store path`, which reported a
+      # directory that pnpm had not created yet — the save step then refused it
+      # with "Path(s) specified in the action for caching do(es) not exist".
+      # Creating it up front also guarantees every generated application shares
+      # one store instead of each resolving its own.
+      - name: Configure pnpm store
+        run: |
+          mkdir -p ~/.pnpm-store
+          pnpm config set store-dir ~/.pnpm-store --global
 
       # Split restore/save rather than plain actions/cache, which skips its
       # post-save step whenever the job fails. That is the wrong way round
@@ -105,7 +111,7 @@ jobs:
         id: pnpm-cache
         uses: actions/cache/restore@v6
         with:
-          path: ${{ steps.pnpm-store.outputs.path }}
+          path: ~/.pnpm-store
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('cli/src/core/package_json/package_json_constants.rs') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
@@ -162,5 +168,5 @@ jobs:
         if: always() && steps.pnpm-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v6
         with:
-          path: ${{ steps.pnpm-store.outputs.path }}
+          path: ~/.pnpm-store
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('cli/src/core/package_json/package_json_constants.rs') }}

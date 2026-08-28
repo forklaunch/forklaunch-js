@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# The CLI binary. CI builds it once and exports FORKLAUNCH_CLI so the 43
-# scripts share one compile instead of each re-checking a release build.
-FL="${FORKLAUNCH_CLI:-cargo run --release}"
+# Deliberately NOT the prebuilt binary. This test rewrites the CLI's own
+# version in Cargo.toml and needs the next invocation to reflect it, which
+# only a rebuild can do — a prebuilt binary has its version compiled in.
+FL="cargo run --release"
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
