@@ -140,8 +140,6 @@ pub(crate) fn fetch_resource_metrics(
 /// resource.
 pub(crate) struct ResolvedResource {
     pub(crate) id: String,
-    pub(crate) project_name: String,
-    pub(crate) resource_type: String,
 }
 
 /// Resolves a `<project-name>:<resource-type>` identifier (or an explicit
@@ -164,11 +162,7 @@ pub(crate) fn resolve(
     let mapped_type = resource_type_to_integration_type(resource_type)?;
 
     if let Some(id) = resource_id_override {
-        return Ok(ResolvedResource {
-            id: id.to_string(),
-            project_name: project_name.to_string(),
-            resource_type: resource_type.to_string(),
-        });
+        return Ok(ResolvedResource { id: id.to_string() });
     }
 
     let project = manifest
@@ -214,8 +208,6 @@ pub(crate) fn resolve(
         }
         1 => Ok(ResolvedResource {
             id: matches[0].id.clone(),
-            project_name: project_name.to_string(),
-            resource_type: resource_type.to_string(),
         }),
         _ => {
             let candidates = matches
