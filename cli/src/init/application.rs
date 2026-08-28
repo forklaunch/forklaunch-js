@@ -57,7 +57,7 @@ use crate::{
                 AJV_VERSION, APP_DEV_BUILD_SCRIPT, APP_DEV_SCRIPT, APP_PREPARE_SCRIPT,
                 BETTER_AUTH_VERSION, BETTER_SQLITE3_VERSION, BIOME_VERSION, BUNRUN_VERSION,
                 COMMON_VERSION, CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION,
-                GLOBALS_VERSION, HUSKY_VERSION, HYPER_EXPRESS_VERSION, JEST_TYPES_VERSION,
+                GLOBALS_VERSION, HUSKY_VERSION, HYPER_EXPRESS_VERSION, UWEBSOCKETS_VERSION, JEST_TYPES_VERSION,
                 JEST_VERSION, LINT_STAGED_VERSION, MIKRO_ORM_CORE_VERSION,
                 MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
                 NODE_GYP_VERSION, OXLINT_VERSION, PRETTIER_VERSION,
@@ -65,7 +65,7 @@ use crate::{
                 SQLITE3_VERSION, TS_JEST_VERSION, TS_NODE_VERSION, TSX_VERSION, TYPEBOX_VERSION,
                 TYPES_BUILD_SCRIPT, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION,
                 TYPES_NODE_VERSION, TYPES_QS_VERSION, TYPES_UUID_VERSION, TYPES_WATCH_SCRIPT,
-                TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_NATIVE_PREVIEW_VERSION, TYPESCRIPT_VERSION, UNIVERSAL_SDK_VERSION, UUID_VERSION,
+                TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_VERSION, UNIVERSAL_SDK_VERSION, UUID_VERSION,
                 VALIDATOR_VERSION, VITEST_VERSION, ZOD_VERSION, application_build_script,
                 application_clean_purge_script, application_clean_script, application_docs_script,
                 application_format_script, application_lint_fix_script, application_lint_script,
@@ -244,7 +244,10 @@ fn generate_application_package_json(
             ts_node: Some(TS_NODE_VERSION.to_string()),
             tsx: Some(TSX_VERSION.to_string()),
             typescript: Some(TYPESCRIPT_VERSION.to_string()),
-            typescript_native_preview: Some(TYPESCRIPT_NATIVE_PREVIEW_VERSION.to_string()),
+            // TypeScript 7 ships the native compiler as `tsc`, so the
+            // preview package that provided `tsgo` is no longer needed. The
+            // field is skipped when None, so generated manifests omit it.
+            typescript_native_preview: None,
             typescript_eslint: if data.is_eslint {
                 Some(TYPESCRIPT_ESLINT_VERSION.to_string())
             } else {
@@ -958,6 +961,8 @@ impl CliCommand for ApplicationCommand {
                     || template_dir.module_id == Some(Module::TwilioMessaging),
                 is_twilio: template_dir.module_id == Some(Module::TwilioMessaging),
                 is_cac: template_dir.module_id == Some(Module::BaseCac),
+                is_ecommerce: template_dir.module_id == Some(Module::StripeEcommerce),
+                ships_worker: template_dir.module_id == Some(Module::StripeEcommerce),
 
                 is_iam_configured: data.projects.iter().any(|project_entry| {
                     if project_entry.name == "iam" {
@@ -1058,6 +1063,11 @@ impl CliCommand for ApplicationCommand {
                         },
                         forklaunch_hyper_express: if service_data.is_hyper_express {
                             Some(HYPER_EXPRESS_VERSION.to_string())
+                        } else {
+                            None
+                        },
+                        uwebsockets_js: if service_data.is_hyper_express {
+                            Some(UWEBSOCKETS_VERSION.to_string())
                         } else {
                             None
                         },

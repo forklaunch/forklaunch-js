@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 1.2.24
+
+### Patch Changes
+
+- Update internal package versions
+
 ## 1.2.20
 
 ### Patch Changes

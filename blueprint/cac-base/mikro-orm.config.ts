@@ -8,7 +8,7 @@ import {
   getEnvVar,
   Lifetime
 } from '@forklaunch/core/services';
-import { Platform, TextType, Type } from '@mikro-orm/core';
+import { EntityClass, EntitySchema, Platform, TextType, Type } from '@mikro-orm/core';
 import { Migrator } from '@mikro-orm/migrations';
 import { defineConfig } from '@mikro-orm/postgresql';
 import dotenv from 'dotenv';
@@ -72,7 +72,15 @@ const mikroOrmOptionsConfig: ReturnType<typeof defineConfig> = defineConfig({
   user: validConfigInjector.resolve(tokens.DB_USER),
   password: validConfigInjector.resolve(tokens.DB_PASSWORD),
   port: validConfigInjector.resolve(tokens.DB_PORT),
-  entities: Object.values(entities),
+  // Object.values() on the entities barrel widens to unknown[]; MikroORM
+  // rejects that. The annotation names the shape MikroORM accepts rather
+  // than one concrete kind, matching the generated template: modules define
+  // entities as schemas or as classes, and a cast to either one alone
+  // rejects the other.
+  entities: Object.values(entities) as (
+    | EntitySchema<any>
+    | EntityClass<Partial<any>>
+  )[],
   discovery: {
     getMappedType(type: string, platform: Platform) {
       if (type === 'string') {

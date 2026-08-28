@@ -50,8 +50,10 @@ use crate::{
                 AJV_VERSION, APP_BILLING_VERSION, APP_CORE_VERSION, APP_IAM_VERSION,
                 APP_MONITORING_VERSION, BETTER_AUTH_MIKRO_ORM_VERSION, BETTER_AUTH_VERSION,
                 BETTER_SQLITE3_VERSION, BILLING_BASE_VERSION, BILLING_INTERFACES_VERSION,
-                BILLING_STRIPE_VERSION, BIOME_VERSION, CAC_BASE_VERSION, CAC_INTERFACES_VERSION,
-                COMMON_VERSION, CORE_VERSION,
+                BILLING_STRIPE_VERSION, BIOME_VERSION, CAC_BASE_VERSION,
+                CAC_INTERFACES_VERSION, COMMON_VERSION, CORE_VERSION, ECOMMERCE_BASE_VERSION,
+                ECOMMERCE_INTERFACES_VERSION, ECOMMERCE_PAYPAL_VERSION,
+                ECOMMERCE_STRIPE_VERSION, WORKER_INTERFACES_VERSION, WORKER_REDIS_VERSION,
                 DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION, HYPER_EXPRESS_VERSION,
                 IAM_BASE_VERSION, IAM_INTERFACES_VERSION, INFRASTRUCTURE_REDIS_VERSION,
                 MESSAGING_BASE_VERSION, MESSAGING_INTERFACES_VERSION, MESSAGING_TWILIO_VERSION,
@@ -63,11 +65,14 @@ use crate::{
                 SQLITE3_VERSION, STRIPE_VERSION, TESTING_VERSION, TSX_VERSION, TYPEBOX_VERSION,
                 TYPEDOC_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION,
                 TYPES_JEST_VERSION, TYPES_QS_VERSION, TYPES_UUID_VERSION,
-                TYPESCRIPT_ESLINT_VERSION, UNIVERSAL_SDK_VERSION, UUID_VERSION, VALIDATOR_VERSION,
+                TYPESCRIPT_ESLINT_VERSION, UNIVERSAL_SDK_VERSION, UWEBSOCKETS_VERSION, UUID_VERSION,
+                VALIDATOR_VERSION,
                 ZOD_VERSION, project_clean_script, project_dev_local_script,
                 project_dev_server_script, project_format_script, project_lint_fix_script,
                 project_lint_script, project_migrate_script, project_retention_enforce_script,
-                project_start_server_script, project_test_script, project_up_latest_script,
+                project_dev_local_worker_script, project_dev_worker_client_script,
+                project_start_server_script, project_start_worker_script, project_test_script,
+                project_up_latest_script,
             },
             project_package_json::{
                 MIKRO_ORM_CONFIG_PATHS, ProjectDependencies, ProjectDevDependencies,
@@ -349,10 +354,17 @@ pub(crate) fn generate_service_package_json(
                     &manifest_data.runtime.parse()?,
                     manifest_data.database.parse::<Database>().ok(),
                 )),
-                dev_local: Some(project_dev_local_script(
-                    &manifest_data.runtime.parse()?,
-                    manifest_data.database.parse::<Database>().ok(),
-                )),
+                dev_local: Some(if manifest_data.ships_worker {
+                    project_dev_local_worker_script(
+                        &manifest_data.runtime.parse()?,
+                        manifest_data.database.parse::<Database>().ok(),
+                    )
+                } else {
+                    project_dev_local_script(
+                        &manifest_data.runtime.parse()?,
+                        manifest_data.database.parse::<Database>().ok(),
+                    )
+                }),
                 test: project_test_script(&manifest_data.runtime.parse()?, &test_framework),
                 docs: Some(PROJECT_DOCS_SCRIPT.to_string()),
                 format: Some(project_format_script(&manifest_data.formatter.parse()?)),
@@ -378,6 +390,24 @@ pub(crate) fn generate_service_package_json(
                 up_latest: project_up_latest_script(&manifest_data.runtime.parse()?),
                 retention_enforce: if manifest_data.is_database_enabled {
                     Some(project_retention_enforce_script(&manifest_data.runtime.parse()?))
+                } else {
+                    None
+                },
+                // A module that ships worker.ts needs a way to run it. Without
+                // these the file scaffolds and nothing ever starts it: order
+                // events never drain, stock never moves, and nothing errors.
+                dev_worker: if manifest_data.ships_worker {
+                    Some(project_dev_worker_client_script(
+                        &manifest_data.runtime.parse()?,
+                    ))
+                } else {
+                    None
+                },
+                start_worker: if manifest_data.ships_worker {
+                    Some(project_start_worker_script(
+                        &manifest_data.runtime.parse()?,
+                        manifest_data.database.parse::<Database>().ok(),
+                    ))
                 } else {
                     None
                 },
@@ -420,6 +450,11 @@ pub(crate) fn generate_service_package_json(
                 } else {
                     None
                 },
+                uwebsockets_js: if manifest_data.is_hyper_express {
+                    Some(UWEBSOCKETS_VERSION.to_string())
+                } else {
+                    None
+                },
                 forklaunch_implementation_billing_base: if manifest_data.is_billing {
                     Some(BILLING_BASE_VERSION.to_string())
                 } else {
@@ -427,6 +462,26 @@ pub(crate) fn generate_service_package_json(
                 },
                 forklaunch_implementation_billing_stripe: if manifest_data.is_stripe {
                     Some(BILLING_STRIPE_VERSION.to_string())
+                } else {
+                    None
+                },
+                forklaunch_implementation_ecommerce_base: if manifest_data.is_ecommerce {
+                    Some(ECOMMERCE_BASE_VERSION.to_string())
+                } else {
+                    None
+                },
+                forklaunch_implementation_ecommerce_stripe: if manifest_data.is_ecommerce {
+                    Some(ECOMMERCE_STRIPE_VERSION.to_string())
+                } else {
+                    None
+                },
+                forklaunch_implementation_ecommerce_paypal: if manifest_data.is_ecommerce {
+                    Some(ECOMMERCE_PAYPAL_VERSION.to_string())
+                } else {
+                    None
+                },
+                forklaunch_interfaces_ecommerce: if manifest_data.is_ecommerce {
+                    Some(ECOMMERCE_INTERFACES_VERSION.to_string())
                 } else {
                     None
                 },
@@ -490,8 +545,19 @@ pub(crate) fn generate_service_package_json(
                 forklaunch_implementation_worker_bullmq: None,
                 forklaunch_implementation_worker_database: None,
                 forklaunch_implementation_worker_kafka: None,
-                forklaunch_implementation_worker_redis: None,
-                forklaunch_interfaces_worker: None,
+                // The ecommerce module ships an order-event worker (worker.ts)
+                // that consumes a Redis-backed queue, so it needs the worker
+                // packages even though it is a service, not a worker project.
+                forklaunch_implementation_worker_redis: if manifest_data.is_ecommerce {
+                    Some(WORKER_REDIS_VERSION.to_string())
+                } else {
+                    None
+                },
+                forklaunch_interfaces_worker: if manifest_data.is_ecommerce {
+                    Some(WORKER_INTERFACES_VERSION.to_string())
+                } else {
+                    None
+                },
                 forklaunch_internal: Some(INTERNAL_VERSION.to_string()),
                 forklaunch_universal_sdk: Some(UNIVERSAL_SDK_VERSION.to_string()),
                 forklaunch_validator: Some(VALIDATOR_VERSION.to_string()),
@@ -544,7 +610,7 @@ pub(crate) fn generate_service_package_json(
                 } else {
                     None
                 },
-                stripe: if manifest_data.is_stripe {
+                stripe: if manifest_data.is_stripe || manifest_data.is_ecommerce {
                     Some(STRIPE_VERSION.to_string())
                 } else {
                     None
@@ -833,6 +899,8 @@ impl CliCommand for ServiceCommand {
             is_better_auth: false,
             is_stripe: false,
             is_twilio: false,
+            is_ecommerce: false,
+            ships_worker: false,
 
             is_iam_configured: manifest_data.projects.iter().any(|project_entry| {
                 if project_entry.name == "iam" {

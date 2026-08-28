@@ -1,6 +1,7 @@
 {
   "name": "@forklaunch/blueprint-core",
   "version": "1.0.0",
+  "private": true,
   "description": "The common core lib for all monorepo services",
   "keywords": [],
   "license": "ISC",
@@ -11,7 +12,7 @@
     "lib/**"
   ],
   "scripts": {
-    "build": "tsgo -b",
+    "build": "tsc -b",
     "clean": "rm -rf lib tsconfig.tsbuildinfo pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
@@ -21,24 +22,22 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "^1.2.23",
-    "@forklaunch/core": "^1.5.15",
-    "@forklaunch/express": "^1.2.39",
-    "@forklaunch/hyper-express": "^1.2.39",
-    "@forklaunch/validator": "^1.2.24",
-    "@mikro-orm/core": "^7.1.11",
-    "@mikro-orm/mongodb": "^7.1.11",
+    "@forklaunch/common": "^1.2.24",
+    "@forklaunch/core": "^1.5.16",
+    "@forklaunch/express": "^1.2.41",
+    "@forklaunch/hyper-express": "^1.2.41",
+    "@forklaunch/validator": "^1.2.25",
+    "@mikro-orm/core": "7.1.14",
+    "@mikro-orm/mongodb": "^7.1.14",
     "@sinclair/typebox": "^0.34.52",
-    "uuid": "^14.0.1",
+    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.52.0",
+    "uuid": "^14.0.2",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/qs": "^6.15.1",
     "@types/uuid": "^11.0.0",
-    "@typescript/native-preview": "7.0.0-dev.20260707.2"
-  },
-  "publishConfig": {
-    "access": "public"
+    "typescript": "^7.0.2"
   }
 }

@@ -14,6 +14,7 @@ pub(crate) mod library;
 pub(crate) mod module;
 pub(crate) mod router;
 pub(crate) mod service;
+pub(crate) mod storefront;
 pub(crate) mod worker;
 
 // TODO: add injected token into struct

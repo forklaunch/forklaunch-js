@@ -49,7 +49,7 @@ use crate::{
                 AJV_VERSION, APP_BILLING_VERSION, APP_CORE_VERSION, APP_IAM_VERSION,
                 APP_MONITORING_VERSION, BETTER_SQLITE3_VERSION, BIOME_VERSION, BULLMQ_VERSION,
                 COMMON_VERSION, CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION,
-                HYPER_EXPRESS_VERSION, INFRASTRUCTURE_REDIS_VERSION, INTERNAL_VERSION,
+                HYPER_EXPRESS_VERSION, UWEBSOCKETS_VERSION, INFRASTRUCTURE_REDIS_VERSION, INTERNAL_VERSION,
                 IOREDIS_VERSION, MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION,
                 MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
                 MIKRO_ORM_SEEDER_VERSION, OXLINT_VERSION,
@@ -469,9 +469,18 @@ pub(crate) fn generate_worker_package_json(
                 } else {
                     None
                 },
+                uwebsockets_js: if manifest_data.is_hyper_express {
+                    Some(UWEBSOCKETS_VERSION.to_string())
+                } else {
+                    None
+                },
                 forklaunch_implementation_billing_base: None,
                 forklaunch_implementation_billing_stripe: None,
                 forklaunch_interfaces_billing: None,
+                forklaunch_implementation_ecommerce_base: None,
+                forklaunch_implementation_ecommerce_stripe: None,
+                forklaunch_implementation_ecommerce_paypal: None,
+                forklaunch_interfaces_ecommerce: None,
                 forklaunch_implementation_iam_base: None,
                 forklaunch_interfaces_iam: None,
                 forklaunch_implementation_messaging_base: None,
