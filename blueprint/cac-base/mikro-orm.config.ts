@@ -10,7 +10,7 @@ import {
 } from '@forklaunch/core/services';
 import { Platform, TextType, Type } from '@mikro-orm/core';
 import { Migrator } from '@mikro-orm/migrations';
-import { defineConfig, type Options } from '@mikro-orm/postgresql';
+import { defineConfig } from '@mikro-orm/postgresql';
 import dotenv from 'dotenv';
 import * as entities from './persistence/entities';
 
@@ -77,7 +77,11 @@ const mikroOrmOptionsConfig = defineConfig({
   // of EntitySchema | EntityClass. Modules define entities either way, so a
   // cast to one concrete kind rejects the other — and naming the option type
   // states the requirement directly instead of restating it with `any` in it.
-  entities: Object.values(entities) as Options['entities'],
+  // Read off `defineConfig` rather than imported, because `forklaunch change
+  // service` rewrites the driver import wholesale and would drop a type import.
+  entities: Object.values(entities) as Parameters<
+    typeof defineConfig
+  >[0]['entities'],
   discovery: {
     getMappedType(type: string, platform: Platform) {
       if (type === 'string') {
