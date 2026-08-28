@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/implementation-ecommerce-paypal",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "PayPal (and Venmo) implementation for forklaunch ecommerce",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
