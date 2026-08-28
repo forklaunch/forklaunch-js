@@ -28,6 +28,7 @@
     "migrate:init": "NODE_OPTIONS='--import=tsx' mikro-orm migration:create --initial",
     "migrate:up": "NODE_OPTIONS='--import=tsx' mikro-orm migration:up",
     "prepack": "pnpm run build",
+    "publish:package": "./publish-package.bash",
     "start": "DOTENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' node dist/server.js",
     "start:worker": "DOTENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' node dist/worker.js",
     "test": "vitest --passWithNoTests"
