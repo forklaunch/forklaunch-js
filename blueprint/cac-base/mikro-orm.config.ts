@@ -8,7 +8,7 @@ import {
   getEnvVar,
   Lifetime
 } from '@forklaunch/core/services';
-import { EntityClass, Platform, TextType, Type } from '@mikro-orm/core';
+import { EntityClass, EntitySchema, Platform, TextType, Type } from '@mikro-orm/core';
 import { Migrator } from '@mikro-orm/migrations';
 import { defineConfig } from '@mikro-orm/postgresql';
 import dotenv from 'dotenv';
@@ -71,9 +71,14 @@ const mikroOrmOptionsConfig = defineConfig({
   port: validConfigInjector.resolve(tokens.DB_PORT),
   // No entities yet — phase 1 adds Patient/Claim/etc (plan/cac/ §4). Until
   // then `entities` is an empty module, so Object.values() widens to unknown[]
-  // and MikroORM rejects it. The annotation is what an entry in that module
-  // would infer to on its own, so it stops mattering once phase 1 lands.
-  entities: Object.values(entities) as EntityClass<Partial<unknown>>[],
+  // and MikroORM rejects it. The annotation names the shape MikroORM accepts
+  // rather than one concrete kind, matching the generated template: modules
+  // define entities as schemas or as classes, and a cast to either one alone
+  // rejects the other.
+  entities: Object.values(entities) as (
+    | EntitySchema<any>
+    | EntityClass<Partial<any>>
+  )[],
   discovery: {
     getMappedType(type: string, platform: Platform) {
       if (type === 'string') {
