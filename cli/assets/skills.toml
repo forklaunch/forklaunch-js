@@ -11,7 +11,7 @@
 #   - db-query.md: a production-database runbook, not agent-facing content.
 
 source_repo = "forklaunch-platform"
-source_commit = "f0c287d0b84c809a85a77818413a72ff451a984a"
+source_commit = "537a7d2ae38ff6ca0459319f96e7ee2821260b86"
 
 include = [
   "README.md",

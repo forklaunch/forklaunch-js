@@ -236,6 +236,14 @@ forklaunch init module billing --path ./src/modules --module billing-stripe --da
 forklaunch init module iam --path ./src/modules --module iam-better-auth --database postgresql
 ```
 
+**`iam-base` has no login or session flow at all** — it's user/role/permission CRUD, not
+authentication. There is no way to obtain a real token from it, so any other service in the app
+still can't make a genuinely authenticated call to anything. If the goal is real cross-service
+auth (a service actually calling another as a logged-in user, testing auth-gated routes,
+exercising a real request chain), use `iam-better-auth` instead — `iam-base` will silently satisfy
+"the app has an iam module" while leaving that goal completely unmet, and discovering the mismatch
+later means re-scaffolding, not just editing config.
+
 ### `forklaunch init router`
 
 Adds a new controller + route + schema + service to an existing service or worker module.

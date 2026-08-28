@@ -29,6 +29,17 @@ pack before continuing. If a command you were told to run turns out to be missin
 don't guess at flags — re-sync the skill pack first, since the instructions you have may simply be
 stale.
 
+**Check a foundational choice against the goal before committing to it, not after.** Some
+decisions are cheap to undo (a formatter, a linter, a variable name) and some aren't (a module
+preset, a database engine, an auth provider) — the expensive ones usually mean re-scaffolding and
+redeploying to fix, not just editing a file. Before locking in one of the expensive ones: state in
+one sentence what capability the app actually needs, then check the specific option against that
+sentence rather than against how closely its name matches. Two options can both plausibly "add
+auth" or "add a database" while only one actually does what the task needs — see `/cli` for a
+concrete example with `iam-base` vs `iam-better-auth`. If getting it wrong would be costly to
+undo, say so and confirm with the user before proceeding, the same way you would before an
+irreversible deploy action.
+
 ## How to explain things (applies to every skill)
 
 Explain results as if to an **intelligent high schooler**: plain language, no
