@@ -1,3 +1,6 @@
+# The CLI binary. CI builds it once and exports FORKLAUNCH_CLI so the 43
+# scripts share one compile instead of each re-checking a release build.
+FL="${FORKLAUNCH_CLI:-cargo run --release}"
 set -e
 
 if [ -d "output/init-worker-workspace" ]; then
@@ -7,7 +10,7 @@ fi
 mkdir -p output/init-worker-workspace
 cd output/init-worker-workspace
 
-RUST_BACKTRACE=1 cargo run --release init application workspace-test-app -p workspace-test-app -o src/modules -d postgresql -f prettier -l eslint -v zod -F express -r node -t vitest -D "Workspace integrity test application" -A "Forklaunch Team" -L 'MIT'
+RUST_BACKTRACE=1 $FL init application workspace-test-app -p workspace-test-app -o src/modules -d postgresql -f prettier -l eslint -v zod -F express -r node -t vitest -D "Workspace integrity test application" -A "Forklaunch Team" -L 'MIT'
 
 WORKSPACE_YAML="workspace-test-app/src/modules/pnpm-workspace.yaml"
 
@@ -21,7 +24,7 @@ if ! grep -q "esbuild: true" "$WORKSPACE_YAML"; then
     exit 1
 fi
 
-RUST_BACKTRACE=1 cargo run --release init worker queue-worker -t bullmq -p workspace-test-app/src/modules -D "BullMQ worker"
+RUST_BACKTRACE=1 $FL init worker queue-worker -t bullmq -p workspace-test-app/src/modules -D "BullMQ worker"
 
 # Re-emitting the workspace file must preserve allowBuilds
 if ! grep -q "esbuild: true" "$WORKSPACE_YAML"; then
@@ -43,7 +46,7 @@ allowBuilds:
 blockExoticSubdeps: false
 EOF
 
-RUST_BACKTRACE=1 cargo run --release init service checkout -d postgresql -p workspace-test-app/src/modules -D "Checkout service"
+RUST_BACKTRACE=1 $FL init service checkout -d postgresql -p workspace-test-app/src/modules -D "Checkout service"
 
 if grep -q "set this to true or false" "$WORKSPACE_YAML"; then
     echo "[ERROR] init service did not heal placeholder allowBuilds values"

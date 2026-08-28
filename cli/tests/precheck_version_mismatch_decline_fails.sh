@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# The CLI binary. CI builds it once and exports FORKLAUNCH_CLI so the 43
+# scripts share one compile instead of each re-checking a release build.
+FL="${FORKLAUNCH_CLI:-cargo run --release}"
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -19,7 +22,7 @@ rm -rf "$TEST_DIR"
 mkdir -p "$TEST_DIR"
 cd "$TEST_DIR"
 
-RUST_BACKTRACE=1 cargo run --release init application app \
+RUST_BACKTRACE=1 $FL init application app \
   -p . \
   -o modules \
   -d postgresql \
@@ -43,7 +46,7 @@ else
 fi
 
 set +e
-printf "n\n" | RUST_BACKTRACE=1 cargo run --release depcheck -p . >/dev/null 2>&1
+printf "n\n" | RUST_BACKTRACE=1 $FL depcheck -p . >/dev/null 2>&1
 EXIT_CODE=$?
 set -e
 
