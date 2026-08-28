@@ -104,8 +104,15 @@ export class ConfigInjector<
     resolutionPath: (keyof CV)[] = []
   ): ResolvedConfigValidator<SV, CV>[T] {
     if (process.env.FORKLAUNCH_MODE === 'openapi') {
+      // The handler below installs `apply` and `construct` traps, which are
+      // only valid on a callable target — hence a function rather than `{}`.
+      // The proxy is what makes every string key resolve; the target itself
+      // has none, so this shape cannot be inferred and has to be asserted.
+      // Named and asserted once, rather than laundered through `unknown`.
+      type NoopTarget = ((...args: never[]) => unknown) &
+        Record<string, unknown>;
       const noopProxy: Record<string, unknown> = new Proxy(
-        function () {} as unknown as Record<string, unknown>,
+        function () {} as NoopTarget,
         {
           get(_target, prop) {
             if (prop === Symbol.toPrimitive) return () => '';

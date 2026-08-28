@@ -1,3 +1,4 @@
+import type { MetricsDefinition } from '../http/types/openTelemetryCollector.types';
 import type { OpenTelemetryCollector } from '../http/telemetry/openTelemetryCollector';
 import type { RetentionService } from './retentionService';
 
@@ -16,10 +17,11 @@ import type { RetentionService } from './retentionService';
  * );
  * ```
  */
-export async function runRetentionEnforcement(
-  retentionService: RetentionService,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  otel: OpenTelemetryCollector<any>
+export async function runRetentionEnforcement<
+  AppliedMetricsDefinition extends MetricsDefinition = MetricsDefinition
+>(
+  retentionService: RetentionService<AppliedMetricsDefinition>,
+  otel: OpenTelemetryCollector<AppliedMetricsDefinition>
 ): Promise<void> {
   const dryRun = process.argv.includes('--dry-run');
 
