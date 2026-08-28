@@ -65,7 +65,7 @@ use crate::{
                 SQLITE3_VERSION, TS_JEST_VERSION, TS_NODE_VERSION, TSX_VERSION, TYPEBOX_VERSION,
                 TYPES_BUILD_SCRIPT, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION,
                 TYPES_NODE_VERSION, TYPES_QS_VERSION, TYPES_UUID_VERSION, TYPES_WATCH_SCRIPT,
-                TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_NATIVE_PREVIEW_VERSION, TYPESCRIPT_VERSION, UNIVERSAL_SDK_VERSION, UUID_VERSION,
+                TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_VERSION, UNIVERSAL_SDK_VERSION, UUID_VERSION,
                 VALIDATOR_VERSION, VITEST_VERSION, ZOD_VERSION, application_build_script,
                 application_clean_purge_script, application_clean_script, application_docs_script,
                 application_format_script, application_lint_fix_script, application_lint_script,
@@ -244,7 +244,10 @@ fn generate_application_package_json(
             ts_node: Some(TS_NODE_VERSION.to_string()),
             tsx: Some(TSX_VERSION.to_string()),
             typescript: Some(TYPESCRIPT_VERSION.to_string()),
-            typescript_native_preview: Some(TYPESCRIPT_NATIVE_PREVIEW_VERSION.to_string()),
+            // TypeScript 7 ships the native compiler as `tsc`, so the
+            // preview package that provided `tsgo` is no longer needed. The
+            // field is skipped when None, so generated manifests omit it.
+            typescript_native_preview: None,
             typescript_eslint: if data.is_eslint {
                 Some(TYPESCRIPT_ESLINT_VERSION.to_string())
             } else {
