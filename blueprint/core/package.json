@@ -1,6 +1,7 @@
 {
   "name": "@forklaunch/blueprint-core",
   "version": "1.0.0",
+  "private": true,
   "description": "The common core lib for all monorepo services",
   "keywords": [],
   "license": "ISC",
@@ -38,8 +39,5 @@
     "@types/qs": "^6.15.1",
     "@types/uuid": "^11.0.0",
     "typescript": "^7.0.2"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

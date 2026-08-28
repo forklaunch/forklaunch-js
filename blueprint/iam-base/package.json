@@ -1,6 +1,7 @@
 {
   "name": "@forklaunch/blueprint-iam-base",
   "version": "0.1.5",
+  "private": true,
   "description": "Forklaunch IAM Implementation",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -72,9 +73,6 @@
     "typedoc": "^0.28.20",
     "typescript": "^7.0.2",
     "vitest": "^4.1.11"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "mikro-orm": {
     "configPaths": [

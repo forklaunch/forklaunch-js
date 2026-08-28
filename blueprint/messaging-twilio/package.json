@@ -1,6 +1,7 @@
 {
   "name": "@forklaunch/blueprint-messaging-twilio",
   "version": "0.0.1",
+  "private": true,
   "description": "Messaging twilio implementation for forklaunch",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -76,9 +77,6 @@
     "typedoc": "^0.28.20",
     "typescript": "^7.0.2",
     "vitest": "^4.1.11"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "mikro-orm": {
     "configPaths": [

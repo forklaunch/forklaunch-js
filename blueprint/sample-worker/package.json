@@ -1,6 +1,7 @@
 {
   "name": "@forklaunch/blueprint-sample-worker",
   "version": "0.1.0",
+  "private": true,
   "description": "Sample worker implementation for forklaunch",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -86,9 +87,6 @@
     "typedoc": "^0.28.20",
     "typescript": "^7.0.2",
     "typescript-eslint": "^8.68.0"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "mikro-orm": {
     "config_paths": [

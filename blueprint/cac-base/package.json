@@ -1,6 +1,7 @@
 {
   "name": "@forklaunch/blueprint-cac-base",
   "version": "0.1.0",
+  "private": true,
   "description": "Computer-assisted coding basic implementation for forklaunch",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -75,9 +76,6 @@
     "typedoc": "^0.28.20",
     "typescript": "^7.0.2",
     "vitest": "^4.1.10"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "mikro-orm": {
     "configPaths": [
