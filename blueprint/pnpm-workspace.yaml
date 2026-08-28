@@ -14,6 +14,7 @@ packages:
 - messaging-twilio
 - sample-worker
 - interfaces/billing
+- interfaces/cac
 - interfaces/ecommerce
 - interfaces/iam
 - interfaces/messaging
@@ -22,6 +23,7 @@ packages:
 - implementations/billing/stripe
 - implementations/messaging/base
 - implementations/messaging/twilio
+- implementations/cac/base
 - implementations/ecommerce/base
 - implementations/ecommerce/stripe
 - implementations/ecommerce/paypal
