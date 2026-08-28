@@ -1,5 +1,39 @@
 # TODOS
 
+## `fl deploy rollback` fails to compile for any app with a websocket-capable service (P0/P1)
+
+**What:** `fl deploy rollback -d <deployment-id> -t <target-release-id>` fails every time on a
+three-service app (`iam`/`billing`/`platform`, node/express, no special config). The generated
+Pulumi program doesn't even compile:
+
+```
+index.ts(3399,21): error TS2304: Cannot find name 'targetGroup_iam_11000'.
+index.ts(3872,21): error TS2304: Cannot find name 'targetGroup_billing_11000'.
+index.ts(4315,21): error TS2304: Cannot find name 'targetGroup_platform_11000'.
+```
+
+**Why:** `11000` is the websocket port (`WS_PORT=11000`, present on every scaffolded service by
+default). The rollback code-generation path references a `targetGroup_<service>_11000` variable
+for every service in the app, but never actually declares it anywhere in the generated code — a
+gap specific to the rollback generator, since normal `deploy create` for the same app worked fine
+across three separate deploys. This isn't specific to our test app's config; nothing unusual was
+done to trigger it (default scaffold, default websocket wiring).
+
+**Impact:** `fl deploy rollback` cannot currently succeed for any app with a websocket-capable
+service — which, since the framework wires websockets by default for every scaffolded service,
+is likely most real apps. The investigator skill's entire "roll back to a known-good version"
+guidance is currently untestable/non-functional for a typical app.
+
+**Confirmed safe:** the rollback fails at the Pulumi program's TypeScript compile step, before
+touching any real infrastructure — the app's services stayed `running` at the pre-rollback version
+throughout, unaffected.
+
+**Effort:** M (need to find where the rollback path's code generator omits declaring the websocket
+target group that the normal deploy path already knows how to create)
+**Priority:** P0/P1 — makes a fully-documented, expected-to-work CLI command non-functional for
+the common case
+**Depends on:** none
+
 ## "iam" is a silently reserved service name — using it without the iam-base/iam-better-auth module panics the CLI (P1)
 
 **What:** `fl init service iam -d postgresql` (a plain custom service, not the `-m iam-base`/
