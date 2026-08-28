@@ -3,6 +3,7 @@
 # This is an auto-generated file. Modifications are encouraged but may inhibit automated upgrades.
 
 packages:
+- cac-base
 - core
 - monitoring
 - billing-base
@@ -32,7 +33,7 @@ packages:
 - implementations/worker/database
 - implementations/worker/kafka
 - implementations/worker/redis
-- universal-sdk
+- client-sdk
 
 blockExoticSubdeps: false
 
