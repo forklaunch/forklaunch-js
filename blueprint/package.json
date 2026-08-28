@@ -40,7 +40,7 @@
     "seed": "docker compose -f docker-compose.base.yml up -d postgres && pnpm -r run seed",
     "test": "pnpm vitest --passWithNoTests",
     "types:watch": "tsc -b -w",
-    "up:packages": "pnpm -r update --latest"
+    "up:packages": "pnpm -r update --latest \"!uWebSockets.js\""
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.7",

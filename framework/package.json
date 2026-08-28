@@ -16,7 +16,7 @@
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
     "publish:packages": "pnpm -r run publish:package",
     "test": "pnpm vitest --passWithNoTests",
-    "up:packages": "pnpm -r update --latest"
+    "up:packages": "pnpm -r update --latest \"!uWebSockets.js\""
   },
   "lint-staged": {
     "**/*.ts": [
@@ -32,7 +32,7 @@
     "eslint": "^10.9.1",
     "globals": "^17.11.0",
     "jest": "^30.4.2",
-    "lint-staged": "^17.3.0",
+    "lint-staged": "^17.4.1",
     "prettier": "^3.9.6",
     "sort-package-json": "^4.0.0",
     "ts-jest": "^29.4.12",
