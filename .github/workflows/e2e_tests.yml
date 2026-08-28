@@ -11,6 +11,9 @@ on:
     paths:
       - "cli/**"
 
+permissions:
+  contents: read
+
 jobs:
   # The CLI is compiled once and shared. Previously all six test jobs ran
   # `cargo build --release` themselves — around four minutes each, roughly
