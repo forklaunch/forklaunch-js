@@ -82,7 +82,7 @@ cd src/modules/<service> && pnpm migrate:up        # Run pending migrations
 
 # Type checking
 cd src/modules/<service> && ./node_modules/.bin/tsc --noEmit   # Backend
-cd client && pnpm tsgo --noEmit                                 # Frontend
+cd client && pnpm tsc --noEmit                                 # Frontend
 
 # Tests
 cd src/modules/<service> && pnpm test   # Run module tests

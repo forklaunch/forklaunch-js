@@ -1,5 +1,27 @@
 # @forklaunch/express
 
+## 1.2.41
+
+### Patch Changes
+
+- Update internal package versions
+- Updated dependencies
+  - @forklaunch/common@1.2.24
+  - @forklaunch/core@1.5.16
+  - @forklaunch/validator@1.2.25
+
+## 1.2.40
+
+### Patch Changes
+
+- Match the setKeepAlive overloads @types/node 26.4 added.
+
+  Node's Socket type gained a `setKeepAlive(options: SetKeepAliveOptions)`
+  overload alongside the positional form. BunSocketShim implemented only the
+  positional one, so it stopped being assignable to Socket — which also cascaded
+  into `connect` returning a type that no longer structurally matched, failing the
+  build with TS2416 and TS2322.
+
 ## 1.2.34
 
 ### Patch Changes

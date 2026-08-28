@@ -3,6 +3,7 @@
 # This is an auto-generated file. Modifications are encouraged but may inhibit automated upgrades.
 
 packages:
+- cac-base
 - core
 - monitoring
 - billing-base
@@ -14,6 +15,7 @@ packages:
 - messaging-twilio
 - sample-worker
 - interfaces/billing
+- interfaces/cac
 - interfaces/ecommerce
 - interfaces/iam
 - interfaces/messaging
@@ -22,6 +24,7 @@ packages:
 - implementations/billing/stripe
 - implementations/messaging/base
 - implementations/messaging/twilio
+- implementations/cac/base
 - implementations/ecommerce/base
 - implementations/ecommerce/stripe
 - implementations/ecommerce/paypal
@@ -30,7 +33,7 @@ packages:
 - implementations/worker/database
 - implementations/worker/kafka
 - implementations/worker/redis
-- universal-sdk
+- client-sdk
 
 blockExoticSubdeps: false
 

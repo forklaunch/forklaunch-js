@@ -1,5 +1,14 @@
 # @forklaunch/internal
 
+## 1.2.26
+
+### Patch Changes
+
+- Update internal package versions
+- Updated dependencies
+  - @forklaunch/common@1.2.24
+  - @forklaunch/validator@1.2.25
+
 ## 1.2.20
 
 ### Patch Changes

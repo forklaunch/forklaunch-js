@@ -65,7 +65,8 @@ use crate::{
                 SQLITE3_VERSION, STRIPE_VERSION, TESTING_VERSION, TSX_VERSION, TYPEBOX_VERSION,
                 TYPEDOC_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION,
                 TYPES_JEST_VERSION, TYPES_QS_VERSION, TYPES_UUID_VERSION,
-                TYPESCRIPT_ESLINT_VERSION, UNIVERSAL_SDK_VERSION, UUID_VERSION, VALIDATOR_VERSION,
+                TYPESCRIPT_ESLINT_VERSION, UNIVERSAL_SDK_VERSION, UWEBSOCKETS_VERSION, UUID_VERSION,
+                VALIDATOR_VERSION,
                 ZOD_VERSION, project_clean_script, project_dev_local_script,
                 project_dev_server_script, project_format_script, project_lint_fix_script,
                 project_lint_script, project_migrate_script, project_retention_enforce_script,
@@ -446,6 +447,11 @@ pub(crate) fn generate_service_package_json(
                 },
                 forklaunch_hyper_express: if manifest_data.is_hyper_express {
                     Some(HYPER_EXPRESS_VERSION.to_string())
+                } else {
+                    None
+                },
+                uwebsockets_js: if manifest_data.is_hyper_express {
+                    Some(UWEBSOCKETS_VERSION.to_string())
                 } else {
                     None
                 },
