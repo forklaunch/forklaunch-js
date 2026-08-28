@@ -491,12 +491,6 @@ importers:
       '@forklaunch/core':
         specifier: ^1.5.15
         version: 1.5.15(ajv-formats@3.0.1(ajv@8.20.0))(ajv@8.20.0)
-      '@typescript/native-preview':
-        specifier: 7.0.0-dev.20260707.2
-        version: 7.0.0-dev.20260707.2
-      typescript:
-        specifier: npm:@typescript/typescript6@^6.0.2
-        version: '@typescript/typescript6@6.0.2'
 
   core:
     dependencies:

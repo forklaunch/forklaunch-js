@@ -1,1 +1,0 @@
-../../scripts/publish-package.bash
