@@ -63,7 +63,10 @@ registerEncryptor(
   new FieldEncryptor(validConfigInjector.resolve(tokens.ENCRYPTION_KEY))
 );
 
-const mikroOrmOptionsConfig = defineConfig({
+// Explicit return-type annotation needed once the entity count/relation
+// graph grows past a certain size — TS7056, the inferred type otherwise
+// exceeds what the compiler will serialize.
+const mikroOrmOptionsConfig: ReturnType<typeof defineConfig> = defineConfig({
   dbName: validConfigInjector.resolve(tokens.DB_NAME),
   host: validConfigInjector.resolve(tokens.DB_HOST),
   user: validConfigInjector.resolve(tokens.DB_USER),

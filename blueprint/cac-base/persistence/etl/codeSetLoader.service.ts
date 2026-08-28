@@ -33,7 +33,7 @@ export class CodeSetLoaderService {
     private readonly otel: OpenTelemetryCollector<MetricsDefinition>
   ) {}
 
-  async load<T extends object>(
+  async load<T extends { code: string }>(
     entityClass: EntityName<T>,
     rows: AsyncIterable<CodeSetRow> | Iterable<CodeSetRow>,
     options?: { batchSize?: number }
