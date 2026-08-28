@@ -1,7 +1,6 @@
 {
   "name": "@forklaunch/blueprint-ecommerce-stripe",
   "version": "0.0.1",
-  "private": true,
   "description": "Ecommerce stripe implementation for forklaunch",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -29,6 +28,7 @@
     "migrate:init": "NODE_OPTIONS='--import=tsx' mikro-orm migration:create --initial",
     "migrate:up": "NODE_OPTIONS='--import=tsx' mikro-orm migration:up",
     "prepack": "pnpm run build",
+    "publish:package": "./publish-package.bash",
     "start": "DOTENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' node dist/server.js",
     "start:worker": "DOTENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' node dist/worker.js",
     "test": "vitest --passWithNoTests"
@@ -87,5 +87,8 @@
       "./mikro-orm.config.ts",
       "./dist/mikro-orm.config.js"
     ]
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
