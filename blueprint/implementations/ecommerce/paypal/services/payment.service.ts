@@ -51,7 +51,7 @@ export class PaypalPaymentService<
       em,
       openTelemetryCollector,
       schemaValidator,
-      mappers as unknown as ConstructorParameters<
+      mappers as ConstructorParameters<
         typeof BasePaymentService<SchemaValidator, Entities, Dto>
       >[3],
       options

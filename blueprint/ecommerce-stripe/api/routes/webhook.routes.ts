@@ -25,7 +25,7 @@ export const webhookRouter = forklaunchRouter(
   {
     json: {
       verify: (req, _res, buf) => {
-        (req as unknown as { rawBody?: Buffer }).rawBody = Buffer.from(buf);
+        (req as { rawBody?: Buffer }).rawBody = Buffer.from(buf);
       }
     }
   }
