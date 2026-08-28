@@ -1,10 +1,6 @@
-# @forklaunch/implementation-cac-base
+# @forklaunch/implementation-ecommerce-paypal
 
-## 0.2.0
-
-### Minor Changes
-
-- 89e1036: Add cac (computer-assisted coding) module skeleton: CodeSetProvider interface with a mock procedure-code implementation (free, unlicensed placeholder codes) — the swappable abstraction that licensed CPT data will plug into once an organization's AMA license is active.
+## 1.0.1
 
 ### Patch Changes
 
@@ -32,6 +28,6 @@
   it, while a newly added dependency resolves the same range to the new one, and
   the two copies coexist until something type-checks across them.
 
-- Updated dependencies [89e1036]
 - Updated dependencies [927378c]
-  - @forklaunch/interfaces-cac@0.2.0
+  - @forklaunch/implementation-ecommerce-base@1.0.6
+  - @forklaunch/interfaces-ecommerce@1.0.6
