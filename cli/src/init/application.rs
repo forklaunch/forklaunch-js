@@ -21,7 +21,8 @@ use crate::{
     constants::{
         Database, ERROR_FAILED_TO_CREATE_DATABASE_EXPORT_INDEX_TS,
         ERROR_FAILED_TO_CREATE_GITIGNORE, ERROR_FAILED_TO_CREATE_LICENSE,
-        ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE, ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE,
+        ERROR_FAILED_TO_GENERATE_BUNFIG, ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE,
+        ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE,
         Formatter, HttpFramework, License, Linter, Module, ModulesPath,
         Runtime, TestFramework, Validator, get_core_module_description,
         get_monitoring_module_description, get_service_module_cache,
@@ -76,6 +77,7 @@ use crate::{
             },
             project_package_json::{ProjectDependencies, ProjectDevDependencies, ProjectScripts},
         },
+        bunfig::generate_bunfig,
         pnpm_workspace::generate_pnpm_workspace,
         rendered_template::{RenderedTemplate, create_forklaunch_dir, write_rendered_templates},
         symlinks::generate_symlinks,
@@ -1239,6 +1241,11 @@ impl CliCommand for ApplicationCommand {
             rendered_templates.extend(
                 generate_pnpm_workspace(&application_path, &additional_projects)
                     .with_context(|| ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE)?,
+            );
+        } else if runtime == Runtime::Bun {
+            rendered_templates.extend(
+                generate_bunfig(&application_path)
+                    .with_context(|| ERROR_FAILED_TO_GENERATE_BUNFIG)?,
             );
         }
 
