@@ -101,7 +101,18 @@ const mikroOrmOptionsConfig = defineConfig({ {{#is_mongo}}
   },{{#is_postgres}}
   // per-app schema on shared-infrastructure tiers (one database, many schemas)
   schema: getEnvVar('DB_SCHEMA') || 'public',{{/is_postgres}}{{/is_in_memory_database}}{{/is_mongo}}
-  entities: Object.values(entities),
+  // Annotated because a module can legitimately start with no entities: over an
+  // empty entities module Object.values() widens to unknown[], which MikroORM
+  // rejects, so the module fails to build the moment it is scaffolded. The
+  // annotation names the shape MikroORM accepts rather than one concrete kind —
+  // modules define entities as schemas or as classes, and a cast to either one
+  // alone rejects the other. Reading the type off `defineConfig` states that
+  // requirement directly instead of restating it with `any` in it, and takes no
+  // extra import — `forklaunch change service` rewrites the driver import
+  // wholesale when the database changes, which would drop one.
+  entities: Object.values(entities) as Parameters<
+    typeof defineConfig
+  >[0]['entities'],
   debug: validConfigInjector.resolve(
     tokens.NODE_ENV
   ) === 'development',

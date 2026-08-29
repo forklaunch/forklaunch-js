@@ -204,7 +204,7 @@ export class Application<
         host,
         port,
         version ?? '1.0.0',
-        this as unknown as ForklaunchRouter<ZodSchemaValidator>,
+        this as ForklaunchRouter<ZodSchemaValidator>,
         this.mcpConfiguration,
         options,
         contentTypeMapping,

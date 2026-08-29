@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/implementation-messaging-twilio",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Twilio implementation for forklaunch messaging",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -63,7 +63,7 @@
     "lib/**"
   ],
   "scripts": {
-    "build": "tsgo --noEmit && tsup persistence/entities/index.ts domain/schemas/index.ts services/index.ts domain/enum/index.ts domain/types/index.ts --format cjs,esm --no-splitting --tsconfig tsconfig.json --out-dir lib --clean && tsgo -p tsconfig.build.json --emitDeclarationOnly && if [ -f eject-package.bash ]; then pnpm package:eject; fi",
+    "build": "tsc --noEmit && tsup persistence/entities/index.ts domain/schemas/index.ts services/index.ts domain/enum/index.ts domain/types/index.ts --format cjs,esm --no-splitting --tsconfig tsconfig.json --out-dir lib --clean && tsc -p tsconfig.build.json --emitDeclarationOnly && if [ -f eject-package.bash ]; then pnpm package:eject; fi",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
@@ -75,24 +75,24 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "^1.2.23",
-    "@forklaunch/core": "^1.5.15",
+    "@forklaunch/common": "^1.2.24",
+    "@forklaunch/core": "^1.5.16",
     "@forklaunch/implementation-messaging-base": "workspace:^",
     "@forklaunch/interfaces-messaging": "workspace:^",
-    "@forklaunch/internal": "^1.2.24",
-    "@forklaunch/validator": "^1.2.24",
-    "@mikro-orm/core": "^7.1.11",
+    "@forklaunch/internal": "^1.2.26",
+    "@forklaunch/validator": "^1.2.25",
+    "@mikro-orm/core": "7.1.14",
     "@sinclair/typebox": "^0.34.52",
     "ajv": "^8.20.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@typescript/native-preview": "7.0.0-dev.20260707.2",
+    "@mikro-orm/sqlite": "^7.1.14",
     "depcheck": "^1.4.7",
     "prettier": "^3.9.6",
     "typedoc": "^0.28.20",
-    "@mikro-orm/sqlite": "^7.1.11",
-    "uuid": "^14.0.1"
+    "typescript": "^7.0.2",
+    "uuid": "^14.0.2"
   },
   "publishConfig": {
     "access": "public"

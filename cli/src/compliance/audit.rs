@@ -920,25 +920,6 @@ impl ModuleEncryptionContext {
         out
     }
 
-    /// Modules that declare classified fields but never register an encryptor —
-    /// those columns are silently written in plaintext.
-    fn unprotected_modules(&self) -> Vec<(String, usize)> {
-        let mut out: Vec<(String, usize)> = self
-            .module_classified_fields
-            .iter()
-            .filter(|(m, count)| {
-                **count > 0
-                    && !self
-                        .module_registers_encryptor
-                        .get(*m)
-                        .copied()
-                        .unwrap_or(false)
-            })
-            .map(|(m, count)| (m.clone(), *count))
-            .collect();
-        out.sort_by(|a, b| a.0.cmp(&b.0));
-        out
-    }
 }
 
 /// Detect, per module, which entities it owns and whether it registers a

@@ -619,7 +619,7 @@ export class ForklaunchExpressLikeRouter<
 
       if (executeMiddlewares && middlewares.length > 0) {
         const allHandlers = [...middlewares];
-        let cursor = allHandlers.shift() as unknown as (
+        let cursor = allHandlers.shift() as (
           req_: typeof req,
           resp_: typeof res,
           next: (err?: Error) => Promise<void> | void
@@ -631,7 +631,7 @@ export class ForklaunchExpressLikeRouter<
               if (err) {
                 throw err;
               }
-              cursor = fn as unknown as (
+              cursor = fn as (
                 req_: typeof req,
                 resp_: typeof res,
                 next: (err?: Error) => Promise<void> | void
@@ -646,7 +646,7 @@ export class ForklaunchExpressLikeRouter<
         }
       }
 
-      const cHandler = controllerHandler as unknown as (
+      const cHandler = controllerHandler as (
         req_: typeof req,
         resp_: typeof res,
         next: (err?: Error) => Promise<void> | void

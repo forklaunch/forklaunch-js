@@ -374,6 +374,11 @@ export class ZodSchemaValidator implements SV<
       }[keyof T]
     ]
   > {
+    // The hop through unknown is load-bearing. `union()` is typed for a fixed
+    // tuple, and mapping an enum's values produces an array whose length is not
+    // known statically, so the two union shapes never overlap enough for a
+    // direct assertion. The runtime value is correct — one literal per enum
+    // member — but that correspondence is not expressible here.
     return this.union(
       Object.values(schemaEnum) as unknown as ZodUnionContainer
     ) as unknown as ZodUnion<

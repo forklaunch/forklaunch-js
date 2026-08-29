@@ -62,7 +62,7 @@ export function contentParse<SV extends AnySchemaValidator>(options?: {
       // so json()/text()/urlencoded() below reuse the same buffered payload.
       // Multipart is excluded: it consumes the stream field-by-field.
       if (discriminatedBody.parserType !== 'multipart') {
-        (req as unknown as { _rawBody?: Buffer })._rawBody = await req.buffer();
+        (req as { _rawBody?: Buffer })._rawBody = await req.buffer();
       }
 
       switch (discriminatedBody.parserType) {

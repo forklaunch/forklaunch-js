@@ -135,6 +135,16 @@ pub(crate) struct EnvironmentVariableRequirement {
     pub origin: Option<String>,
     #[serde(rename = "interServiceUrl", skip_serializing_if = "Option::is_none")]
     pub inter_service_url: Option<InterServiceUrlInfo>,
+    /// Whether the app declares this variable `optional(...)` at the schema
+    /// level. Omitted when the scanner saw no declared type, so an older
+    /// platform — or one reading this under manifest schema 1.0.0 — falls back
+    /// to today's behaviour.
+    ///
+    /// NOTE: this field is only carried through platform ingestion from
+    /// manifest schema version 1.1.0 onward. Under 1.0.0 it is validated away
+    /// silently. See `RELEASE_MANIFEST_SCHEMA_VERSION`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub optional: Option<bool>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -982,6 +992,57 @@ fn add_non_db_resources(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_required_env_var_serializes_declared_optionality() {
+        // The scanner's work is only useful if the field survives serialization
+        // into the manifest the platform actually reads.
+        let requirement = EnvironmentVariableRequirement {
+            name: "OTEL_LEVEL".to_string(),
+            scope: EnvironmentVariableScope::Service,
+            scope_id: Some("billing".to_string()),
+            component: None,
+            origin: None,
+            inter_service_url: None,
+            optional: Some(true),
+        };
+
+        let json = serde_json::to_value(&requirement).unwrap();
+        assert_eq!(json["optional"], serde_json::json!(true));
+
+        // Required is carried explicitly rather than omitted, so the platform can
+        // tell "declared required" from "an older CLI said nothing".
+        let required = EnvironmentVariableRequirement {
+            optional: Some(false),
+            ..requirement
+        };
+        assert_eq!(
+            serde_json::to_value(&required).unwrap()["optional"],
+            serde_json::json!(false)
+        );
+    }
+
+    #[test]
+    fn test_required_env_var_omits_unknown_optionality() {
+        // A synthesized variable the scanner never sighted has no optionality to
+        // report; the field is omitted so the platform falls back to today's
+        // behaviour rather than reading it as "required".
+        let requirement = EnvironmentVariableRequirement {
+            name: "PLATFORM_INJECTED".to_string(),
+            scope: EnvironmentVariableScope::Application,
+            scope_id: None,
+            component: None,
+            origin: Some("platform".to_string()),
+            inter_service_url: None,
+            optional: None,
+        };
+
+        let json = serde_json::to_value(&requirement).unwrap();
+        assert!(
+            json.get("optional").is_none(),
+            "unknown optionality must not serialize, got: {json}"
+        );
+    }
 
     #[test]
     fn test_route_definition_has_topology_with_versions() {

@@ -48,7 +48,11 @@ pub(crate) fn is_dev_build() -> bool {
         .unwrap_or(false)
 }
 
-pub(crate) const RELEASE_MANIFEST_SCHEMA_VERSION: &str = "1.0.0";
+// Manifest schema 1.1.0 adds `optional` to each environment variable
+// requirement. The platform's ingestion rejects a schema version it does not
+// know rather than degrading, so this must not move ahead of the platform —
+// forklaunch-platform#389 landed 1.1.0 support before this bump.
+pub(crate) const RELEASE_MANIFEST_SCHEMA_VERSION: &str = "1.1.0";
 
 pub(crate) fn get_platform_management_api_url() -> String {
     std::env::var("FORKLAUNCH_PLATFORM_MANAGEMENT_API_URL").unwrap_or_else(|_| {
@@ -385,6 +389,11 @@ choice! {
             id: "messaging-twilio",
             description: Some("twilio sms implementation for messaging"),
             exclusive_files: Some(&["messaging-twilio"]),
+        },
+        BaseCac = Choice {
+            id: "cac-base",
+            description: Some("computer-assisted coding hooks only"),
+            exclusive_files: Some(&["cac-base"]),
         }
     }
 
@@ -507,6 +516,7 @@ pub(crate) const ERROR_FAILED_TO_CREATE_LICENSE: &str =
     "Failed to create license file. Please check your target directory is writable.";
 pub(crate) const ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE: &str =
     "Failed to generate pnpm-workspace.yaml.";
+pub(crate) const ERROR_FAILED_TO_GENERATE_BUNFIG: &str = "Failed to generate bunfig.toml.";
 pub(crate) const ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE: &str =
     "Failed to add project metadata to docker compose yaml.";
 pub(crate) const ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST: &str =
@@ -531,6 +541,11 @@ pub(crate) const ERROR_FAILED_TO_CREATE_DATABASE_EXPORT_INDEX_TS: &str =
     "Failed to create database export index.ts in core/persistence.";
 pub(crate) const ERROR_FAILED_TO_CREATE_LIBRARY_PACKAGE_JSON: &str =
     "Failed to create library package.json.";
+pub(crate) const ERROR_FAILED_TO_READ_STOREFRONT_MANIFEST: &str =
+    "Failed to read the storefront manifest.json. Please check the --from path is correct.";
+pub(crate) const ERROR_FAILED_TO_PARSE_STOREFRONT_MANIFEST: &str = "Failed to parse the storefront manifest.json. Please verify the file is valid json produced by the storefront capture tool.";
+pub(crate) const ERROR_STOREFRONT_PROJECT_ALREADY_EXISTS: &str = "A project directory with this name already exists. Please choose a different name or remove the existing directory.";
+pub(crate) const ERROR_FAILED_TO_COPY_STOREFRONT_SITE: &str = "Failed to copy captured storefront site assets. Please check the source site/ directory and target directory are accessible.";
 pub(crate) const ERROR_FAILED_TO_ADD_SERVICE_METADATA_TO_ARTIFACTS: &str =
     "Failed to add service metadata to artifacts.";
 pub(crate) const ERROR_FAILED_TO_UPDATE_APPLICATION_PACKAGE_JSON: &str =
@@ -566,6 +581,7 @@ pub(crate) fn get_service_module_name(service_type: &Module) -> String {
         Module::BaseIam | Module::BetterAuthIam => "iam".to_string(),
         Module::StripeEcommerce => "ecommerce".to_string(),
         Module::BaseMessaging | Module::TwilioMessaging => "messaging".to_string(),
+        Module::BaseCac => "cac".to_string(),
     }
 }
 
@@ -579,6 +595,7 @@ pub(crate) fn get_service_module_description(name: &str, service_type: &Module) 
             Module::BaseIam | Module::BetterAuthIam => "identity and access management APIs",
             Module::StripeEcommerce => "ecommerce service APIs",
             Module::BaseMessaging | Module::TwilioMessaging => "messaging service APIs",
+            Module::BaseCac => "computer-assisted coding service APIs",
         }
     )
 }
@@ -589,6 +606,9 @@ pub(crate) fn get_service_module_cache(service_type: &Module) -> Option<String> 
         Module::BaseMessaging | Module::TwilioMessaging => {
             Some(Infrastructure::Redis.to_string())
         }
+        // The ecommerce blueprint reads REDIS_URL at startup for both the cart
+        // cache and the order-event queue, and exits if it is unset.
+        Module::StripeEcommerce => Some(Infrastructure::Redis.to_string()),
         _ => None,
     }
 }
@@ -605,3 +625,37 @@ pub(crate) const DIRS_TO_IGNORE: &[&str] = &[
     "core",
     "client-sdk",
 ];
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Every module whose blueprint reads REDIS_URL at startup must declare a
+    /// cache resource, otherwise `init module` writes a manifest with no Redis
+    /// in it and the scaffolded project cannot boot once deployed.
+    #[test]
+    fn modules_needing_redis_declare_a_cache_resource() {
+        for module in [
+            Module::BaseBilling,
+            Module::StripeBilling,
+            Module::BaseMessaging,
+            Module::TwilioMessaging,
+            Module::StripeEcommerce,
+        ] {
+            assert_eq!(
+                get_service_module_cache(&module),
+                Some(Infrastructure::Redis.to_string()),
+                "{module:?} needs a Redis cache resource in its manifest"
+            );
+        }
+    }
+
+    /// The iam modules wire no cache, so the helper must keep returning None
+    /// for them rather than handing every module a Redis resource it will
+    /// never use.
+    #[test]
+    fn modules_without_a_cache_declare_none() {
+        assert_eq!(get_service_module_cache(&Module::BaseIam), None);
+        assert_eq!(get_service_module_cache(&Module::BetterAuthIam), None);
+    }
+}

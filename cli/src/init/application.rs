@@ -21,7 +21,8 @@ use crate::{
     constants::{
         Database, ERROR_FAILED_TO_CREATE_DATABASE_EXPORT_INDEX_TS,
         ERROR_FAILED_TO_CREATE_GITIGNORE, ERROR_FAILED_TO_CREATE_LICENSE,
-        ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE, ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE,
+        ERROR_FAILED_TO_GENERATE_BUNFIG, ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE,
+        ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE,
         Formatter, HttpFramework, License, Linter, Module, ModulesPath,
         Runtime, TestFramework, Validator, get_core_module_description,
         get_monitoring_module_description, get_service_module_cache,
@@ -57,7 +58,7 @@ use crate::{
                 AJV_VERSION, APP_DEV_BUILD_SCRIPT, APP_DEV_SCRIPT, APP_PREPARE_SCRIPT,
                 BETTER_AUTH_VERSION, BETTER_SQLITE3_VERSION, BIOME_VERSION, BUNRUN_VERSION,
                 COMMON_VERSION, CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION,
-                GLOBALS_VERSION, HUSKY_VERSION, HYPER_EXPRESS_VERSION, JEST_TYPES_VERSION,
+                GLOBALS_VERSION, HUSKY_VERSION, HYPER_EXPRESS_VERSION, UWEBSOCKETS_VERSION, JEST_TYPES_VERSION,
                 JEST_VERSION, LINT_STAGED_VERSION, MIKRO_ORM_CORE_VERSION,
                 MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
                 NODE_GYP_VERSION, OXLINT_VERSION, PRETTIER_VERSION,
@@ -65,7 +66,7 @@ use crate::{
                 SQLITE3_VERSION, TS_JEST_VERSION, TS_NODE_VERSION, TSX_VERSION, TYPEBOX_VERSION,
                 TYPES_BUILD_SCRIPT, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION,
                 TYPES_NODE_VERSION, TYPES_QS_VERSION, TYPES_UUID_VERSION, TYPES_WATCH_SCRIPT,
-                TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_NATIVE_PREVIEW_VERSION, TYPESCRIPT_VERSION, UNIVERSAL_SDK_VERSION, UUID_VERSION,
+                TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_VERSION, UNIVERSAL_SDK_VERSION, UUID_VERSION,
                 VALIDATOR_VERSION, VITEST_VERSION, ZOD_VERSION, application_build_script,
                 application_clean_purge_script, application_clean_script, application_docs_script,
                 application_format_script, application_lint_fix_script, application_lint_script,
@@ -76,6 +77,7 @@ use crate::{
             },
             project_package_json::{ProjectDependencies, ProjectDevDependencies, ProjectScripts},
         },
+        bunfig::generate_bunfig,
         pnpm_workspace::generate_pnpm_workspace,
         rendered_template::{RenderedTemplate, create_forklaunch_dir, write_rendered_templates},
         symlinks::generate_symlinks,
@@ -244,7 +246,10 @@ fn generate_application_package_json(
             ts_node: Some(TS_NODE_VERSION.to_string()),
             tsx: Some(TSX_VERSION.to_string()),
             typescript: Some(TYPESCRIPT_VERSION.to_string()),
-            typescript_native_preview: Some(TYPESCRIPT_NATIVE_PREVIEW_VERSION.to_string()),
+            // TypeScript 7 ships the native compiler as `tsc`, so the
+            // preview package that provided `tsgo` is no longer needed. The
+            // field is skipped when None, so generated manifests omit it.
+            typescript_native_preview: None,
             typescript_eslint: if data.is_eslint {
                 Some(TYPESCRIPT_ESLINT_VERSION.to_string())
             } else {
@@ -569,6 +574,7 @@ impl CliCommand for ApplicationCommand {
             billing: None,
             ecommerce: None,
             messaging: None,
+            cac: None,
             };
         let mut modules: Vec<Module> = if matches.get_many::<String>("modules").is_none()
             && std::io::stdin().is_terminal()
@@ -580,6 +586,7 @@ impl CliCommand for ApplicationCommand {
                     billing: None,
                     ecommerce: None,
                     messaging: None,
+                    cac: None,
                     };
                 modules_to_test = prompt_comma_separated_list(
                     &mut line_editor,
@@ -619,6 +626,7 @@ impl CliCommand for ApplicationCommand {
                 Module::BaseBilling | Module::StripeBilling => 1,
                 Module::StripeEcommerce => 2,
                 Module::BaseMessaging | Module::TwilioMessaging => 3,
+                Module::BaseCac => 4,
             }
         });
 
@@ -954,6 +962,9 @@ impl CliCommand for ApplicationCommand {
                 is_messaging: template_dir.module_id == Some(Module::BaseMessaging)
                     || template_dir.module_id == Some(Module::TwilioMessaging),
                 is_twilio: template_dir.module_id == Some(Module::TwilioMessaging),
+                is_cac: template_dir.module_id == Some(Module::BaseCac),
+                is_ecommerce: template_dir.module_id == Some(Module::StripeEcommerce),
+                ships_worker: template_dir.module_id == Some(Module::StripeEcommerce),
 
                 is_iam_configured: data.projects.iter().any(|project_entry| {
                     if project_entry.name == "iam" {
@@ -992,6 +1003,7 @@ impl CliCommand for ApplicationCommand {
                 service_data.is_iam = global_module_config.iam.is_some();
                 service_data.is_billing = global_module_config.billing.is_some();
                 service_data.is_messaging = global_module_config.messaging.is_some();
+                service_data.is_cac = global_module_config.cac.is_some();
                 service_data.is_better_auth = global_module_config
                     .iam
                     .as_ref()
@@ -1053,6 +1065,11 @@ impl CliCommand for ApplicationCommand {
                         },
                         forklaunch_hyper_express: if service_data.is_hyper_express {
                             Some(HYPER_EXPRESS_VERSION.to_string())
+                        } else {
+                            None
+                        },
+                        uwebsockets_js: if service_data.is_hyper_express {
+                            Some(UWEBSOCKETS_VERSION.to_string())
                         } else {
                             None
                         },
@@ -1119,6 +1136,7 @@ impl CliCommand for ApplicationCommand {
                             global_module_config.billing.is_some(),
                             global_module_config.iam.is_some(),
                             global_module_config.messaging.is_some(),
+                            global_module_config.cac.is_some(),
                         ),
                         ..Default::default()
                     }),
@@ -1223,6 +1241,11 @@ impl CliCommand for ApplicationCommand {
             rendered_templates.extend(
                 generate_pnpm_workspace(&application_path, &additional_projects)
                     .with_context(|| ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE)?,
+            );
+        } else if runtime == Runtime::Bun {
+            rendered_templates.extend(
+                generate_bunfig(&application_path)
+                    .with_context(|| ERROR_FAILED_TO_GENERATE_BUNFIG)?,
             );
         }
 

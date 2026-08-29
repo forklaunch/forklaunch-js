@@ -82,6 +82,23 @@ config_struct!(
         pub(crate) is_messaging: bool,
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) is_twilio: bool,
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) is_cac: bool,
+        /// True when scaffolding the stripe ecommerce module. Kept separate
+        /// from `is_stripe` (which means "the stripe *billing* module") because
+        /// that flag also pulls in @forklaunch/implementation-billing-stripe —
+        /// an ecommerce project needs the Stripe SDK and Stripe env vars, but
+        /// not the billing implementation.
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) is_ecommerce: bool,
+
+        /// True when the module's template includes a worker.ts, so the
+        /// generated package.json needs entry points that start it. Kept
+        /// separate from is_ecommerce: shipping a worker is the property the
+        /// scripts depend on, and the next module to ship one should not have
+        /// to be called ecommerce to get them.
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) ships_worker: bool,
 
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) is_iam_configured: bool,

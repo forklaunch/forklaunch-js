@@ -42,7 +42,7 @@ use crate::{
             add_redis_to_docker_compose, clean_up_unused_infrastructure_services,
             remove_service_from_docker_compose,
         },
-        env::Env,
+        env::read_env_local_or_default,
         format::format_code,
         manifest::{
             InitializableManifestConfig, InitializableManifestConfigMetadata, ManifestData,
@@ -182,12 +182,8 @@ fn change_type(
         .clone();
 
     let env_local_path = base_path.join(".env.local");
-    let mut env_local_content: Env = serde_envfile::from_str(
-        &rendered_templates_cache
-            .get(&env_local_path)?
-            .unwrap()
-            .content,
-    )?;
+    let mut env_local_content =
+        read_env_local_or_default(rendered_templates_cache, &env_local_path)?;
 
     env_local_content.db_name = None;
     env_local_content.db_host = None;

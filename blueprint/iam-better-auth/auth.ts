@@ -3,7 +3,7 @@ import { PERMISSIONS, ROLES } from '@forklaunch/blueprint-core';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { getEnvVar } from '@forklaunch/common';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { MikroORM } from '@mikro-orm/core';
+import type { AnyMikroORM } from '@forklaunch/core/persistence';
 import { betterAuth, BetterAuthOptions } from 'better-auth';
 import { createAccessControl } from 'better-auth/plugins/access';
 import { jwt, openAPI, organization } from 'better-auth/plugins';
@@ -114,10 +114,10 @@ export const betterAuthConfig = ({
 }: {
   BETTER_AUTH_BASE_PATH: string;
   CORS_ORIGINS: string[];
-  // relaxed type params: MikroORM.init() returns a readonly entities array,
-  // which a bare `MikroORM` annotation rejects
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  orm: MikroORM<any, any, any>;
+  // AnyMikroORM is derived from MikroORM.init's own return type, which is what
+  // makes it accept the readonly entities array a bare `MikroORM` annotation
+  // rejects — without the three `any`s that used to stand in for it.
+  orm: AnyMikroORM;
   openTelemetryCollector: OpenTelemetryCollector<Metrics>;
 }) => {
   const baseURL =

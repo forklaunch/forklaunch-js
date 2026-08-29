@@ -1,13 +1,13 @@
-import { MikroORM, Options } from '@mikro-orm/core';
+import { MikroORM } from '@mikro-orm/core';
 
 /**
- * `MikroORM` with relaxed type parameters. `MikroORM.init()` returns an
- * instance whose `Entities` parameter is a readonly array, which is not
- * assignable to a bare `MikroORM` annotation (its `Entities` default is a
- * mutable array) — so the harness accepts any concrete instance instead.
+ * The type `MikroORM.init()` actually returns. Its `Entities` parameter is a
+ * readonly array, which is not assignable to a bare `MikroORM` annotation
+ * (whose `Entities` default is mutable) — so the harness names the returned
+ * type directly rather than widening the parameters to `any`, which would have
+ * accepted anything at all instead of exactly what `init()` hands back.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type AnyMikroORM = MikroORM<any, any, any>;
+export type AnyMikroORM = Awaited<ReturnType<typeof MikroORM.init>>;
 import Redis from 'ioredis';
 import { StartedTestContainer } from 'testcontainers';
 import { DatabaseType } from './containers';
@@ -16,10 +16,12 @@ import { DatabaseType } from './containers';
  * MikroORM options that accept any driver's `defineConfig()` return —
  * mutable or readonly entities, base or driver-specific `Options`
  * (e.g. `Options<PostgreSqlDriver, ...>` is not assignable to the
- * base-driver `Options` default).
+ * base-driver `Options` default). Taken from the parameter `init()` accepts,
+ * so the harness tracks MikroORM's own shape instead of restating it.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type AnyMikroOrmOptions = Partial<Options<any, any, any>>;
+export type AnyMikroOrmOptions = Partial<
+  NonNullable<Parameters<typeof MikroORM.init>[0]>
+>;
 
 export interface MikroOrmTestConfig {
   /**

@@ -105,7 +105,7 @@ export class Application<
       }),
       [
         contentParse<SV>(configurationOptions),
-        enrichResponseTransmission as unknown as MiddlewareHandler
+        enrichResponseTransmission as MiddlewareHandler
       ],
       openTelemetryCollector,
       configurationOptions
@@ -248,7 +248,7 @@ export class Application<
           host,
           port,
           version ?? '1.0.0',
-          this as unknown as ForklaunchRouter<ZodSchemaValidator>,
+          this as ForklaunchRouter<ZodSchemaValidator>,
           this.mcpConfiguration,
           options,
           contentTypeMapping
@@ -331,6 +331,8 @@ export class Application<
                 })),
                 ...(this.docsConfiguration?.sources ?? [])
               ]
+              // Scalar's `apiReference` returns an Express-typed handler; hyper-express
+              // expects its own `MiddlewareHandler`. Same function, disjoint signatures.
             }) as unknown as MiddlewareHandler
           );
         } else if (this.docsConfiguration?.type === 'swagger') {

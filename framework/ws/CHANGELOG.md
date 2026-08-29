@@ -1,5 +1,15 @@
 # @forklaunch/ws
 
+## 1.2.39
+
+### Patch Changes
+
+- Update internal package versions
+- Updated dependencies
+  - @forklaunch/common@1.2.24
+  - @forklaunch/core@1.5.16
+  - @forklaunch/validator@1.2.25
+
 ## 1.2.34
 
 ### Patch Changes

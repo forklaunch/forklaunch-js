@@ -1,3 +1,4 @@
+import type { MetricsDefinition } from '../http/types/openTelemetryCollector.types';
 import type { OpenTelemetryCollector } from '../http/telemetry/openTelemetryCollector';
 import type { ComplianceOrm } from './complianceDataService';
 import {
@@ -29,13 +30,21 @@ export interface EnforcementResult {
   durationMs: number;
 }
 
-export class RetentionService {
+// Parameterised on the metrics definition rather than typed against
+// `OpenTelemetryCollector<any>`. This service only logs — info, warn, error —
+// and never touches a metric, so it has no reason to know the definition; but
+// `any` there switched off checking on every call through this collector, and
+// the collector's generic appears in its own method parameters, so widening to
+// the base constraint would not have been sound either. The default keeps
+// existing construction sites inferring exactly as before.
+export class RetentionService<
+  AppliedMetricsDefinition extends MetricsDefinition = MetricsDefinition
+> {
   private readonly DEFAULT_BATCH_SIZE = 1000;
 
   constructor(
     private readonly orm: ComplianceOrm,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private readonly otel: OpenTelemetryCollector<any>
+    private readonly otel: OpenTelemetryCollector<AppliedMetricsDefinition>
   ) {}
 
   async enforce(options?: EnforcementOptions): Promise<EnforcementResult> {

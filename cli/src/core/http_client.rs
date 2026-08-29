@@ -127,6 +127,26 @@ pub fn delete(url: &str) -> Result<Response> {
     make_authenticated_request(Method::DELETE, url, None)
 }
 
+/// POST with NO credentials and NO token lookup.
+///
+/// Every other helper here funnels through `make_authenticated_request`, which calls
+/// `get_token()` and, if that fails, drops the user into an interactive login. That is
+/// the wrong behavior for a route the platform declares `access: 'public'` and that a
+/// person with no ForkLaunch account is expected to call — `managed instance claim` is
+/// the case this exists for, where a one-time token in the body is the credential.
+///
+/// Keeps the `Accept` and `User-Agent` headers so these requests are still identifiable
+/// as CLI-originated in platform logs.
+pub fn post_unauthenticated(url: &str, body: Value) -> Result<Response> {
+    let client = Client::new();
+    Ok(client
+        .post(url)
+        .header("Accept", "application/json")
+        .header("User-Agent", user_agent())
+        .json(&body)
+        .send()?)
+}
+
 /// Extract the path component from a full URL (e.g. "https://host:port/path?q" -> "/path?q")
 fn extract_url_path(url: &str) -> Result<String> {
     // Find the start of the path after scheme://host(:port)
