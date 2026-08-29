@@ -614,7 +614,7 @@ forklaunch deploy create --release <version> --environment <name> --region <regi
 
 # Examples:
 forklaunch deploy create --release 1.2.0 --environment staging --region us-east-1
-forklaunch deploy create --release 1.2.0 --environment production --dry-run
+forklaunch deploy create --release 1.2.0 --environment production --region us-east-1 --dry-run
 forklaunch deploy info -v <version>      # status of a deployment
 forklaunch deploy destroy ...            # tear down application infrastructure
 ```
@@ -862,10 +862,12 @@ with internal access can run them directly.
   describe-task-definition`). For any container env entry that is itself a secret ARN reference,
   restore by ARN/version, not by reading the plaintext value. Overwritten (not deleted) parameters
   are recoverable from history: first list versions without decrypting (`aws ssm
-  get-parameter-history --name <param>`), match the version by `LastModifiedDate` around the push,
-  and only add `--with-decryption` for the specific parameter/version you've identified — never
-  paste the decrypted value into chat, logs, or a committed file, pipe it straight into the restore
-  command.
+  get-parameter-history --name <param>`, which returns every version but never decrypts any of
+  them) and match the version number by `LastModifiedDate` around the push. `--with-decryption` on
+  `get-parameter-history` decrypts the WHOLE history at once, not just one version — instead fetch
+  only the identified version with `aws ssm get-parameter --name <param>:<version> --with-decryption`
+  (colon-suffixed version label), and never paste the decrypted value into chat, logs, or a
+  committed file — pipe it straight into the restore command.
 - Fix the config store BEFORE deploying again, or the deploy will re-apply the damaged state and
   undo any ECS/IAM repair.
 

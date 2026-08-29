@@ -357,15 +357,20 @@ export const updateWidget = handlers.patch(
     responses: {
       200: WidgetSchemas.WidgetResponseSchema,
       401: string,
+      403: string,
       404: string,
     },
   },
   async (req, res) => {
-    const em = emFactory({ context: { tenantId: req.session.organizationId } });
+    const organizationId = req.session.organizationId;
+    if (!organizationId) {
+      return res.status(403).send("Organization ID not found in session");
+    }
+    const em = emFactory({ context: { tenantId: organizationId } });
     const result = await widgetFactory().updateWidget({
       id: req.params.id,
       data: req.body,
-      organizationId: req.session.organizationId,
+      organizationId,
       em,
     });
     if (!result) {
@@ -389,13 +394,17 @@ export const deleteWidget = handlers.delete(
       jwt: { jwksPublicKeyUrl: JWKS_PUBLIC_KEY_URL },
       allowedRoles: PLATFORM_EDITOR_ROLES,
     },
-    responses: { 204: string, 401: string, 404: string },
+    responses: { 204: string, 401: string, 403: string, 404: string },
   },
   async (req, res) => {
-    const em = emFactory({ context: { tenantId: req.session.organizationId } });
+    const organizationId = req.session.organizationId;
+    if (!organizationId) {
+      return res.status(403).send("Organization ID not found in session");
+    }
+    const em = emFactory({ context: { tenantId: organizationId } });
     await widgetFactory().deleteWidget({
       id: req.params.id,
-      organizationId: req.session.organizationId,
+      organizationId,
       em,
     });
     await em.flush();
