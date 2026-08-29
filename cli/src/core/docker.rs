@@ -1847,11 +1847,10 @@ fn add_iam_environment_variables_to_docker_compose(
     environment: &mut IndexMap<String, String>,
     hmac_secret: &str,
 ) -> Result<()> {
-    environment.insert("HMAC_SECRET_KEY".to_string(), hmac_secret.to_string());
-
     // A project literally named "iam" only carries a `variant` when it came from the real
     // `iam-base`/`iam-better-auth` module preset. A plain custom service happens to be named
-    // "iam" has no variant — skip IAM wiring instead of panicking; it isn't a real auth module.
+    // "iam" has no variant — skip IAM wiring entirely (including the HMAC secret, which it has
+    // no use for) instead of panicking; it isn't a real auth module.
     let Some(iam_project_variant) = projects
         .iter()
         .find(|project| project.name == "iam")
@@ -1860,6 +1859,8 @@ fn add_iam_environment_variables_to_docker_compose(
     else {
         return Ok(());
     };
+
+    environment.insert("HMAC_SECRET_KEY".to_string(), hmac_secret.to_string());
 
     let iam_port = if service_name == "iam" {
         port_number
@@ -2609,6 +2610,7 @@ mod tests {
 
         assert!(result.is_ok());
         assert!(!environment.contains_key("JWKS_PUBLIC_KEY_URL"));
+        assert!(!environment.contains_key("HMAC_SECRET_KEY"));
     }
 
     #[test]
