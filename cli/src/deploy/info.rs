@@ -88,7 +88,7 @@ fn print_service_urls(out: &mut StandardStream, metadata: &Option<serde_json::Va
     out.reset()?;
     writeln!(out)?;
     for (service_name, url) in urls {
-        writeln!(out, "    {:<20}{}", service_name, url)?;
+        writeln!(out, "    {:<20}  {}", service_name, url)?;
     }
     Ok(())
 }
