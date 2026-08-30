@@ -48,6 +48,45 @@ const TENANT_GATES: &[(&str, &str)] = &[
     ),
 ];
 
+/// Better Auth handles `/api/auth/*` itself and reads the database through
+/// whatever ORM it was handed at construction. If that ORM is the raw one while
+/// the project's own EntityManager goes through `wrapEmWithTenantContext`, the
+/// two sides derive different encryption keys: `FieldEncryptor` derives per
+/// tenant via HKDF, and Better Auth reads with no tenant at all.
+///
+/// The rows are written under the tenant key and read back under the empty one,
+/// which fails with "ciphertext is corrupted or the wrong key was used" — as a
+/// 500 from sign-in or sign-up, and with nothing in the logs, because Better
+/// Auth swallows its own errors. It is invisible in a single-tenant deployment,
+/// where both sides agree on the empty context, and appears the first time a
+/// tenant id is supplied.
+const BETTER_AUTH_CONFIG_MARKERS: &[&str] = &["betterAuthConfig(", "betterAuth("];
+const ENCRYPTION_AWARE_ORM_MARKERS: &[&str] = &[
+    "createEncryptionAwareOrm(",
+    "createTenantAwareBetterAuthOrmProxy(",
+];
+
+/// Files that can legitimately hold either half of the Better Auth wiring.
+/// The blueprint wraps the ORM at the registration site; forklaunch-platform
+/// wraps it inside `auth.ts` instead. Reading only one of the two would flag a
+/// correctly-wired service, so both are searched together.
+const BETTER_AUTH_WIRING_FILES: &[&str] = &["registrations.ts", "auth.ts"];
+
+/// True when the project wires Better Auth against an ORM that was not made
+/// encryption-aware. Returns false when Better Auth is not used at all.
+fn better_auth_orm_is_unwrapped(sources: &str) -> bool {
+    let wires_better_auth = BETTER_AUTH_CONFIG_MARKERS
+        .iter()
+        .any(|marker| sources.contains(marker));
+    if !wires_better_auth {
+        return false;
+    }
+
+    !ENCRYPTION_AWARE_ORM_MARKERS
+        .iter()
+        .any(|marker| sources.contains(marker))
+}
+
 /// Field-name words that suggest a classification stronger than `none`.
 /// Matching is done on lowercased words split from camelCase / snake_case,
 /// including joined adjacent pairs (`first_name` -> `firstname`), to keep
@@ -207,8 +246,8 @@ pub(crate) fn run_local_checks(modules_path: &Path) -> Result<Vec<LocalFinding>>
                     .values()
                     .any(|classification| classification != "none")
             });
-            let registrations = fs::read_to_string(project_path.join("registrations.ts"))
-                .unwrap_or_default();
+            let registrations =
+                fs::read_to_string(project_path.join("registrations.ts")).unwrap_or_default();
             if has_retention && !registrations.contains("RetentionService") {
                 findings.push(LocalFinding {
                     severity: Severity::Warning,
@@ -228,7 +267,23 @@ pub(crate) fn run_local_checks(modules_path: &Path) -> Result<Vec<LocalFinding>>
                 });
             }
 
-            // 3. Sensitive-field heuristics
+            // 3. Better Auth reading encrypted columns without a tenant context
+            let better_auth_sources = BETTER_AUTH_WIRING_FILES
+                .iter()
+                .map(|file| fs::read_to_string(project_path.join(file)).unwrap_or_default())
+                .collect::<Vec<_>>()
+                .join("\n");
+            if has_sensitive && better_auth_orm_is_unwrapped(&better_auth_sources) {
+                findings.push(LocalFinding {
+                    severity: Severity::Warning,
+                    project: project.clone(),
+                    check: "better-auth-encryption-context".to_string(),
+                    subject: "registrations.ts".to_string(),
+                    message: "entities hold classified data but Better Auth is wired to the raw ORM — its reads run with no tenant encryption context and will fail to decrypt once a tenant id is used".to_string(),
+                });
+            }
+
+            // 4. Sensitive-field heuristics
             for entity in &entities {
                 for (field, classification) in &entity.field_classifications {
                     if classification != "none" {
@@ -253,12 +308,8 @@ pub(crate) fn run_local_checks(modules_path: &Path) -> Result<Vec<LocalFinding>>
 
     // Deterministic output for --json / snapshots
     findings.sort_by(|a, b| {
-        (&a.project, &a.check, &a.subject, &a.message).cmp(&(
-            &b.project,
-            &b.check,
-            &b.subject,
-            &b.message,
-        ))
+        (&a.project, &a.check, &a.subject, &a.message)
+            .cmp(&(&b.project, &b.check, &b.subject, &b.message))
     });
     Ok(findings)
 }
@@ -281,6 +332,63 @@ mod tests {
             setupRls(orm, { logger });
         "#;
         assert!(missing_tenant_gates(source).is_empty());
+    }
+
+    #[test]
+    fn test_better_auth_orm_unwrapped_is_flagged() {
+        // The shape that took production down: Better Auth handed `Orm`
+        // directly while the service's own EntityManager is tenant-wrapped.
+        let registrations = r#"
+            EntityManager: { factory: ({ Orm }, context) =>
+                wrapEmWithTenantContext(Orm.em.fork(), context?.tenantId) },
+            BetterAuth: { factory: ({ Orm }) =>
+                betterAuth(betterAuthConfig({ orm: Orm })) }
+        "#;
+        assert!(better_auth_orm_is_unwrapped(registrations));
+    }
+
+    #[test]
+    fn test_better_auth_orm_wrapped_passes() {
+        let registrations = r#"
+            BetterAuth: { factory: ({ Orm }) =>
+                betterAuth(betterAuthConfig({ orm: createEncryptionAwareOrm(Orm) })) }
+        "#;
+        assert!(!better_auth_orm_is_unwrapped(registrations));
+    }
+
+    #[test]
+    fn test_better_auth_platform_proxy_also_counts_as_wrapped() {
+        // forklaunch-platform wraps via its own proxy rather than the
+        // blueprint helper; both make the reads encryption-aware.
+        let registrations = r#"
+            orm: createTenantAwareBetterAuthOrmProxy(Orm)
+        "#;
+        assert!(!better_auth_orm_is_unwrapped(registrations));
+    }
+
+    #[test]
+    fn test_wrapper_in_auth_ts_counts_even_when_registrations_looks_raw() {
+        // The exact false positive dogfooding caught: forklaunch-platform
+        // passes `orm: Orm` at the registration site and applies the proxy
+        // inside auth.ts. Searching registrations.ts alone flags a service
+        // that is correctly wired.
+        let registrations = "betterAuth(betterAuthConfig({ orm: Orm }))";
+        let auth = "const betterAuthOrm = createTenantAwareBetterAuthOrmProxy(orm);";
+        let combined = format!("{}\n{}", registrations, auth);
+
+        assert!(better_auth_orm_is_unwrapped(registrations));
+        assert!(!better_auth_orm_is_unwrapped(&combined));
+    }
+
+    #[test]
+    fn test_project_without_better_auth_is_not_flagged() {
+        // A service that never wires Better Auth has nothing to answer for —
+        // the check must not fire on every project that owns entities.
+        let registrations = r#"
+            EntityManager: { factory: ({ Orm }, context) =>
+                wrapEmWithTenantContext(Orm.em.fork(), context?.tenantId) }
+        "#;
+        assert!(!better_auth_orm_is_unwrapped(registrations));
     }
 
     #[test]
@@ -323,7 +431,80 @@ mod fs_tests {
         std::fs::write(proj.join("server.ts"), "const app = express();").unwrap();
         let findings = run_local_checks(&dir).unwrap();
         let _ = std::fs::remove_dir_all(&dir);
-        assert_eq!(findings.len(), 2, "expected 2 wiring findings, got: {:?}", findings);
-        assert!(findings.iter().all(|f| f.check == "tenant-isolation-wiring"));
+        assert_eq!(
+            findings.len(),
+            2,
+            "expected 2 wiring findings, got: {:?}",
+            findings
+        );
+        assert!(
+            findings
+                .iter()
+                .all(|f| f.check == "tenant-isolation-wiring")
+        );
+    }
+
+    /// Builds a project whose entity holds classified data, so the
+    /// encryption-context check has something to fire on.
+    fn write_project_with_classified_entity(proj: &std::path::Path, registrations: &str) {
+        std::fs::create_dir_all(proj.join("persistence/entities")).unwrap();
+        std::fs::write(
+            proj.join("persistence/entities/account.entity.ts"),
+            r#"
+            export const AccountEntity = defineComplianceEntity({
+              name: 'Account',
+              properties: {
+                accountId: fp.string().compliance('none'),
+                password: fp.string().nullable().compliance('pii')
+              }
+            });
+            "#,
+        )
+        .unwrap();
+        std::fs::write(proj.join("registrations.ts"), registrations).unwrap();
+    }
+
+    #[test]
+    fn test_run_local_checks_flags_better_auth_raw_orm() {
+        let dir = std::env::temp_dir().join("fl-checks-ba-raw");
+        let proj = dir.join("iam");
+        let _ = std::fs::remove_dir_all(&dir);
+        write_project_with_classified_entity(
+            &proj,
+            "BetterAuth: betterAuth(betterAuthConfig({ orm: Orm }))",
+        );
+
+        let findings = run_local_checks(&dir).unwrap();
+        let _ = std::fs::remove_dir_all(&dir);
+
+        assert!(
+            findings
+                .iter()
+                .any(|f| f.check == "better-auth-encryption-context"),
+            "expected the encryption-context finding, got: {:?}",
+            findings
+        );
+    }
+
+    #[test]
+    fn test_run_local_checks_passes_encryption_aware_better_auth() {
+        let dir = std::env::temp_dir().join("fl-checks-ba-wrapped");
+        let proj = dir.join("iam");
+        let _ = std::fs::remove_dir_all(&dir);
+        write_project_with_classified_entity(
+            &proj,
+            "BetterAuth: betterAuth(betterAuthConfig({ orm: createEncryptionAwareOrm(Orm) }))",
+        );
+
+        let findings = run_local_checks(&dir).unwrap();
+        let _ = std::fs::remove_dir_all(&dir);
+
+        assert!(
+            !findings
+                .iter()
+                .any(|f| f.check == "better-auth-encryption-context"),
+            "wrapped ORM should not be flagged, got: {:?}",
+            findings
+        );
     }
 }
