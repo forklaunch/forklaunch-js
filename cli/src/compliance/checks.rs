@@ -341,8 +341,17 @@ pub(crate) fn run_local_checks(modules_path: &Path) -> Result<Vec<LocalFinding>>
                 });
             }
 
-            // 4. Encryptor registration for classified columns
-            if has_sensitive {
+            // 4. Encryptor registration for classified columns.
+            //
+            // Gated on the project owning a MikroORM config, not merely having
+            // a `persistence` directory. `defineComplianceEntity` is also used
+            // to type queue payloads — forklaunch-platform's
+            // deployment-agent-worker declares an event record with `pci`
+            // fields, imports it with `import type`, and never persists it
+            // through an ORM. Without this gate the check reports a plaintext
+            // column on a table that does not exist.
+            let owns_orm = project_path.join("mikro-orm.config.ts").exists();
+            if has_sensitive && owns_orm {
                 let sources = read_production_sources(&project_path);
                 if !sources.contains("registerEncryptor(") {
                     findings.push(LocalFinding {
@@ -363,7 +372,7 @@ pub(crate) fn run_local_checks(modules_path: &Path) -> Result<Vec<LocalFinding>>
                         project: project.clone(),
                         check: "tenant-em-wiring".to_string(),
                         subject: "registrations.ts".to_string(),
-                        message: "entities hold classified data but the EntityManager is never bound to a tenant — encrypted columns can only use the no-tenant key, and will stop decrypting if a tenant is introduced later".to_string(),
+                        message: "entities hold classified data but no encryption tenant is ever bound — encrypted columns can only use the no-tenant key, and will stop decrypting if a tenant is introduced later. Note this is about the ENCRYPTION context specifically: setFilterParams('tenant', ..) scopes queries but does not set it".to_string(),
                     });
                 }
             }
@@ -547,6 +556,8 @@ mod fs_tests {
         )
         .unwrap();
         std::fs::write(proj.join("registrations.ts"), registrations).unwrap();
+        // Owning an ORM is what makes the encryption checks applicable.
+        std::fs::write(proj.join("mikro-orm.config.ts"), "export default {};").unwrap();
     }
 
     #[test]
@@ -607,6 +618,32 @@ mod fs_tests {
         // A deliberately single-tenant service is not broken, so this must not
         // be a warning — the helper no-ops when the tenant id is undefined.
         assert!(matches!(f.severity, Severity::Info));
+    }
+
+    #[test]
+    fn test_entities_without_an_orm_are_not_flagged() {
+        // The false positive found by running this against forklaunch-platform:
+        // deployment-agent-worker types its BullMQ payload with
+        // defineComplianceEntity, marks fields `pci`, imports it with
+        // `import type`, and owns no mikro-orm.config.ts. Nothing is persisted,
+        // so there is no plaintext column to report.
+        let dir = std::env::temp_dir().join("fl-checks-queue-payload");
+        let proj = dir.join("worker");
+        let _ = std::fs::remove_dir_all(&dir);
+        write_project_with_classified_entity(&proj, "export const x = 1;");
+        // The helper writes one; a queue-payload module has none.
+        std::fs::remove_file(proj.join("mikro-orm.config.ts")).unwrap();
+
+        let findings = run_local_checks(&dir).unwrap();
+        let _ = std::fs::remove_dir_all(&dir);
+
+        assert!(
+            !findings
+                .iter()
+                .any(|f| f.check == "encryptor-registration" || f.check == "tenant-em-wiring"),
+            "a project with no ORM should not be flagged, got: {:?}",
+            findings
+        );
     }
 
     #[test]
