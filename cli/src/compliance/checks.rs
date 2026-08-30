@@ -87,6 +87,64 @@ fn better_auth_orm_is_unwrapped(sources: &str) -> bool {
         .any(|marker| sources.contains(marker))
 }
 
+/// Directories that never hold production wiring. Tests in particular must be
+/// excluded: a project whose only `withEncryptionContext` call is in a test is
+/// not wired, and counting it would hide exactly the gap being looked for.
+const NON_PRODUCTION_DIRS: &[&str] = &["node_modules", "dist", "__test__", "migrations"];
+
+/// Concatenates the project's production TypeScript. The wiring these checks
+/// look for is not confined to one file — forklaunch-platform registers the
+/// encryptor in `mikro-orm.config.ts` and binds tenants from `auth.ts` and its
+/// services, while the blueprints do both from `registrations.ts`. Reading a
+/// fixed filename flags correctly-wired services, which is a false positive
+/// this check has already produced once.
+fn read_production_sources(project_path: &Path) -> String {
+    fn walk(dir: &Path, out: &mut String) {
+        let Ok(entries) = fs::read_dir(dir) else {
+            return;
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            let name = entry.file_name().to_string_lossy().to_string();
+            if path.is_dir() {
+                if !NON_PRODUCTION_DIRS.contains(&name.as_str()) {
+                    walk(&path, out);
+                }
+            } else if name.ends_with(".ts") && !name.ends_with(".test.ts") {
+                if let Ok(text) = fs::read_to_string(&path) {
+                    out.push_str(&text);
+                    out.push('\n');
+                }
+            }
+        }
+    }
+
+    let mut out = String::new();
+    walk(project_path, &mut out);
+    out
+}
+
+/// Any of these means the service can bind an encryption tenant. There is more
+/// than one legitimate way: the blueprints wrap the EntityManager, while
+/// forklaunch-platform's IAM enters the context directly around its reads.
+const TENANT_BINDING_MARKERS: &[&str] = &[
+    "wrapEmWithTenantContext(",
+    "withEncryptionContext(",
+    "setEncryptionTenantId(",
+];
+
+/// Where the encryptor is registered. Without it `EncryptedType` does not fail
+/// loudly on write — it falls through to `this.serialize(value)` and stores
+/// PLAINTEXT in a column declared `pii`/`pci`/`phi`. The read side does throw
+/// ("no encryptor registered but database contains encrypted value"), but only
+/// once a previously-encrypted row is read back, which may be much later.
+/// Silent plaintext at rest is the worse half, so this is a warning.
+/// Where the EntityManager is bound to a tenant. Unlike the encryptor this is
+/// not required for a single-tenant service to be correct — the helper no-ops
+/// when the tenant id is `undefined`. What its absence means is that the tenant
+/// capability is not wired at all, so encrypted columns can only ever use the
+/// no-tenant key. That is consistent until something introduces a tenant, at
+/// which point previously-written rows stop decrypting. Reported as info.
 /// Field-name words that suggest a classification stronger than `none`.
 /// Matching is done on lowercased words split from camelCase / snake_case,
 /// including joined adjacent pairs (`first_name` -> `firstname`), to keep
@@ -283,7 +341,34 @@ pub(crate) fn run_local_checks(modules_path: &Path) -> Result<Vec<LocalFinding>>
                 });
             }
 
-            // 4. Sensitive-field heuristics
+            // 4. Encryptor registration for classified columns
+            if has_sensitive {
+                let sources = read_production_sources(&project_path);
+                if !sources.contains("registerEncryptor(") {
+                    findings.push(LocalFinding {
+                        severity: Severity::Warning,
+                        project: project.clone(),
+                        check: "encryptor-registration".to_string(),
+                        subject: "mikro-orm.config.ts".to_string(),
+                        message: "entities declare classified fields but registerEncryptor() is never called — those columns are written as plaintext".to_string(),
+                    });
+                }
+
+                let binds_tenant = TENANT_BINDING_MARKERS
+                    .iter()
+                    .any(|marker| sources.contains(marker));
+                if !binds_tenant {
+                    findings.push(LocalFinding {
+                        severity: Severity::Info,
+                        project: project.clone(),
+                        check: "tenant-em-wiring".to_string(),
+                        subject: "registrations.ts".to_string(),
+                        message: "entities hold classified data but the EntityManager is never bound to a tenant — encrypted columns can only use the no-tenant key, and will stop decrypting if a tenant is introduced later".to_string(),
+                    });
+                }
+            }
+
+            // 5. Sensitive-field heuristics
             for entity in &entities {
                 for (field, classification) in &entity.field_classifications {
                     if classification != "none" {
@@ -462,6 +547,143 @@ mod fs_tests {
         )
         .unwrap();
         std::fs::write(proj.join("registrations.ts"), registrations).unwrap();
+    }
+
+    #[test]
+    fn test_run_local_checks_flags_missing_encryptor() {
+        let dir = std::env::temp_dir().join("fl-checks-no-encryptor");
+        let proj = dir.join("svc");
+        let _ = std::fs::remove_dir_all(&dir);
+        write_project_with_classified_entity(&proj, "export const x = 1;");
+
+        let findings = run_local_checks(&dir).unwrap();
+        let _ = std::fs::remove_dir_all(&dir);
+
+        let f = findings
+            .iter()
+            .find(|f| f.check == "encryptor-registration")
+            .unwrap_or_else(|| panic!("expected the finding, got: {:?}", findings));
+        // Plaintext at rest in a column declared pii is a warning, not info.
+        assert!(matches!(f.severity, Severity::Warning));
+    }
+
+    #[test]
+    fn test_run_local_checks_accepts_encryptor_in_mikro_orm_config() {
+        let dir = std::env::temp_dir().join("fl-checks-encryptor-ok");
+        let proj = dir.join("svc");
+        let _ = std::fs::remove_dir_all(&dir);
+        write_project_with_classified_entity(&proj, "export const x = 1;");
+        // Every blueprint registers it here, not in registrations.ts.
+        std::fs::write(
+            proj.join("mikro-orm.config.ts"),
+            "registerEncryptor(new FieldEncryptor(key));",
+        )
+        .unwrap();
+
+        let findings = run_local_checks(&dir).unwrap();
+        let _ = std::fs::remove_dir_all(&dir);
+
+        assert!(
+            !findings.iter().any(|f| f.check == "encryptor-registration"),
+            "registering in mikro-orm.config.ts should satisfy the check, got: {:?}",
+            findings
+        );
+    }
+
+    #[test]
+    fn test_run_local_checks_reports_unbound_tenant_em_as_info() {
+        let dir = std::env::temp_dir().join("fl-checks-no-tenant-em");
+        let proj = dir.join("svc");
+        let _ = std::fs::remove_dir_all(&dir);
+        write_project_with_classified_entity(&proj, "export const x = 1;");
+
+        let findings = run_local_checks(&dir).unwrap();
+        let _ = std::fs::remove_dir_all(&dir);
+
+        let f = findings
+            .iter()
+            .find(|f| f.check == "tenant-em-wiring")
+            .unwrap_or_else(|| panic!("expected the finding, got: {:?}", findings));
+        // A deliberately single-tenant service is not broken, so this must not
+        // be a warning — the helper no-ops when the tenant id is undefined.
+        assert!(matches!(f.severity, Severity::Info));
+    }
+
+    #[test]
+    fn test_tenant_binding_accepts_with_encryption_context() {
+        // The false positive dogfooding caught: forklaunch-platform's IAM never
+        // calls wrapEmWithTenantContext — it enters the context directly around
+        // its reads. Insisting on one helper flags a service that does bind.
+        let dir = std::env::temp_dir().join("fl-checks-alt-binding");
+        let proj = dir.join("iam");
+        let _ = std::fs::remove_dir_all(&dir);
+        write_project_with_classified_entity(&proj, "registerEncryptor(enc);");
+        std::fs::write(
+            proj.join("auth.ts"),
+            "await withEncryptionContext(orgId, () => em.findOne(Account, where));",
+        )
+        .unwrap();
+
+        let findings = run_local_checks(&dir).unwrap();
+        let _ = std::fs::remove_dir_all(&dir);
+
+        assert!(
+            !findings.iter().any(|f| f.check == "tenant-em-wiring"),
+            "withEncryptionContext should count as binding, got: {:?}",
+            findings
+        );
+    }
+
+    #[test]
+    fn test_tenant_binding_in_a_test_file_does_not_count() {
+        // A project whose only binding call lives in a test is not wired. This
+        // is how the platform's IAM first looked wired under a naive grep.
+        let dir = std::env::temp_dir().join("fl-checks-test-only-binding");
+        let proj = dir.join("svc");
+        let _ = std::fs::remove_dir_all(&dir);
+        write_project_with_classified_entity(&proj, "registerEncryptor(enc);");
+        std::fs::create_dir_all(proj.join("__test__")).unwrap();
+        std::fs::write(
+            proj.join("__test__/thing.test.ts"),
+            "withEncryptionContext('org', () => {});",
+        )
+        .unwrap();
+
+        let findings = run_local_checks(&dir).unwrap();
+        let _ = std::fs::remove_dir_all(&dir);
+
+        assert!(
+            findings.iter().any(|f| f.check == "tenant-em-wiring"),
+            "a binding call only in tests must still flag, got: {:?}",
+            findings
+        );
+    }
+
+    #[test]
+    fn test_run_local_checks_ignores_projects_without_classified_data() {
+        let dir = std::env::temp_dir().join("fl-checks-unclassified");
+        let proj = dir.join("svc");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(proj.join("persistence/entities")).unwrap();
+        std::fs::write(
+            proj.join("persistence/entities/thing.entity.ts"),
+            "export const ThingEntity = defineComplianceEntity({ name: 'Thing', properties: { label: fp.string().compliance('none') } });",
+        )
+        .unwrap();
+        std::fs::write(proj.join("registrations.ts"), "export const x = 1;").unwrap();
+
+        let findings = run_local_checks(&dir).unwrap();
+        let _ = std::fs::remove_dir_all(&dir);
+
+        // Nothing classified means nothing to encrypt or bind — neither check
+        // should fire, or every plain CRUD service gets noise.
+        assert!(
+            !findings
+                .iter()
+                .any(|f| f.check == "encryptor-registration" || f.check == "tenant-em-wiring"),
+            "unclassified project should be quiet, got: {:?}",
+            findings
+        );
     }
 
     #[test]
