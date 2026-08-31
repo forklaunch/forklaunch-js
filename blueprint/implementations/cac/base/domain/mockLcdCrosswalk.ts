@@ -6,13 +6,18 @@
 // Illustrative only — a coding/compliance SME should review this crosswalk
 // before treating it as more than a scrubbing-engine test fixture. See
 // plan/cac/MEDICAL-CODING-IMPLEMENTATION-PLAN.md §6, §12 item 3.
+import { CPT_SHAPED_LCD_CROSSWALK } from './cptShapedFixture';
+
+// Includes both the "PROC-XXX" placeholder entries and the CPT-*shaped*
+// synthetic entry (§5 readiness bar) — same lookup, same function.
 export const MOCK_LCD_CROSSWALK: Record<string, ReadonlyArray<string>> = {
   // Office Visit — justified by an acute condition needing evaluation.
   'PROC-001': ['J06.9'], // Acute upper respiratory infection, unspecified
   // Annual Physical Exam — justified by a routine/preventive encounter.
   'PROC-002': ['Z00.00'], // Encounter for general adult medical exam w/o abnormal findings
   // Diagnostic Lab Panel — justified by a finding that warrants lab workup.
-  'PROC-003': ['R73.09'] // Other abnormal glucose
+  'PROC-003': ['R73.09'], // Other abnormal glucose
+  ...CPT_SHAPED_LCD_CROSSWALK
 };
 
 export function isMedicallyNecessary(

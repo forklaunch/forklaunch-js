@@ -36,9 +36,19 @@ export class CodeSetLoaderService {
   async load<T extends { code: string }>(
     entityClass: EntityName<T>,
     rows: AsyncIterable<CodeSetRow> | Iterable<CodeSetRow>,
-    options?: { batchSize?: number }
+    options?: {
+      batchSize?: number;
+      // Global reference tables (Icd10Code/HcpcsCode) are unique on `code`
+      // alone; org-scoped tables (CptCode, §5) are unique on
+      // (organizationId, code) instead — see cptCode.entity.ts.
+      onConflictFields?: (keyof T)[];
+      // Stamped onto every row when loading into an org-scoped table.
+      organizationId?: string;
+    }
   ): Promise<CodeSetLoadResult> {
     const batchSize = options?.batchSize ?? DEFAULT_BATCH_SIZE;
+    const onConflictFields = options?.onConflictFields ?? (['code'] as (keyof T)[]);
+    const organizationId = options?.organizationId;
     const result: CodeSetLoadResult = {
       rowsRead: 0,
       rowsUpserted: 0,
@@ -53,11 +63,12 @@ export class CodeSetLoaderService {
       await em.upsertMany(
         entityClass,
         batch.map((row) => ({
+          ...(organizationId != null ? { organizationId } : {}),
           code: row.code,
           description: row.description,
           effectiveDate: row.effectiveDate ?? null
         })) as unknown as T[],
-        { onConflictFields: ['code'] }
+        { onConflictFields }
       );
 
       result.rowsUpserted += batch.length;

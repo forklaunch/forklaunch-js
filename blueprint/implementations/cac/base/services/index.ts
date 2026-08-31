@@ -1,3 +1,4 @@
+export * from './cptCodeProvider.service';
 export * from './mockProcedureCodeProvider.service';
 export * from './scrubbing.service';
 

@@ -4,6 +4,7 @@
 export { Charge } from './charge.entity';
 export { Claim } from './claim.entity';
 export { CodeSetLicense } from './codeSetLicense.entity';
+export { CptCode } from './cptCode.entity';
 export { Denial } from './denial.entity';
 export { Diagnosis } from './diagnosis.entity';
 export { Encounter } from './encounter.entity';
