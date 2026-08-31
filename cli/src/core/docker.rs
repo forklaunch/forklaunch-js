@@ -1859,16 +1859,20 @@ fn add_iam_environment_variables_to_docker_compose(
     environment: &mut IndexMap<String, String>,
     hmac_secret: &str,
 ) -> Result<()> {
-    environment.insert("HMAC_SECRET_KEY".to_string(), hmac_secret.to_string());
+    // A project literally named "iam" only carries a `variant` when it came from the real
+    // `iam-base`/`iam-better-auth` module preset. A plain custom service happens to be named
+    // "iam" has no variant — skip IAM wiring entirely (including the HMAC secret, which it has
+    // no use for) instead of panicking; it isn't a real auth module.
+    let Some(iam_project_variant) = projects
+        .iter()
+        .find(|project| project.name == "iam")
+        .and_then(|project| project.variant.as_ref())
+        .and_then(|variant| variant.parse::<Module>().ok())
+    else {
+        return Ok(());
+    };
 
-    let iam_project = projects.iter().find(|project| project.name == "iam");
-    let iam_project_variant = iam_project
-        .unwrap()
-        .variant
-        .as_ref()
-        .unwrap()
-        .parse::<Module>()
-        .unwrap();
+    environment.insert("HMAC_SECRET_KEY".to_string(), hmac_secret.to_string());
 
     let iam_port = if service_name == "iam" {
         port_number
@@ -2581,7 +2585,45 @@ pub(crate) fn sync_docker_compose_env_vars(
 mod tests {
     use super::*;
     use crate::constants::Runtime;
-    use crate::core::manifest::{ProjectEntry, application::ApplicationManifestData};
+    use crate::core::manifest::{ProjectEntry, ProjectType, application::ApplicationManifestData};
+
+    #[test]
+    fn test_add_iam_environment_variables_skips_gracefully_when_iam_project_has_no_variant() {
+        // A plain custom service that merely happens to be named "iam" (not scaffolded via
+        // the `iam-base`/`iam-better-auth` module preset) has no `variant`. This must not
+        // panic — it should just skip IAM wiring for the caller.
+        let projects = vec![ProjectEntry {
+            r#type: ProjectType::Service,
+            name: "iam".to_string(),
+            description: "a plain custom service named iam".to_string(),
+            variant: None,
+            resources: None,
+            routers: None,
+            metadata: None,
+        }];
+        let docker_compose = DockerCompose {
+            version: None,
+            volumes: IndexMap::new(),
+            networks: IndexMap::new(),
+            services: IndexMap::new(),
+            additional_entries: HashMap::new(),
+        };
+        let mut environment = IndexMap::new();
+
+        let result = add_iam_environment_variables_to_docker_compose(
+            "test-app",
+            "other-service",
+            8000,
+            projects,
+            &docker_compose,
+            &mut environment,
+            "hmac-secret",
+        );
+
+        assert!(result.is_ok());
+        assert!(!environment.contains_key("JWKS_PUBLIC_KEY_URL"));
+        assert!(!environment.contains_key("HMAC_SECRET_KEY"));
+    }
 
     /// Minimal manifest for exercising `add_otel_to_docker_compose`.
     fn otel_test_manifest() -> ApplicationManifestData {
