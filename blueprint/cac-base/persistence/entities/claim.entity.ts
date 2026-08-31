@@ -1,5 +1,6 @@
 import { sqlBaseProperties } from '@forklaunch/blueprint-core';
 import { defineComplianceEntity, fp } from '@forklaunch/core/persistence';
+import type { InferEntity } from '@mikro-orm/core';
 import { ClaimStatus } from '../../domain/enum/claimStatus.enum';
 import { Denial } from './denial.entity';
 import { Encounter } from './encounter.entity';
@@ -27,3 +28,5 @@ export const Claim = defineComplianceEntity({
   },
   userIdField: 'patient'
 });
+
+export type Claim = InferEntity<typeof Claim>;

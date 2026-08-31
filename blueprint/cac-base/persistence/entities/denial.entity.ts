@@ -4,6 +4,7 @@ import {
   fp,
   RetentionDuration
 } from '@forklaunch/core/persistence';
+import type { InferEntity } from '@mikro-orm/core';
 import { DenialReasonCategory } from '../../domain/enum/denialReasonCategory.enum';
 import { Claim } from './claim.entity';
 
@@ -31,3 +32,5 @@ export const Denial = defineComplianceEntity({
     action: 'delete'
   }
 });
+
+export type Denial = InferEntity<typeof Denial>;
