@@ -1,3 +1,4 @@
+import type { AuthCacheService } from '@forklaunch/blueprint-core';
 import { generateHmacAuthHeaders } from '@forklaunch/core/http';
 import { universalSdk } from '@forklaunch/universal-sdk';
 
@@ -16,11 +17,13 @@ import { universalSdk } from '@forklaunch/universal-sdk';
 // IAM's live OpenAPI spec, so the type here is a compile-time convenience,
 // not something IAM has to conform to structurally.
 //
-// Deliberately does NOT cache results the way iam-base's own pattern
-// does (AuthCacheService, Redis-backed) — cac-base doesn't have Redis
-// wired in yet (§12 item 8, still open). Every request re-calls IAM. This
-// is a real, correct implementation, just not yet optimized for repeated
-// calls — a disclosed follow-up, not a shortcut pretending to be done.
+// Results are cached via AuthCacheService (§12 item 8, closed) — a 5min
+// TTL, Redis-backed, same shape iam-base's own pattern uses — so repeat
+// requests from the same user within the window skip the IAM round-trip
+// entirely. A cache miss or lookup error falls through to the live IAM
+// call unchanged; a cache write failure is swallowed by AuthCacheService
+// itself (fail-open — caching is a perf optimization, never a correctness
+// dependency).
 interface IamSurfaceSdk {
   user: {
     surfacePermissions: (args: {
@@ -55,14 +58,20 @@ async function getIamSdk(iamUrl: string): Promise<IamSurfaceSdk> {
 }
 
 export function createSurfacePermissions(params: {
+  authCacheService: AuthCacheService;
   iamUrl: string;
   hmacSecretKey: string;
 }): (payload: { sub?: string }) => Promise<Set<string>> {
-  const { iamUrl, hmacSecretKey } = params;
+  const { authCacheService, iamUrl, hmacSecretKey } = params;
 
   return async (payload) => {
     if (!payload.sub) {
       return new Set<string>();
+    }
+
+    const cached = await authCacheService.getCachedPermissions(payload.sub);
+    if (cached) {
+      return cached;
     }
 
     try {
@@ -82,7 +91,11 @@ export function createSurfacePermissions(params: {
         return new Set<string>();
       }
 
-      return new Set(response.response.map((permission) => permission.slug));
+      const permissions = new Set(
+        response.response.map((permission) => permission.slug)
+      );
+      await authCacheService.setCachedPermissions(payload.sub, permissions);
+      return permissions;
     } catch (error) {
       console.error('[surfacePermissions] Error surfacing permissions:', error);
       return new Set<string>();
@@ -91,14 +104,20 @@ export function createSurfacePermissions(params: {
 }
 
 export function createSurfaceRoles(params: {
+  authCacheService: AuthCacheService;
   iamUrl: string;
   hmacSecretKey: string;
 }): (payload: { sub?: string }) => Promise<Set<string>> {
-  const { iamUrl, hmacSecretKey } = params;
+  const { authCacheService, iamUrl, hmacSecretKey } = params;
 
   return async (payload) => {
     if (!payload.sub) {
       return new Set<string>();
+    }
+
+    const cached = await authCacheService.getCachedRoles(payload.sub);
+    if (cached) {
+      return cached;
     }
 
     try {
@@ -118,7 +137,9 @@ export function createSurfaceRoles(params: {
         return new Set<string>();
       }
 
-      return new Set(response.response.map((role) => role.name));
+      const roles = new Set(response.response.map((role) => role.name));
+      await authCacheService.setCachedRoles(payload.sub, roles);
+      return roles;
     } catch (error) {
       console.error('[surfaceRoles] Error surfacing roles:', error);
       return new Set<string>();

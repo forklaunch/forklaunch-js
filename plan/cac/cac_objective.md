@@ -14,7 +14,8 @@ We're building it as a reusable ForkLaunch module (`cac-base`), the same way `ia
 - ✅ **Built:** the real-CPT extension point (item 4) — a real, tested adapter an adopter can wire their own licensed data into today — **and the automatic per-organization switch that uses it.** Each organization's own license status decides mock vs. real CPT per request; nobody has to wire anything in by hand.
 - ✅ **Built:** a denial worklist API (list/view/resolve the scrubbing engine's findings), an analytics API (clean-claim-rate, denial-rate), and real RBAC — coder/biller/admin routes actually check permissions against a live call to IAM, not a placeholder that granted everyone the same access.
 - ❌ **Out of scope, not just unbuilt:** item 3 below (eligibility check, clearinghouse submission, remittance parsing). Confirmed by the founder (2026-08-31): `cac-base` doesn't execute or submit claims on an adopter's behalf — it produces the scrubbing report, and the adopter takes it from there through their own systems. This isn't waiting on a Stedi account; it's not something this module builds.
-- ⏸️ **Not built yet:** caching for the IAM permission/role lookups (every request currently re-calls IAM) and the scrubbing-rule lookups — a performance optimization once real traffic volume justifies it, not a correctness gap.
+- ✅ **Built:** Redis-backed caching for the IAM permission/role lookups — a repeat request from the same user within a 5-minute window no longer re-calls IAM.
+- ⏸️ **Not built, and not currently useful:** caching the scrubbing-rule lookups. Today those are pure in-memory checks against mock tables — there's no network/DB call there to cache. It becomes worth building once the real-CPT rule source (item 4) replaces the mocks and those lookups become genuine I/O.
 
 ## How it works, end to end
 

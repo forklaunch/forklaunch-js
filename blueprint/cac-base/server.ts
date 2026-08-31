@@ -1,4 +1,8 @@
-import { forklaunchExpress, schemaValidator } from '@forklaunch/blueprint-core';
+import {
+  createAuthCacheService,
+  forklaunchExpress,
+  schemaValidator
+} from '@forklaunch/blueprint-core';
 import { setupRls, setupTenantFilter } from '@forklaunch/core/persistence';
 import { analyticsRouter } from './api/routes/analytics.routes';
 import { claimRouter } from './api/routes/claim.routes';
@@ -19,15 +23,21 @@ setupRls(orm, { logger: openTelemetryCollector });
 //! resolves the IAM cross-service call config (§3 "Cross-service calls to IAM")
 const iamUrl = ci.resolve(tokens.IAM_URL);
 const hmacSecretKey = ci.resolve(tokens.HMAC_SECRET_KEY);
+const authCacheService = createAuthCacheService(ci.resolve(tokens.TtlCache));
 
 //! creates an instance of forklaunchExpress
 const app = forklaunchExpress(schemaValidator, openTelemetryCollector, {
   auth: {
     // RBAC verification pass (§14 PR 5): real coder/biller permissions and
     // roles surfaced from IAM, not the hardcoded placeholder this used to
-    // be — see ./surfacing.ts for why no caching layer is wired in yet.
-    surfacePermissions: createSurfacePermissions({ iamUrl, hmacSecretKey }),
-    surfaceRoles: createSurfaceRoles({ iamUrl, hmacSecretKey })
+    // be. Redis-backed caching (§12 item 8) added on top — see
+    // ./surfacing.ts for the cache-check/cache-set details.
+    surfacePermissions: createSurfacePermissions({
+      authCacheService,
+      iamUrl,
+      hmacSecretKey
+    }),
+    surfaceRoles: createSurfaceRoles({ authCacheService, iamUrl, hmacSecretKey })
   }
 });
 

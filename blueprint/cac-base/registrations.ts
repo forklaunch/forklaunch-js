@@ -6,7 +6,10 @@ import {
 } from '@forklaunch/blueprint-core';
 import { Metrics, metrics } from '@forklaunch/blueprint-monitoring';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { wrapEmWithTenantContext } from '@forklaunch/core/persistence';
+import {
+  FieldEncryptor,
+  wrapEmWithTenantContext
+} from '@forklaunch/core/persistence';
 import {
   ComplianceDataService,
   createConfigInjector,
@@ -15,6 +18,7 @@ import {
   RetentionService
 } from '@forklaunch/core/services';
 import { ScrubbingService } from '@forklaunch/implementation-cac-base/services';
+import { RedisTtlCache } from '@forklaunch/infrastructure-redis';
 import { ForkOptions } from '@mikro-orm/core';
 import { EntityManager, MikroORM } from '@mikro-orm/postgresql';
 import mikroOrmOptionsConfig from './mikro-orm.config';
@@ -41,6 +45,11 @@ const configInjector = createConfigInjector(schemaValidator, {
 
 //! defines the environment configuration for the application
 const environmentConfig = configInjector.chain({
+  REDIS_URL: {
+    lifetime: Lifetime.Singleton,
+    type: string,
+    value: getEnvVar('REDIS_URL')
+  },
   HOST: {
     lifetime: Lifetime.Singleton,
     type: string,
@@ -113,6 +122,29 @@ const runtimeDependencies = environmentConfig.chain({
         OTEL_SERVICE_NAME,
         OTEL_LEVEL || 'info',
         metrics
+      )
+  },
+  // Backs AuthCacheService (§12 item 8, closed) — caches IAM permission/role
+  // lookups so protected routes don't re-call IAM on every request. 1hr TTL
+  // here is a ceiling; createAuthCacheService (server.ts) applies its own
+  // shorter 5min TTL on top per-record, matching billing-base's pattern.
+  TtlCache: {
+    lifetime: Lifetime.Singleton,
+    type: RedisTtlCache,
+    factory: ({ REDIS_URL, OtelCollector, OTEL_LEVEL, ENCRYPTION_KEY }) =>
+      new RedisTtlCache(
+        60 * 60 * 1000,
+        OtelCollector,
+        {
+          url: REDIS_URL
+        },
+        {
+          enabled: true,
+          level: OTEL_LEVEL || 'info'
+        },
+        {
+          encryptor: new FieldEncryptor(ENCRYPTION_KEY)
+        }
       )
   },
   EntityManager: {
