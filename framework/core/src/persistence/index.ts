@@ -16,8 +16,24 @@ export {
   getEntityRetention,
   getAllRetentionPolicies,
   getEntityUserIdField,
-  getAllUserIdFields
+  getAllUserIdFields,
+  type EncryptedComplianceLevel,
+  type EncryptedKeysOf,
+  type RequiresEncryptionContext,
+  type SelectionAvoidsEncryptedColumns
 } from './complianceTypes';
+export {
+  asEncryptionSafe,
+  type ContextFreeKeysOfSchema,
+  type ContextFreeReadOptions,
+  type DecryptingReadOptions,
+  type EncryptedKeysOfSchema,
+  type EncryptionAwareReadOptions,
+  type EncryptionSafeEntityManager,
+  type HydratingReadMethod,
+  type PropertiesOfSchema,
+  type SchemaRequiresEncryptionContext
+} from './encryptionSafeEm';
 
 // Compliance-aware property builder (drop-in replacement for MikroORM's p)
 export { fp } from './compliancePropertyBuilder';

@@ -15,11 +15,15 @@ import {
   type RetentionPolicy
 } from './complianceTypes';
 
+// Accepts any classification level rather than a bare `true`, now that
+// `.compliance()` records which one was chosen. The requirement is unchanged:
+// every property must have been classified.
 type ValidateProperties<T> = {
   [K in keyof T]: T[K] extends
-    { '~options': { readonly '~c': true } } | ((...args: never[]) => unknown)
+    | { '~options': { readonly '~c': ComplianceLevel } }
+    | ((...args: never[]) => unknown)
     ? T[K]
-    : { '~options': { readonly '~c': true } };
+    : { '~options': { readonly '~c': ComplianceLevel } };
 };
 
 function readComplianceLevel(builder: unknown): ComplianceLevel | undefined {

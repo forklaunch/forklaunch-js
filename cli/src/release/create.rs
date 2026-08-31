@@ -2390,6 +2390,8 @@ fn is_platform_managed_var(var_name: &str) -> bool {
         "OTEL_METRICS_EXPORTER",
         "OTEL_LOGS_EXPORTER",
         "OTEL_LEVEL",
+        "MIMIR_URL",
+        // Retained for back-compat with projects scaffolded pre-Mimir.
         "PROMETHEUS_URL",
         "LOKI_URL",
         "TEMPO_URL",
