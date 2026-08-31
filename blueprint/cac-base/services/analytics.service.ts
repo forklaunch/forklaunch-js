@@ -46,7 +46,15 @@ export class AnalyticsService {
         status: ClaimStatus.DENIED,
         ...(createdAtFilter ? { createdAt: createdAtFilter } : {})
       }),
-      this.em.find(Denial, createdAtFilter ? { createdAt: createdAtFilter } : {})
+      // Filtered by the parent claim's createdAt, not the denial's own —
+      // a claim can be built on one day and scrubbed (denial created) on
+      // another, and this must stay in the same date window as
+      // readyCount/deniedCount above or denialsByCategory silently drifts
+      // out of sync with deniedCount.
+      this.em.find(
+        Denial,
+        createdAtFilter ? { claim: { createdAt: createdAtFilter } } : {}
+      )
     ]);
 
     const totalScrubbedClaims = readyCount + deniedCount;

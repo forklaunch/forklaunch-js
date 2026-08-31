@@ -45,7 +45,8 @@ export const getClaimAnalyticsSummary = handlers.get(
         cleanClaimRate: number,
         denialRate: number,
         denialsByCategory: schemaValidator.record(string, number)
-      }
+      },
+      400: string
     }
   },
   async (req, res) => {
@@ -54,9 +55,20 @@ export const getClaimAnalyticsSummary = handlers.get(
       since,
       until
     });
+
+    const sinceDate = since ? new Date(since) : undefined;
+    const untilDate = until ? new Date(until) : undefined;
+    if (
+      (sinceDate && Number.isNaN(sinceDate.getTime())) ||
+      (untilDate && Number.isNaN(untilDate.getTime()))
+    ) {
+      res.status(400).send('since/until must be valid ISO date strings');
+      return;
+    }
+
     const summary = await serviceFactory().getClaimSummary({
-      since: since ? new Date(since) : undefined,
-      until: until ? new Date(until) : undefined
+      since: sinceDate,
+      until: untilDate
     });
     res.status(200).json({
       totalScrubbedClaims: summary.totalScrubbedClaims,
