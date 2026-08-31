@@ -21,6 +21,7 @@ import {
 import { ForkOptions } from '@mikro-orm/core';
 import { EntityManager, MikroORM } from '@mikro-orm/postgresql';
 import mikroOrmOptionsConfig from './mikro-orm.config';
+import { AnalyticsService } from './services/analytics.service';
 import { ClaimService } from './services/claim.service';
 import { CodeValidationService } from './services/codeValidation.service';
 import { DenialWorklistService } from './services/denialWorklist.service';
@@ -162,6 +163,12 @@ const serviceDependencies = runtimeDependencies.chain({
     type: DenialWorklistService,
     factory: ({ EntityManager, OtelCollector }) =>
       new DenialWorklistService(EntityManager, OtelCollector)
+  },
+  AnalyticsService: {
+    lifetime: Lifetime.Scoped,
+    type: AnalyticsService,
+    factory: ({ EntityManager, OtelCollector }) =>
+      new AnalyticsService(EntityManager, OtelCollector)
   },
   ComplianceDataService: {
     lifetime: Lifetime.Singleton,
