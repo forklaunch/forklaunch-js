@@ -833,40 +833,43 @@ config store, because a deploy regenerates infrastructure from it:
 5. The next deploy also **regenerated task definitions**, silently reverting any manual ECS
    rollback. Recovery does not stick until the config store itself is correct.
 
-On ForkLaunch's managed platform (`platform-shared`/`org-shared` clusters), the underlying AWS
-account belongs to ForkLaunch, not the customer — an agent working in a customer's project has no
-AWS credentials for it, and should not assume any of the `aws ecs`/`aws ssm` commands below are
-runnable. Only a `dedicated`-cluster app (customer owns the AWS account) or a ForkLaunch operator
-with internal access can run them directly.
+The underlying AWS account belongs to ForkLaunch, never the customer, regardless of cluster type —
+an agent working in a customer's project has no AWS credentials for it, full stop. None of the
+`aws ecs`/`aws ssm` commands below are ever runnable from that context; they exist only as an
+internal ForkLaunch-operator runbook (this is the actual playbook used to resolve the outage
+above), not something to suggest to a customer or run on their behalf.
 
 **Rules**
 
 - NEVER `push` a file that came from a `--service`-filtered `pull`. Only push a file from a full
   (unfiltered) pull of the same environment.
 - Before any push, diff the input against a full `config pull` of the same environment and confirm
-  no service loses keys. If you have direct AWS access to the app's account, you can additionally
-  cross-check the running task definitions:
-  `aws ecs describe-task-definition --task-definition <td> --query 'taskDefinition.containerDefinitions[0].environment[*].name'`
+  no service loses keys.
 - Treat `push` as a destructive, environment-wide replace. Take a full unfiltered pull first and
-  keep it as the rollback artifact — this is the recovery path available without AWS access.
-- A push can delete secrets. With direct AWS access you can verify SSM before/after:
-  `aws ssm get-parameters-by-path --path /<env-prefix> --query 'length(Parameters)'`
+  keep it as the rollback artifact — this is the only recovery path available to a customer-facing
+  agent; everything below this point is ForkLaunch-internal only.
 
 **If it has already happened**
 
-- Without direct AWS access: restore from the full unfiltered `config pull` taken before the push
-  (see Rules above) via `config push`, then redeploy. If no such backup exists, this is a ForkLaunch
-  support escalation — don't guess at secret values or fabricate a replacement config.
-- With direct AWS access to the app's account only: task definitions hold the correct secret ARNs
-  and non-secret env values — use them to identify which keys and versions need restoring (`aws ecs
-  describe-task-definition`). For any container env entry that is itself a secret ARN reference,
-  restore by ARN/version, not by reading the plaintext value. Overwritten (not deleted) parameters
-  are recoverable from history: first list versions without decrypting (`aws ssm
-  get-parameter-history --name <param>`, which returns every version but never decrypts any of
-  them) and match the version number by `LastModifiedDate` around the push. `--with-decryption` on
-  `get-parameter-history` decrypts the WHOLE history at once, not just one version — instead fetch
-  only the identified version with `aws ssm get-parameter --name <param>:<version> --with-decryption`
-  (colon-suffixed version label), and never paste the decrypted value into chat, logs, or a
+- Customer-facing agent: restore from the full unfiltered `config pull` taken before the push (see
+  Rules above) via `config push`, then redeploy. If no such backup exists, this is a ForkLaunch
+  support escalation — don't guess at secret values or fabricate a replacement config, and don't
+  suggest AWS CLI commands to the customer.
+- ForkLaunch operator only, with real AWS access to ForkLaunch's own account: before any push,
+  cross-check the running task definitions —
+  `aws ecs describe-task-definition --task-definition <td> --query 'taskDefinition.containerDefinitions[0].environment[*].name'`
+  — and verify SSM before/after a push:
+  `aws ssm get-parameters-by-path --path /<env-prefix> --query 'length(Parameters)'`. If damage has
+  already happened, task definitions hold the correct secret ARNs and non-secret env values — use
+  them to identify which keys and versions need restoring (`aws ecs describe-task-definition`).
+  For any container env entry that is itself a secret ARN reference, restore by ARN/version, not by
+  reading the plaintext value. Overwritten (not deleted) parameters are recoverable from history:
+  first list versions without decrypting (`aws ssm get-parameter-history --name <param>`, which
+  returns every version but never decrypts any of them) and match the version number by
+  `LastModifiedDate` around the push. `--with-decryption` on `get-parameter-history` decrypts the
+  WHOLE history at once, not just one version — instead fetch only the identified version with
+  `aws ssm get-parameter --name <param>:<version> --with-decryption` (colon-suffixed version
+  label), and never paste the decrypted value into chat, logs, or a
   committed file — pipe it straight into the restore command.
 - Fix the config store BEFORE deploying again, or the deploy will re-apply the damaged state and
   undo any ECS/IAM repair.
