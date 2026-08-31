@@ -1,13 +1,79 @@
 # ForkLaunch Skills for Claude Code
 
-Skills that teach Claude Code (and developers) how to build with ForkLaunch.
+Skills that teach Claude Code (and developers) how to build with, and operate, ForkLaunch.
+
+## Agent Behavior (applies to every skill, not just the one you're reading)
+
+**CLI-first, API-fallback — but never blindly retry a mutation.** For anything that talks to the
+ForkLaunch control plane — deployments, logs, alerts, infrastructure, issues — try the matching
+`fl` command first. If no CLI command covers the action yet, or a **read-only** command fails
+(a `GET`/list/status check), falling back to a direct API call is safe — reads have no side
+effects to duplicate. If a **mutating** command fails (create, deploy, delete, anything that
+changes state), the request may have already been accepted server-side before the CLI itself
+failed (a timeout, a dropped connection) — check whether it actually landed first (the matching
+`fl ... info`/list/status command) before resubmitting through the API or retrying at all. The CLI
+already handles auth (`fl login`) and consistent output for what it covers; a raw API call skips
+that, and skips nothing about the risk of a duplicate write.
+
+**Every operation ends with a plain-language summary — not something the user has to ask for.**
+Whatever technical work happened above it (commands run, files changed, errors seen), close with
+a few short sentences a non-technical person could read and understand: what you were doing, what
+happened, and whether it's fixed or still needs their input. No jargon, no unexplained acronyms,
+no file paths or stack traces in this part — those already exist above it for anyone who wants
+them. If a friend or family member with no coding background read only this last part, they
+should be able to tell what happened. If a result is uncertain or partial, say that plainly too —
+"I couldn't confirm X" is a better summary than skipping X.
+
+**Keep the CLI and skills in sync.** `forklaunch` self-updates its own binary automatically on
+each run (comparing against the version pinned in `manifest.toml`), but the skill pack a project
+already has on disk (`.claude/skills/`, `AGENTS.md`, etc.) is a static copy from whenever
+`forklaunch context` last ran — it does **not** refresh itself. After a CLI version change, or if
+a skill's instructions stop matching what a command actually does (a flag that no longer exists,
+an error message that reads differently), re-run `forklaunch context` to pull the current skill
+pack before continuing. If a command you were told to run turns out to be missing or renamed,
+don't guess at flags — re-sync the skill pack first, since the instructions you have may simply be
+stale.
+
+**Check a foundational choice against the goal before committing to it, not after.** Some
+decisions are cheap to undo (a formatter, a linter, a variable name) and some aren't (a module
+preset, a database engine, an auth provider) — the expensive ones usually mean re-scaffolding and
+redeploying to fix, not just editing a file. Before locking in one of the expensive ones: state in
+one sentence what capability the app actually needs, then check the specific option against that
+sentence rather than against how closely its name matches. Two options can both plausibly "add
+auth" or "add a database" while only one actually does what the task needs — see `/cli` for a
+concrete example with `iam-base` vs `iam-better-auth`. If getting it wrong would be costly to
+undo, say so and confirm with the user before proceeding, the same way you would before an
+irreversible deploy action.
+
+## How to explain things (applies to every skill)
+
+Explain results as if to an **intelligent high schooler**: plain language, no
+jargon, no undefined acronyms. **Use a concrete example** — abstractions are
+where jargon hides, and an example forces you to be specific.
+
+Then the technical detail if it is needed. Then **close with a plain-English
+summary**: what changed, what it means, what is still open. Someone who skipped
+the middle should read the first and last parts and be correctly informed.
+
+**plain → technical → plain summary.** The order is not optional.
+
+Say what happened rather than what was run; never fake simplicity by dropping
+caveats; and always say what you did *not* verify.
+
+Full version in `AGENTS.md` and `CLAUDE.md`.
 
 ## Available Skills
+
+### Operating a Deployed App
+- `/investigator` — Diagnose a running ForkLaunch app: is it up, why did a deploy fail, why isn't
+  a change showing, where are the errors. Start here for "something's wrong."
 
 ### Building & Scaffolding
 - `/studio` — Fast app generation: greenfield, existing Next.js, backend migration.
 - `/cli` — All CLI commands: init, change, delete, deploy, release, sync, sdk, openapi. **Supply ALL flags or CLI hangs.**
 - `/quick-reference` — Cheat sheet: imports, patterns, templates, commands at a glance.
+- `/managed-provisioning` — Managed apps: templates, provisioning, the claim handover, and where each surface stops.
+- `/deployment-approvals` — Approval gating: why it is opt-in, resolution order, four-eyes, the two gates.
 
 ### Backend
 - `/backend-patterns` — Handlers, services, entities, schemas, routes, DI, auth, feature gating.
@@ -16,6 +82,9 @@ Skills that teach Claude Code (and developers) how to build with ForkLaunch.
 - `/imports-and-structure` — Import layers, module structure, file naming. **Always import from `@{{app-name}}/core`.**
 - `/websockets-and-mappers` — WebSockets, real-time, log streaming, requestMapper/responseMapper.
 - `/compliance` — fp property builder, defineComplianceEntity, access levels, audit CLI, encryption, tenant isolation.
+- `/score-self-heal` — run the ForkLaunch Score during development, fix the lowest-scoring criteria from their `fix`es, re-score until the threshold passes.
+- `/security` — Auth surfaces, device flow, rate limiting, security events, secrets hygiene, HMAC, branch protection.
+- `/observability` — OTel wiring, metrics definitions, security events, alert rules, notifiers, telemetry retention.
 
 ### Frontend
 - `/frontend-patterns` — Pages, SDK client, useApi/useMutation hooks, auth, feature gating, forms, tables.
@@ -40,12 +109,28 @@ Skills that teach Claude Code (and developers) how to build with ForkLaunch.
 2. **Schemas use natural notation:** `{ name: string, age: optional(number) }`. NEVER `z.object()`.
 3. **Enums use const objects:** `const X = { A: 'a' } as const`. NEVER TypeScript `enum`.
 4. **Handler `name` cannot contain slashes.** Use PascalCase: `'GetRestaurant'`.
-5. **Services return entities.** Mapping happens in controllers only.
-6. **Always `em.flush()` after mutations.**
-7. **Use `forklaunch init` for structural changes.** Don't manually create service directories.
-8. **Don't edit `manifest.toml` by hand.** Use `forklaunch change` commands.
-9. **Supply ALL CLI flags** or the CLI drops into interactive mode and hangs.
-10. **TSC for backend:** `cd src/modules/<service> && ./node_modules/.bin/tsc --noEmit`
+5. **Handler responses must match `responses[code]`.** Do not return starter `{ message }` JSON against a domain schema.
+6. **Controller calls must match service signatures.** Pass the exact command object, not one primitive field, when a service expects `{ ... }`.
+7. **Follow the local service shape.** Current Studio scaffolds often use schema-derived DTO services; do not force older mapper/entity-return examples.
+8. **Always `em.flush()` after mutations.**
+9. **Use `forklaunch init` for structural changes.** Don't manually create service directories.
+10. **Don't edit `manifest.toml` by hand.** Use `forklaunch change` commands. Note `change service --to worker` ADDS a worker and KEEPS the HTTP surface — `type = "Worker"` means "has a worker", not "is no longer a service" (see `observability-api`). Never hand-roll a `worker.ts` to avoid it.
+11. **Supply ALL CLI flags** or the CLI drops into interactive mode and hangs.
+12. **TSC for backend:** `cd src/modules/<service> && ./node_modules/.bin/tsc --noEmit`
+13. **Studio watch logs are informational.** `tsx watch` restarts, shutdown spam, force-kill messages, and MaxListeners warnings are not repair targets if the service starts again.
+
+## Studio Architecture Default
+
+In Studio planning, bias toward fat services and workers:
+
+- Start with one custom backend service as the app control plane. Pack synchronous APIs, admin endpoints, domain logic, and shared persistence into that service first.
+- If background processing is necessary, generate one worker scaffold instead of a separate service plus worker. A ForkLaunch worker scaffold creates the service/worker pair; use the service side as the control plane and the worker side for jobs. Name the worker the same product/control-plane name you would have used for the service, not a separate queue-specific name.
+- Do not split by domain nouns like parser, analytics, notifications, reports, or admin during initial generation. Put future splits in prose or scaling notes, not executable scaffold commands.
+- Only add more custom services when loading/importing a repo whose existing deployable boundaries make separation absolutely necessary.
+- Never name the custom service or worker `core`, `monitoring`, `client-sdk`, `iam`, or `billing`; those are reserved scaffold modules. Use a product-specific name such as `workspace`, `operations`, `intake`, `reports`, `patients`, or the app domain name.
+- Use a two-pass Studio decision flow: ask all user-facing questions in one grouped pass, then do one review pass that locks answers/defaults and proceeds. The first pass may ask as many questions as real requirements need; do not cap it at three or create a third decision turn. In user-facing text, call the main service the `API` or `main API`, never `core API`.
+- Studio has no external coding agent handoff. Do not emit copy/paste-to-agent instructions, skill references, or "HOW TO USE THIS PLAN" text in Studio plans.
+- Compliance boundary: ForkLaunch-hosted Bedrock model calls are BAA-protected through ForkLaunch; nothing else is. Direct AWS account services, direct Anthropic/OpenAI keys, SendGrid, Stripe, and other processors need the user's own compliance setup.
 
 ## Quick Start for New Features
 
@@ -82,7 +167,7 @@ cd src/modules/<service> && pnpm migrate:up        # Run pending migrations
 
 # Type checking
 cd src/modules/<service> && ./node_modules/.bin/tsc --noEmit   # Backend
-cd client && pnpm tsc --noEmit                                 # Frontend
+cd client && pnpm tsc --noEmit                                  # Frontend
 
 # Tests
 cd src/modules/<service> && pnpm test   # Run module tests
