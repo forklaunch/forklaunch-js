@@ -1170,6 +1170,11 @@ fn change_runtime(
     match runtime {
         Runtime::Bun => {
             application_json_to_write.workspaces = Some(existing_workspaces);
+            if let Some(rendered) =
+                crate::core::bunfig::generate_bunfig(&base_path.to_string_lossy())?
+            {
+                rendered_templates_cache.insert("bunfig.toml".to_string(), rendered);
+            }
         }
         Runtime::Node => {
             rendered_templates_cache.insert(

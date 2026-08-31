@@ -82,7 +82,7 @@ function contentParse<SV extends AnySchemaValidator>(
     const userVerify = base?.verify as BodyParserVerify | undefined;
     return (req, res, buf, encoding) => {
       userVerify?.(req, res, buf, encoding);
-      (req as unknown as { _rawBody?: Buffer })._rawBody = buf;
+      (req as { _rawBody?: Buffer })._rawBody = buf;
     };
   };
 
@@ -144,6 +144,9 @@ function contentParse<SV extends AnySchemaValidator>(
 
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
+      // `_rawBody` and the other fields read below are attached by earlier
+      // middleware, not declared on Express' `Request`, so the augmented shape
+      // shares no declared member with it.
       const coercedRequest = req as unknown as {
         schemaValidator: SV;
         contractDetails: HttpContractDetails<SV>;

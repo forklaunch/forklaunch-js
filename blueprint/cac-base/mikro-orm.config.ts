@@ -8,7 +8,7 @@ import {
   getEnvVar,
   Lifetime
 } from '@forklaunch/core/services';
-import { EntityClass, EntitySchema, Platform, TextType, Type } from '@mikro-orm/core';
+import { Platform, TextType, Type } from '@mikro-orm/core';
 import { Migrator } from '@mikro-orm/migrations';
 import { defineConfig } from '@mikro-orm/postgresql';
 import dotenv from 'dotenv';
@@ -73,14 +73,17 @@ const mikroOrmOptionsConfig: ReturnType<typeof defineConfig> = defineConfig({
   password: validConfigInjector.resolve(tokens.DB_PASSWORD),
   port: validConfigInjector.resolve(tokens.DB_PORT),
   // Object.values() on the entities barrel widens to unknown[]; MikroORM
-  // rejects that. The annotation names the shape MikroORM accepts rather
-  // than one concrete kind, matching the generated template: modules define
-  // entities as schemas or as classes, and a cast to either one alone
-  // rejects the other.
-  entities: Object.values(entities) as (
-    | EntitySchema<any>
-    | EntityClass<Partial<any>>
-  )[],
+  // rejects that.
+  //
+  // Typed as MikroORM's own `entities` option rather than a hand-written union
+  // of EntitySchema | EntityClass. Modules define entities either way, so a
+  // cast to one concrete kind rejects the other — and naming the option type
+  // states the requirement directly instead of restating it with `any` in it.
+  // Read off `defineConfig` rather than imported, because `forklaunch change
+  // service` rewrites the driver import wholesale and would drop a type import.
+  entities: Object.values(entities) as Parameters<
+    typeof defineConfig
+  >[0]['entities'],
   discovery: {
     getMappedType(type: string, platform: Platform) {
       if (type === 'string') {

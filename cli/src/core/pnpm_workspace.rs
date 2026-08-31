@@ -116,6 +116,27 @@ fn sanitize_minimum_release_age_exclude(pnpm_workspace: &mut PnpmWorkspace) {
     *entries = normalized;
 }
 
+/// Set-if-missing on every rewrite path, not just initial creation, so an
+/// app that already existed before this default was introduced (or had the
+/// key stripped) still gets it back.
+fn ensure_minimum_release_age(pnpm_workspace: &mut PnpmWorkspace) {
+    pnpm_workspace
+        .other
+        .entry("minimumReleaseAge".to_string())
+        .or_insert(Value::Number(1440.into()));
+}
+
+/// Pin explicitly rather than leave unset: pnpm >=11.2 defaults
+/// minimumReleaseAge to 1440 (24h), but a scaffold's local `pnpm install`
+/// may run on an older pnpm with no age gate at all, resolving versions the
+/// deploy pipeline's newer pnpm then rejects from an already-locked
+/// lockfile. Setting it explicitly makes local resolution skip too-new
+/// versions the same way deploy does, so the generated lockfile is already
+/// compliant. Same value as forklaunch-platform's own pnpm-workspace.yaml.
+fn default_other() -> BTreeMap<String, Value> {
+    BTreeMap::from([("minimumReleaseAge".to_string(), Value::Number(1440.into()))])
+}
+
 pub(crate) fn generate_pnpm_workspace(
     application_path: &str,
     additional_projects: &Vec<ProjectEntry>,
@@ -130,7 +151,7 @@ pub(crate) fn generate_pnpm_workspace(
         content: to_string(&PnpmWorkspace {
             packages: additional_projects.iter().map(|p| p.name.clone()).collect(),
             allow_builds: Some(default_allow_builds()),
-            other: BTreeMap::new(),
+            other: default_other(),
         })
         .with_context(|| ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE)?,
         context: None,
@@ -155,12 +176,13 @@ pub(crate) fn render_pnpm_workspace_with_packages(
         PnpmWorkspace {
             packages: Vec::new(),
             allow_builds: None,
-            other: BTreeMap::new(),
+            other: default_other(),
         }
     };
     pnpm_workspace.packages = packages;
     sanitize_allow_builds(&mut pnpm_workspace);
     sanitize_minimum_release_age_exclude(&mut pnpm_workspace);
+    ensure_minimum_release_age(&mut pnpm_workspace);
     Ok(to_string(&pnpm_workspace)
         .with_context(|| ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE)?)
 }
@@ -182,6 +204,7 @@ pub(crate) fn add_project_definition_to_pnpm_workspace<
     }
     sanitize_allow_builds(&mut pnpm_workspace);
     sanitize_minimum_release_age_exclude(&mut pnpm_workspace);
+    ensure_minimum_release_age(&mut pnpm_workspace);
     Ok(to_string(&pnpm_workspace)
         .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?)
 }
@@ -205,6 +228,7 @@ pub(crate) fn remove_project_definition_to_pnpm_workspace(
     }
     sanitize_allow_builds(&mut pnpm_workspace);
     sanitize_minimum_release_age_exclude(&mut pnpm_workspace);
+    ensure_minimum_release_age(&mut pnpm_workspace);
 
     Ok(to_string(&pnpm_workspace)
         .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?)
@@ -234,5 +258,37 @@ mod tests {
         let mut ws: PnpmWorkspace = from_str("packages:\n- core\n").unwrap();
         sanitize_minimum_release_age_exclude(&mut ws);
         assert!(!to_string(&ws).unwrap().contains("minimumReleaseAgeExclude"));
+    }
+
+    #[test]
+    fn test_generate_pnpm_workspace_pins_minimum_release_age() {
+        let dir = tempfile::tempdir().unwrap();
+        let rendered = generate_pnpm_workspace(dir.path().to_str().unwrap(), &Vec::new())
+            .unwrap()
+            .unwrap();
+        assert!(rendered.content.contains("minimumReleaseAge: 1440"));
+    }
+
+    #[test]
+    fn test_render_pnpm_workspace_with_packages_pins_minimum_release_age_when_file_missing() {
+        let dir = tempfile::tempdir().unwrap();
+        let rendered =
+            render_pnpm_workspace_with_packages(dir.path(), vec!["core".to_string()]).unwrap();
+        assert!(rendered.contains("minimumReleaseAge: 1440"));
+    }
+
+    #[test]
+    fn test_ensure_minimum_release_age_backfills_when_absent() {
+        let mut ws: PnpmWorkspace = from_str("packages:\n- core\n").unwrap();
+        ensure_minimum_release_age(&mut ws);
+        assert!(to_string(&ws).unwrap().contains("minimumReleaseAge: 1440"));
+    }
+
+    #[test]
+    fn test_ensure_minimum_release_age_preserves_existing_value() {
+        let mut ws: PnpmWorkspace =
+            from_str("packages:\n- core\nminimumReleaseAge: 0\n").unwrap();
+        ensure_minimum_release_age(&mut ws);
+        assert!(to_string(&ws).unwrap().contains("minimumReleaseAge: 0"));
     }
 }

@@ -1,6 +1,13 @@
 use serde::{Deserialize, Serialize};
 
 /// One entry from `GET /platform-resources/application/:applicationId`.
+///
+/// This mirrors the response body, so it carries fields nothing reads yet.
+/// They are kept deliberately: the struct documents the wire contract, and
+/// dropping a field here would silently discard it the moment a caller wants
+/// it. Serde ignores unknown fields, so their absence would not have failed
+/// loudly either.
+#[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize)]
 pub(crate) struct ResourceListItem {
     pub(crate) id: String,

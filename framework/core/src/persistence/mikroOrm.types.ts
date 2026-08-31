@@ -10,6 +10,12 @@ import type { MikroORM } from '@mikro-orm/core';
  * annotation. Use this alias for ORM-valued parameters, fields, and
  * variables that must accept any configured instance.
  *
+ * Derived from `init`'s own return type rather than written as
+ * `MikroORM<any, any, any>`. The `any`s said "accepts anything", which is
+ * broader than the truth and switches off checking on every ORM value in the
+ * codebase; deriving keeps the real instance type and follows MikroORM's
+ * generics automatically when they change again.
+ *
  * @example
  * ```typescript
  * import { AnyMikroORM } from '@forklaunch/core/persistence';
@@ -19,8 +25,7 @@ import type { MikroORM } from '@mikro-orm/core';
  * }
  * ```
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type AnyMikroORM = MikroORM<any, any, any>;
+export type AnyMikroORM = Awaited<ReturnType<typeof MikroORM.init>>;
 
 /**
  * The resolved, structural view of an inferred entity: its plain data fields
