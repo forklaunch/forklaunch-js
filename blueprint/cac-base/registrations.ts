@@ -14,10 +14,14 @@ import {
   Lifetime,
   RetentionService
 } from '@forklaunch/core/services';
-import { MockProcedureCodeProvider } from '@forklaunch/implementation-cac-base/services';
+import {
+  MockProcedureCodeProvider,
+  ScrubbingService
+} from '@forklaunch/implementation-cac-base/services';
 import { ForkOptions } from '@mikro-orm/core';
 import { EntityManager, MikroORM } from '@mikro-orm/postgresql';
 import mikroOrmOptionsConfig from './mikro-orm.config';
+import { ClaimService } from './services/claim.service';
 import { CodeValidationService } from './services/codeValidation.service';
 
 //! defines the configuration schema for the application
@@ -140,6 +144,17 @@ const serviceDependencies = runtimeDependencies.chain({
     type: CodeValidationService,
     factory: ({ EntityManager, OtelCollector }) =>
       new CodeValidationService(EntityManager, OtelCollector)
+  },
+  ScrubbingService: {
+    lifetime: Lifetime.Singleton,
+    type: ScrubbingService,
+    factory: () => new ScrubbingService()
+  },
+  ClaimService: {
+    lifetime: Lifetime.Scoped,
+    type: ClaimService,
+    factory: ({ EntityManager, ScrubbingService, OtelCollector }) =>
+      new ClaimService(EntityManager, ScrubbingService, OtelCollector)
   },
   ComplianceDataService: {
     lifetime: Lifetime.Singleton,

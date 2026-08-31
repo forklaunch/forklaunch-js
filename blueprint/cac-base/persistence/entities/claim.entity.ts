@@ -7,9 +7,8 @@ import { Insurance } from './insurance.entity';
 import { Patient } from './patient.entity';
 import { Remittance } from './remittance.entity';
 
-// A claim is built from one encounter's charges + diagnoses — the claim
-// builder itself (encounter+charges+diagnoses -> claim) is Phase 2 business
-// logic (§10 Phase 2 / PR 3), not this phase's entity shape.
+// A claim is built from one encounter's charges + diagnoses — see
+// services/claim.service.ts for the builder/scrubbing orchestration (§6).
 export const Claim = defineComplianceEntity({
   name: 'Claim',
   properties: {

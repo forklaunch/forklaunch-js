@@ -14,7 +14,7 @@
 - **Free-first still describes what ships fully built, usable by anyone with zero license:** ICD-10-CM, HCPCS, NCCI, and LCD/NCD-shaped scrubbing, using mock procedure codes — built, tested, and now also demoable through a lightweight validation UI in the separate `forklaunch-platform` repo (§10).
 - **What research corrected:** the source doc conflated NCCI code-conflict rules with diagnosis-procedure medical necessity. These are two separate CMS mechanisms with different data, cadences, and denial codes — the scrubbing engine has three distinct rule layers instead of one (§6).
 - **What's still open, not just deferred:** the Phase 0–4 week estimates are inherited from the source doc and unvalidated against actual team capacity (§11); a *meaningful* real LCD/NCD crosswalk can't exist until whichever downstream customer wires in real CPT does so themselves, even though the LCD data itself is free (§6, §12); and the `forklaunch-platform` validation UI's scope and hosting haven't been explored yet (§10, §12).
-- **How it ships:** one PR per phase, six PRs total — see §14 for the breakdown. PR 1 (CLI module registration + blueprint skeleton) is merged; PR 2 (all §4 entities, the ICD-10-CM/HCPCS loaders, and the `refresh-code-sets.ts` ETL shape) is implemented alongside this plan revision. PR 3 (Phase 2) remains the largest overall, now carrying the real-CPT extension point as ready-now scope rather than a deferred activation step.
+- **How it ships:** one PR per phase, six PRs total — see §14 for the breakdown. PR 1 (CLI module registration + blueprint skeleton) is merged; PR 2 (all §4 entities, the ICD-10-CM/HCPCS loaders, and the `refresh-code-sets.ts` ETL shape) is implemented. PR 3 (Phase 2) remains the largest overall — its claim engine and three-layer scrubbing (mock codes) are now implemented too; the real-CPT extension point and Stedi submission path are still outstanding within it.
 - **Where to start:** §13 Immediate next steps.
 
 ---
@@ -119,10 +119,12 @@ blueprint/implementations/cac/base/    # concrete services implementing the inte
                                                      # demonstrates how a customer's own licensed
                                                      # CPT connector plugs in; never contains real
                                                      # AMA content
-    claim.service.ts
-    scrubbing.service.ts                           # three-layer engine, §6
+    scrubbing.service.ts                           # three-layer engine, §6 — pure logic,
+                                                     # no DB dependency, so it stays here
+  domain/
+    mockNcciRules.ts, mockLcdCrosswalk.ts          # mock PTP/MUE/LCD fixture data, §6
   domain/schemas/{zod,typebox}/
-  __test__/schemaEquality.test.ts
+  __test__/schemaEquality.test.ts, scrubbing.service.test.ts
 
 blueprint/cac-base/                     # the living reference app — entities, controllers, DI wiring
   api/
@@ -138,6 +140,13 @@ blueprint/cac-base/                     # the living reference app — entities,
     migrations/           # hand-written DDL, see "Migrations" below
     seeders/              # small reference/config data only — NOT full code-set files, see §7
     seed.data.ts
+  services/
+    claim.service.ts       # claim builder + scrubbing orchestration (§6) — as-built, this lives
+                            # here rather than implementations/cac/base as originally sketched
+                            # above: it needs the real entities, and unlike CodeSetProvider there's
+                            # no swappable mock/real variant of "how a claim gets built" (cac has
+                            # only one variant, §3's "Module variant count" note below)
+    codeValidation.service.ts
   bootstrapper.ts, registrations.ts, sdk.ts, server.ts, mikro-orm.config.ts
   scripts/
     enforce-retention.ts   # reuse framework's RetentionService, same as billing/iam
@@ -408,7 +417,7 @@ One PR per phase from §11, mapped 1:1 — six PRs total (the `forklaunch-platfo
 |---|---|---|
 | PR 1 | Phase 0 | **CLI module registration + blueprint package skeleton (§3) — implemented and merged**, as two commits (CLI wiring, then the three blueprint packages). Stedi sandbox, HIPAA hosting/BAA, and synthetic test dataset are business/ops tasks still outstanding, not engineering |
 | PR 2 | Phase 1 | **Code validation — implemented.** All §4 entities (+ `Icd10Code`/`HcpcsCode` reference tables), a hand-written schema migration, the `CodeSetLoaderService` ETL shape with ICD-10-CM/HCPCS loaders, `refresh-code-sets.ts`, and free-code-set validation endpoints (`GET /codeValidation/icd10/:code`, `/hcpcs/:code`) — the surface §10's `forklaunch-platform` UI calls |
-| PR 3 | Phase 2 | Claim engine, three-layer scrubbing, **and** the real-CPT extension point (reference adapter + tests against the synthetic CPT-shaped fixture) built to genuine readiness (§5) |
+| PR 3 | Phase 2 | **Claim engine + three-layer scrubbing implemented** (mock codes only) — `ClaimService` (`cac-base`) builds a claim from an encounter's charges/diagnoses and runs it through `ScrubbingService` (`implementations/cac/base`, pure logic, unit-tested), which checks NCCI PTP conflicts, NCCI MUE unit caps, and LCD/NCD-style medical necessity against mock fixture data, persisting `Denial` rows and updating `Claim.status`. New `POST /claim/build` and `POST /claim/:id/scrub` endpoints. **Still outstanding in this PR:** the real-CPT extension point (reference adapter + synthetic CPT-shaped fixture tests, §5) and the Stedi clearinghouse submission path — deferred to a follow-up pass since both need inputs this session can't produce alone (a coding/compliance SME for the fixture per §12 item 3; a real Stedi sandbox account per §8). Also deferred: the full `testcontainers` end-to-end test matrix from §9 — the pure-logic unit tests on `ScrubbingService` cover the same branching logic without a DB round-trip |
 | PR 4 | Phase 3 | Eligibility & remittance — 270/271, 835, 277CA/999, denial worklist |
 | PR 5 | Phase 4 | Analytics dashboard + RBAC/audit verification pass (external security review sits outside any PR, and is each adopter's own responsibility for their own deployment — §9) |
 | PR 6 | Phase 5 | Downstream-builder documentation & extension-point hardening — the README/docs explaining how to implement a real `CodeSetProvider` against a customer's own licensed CPT feed (§5, item 5), plus any polish on the reference adapter surfaced by real integration questions. No AMA contact and no "flip a flag for our own client" step — ForkLaunch doesn't operate that relationship (§2) |

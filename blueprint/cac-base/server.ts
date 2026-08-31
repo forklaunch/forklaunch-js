@@ -5,6 +5,7 @@ import {
   schemaValidator
 } from '@forklaunch/blueprint-core';
 import { setupRls, setupTenantFilter } from '@forklaunch/core/persistence';
+import { claimRouter } from './api/routes/claim.routes';
 import { codeSetRouter } from './api/routes/codeSet.routes';
 import { codeValidationRouter } from './api/routes/codeValidation.routes';
 import { complianceRouter } from './api/routes/compliance.routes';
@@ -40,6 +41,7 @@ const version = ci.resolve(tokens.VERSION);
 const docsPath = ci.resolve(tokens.DOCS_PATH);
 
 //! mounts the routes to the app
+app.use(claimRouter);
 app.use(codeSetRouter);
 app.use(codeValidationRouter);
 app.use(complianceRouter);

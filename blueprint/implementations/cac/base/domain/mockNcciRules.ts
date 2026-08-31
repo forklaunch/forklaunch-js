@@ -1,0 +1,27 @@
+// Free, non-AMA mock NCCI PTP/MUE data — carries the same shape as real CMS
+// NCCI edit tables without using any real code list. Illustrative only; a
+// coding/compliance SME should review before this fixture is treated as
+// authoritative for anything beyond demoing the scrubbing engine's logic.
+// See plan/cac/MEDICAL-CODING-IMPLEMENTATION-PLAN.md §6, §12 item 3.
+
+// NCCI PTP — unordered pairs of mock procedure codes that shouldn't be
+// billed together on the same claim absent a justifying modifier (which
+// this mock fixture doesn't model — every pair here is a hard conflict).
+export const MOCK_NCCI_PTP_CONFLICTS: ReadonlyArray<
+  readonly [string, string]
+> = [['PROC-001', 'PROC-002']];
+
+export function isPtpConflict(codeA: string, codeB: string): boolean {
+  return MOCK_NCCI_PTP_CONFLICTS.some(
+    ([a, b]) =>
+      (a === codeA && b === codeB) || (a === codeB && b === codeA)
+  );
+}
+
+// NCCI MUE — the maximum plausible unit count for a single mock procedure
+// code on one date of service. Codes not listed here have no mock unit cap.
+export const MOCK_NCCI_MUE_CAPS: Record<string, number> = {
+  'PROC-001': 1,
+  'PROC-002': 1,
+  'PROC-003': 3
+};
