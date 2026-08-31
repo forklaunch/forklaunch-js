@@ -3,11 +3,11 @@
 # This is an auto-generated file. Modifications are encouraged but may inhibit automated upgrades.
 
 packages:
-- cac-base
 - core
 - monitoring
 - billing-base
 - billing-stripe
+- cac-base
 - ecommerce-stripe
 - iam-base
 - iam-better-auth
@@ -22,9 +22,9 @@ packages:
 - interfaces/worker
 - implementations/billing/base
 - implementations/billing/stripe
+- implementations/cac/base
 - implementations/messaging/base
 - implementations/messaging/twilio
-- implementations/cac/base
 - implementations/ecommerce/base
 - implementations/ecommerce/stripe
 - implementations/ecommerce/paypal
