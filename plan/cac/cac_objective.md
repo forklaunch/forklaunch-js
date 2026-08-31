@@ -8,6 +8,13 @@ Build the coding/billing engine for a hospital claims platform — the piece tha
 
 We're building it as a reusable ForkLaunch module (`cac-base`), the same way `iam-base` and `billing-base` are — **not** a product ForkLaunch operates or sells directly to hospitals. Confirmed by the founder: ForkLaunch is not in the CPT-licensing business. Companies who already hold their own AMA CPT license use `cac-base` as a building block, build their own product on top of it, and self-host it — modifying and extending it as their own needs require.
 
+## What's actually built right now
+
+- ✅ **Built:** the module itself (entities, DI wiring), free code sets (ICD-10-CM, HCPCS) with a real refresh pipeline, claim building, and all three scrubbing layers — items 1, 2, 4, and 5 below.
+- ✅ **Built:** the real-CPT extension point itself (item 4) — a real, tested adapter an adopter can wire their own licensed data into today.
+- ⏸️ **Not built yet:** item 3 below (eligibility check + clearinghouse submission + remittance) — this needs a real Stedi account, which isn't set up yet and isn't currently a priority.
+- ⏸️ **Not built yet:** the automatic per-organization switch from mock to real CPT (an org still has to be wired in by hand; the pieces to automate it exist in the framework but aren't connected).
+
 ## How it works, end to end
 
 1. **A claim gets built.** An encounter (visit) has diagnoses (ICD-10 codes, free/public) and procedures (CPT codes). Out of the box the module uses free mock procedure-code placeholders, since ForkLaunch never holds real CPT content — an adopter with their own license plugs in their own real CPT connector. These combine into a claim.
@@ -19,9 +26,9 @@ We're building it as a reusable ForkLaunch module (`cac-base`), the same way `ia
 
    Bad claims get flagged with the same denial codes real payers use (CO-11, CO-16, CO-27, CO-50, CO-97), before they ever leave the building.
 
-3. **Clean claims go out and remittances come back.** We check the patient's coverage first (270/271 eligibility), submit the claim (837) through a clearinghouse (Stedi), and parse the payment/denial response (835) when it comes back — feeding a worklist so staff can see and fix what got denied.
+3. **Clean claims go out and remittances come back — not built yet.** The plan: check the patient's coverage first (270/271 eligibility), submit the claim (837) through a clearinghouse (Stedi), and parse the payment/denial response (835) when it comes back, feeding a worklist so staff can see and fix what got denied. This is entirely blocked on a real Stedi account, which isn't set up and isn't currently a priority.
 
-4. **The mock-vs-real switch — and who's on each side of it.** There's one interface (`CodeSetProvider`) with two sides: a free, fully-built mock implementation that ships with the module, and a real-CPT extension point that an adopting company implements themselves, against their own licensed CPT data. ForkLaunch builds and tests the extension point itself (so it's genuinely usable on day one, not a future promise) but never fills it with real AMA content — that's each adopter's own connector, using their own license. A single per-organization flag decides which side is active; nothing else in the claim/scrubbing logic changes when it flips.
+4. **The mock-vs-real switch — and who's on each side of it.** There's one interface (`CodeSetProvider`) with two sides: a free, fully-built mock implementation that ships with the module, and a real-CPT extension point (`CptCodeProvider`) that an adopting company wires their own licensed CPT data into. Both sides are built and tested today — the extension point is genuinely usable now, not a future promise — but it never contains real AMA content itself; that's each adopter's own connector, using their own license. The plan is a single per-organization flag to decide which side is active automatically; that automatic switch isn't wired up yet, so for now an adopter wires `CptCodeProvider` in by hand once they're ready.
 
 5. **It's a module, not a one-off app.** It plugs into ForkLaunch's existing pieces — IAM for who's allowed to do what (coders vs. billers), the compliance layer for encrypting patient data and audit logs automatically, tenant isolation so one hospital never sees another's data — the same way the `billing` and `iam` modules already do.
 
