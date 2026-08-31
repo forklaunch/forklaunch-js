@@ -12,7 +12,7 @@ We're building it as a reusable ForkLaunch module (`cac-base`), the same way `ia
 
 - ✅ **Built:** the module itself (entities, DI wiring), free code sets (ICD-10-CM, HCPCS) with a real refresh pipeline, claim building, and all three scrubbing layers — items 1, 2, 4, and 5 below.
 - ✅ **Built:** the real-CPT extension point itself (item 4) — a real, tested adapter an adopter can wire their own licensed data into today.
-- ⏸️ **Not built yet:** item 3 below (eligibility check + clearinghouse submission + remittance) — this needs a real Stedi account, which isn't set up yet and isn't currently a priority.
+- ❌ **Out of scope, not just unbuilt:** item 3 below (eligibility check, clearinghouse submission, remittance parsing). Confirmed by the founder (2026-08-31): `cac-base` doesn't execute or submit claims on an adopter's behalf — it produces the scrubbing report, and the adopter takes it from there through their own systems. This isn't waiting on a Stedi account; it's not something this module builds.
 - ⏸️ **Not built yet:** the automatic per-organization switch from mock to real CPT (an org still has to be wired in by hand; the pieces to automate it exist in the framework but aren't connected).
 
 ## How it works, end to end
@@ -26,7 +26,7 @@ We're building it as a reusable ForkLaunch module (`cac-base`), the same way `ia
 
    Bad claims get flagged with the same denial codes real payers use (CO-11, CO-16, CO-27, CO-50, CO-97), before they ever leave the building.
 
-3. **Clean claims go out and remittances come back — not built yet.** The plan: check the patient's coverage first (270/271 eligibility), submit the claim (837) through a clearinghouse (Stedi), and parse the payment/denial response (835) when it comes back, feeding a worklist so staff can see and fix what got denied. This is entirely blocked on a real Stedi account, which isn't set up and isn't currently a priority.
+3. **We don't submit the claim anywhere — that part is out of scope.** Earlier drafts of this plan had `cac-base` checking the patient's coverage (270/271 eligibility), submitting the claim (837) through a clearinghouse, and parsing the payment/denial response (835) when it came back. The founder clarified (2026-08-31): we don't need to execute the claim on the business's behalf, just map the codes — they take the scrubbing report from step 2 and do whatever they like with it through their own systems. This module's job ends at the report.
 
 4. **The mock-vs-real switch — and who's on each side of it.** There's one interface (`CodeSetProvider`) with two sides: a free, fully-built mock implementation that ships with the module, and a real-CPT extension point (`CptCodeProvider`) that an adopting company wires their own licensed CPT data into. Both sides are built and tested today — the extension point is genuinely usable now, not a future promise — but it never contains real AMA content itself; that's each adopter's own connector, using their own license. The plan is a single per-organization flag to decide which side is active automatically; that automatic switch isn't wired up yet, so for now an adopter wires `CptCodeProvider` in by hand once they're ready.
 
