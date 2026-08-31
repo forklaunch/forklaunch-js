@@ -7,6 +7,7 @@ import type { DenialReasonCategory as MockDenialReasonCategory } from '@forklaun
 import { EntityManager } from '@mikro-orm/postgresql';
 import { ClaimStatus } from '../domain/enum/claimStatus.enum';
 import { DenialReasonCategory } from '../domain/enum/denialReasonCategory.enum';
+import { WorklistStatus } from '../domain/enum/worklistStatus.enum';
 import { Claim } from '../persistence/entities/claim.entity';
 import { Denial } from '../persistence/entities/denial.entity';
 import { Encounter } from '../persistence/entities/encounter.entity';
@@ -79,7 +80,7 @@ export class ClaimService {
         claim,
         carcCode: finding.carcCode,
         category: mapMockCategory(finding.category),
-        worklistStatus: 'open'
+        worklistStatus: WorklistStatus.OPEN
       })
     );
 

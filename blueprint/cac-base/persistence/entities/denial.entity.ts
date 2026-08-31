@@ -6,11 +6,13 @@ import {
 } from '@forklaunch/core/persistence';
 import type { InferEntity } from '@mikro-orm/core';
 import { DenialReasonCategory } from '../../domain/enum/denialReasonCategory.enum';
+import { WorklistStatus } from '../../domain/enum/worklistStatus.enum';
 import { Claim } from './claim.entity';
 
-// Denial worklist entry — one row per CARC/RARC-coded rejection, whether
-// caught by the scrubbing engine pre-submission (§6) or returned on a real
-// 835 remittance (§8).
+// Denial worklist entry — one row per CARC/RARC-coded rejection caught by
+// the scrubbing engine (§6). This *is* the report: cac-base never submits
+// claims or receives real remittances itself (§8), so every Denial row
+// comes from ScrubbingService, not from a payer response.
 export const Denial = defineComplianceEntity({
   name: 'Denial',
   properties: {
@@ -19,7 +21,10 @@ export const Denial = defineComplianceEntity({
     claim: () => fp.manyToOne(Claim),
     carcCode: fp.string().compliance('none'),
     category: fp.enum(() => DenialReasonCategory).compliance('none'),
-    worklistStatus: fp.string().compliance('none'),
+    worklistStatus: fp
+      .enum(() => WorklistStatus)
+      .default(WorklistStatus.OPEN)
+      .compliance('none'),
     resolvedAt: fp.datetime().nullable().compliance('none')
   },
   // HIPAA §164.530(j) — denial worklist records purged after 7 years. This

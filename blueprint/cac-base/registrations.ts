@@ -23,6 +23,7 @@ import { EntityManager, MikroORM } from '@mikro-orm/postgresql';
 import mikroOrmOptionsConfig from './mikro-orm.config';
 import { ClaimService } from './services/claim.service';
 import { CodeValidationService } from './services/codeValidation.service';
+import { DenialWorklistService } from './services/denialWorklist.service';
 
 //! defines the configuration schema for the application
 const configInjector = createConfigInjector(schemaValidator, {
@@ -155,6 +156,12 @@ const serviceDependencies = runtimeDependencies.chain({
     type: ClaimService,
     factory: ({ EntityManager, ScrubbingService, OtelCollector }) =>
       new ClaimService(EntityManager, ScrubbingService, OtelCollector)
+  },
+  DenialWorklistService: {
+    lifetime: Lifetime.Scoped,
+    type: DenialWorklistService,
+    factory: ({ EntityManager, OtelCollector }) =>
+      new DenialWorklistService(EntityManager, OtelCollector)
   },
   ComplianceDataService: {
     lifetime: Lifetime.Singleton,

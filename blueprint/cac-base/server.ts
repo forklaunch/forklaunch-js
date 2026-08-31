@@ -9,6 +9,7 @@ import { claimRouter } from './api/routes/claim.routes';
 import { codeSetRouter } from './api/routes/codeSet.routes';
 import { codeValidationRouter } from './api/routes/codeValidation.routes';
 import { complianceRouter } from './api/routes/compliance.routes';
+import { denialRouter } from './api/routes/denial.routes';
 import { ci, tokens } from './bootstrapper';
 import { cacSdkClient } from './sdk';
 
@@ -45,6 +46,7 @@ app.use(claimRouter);
 app.use(codeSetRouter);
 app.use(codeValidationRouter);
 app.use(complianceRouter);
+app.use(denialRouter);
 
 //! registers the sdk client
 app.registerSdks(cacSdkClient);
