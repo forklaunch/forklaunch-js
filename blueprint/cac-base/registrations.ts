@@ -14,15 +14,13 @@ import {
   Lifetime,
   RetentionService
 } from '@forklaunch/core/services';
-import {
-  MockProcedureCodeProvider,
-  ScrubbingService
-} from '@forklaunch/implementation-cac-base/services';
+import { ScrubbingService } from '@forklaunch/implementation-cac-base/services';
 import { ForkOptions } from '@mikro-orm/core';
 import { EntityManager, MikroORM } from '@mikro-orm/postgresql';
 import mikroOrmOptionsConfig from './mikro-orm.config';
 import { AnalyticsService } from './services/analytics.service';
 import { ClaimService } from './services/claim.service';
+import { CodeSetProviderResolver } from './services/codeSetProviderResolver.service';
 import { CodeValidationService } from './services/codeValidation.service';
 import { DenialWorklistService } from './services/denialWorklist.service';
 
@@ -133,13 +131,14 @@ const runtimeDependencies = environmentConfig.chain({
 
 //! defines the service dependencies for the application
 const serviceDependencies = runtimeDependencies.chain({
-  CodeSetProvider: {
-    lifetime: Lifetime.Singleton,
-    type: MockProcedureCodeProvider,
-    // Every org resolves to the free mock provider until the phase 2
-    // feature gate (§5) reads CodeSetLicense and swaps in a real connector
-    // for organizations that have wired one up. See plan/cac/ §5.
-    factory: ({ OtelCollector }) => new MockProcedureCodeProvider(OtelCollector)
+  // Replaces the old always-mock CodeSetProvider Singleton — the per-org
+  // runtime feature gate (§5, plan §12 item 11) resolves Mock vs. real CPT
+  // fresh per request, based on that organization's own CodeSetLicense.
+  CodeSetProviderResolver: {
+    lifetime: Lifetime.Scoped,
+    type: CodeSetProviderResolver,
+    factory: ({ EntityManager, OtelCollector }) =>
+      new CodeSetProviderResolver(EntityManager, OtelCollector)
   },
   CodeValidationService: {
     lifetime: Lifetime.Scoped,
