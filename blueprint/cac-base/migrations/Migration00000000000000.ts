@@ -56,9 +56,9 @@ export class Migration00000000000000 extends Migration {
     );
 
     // Org-scoped, unlike icd10_code/hcpcs_code — real CPT content is
-    // licensed per organization (§5). Uniqueness is (organization_id, code),
-    // enforced by the loader's upsert, not a DB constraint alone, since
-    // "code" repeats across organizations.
+    // licensed per organization (§5). Uniqueness is the composite
+    // (organization_id, code) below, not a single-column constraint on
+    // "code" alone, since code repeats across organizations.
     this.addSql(
       `create table "cpt_code" ("id" uuid not null, "created_at" timestamptz not null, "updated_at" timestamptz not null, "retention_anonymized_at" timestamptz null, "organization_id" uuid not null, "code" text not null, "description" text not null, "effective_date" timestamptz null, constraint "cpt_code_pkey" primary key ("id"));`
     );
