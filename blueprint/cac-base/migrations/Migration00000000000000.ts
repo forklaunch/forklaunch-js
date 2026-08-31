@@ -40,6 +40,12 @@ export class Migration00000000000000 extends Migration {
     this.addSql(
       `create table "code_set_license" ("id" uuid not null, "created_at" timestamptz not null, "updated_at" timestamptz not null, "retention_anonymized_at" timestamptz null, "organization_id" uuid not null, "code_set_type" text not null, "status" text not null default 'none', "signed_at" timestamptz null, constraint "code_set_license_pkey" primary key ("id"));`
     );
+    // One license row per (org, code-set type) — without this,
+    // CodeSetProviderResolver's findOne() has no guarantee of picking the
+    // right row if duplicates ever exist (§5).
+    this.addSql(
+      `alter table "code_set_license" add constraint "code_set_license_organization_id_code_set_type_unique" unique ("organization_id", "code_set_type");`
+    );
 
     this.addSql(
       `create table "icd10_code" ("id" uuid not null, "created_at" timestamptz not null, "updated_at" timestamptz not null, "retention_anonymized_at" timestamptz null, "code" text not null, "description" text not null, "effective_date" timestamptz null, constraint "icd10_code_pkey" primary key ("id"));`
