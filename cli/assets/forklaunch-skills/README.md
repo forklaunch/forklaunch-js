@@ -66,7 +66,8 @@ Full version in `AGENTS.md` and `CLAUDE.md`.
 
 ### Start Here
 - `/getting-started` — **The driver.** Fresh machine or fresh session to a running app: plan by
-  conversation, scaffold, then check after every pass. Routes to every skill below.
+  conversation, score the plan on the five rails and close gaps by Q&A, scaffold, then check after
+  every pass. Routes to every skill below.
 - `SETUP.md` — Installing Node, a container runtime, Git/GitHub, the CLI and an assistant, written
   for someone who has never opened a terminal. Send non-technical users here.
 

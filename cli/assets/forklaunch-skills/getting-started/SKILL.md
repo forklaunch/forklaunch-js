@@ -1,6 +1,6 @@
 ---
 name: getting-started
-description: "Driver skill: take someone from a fresh Claude Code or Codex setup to a running ForkLaunch app. Plan by conversation, scaffold, then check after every pass. Routes to every other skill."
+description: "Driver skill: fresh Claude Code or Codex setup to a running ForkLaunch app. Plan by conversation, score the plan on the five rails and close gaps by Q&A, scaffold, then check after every pass. Routes to every other skill."
 user-invokable: true
 ---
 
@@ -36,12 +36,12 @@ opened a terminal.
 ## The loop
 
 ```
-  1. PLAN      conversation → a written plan the user has agreed to
+  1. PLAN      conversation → agreed plan → SCORE it, close gaps by Q&A
   2. SCAFFOLD  forklaunch init application / init service
   3. PASS      generate or edit code
   4. CHECK     forklaunch analyze --report-card     ← after EVERY pass
   5. repeat 3–4 until the plan is delivered
-  6. MILESTONE full analyze / report card, then deploy
+  6. MILESTONE full analyze, compared against the plan's score, then deploy
 ```
 
 Steps 3 and 4 are one unit. Never run a pass without the check after it.
@@ -77,6 +77,50 @@ data breach — medical details, card numbers, home addresses?"*
 
 A user who says "yes, that's right" to a written plan has given you far more
 than one who said "build me a booking app".
+
+**Then score the plan, before writing any code.** This is the part the studio
+surface does that a plain planning conversation skips, and it is the point of
+planning at all: a readiness problem is nearly free to fix in a plan and
+expensive to fix in a codebase.
+
+Score the agreed plan across the same five rails the finished app is judged on,
+against the same rubric:
+
+| rail | what it covers |
+|---|---|
+| Compliance | data classification (PII/PHI/PCI), audit logging, encryption, retention, consent |
+| Security | authn/authz/RBAC, tenant isolation, input validation, secrets, least privilege |
+| Governance | build and dependency integrity, best practices enforced by construction |
+| Scalability | statelessness, pagination, indexing, N+1/caching, queues, background work |
+| Observability | logs/metrics/traces, health checks, error tracking, alerting |
+
+You are scoring a **projection**, not code — `phase: "plan"`. Give each rail a
+0–100, a one-line summary, and a short checklist of what the plan does and does
+not yet account for. Say plainly which rails the plan is weakest on.
+
+**Then use the questions to close the gaps — this is the loop.** For each rail
+scoring poorly, ask the user what would raise it. One question at a time, in
+plain language, each tied to the rail it affects and what it is worth:
+
+> Compliance is at 45. The plan stores patient names and appointment notes, but
+> nothing says how long you keep them. **How long should records be kept after a
+> patient leaves?** Answering this is worth about 15 points — it decides the
+> retention policy, which is far easier to set now than to backfill.
+
+Then re-score with the answer folded in and show the movement. Repeat until the
+score stops moving or the user says it is good enough.
+
+Two rules make this loop work rather than annoy:
+
+- **A decision already made is final.** Never re-ask something the user has
+  answered. Carry answers forward verbatim into each re-score.
+- **An open question stays worded the same.** Re-asking a question in new words
+  reads as though you forgot, and invites a contradictory answer.
+
+Record the final scored plan — the plan text, the rail scores, and the
+decisions with their answers. It is the baseline the per-pass checks in step 4
+are measured against, and it is what tells you whether the build is tracking
+the plan or drifting from it.
 
 For a heavier review — scope challenge, architecture critique — use `/plan`,
 `/plan-ceo-review` and `/plan-eng-review`. Use those when the app is large or
@@ -144,6 +188,12 @@ The fast check scores **compliance** and **security** only. Governance,
 scalability and observability need judgement a source read cannot supply and
 come back `pending` rather than zero. Quote the card's `caveat` whenever you
 report a number. `/report-card` covers reading one properly.
+
+**Compare the milestone card against the plan's score from step 1.** They use
+the same five rails, so they are directly comparable — that comparison is the
+whole reason for scoring the plan. A rail that the plan scored 80 and the built
+app scores 40 means the build drifted from what was agreed, and it is worth
+saying so explicitly rather than reporting the second number alone.
 
 ## Which skill, when
 
