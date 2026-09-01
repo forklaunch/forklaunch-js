@@ -15,11 +15,6 @@ export const CreatePaymentMapper = requestMapper({
     toEntity: async (
       dto,
       em: EntityManager,
-      // Widened to the union of both providers' pre-persistence objects so this
-      // one runtime mapper is assignable to BOTH StripePaymentMappers (3rd arg
-      // Stripe.PaymentIntent) and PaypalPaymentMappers (3rd arg PaypalOrder) by
-      // function-parameter contravariance — the body only reads `.id`, present
-      // on both. Lets the PayPal wiring drop its `as unknown as` cast.
       paymentIntent: Stripe.PaymentIntent | PaypalOrder
     ) => {
       return em.create(Payment, {

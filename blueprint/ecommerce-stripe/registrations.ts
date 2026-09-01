@@ -450,11 +450,6 @@ const serviceDependencies = runtimeDependencies.chain({
           : EntityManager,
         OtelCollector,
         schemaValidator,
-        // One shared runtime mapper object serves both providers. Its
-        // CreatePaymentMapper.toEntity 3rd arg is typed
-        // `Stripe.PaymentIntent | PaypalOrder`, so it is assignable to both
-        // StripePaymentMappers and PaypalPaymentMappers with no cast (see
-        // domain/mappers/payment.mappers.ts).
         { PaymentMapper, CreatePaymentMapper }
       )
   },
