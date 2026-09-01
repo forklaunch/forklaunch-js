@@ -63,20 +63,44 @@ real, licensed CPT data:
 3. Run `scripts/refresh-code-sets.ts`. It upserts into `CptCode`, keyed on
    `(organizationId, code)` — safe to re-run on whatever cadence your license
    agreement requires you to refresh CPT data.
-4. Wire `CptCodeProvider` (constructed with an `EntityManagerCptCodeSource`
-   for your organization) in place of `MockProcedureCodeProvider` for that
-   organization's requests.
+4. Mark your organization's license active — insert or update a
+   `CodeSetLicense` row (`cac-base/persistence/entities/codeSetLicense.entity.ts`)
+   for your `organizationId` with `codeSetType: CodeSetType.CPT` and
+   `status: LicenseStatus.ACTIVE`:
 
-Step 4 — the per-organization runtime switch (reading each request's
-organization, checking whether their `CodeSetLicense` is active, and
-resolving the right provider) — is **not wired up yet**. The framework
-guard it should use already exists
-(`hasFeatureChecks`/`surfaceFeatures`, the same mechanism `billing-base`
-uses for entitlement gating — see plan §5), but connecting `CodeSetLicense`
-to that guard is follow-up work, not done in this pass. Until then, treat
-`CptCodeProvider` + `EntityManagerCptCodeSource` as a correct, tested
-building block you wire in yourself, the same way you'd wire in any other
-service.
+   ```ts
+   // paths below are relative to cac-base/, wherever your own script lives
+   import { CodeSetType } from 'domain/enum/codeSetType.enum';
+   import { LicenseStatus } from 'domain/enum/licenseStatus.enum';
+   import { CodeSetLicense } from 'persistence/entities/codeSetLicense.entity';
+
+   await em.upsert(CodeSetLicense, {
+     organizationId,
+     codeSetType: CodeSetType.CPT,
+     status: LicenseStatus.ACTIVE,
+     signedAt: new Date()
+   });
+   ```
+
+   That's it — no code change, no redeploy, no flag to flip per-request.
+
+The per-organization runtime switch **is wired up**: `CodeSetProviderResolver`
+(`cac-base/services/codeSetProviderResolver.service.ts`) resolves it fresh on
+every request, reading `organizationId` off the caller's session. This is
+deliberately **not** built on `hasFeatureChecks`/`surfaceFeatures` (the
+mechanism `billing-base` uses for entitlement gating) — that guard *blocks*
+a route outright when a feature is missing, which is wrong here, since real
+CPT is never a hard requirement for these endpoints to work. An organization
+with no `CodeSetLicense` row, a `PENDING` one, or a lookup that errors all
+transparently keep getting `MockProcedureCodeProvider` — never a 403, never
+a broken request. Only a `CodeSetLicense` row with `status: 'active'` flips
+that organization over to `CptCodeProvider` + `EntityManagerCptCodeSource`.
+
+Verify which provider is active for your organization at any time via the
+`codeSet` routes (`admin:manage_codesets` permission required):
+`GET /codeSet` returns `{ codeSetType, licensed }` for the caller's own
+organization; `GET /codeSet/:code` runs an actual lookup against whichever
+provider is currently active.
 
 **Never mistake the shipped `CptCodeProvider` class for a working CPT
 dataset.** It is an adapter shape, not data. It returns nothing useful until
