@@ -6,6 +6,7 @@ use set::SetCommand;
 
 use crate::{CliCommand, core::command::command};
 
+mod declared;
 mod pull;
 mod push;
 mod set;
