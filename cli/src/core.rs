@@ -32,6 +32,7 @@ pub(crate) mod pnpm_workspace;
 pub(crate) mod relative_path;
 pub(crate) mod removal_template;
 pub(crate) mod report_card;
+pub(crate) mod workspace_archive;
 pub(crate) mod rendered_template;
 pub(crate) mod static_analysis;
 pub(crate) mod string;
