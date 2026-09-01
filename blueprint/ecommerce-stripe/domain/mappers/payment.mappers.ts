@@ -1,6 +1,7 @@
 import { schemaValidator } from '../../schema';
 import { requestMapper, responseMapper } from '@forklaunch/core/mappers';
 import { PaymentStatus } from '@forklaunch/interfaces-ecommerce/types';
+import { PaypalOrder } from '@forklaunch/implementation-ecommerce-paypal/services';
 import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
 import { Payment } from '../../persistence/entities/payment.entity';
@@ -14,7 +15,12 @@ export const CreatePaymentMapper = requestMapper({
     toEntity: async (
       dto,
       em: EntityManager,
-      paymentIntent: Stripe.PaymentIntent
+      // Widened to the union of both providers' pre-persistence objects so this
+      // one runtime mapper is assignable to BOTH StripePaymentMappers (3rd arg
+      // Stripe.PaymentIntent) and PaypalPaymentMappers (3rd arg PaypalOrder) by
+      // function-parameter contravariance — the body only reads `.id`, present
+      // on both. Lets the PayPal wiring drop its `as unknown as` cast.
+      paymentIntent: Stripe.PaymentIntent | PaypalOrder
     ) => {
       return em.create(Payment, {
         orderId: dto.orderId,
