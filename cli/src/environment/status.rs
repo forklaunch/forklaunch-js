@@ -1,18 +1,22 @@
-use std::io::Write;
+use std::{collections::HashMap, io::Write};
 
-use anyhow::Result;
+use anyhow::{Context, Result, bail};
 use clap::{Arg, ArgAction, ArgMatches, Command};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use termcolor::{Color, ColorChoice, StandardStream, WriteColor};
 
 use crate::{
     CliCommand,
+    constants::get_platform_management_api_url,
     core::{
         ast::infrastructure::env::find_all_env_vars,
         command::command,
         env::{find_workspace_root, get_modules_path, is_env_var_defined},
         env_scope::{determine_env_var_scopes, is_pulumi_injected},
+        http_client,
+        manifest::application::ApplicationManifestData,
         rendered_template::RenderedTemplatesCache,
+        validate::{require_integration, resolve_auth},
     },
 };
 
@@ -34,6 +38,28 @@ pub(crate) enum Classification {
 }
 
 impl Classification {
+    /// Translate the platform's classification into the CLI's vocabulary.
+    ///
+    /// The platform distinguishes more reasons than the CLI can determine
+    /// locally — an inter-service URL or a runtime-injected variable both mean
+    /// "the platform supplies this", which is what `PlatformManaged` says here.
+    fn from_platform(row: &PlatformStatus) -> Self {
+        // A stored value settles it whatever the classification says. The
+        // platform's `needsValue` describes the class of variable — whether one
+        // of these ever requires a person — not whether this one is still
+        // missing. Reading it alone reports a variable that is already set as
+        // still needing someone.
+        if row.state == "set" {
+            return Self::Set;
+        }
+
+        match row.classification.as_str() {
+            "NEEDS_VALUE" => Self::NeedsValue,
+            "DECLARED_OPTIONAL" => Self::DeclaredOptional,
+            _ => Self::PlatformManaged,
+        }
+    }
+
     fn label(self) -> &'static str {
         match self {
             Self::PlatformManaged => "platform-managed",
@@ -67,6 +93,77 @@ pub(crate) struct VariableStatus {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub optional: Option<bool>,
     pub needs_value: bool,
+    /// True when the platform answered for this variable rather than the local
+    /// scan guessing. Reported so a reader can tell the two apart.
+    #[serde(default)]
+    pub from_platform: bool,
+    /// True when the platform resolved the value from a broader scope.
+    #[serde(default)]
+    pub inherited: bool,
+}
+
+/// Whether the report reflects platform state or only this machine.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum StatusSource {
+    LocalOnly,
+    Platform,
+}
+
+/// One row of the platform's answer.
+///
+/// The platform is authoritative: the deploy gate applies skip logic the CLI
+/// does not share, and it knows values stored for an environment that never
+/// appear on this machine. Where it has an opinion, it wins.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct PlatformStatus {
+    pub key: String,
+    pub state: String,
+    pub classification: String,
+    pub needs_value: bool,
+    #[serde(default)]
+    pub inherited: bool,
+}
+
+/// Ask the platform which variables still need a person for an environment.
+///
+/// Returns None when the application is not integrated or no environment was
+/// named — the local scan is still useful on its own, and requiring a platform
+/// round trip to run `env status` at all would make it useless offline.
+fn fetch_platform_status(
+    manifest: &ApplicationManifestData,
+    environment: &str,
+    region: &str,
+) -> Result<Option<Vec<PlatformStatus>>> {
+    let application_id = match require_integration(manifest) {
+        Ok(id) => id,
+        Err(_) => return Ok(None),
+    };
+
+    let auth_mode = resolve_auth()?;
+    let url = format!(
+        "{}/applications/{}/environments/{}/regions/{}/config/status",
+        get_platform_management_api_url(),
+        application_id,
+        environment,
+        region
+    );
+
+    let response = http_client::get_with_auth(&auth_mode, &url)
+        .with_context(|| format!("Failed to reach the platform at {url}"))?;
+
+    if !response.status().is_success() {
+        bail!(
+            "Platform returned {} for environment '{}' region '{}'",
+            response.status(),
+            environment,
+            region
+        );
+    }
+
+    Ok(Some(response.json::<Vec<PlatformStatus>>().with_context(
+        || "Failed to parse the platform's status response",
+    )?))
 }
 
 /// Decide what a variable's status is.
@@ -120,6 +217,18 @@ impl CliCommand for StatusCommand {
                 .help("The application path to report status for"),
         )
         .arg(
+            Arg::new("environment")
+                .short('e')
+                .long("environment")
+                .help("Environment to ask the platform about (e.g. production)"),
+        )
+        .arg(
+            Arg::new("region")
+                .short('r')
+                .long("region")
+                .help("Region to ask the platform about (e.g. us-west-2)"),
+        )
+        .arg(
             Arg::new("json")
                 .long("json")
                 .help("Emit machine-readable JSON instead of a table")
@@ -170,7 +279,55 @@ impl CliCommand for StatusCommand {
                 classification,
                 optional: var.optional,
                 needs_value: classification.needs_person(),
+                from_platform: false,
+                inherited: false,
             });
+        }
+
+        // Ask the platform, when we have somewhere to ask about. Its answer
+        // replaces the local guess for any variable it knows: a value stored for
+        // this environment never appears on this machine, and a local .env entry
+        // says nothing about whether production has one. Reporting `set` from a
+        // local file alone is how this tool would tell an agent an application is
+        // ready to deploy when it is not.
+        let environment = matches.get_one::<String>("environment");
+        let region = matches.get_one::<String>("region");
+
+        let platform = match (environment, region) {
+            (Some(env), Some(reg)) => {
+                match fetch_platform_status(&manifest, env, reg) {
+                    Ok(rows) => rows,
+                    Err(error) => {
+                        // A failed lookup must not masquerade as "nothing needed".
+                        log_warn!(
+                            stdout,
+                            "Could not read platform state ({error}); reporting local state only"
+                        );
+                        None
+                    }
+                }
+            }
+            _ => None,
+        };
+
+        let mut source = StatusSource::LocalOnly;
+        if let Some(rows) = platform {
+            source = StatusSource::Platform;
+            let authoritative: HashMap<String, PlatformStatus> =
+                rows.into_iter().map(|r| (r.key.clone(), r)).collect();
+
+            for status in statuses.iter_mut() {
+                if let Some(row) = authoritative.get(&status.key) {
+                    status.classification = Classification::from_platform(row);
+                    // Outstanding means the class requires a person AND nothing
+                    // usable is stored — the same combination the platform's own
+                    // outstanding list applies.
+                    status.needs_value =
+                        row.needs_value && matches!(row.state.as_str(), "absent" | "blank");
+                    status.inherited = row.inherited;
+                    status.from_platform = true;
+                }
+            }
         }
 
         statuses.sort_by(|a, b| (&a.project, &a.key).cmp(&(&b.project, &b.key)));
@@ -179,7 +336,7 @@ impl CliCommand for StatusCommand {
         if json_output {
             writeln!(stdout, "{}", serde_json::to_string_pretty(&statuses)?)?;
         } else {
-            render_table(&mut stdout, &statuses)?;
+            render_table(&mut stdout, &statuses, source)?;
         }
 
         // Non-zero while anything needs input, so CI and agents can gate on the
@@ -192,7 +349,11 @@ impl CliCommand for StatusCommand {
     }
 }
 
-fn render_table(stdout: &mut StandardStream, statuses: &[VariableStatus]) -> Result<()> {
+fn render_table(
+    stdout: &mut StandardStream,
+    statuses: &[VariableStatus],
+    source: StatusSource,
+) -> Result<()> {
     if statuses.is_empty() {
         writeln!(stdout, "No environment variables found.")?;
         return Ok(());
@@ -223,6 +384,20 @@ fn render_table(stdout: &mut StandardStream, statuses: &[VariableStatus]) -> Res
         statuses.len(),
         outstanding
     )?;
+
+    // Say which state this reflects. Without it a reader cannot tell an answer
+    // about their deployed environment from a guess made off local files, and
+    // the two disagree precisely when it matters.
+    match source {
+        StatusSource::Platform => writeln!(
+            stdout,
+            "Reflecting platform state for the requested environment."
+        )?,
+        StatusSource::LocalOnly => writeln!(
+            stdout,
+            "Local state only — pass --environment and --region to ask the platform."
+        )?,
+    }
 
     Ok(())
 }
@@ -266,6 +441,64 @@ mod tests {
         assert_eq!(classify(false, false, None), Classification::NeedsValue);
         assert_eq!(
             classify(false, false, Some(false)),
+            Classification::NeedsValue
+        );
+    }
+
+    fn platform_row(state: &str, classification: &str, needs_value: bool) -> PlatformStatus {
+        PlatformStatus {
+            key: "K".to_string(),
+            state: state.to_string(),
+            classification: classification.to_string(),
+            needs_value,
+            inherited: false,
+        }
+    }
+
+    #[test]
+    fn a_stored_platform_value_settles_it_whatever_the_class_says() {
+        // The platform's `needsValue` describes the class of variable — whether
+        // one of these ever requires a person — not whether this one is still
+        // missing. Reading it alone reported a variable already set on the
+        // platform as still needing someone.
+        let row = platform_row("set", "NEEDS_VALUE", true);
+
+        assert_eq!(Classification::from_platform(&row), Classification::Set);
+    }
+
+    #[test]
+    fn platform_classifications_map_onto_the_cli_vocabulary() {
+        assert_eq!(
+            Classification::from_platform(&platform_row("absent", "NEEDS_VALUE", true)),
+            Classification::NeedsValue
+        );
+        assert_eq!(
+            Classification::from_platform(&platform_row("absent", "DECLARED_OPTIONAL", false)),
+            Classification::DeclaredOptional
+        );
+        // The platform distinguishes reasons the CLI cannot determine locally.
+        // All of them mean the same thing here: the platform supplies it.
+        for reason in [
+            "PLATFORM_MANAGED",
+            "INTER_SERVICE_URL",
+            "RUNTIME_INJECTED",
+            "TEST_ONLY",
+        ] {
+            assert_eq!(
+                Classification::from_platform(&platform_row("absent", reason, false)),
+                Classification::PlatformManaged
+            );
+        }
+    }
+
+    #[test]
+    fn a_blank_platform_value_still_needs_a_person() {
+        // Blank is not set. A variable stored as an empty string is exactly the
+        // case that would silently drop off an agent's list.
+        let row = platform_row("blank", "NEEDS_VALUE", true);
+
+        assert_eq!(
+            Classification::from_platform(&row),
             Classification::NeedsValue
         );
     }
