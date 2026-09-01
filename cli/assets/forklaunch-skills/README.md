@@ -64,6 +64,12 @@ Full version in `AGENTS.md` and `CLAUDE.md`.
 
 ## Available Skills
 
+### Start Here
+- `/getting-started` — **The driver.** Fresh machine or fresh session to a running app: plan by
+  conversation, scaffold, then check after every pass. Routes to every skill below.
+- `SETUP.md` — Installing Node, a container runtime, Git/GitHub, the CLI and an assistant, written
+  for someone who has never opened a terminal. Send non-technical users here.
+
 ### Operating a Deployed App
 - `/investigator` — Diagnose a running ForkLaunch app: is it up, why did a deploy fail, why isn't
   a change showing, where are the errors. Start here for "something's wrong."
@@ -82,6 +88,7 @@ Full version in `AGENTS.md` and `CLAUDE.md`.
 - `/imports-and-structure` — Import layers, module structure, file naming. **Always import from `@{{app-name}}/core`.**
 - `/websockets-and-mappers` — WebSockets, real-time, log streaming, requestMapper/responseMapper.
 - `/compliance` — fp property builder, defineComplianceEntity, access levels, audit CLI, encryption, tenant isolation.
+- `/report-card` — Enterprise-Readiness Report Card: generate one from the CLI, read the five rails, gate CI on a minimum score, and know what deterministic checks can and cannot judge.
 - `/score-self-heal` — run the ForkLaunch Score during development, fix the lowest-scoring criteria from their `fix`es, re-score until the threshold passes.
 - `/security` — Auth surfaces, device flow, rate limiting, security events, secrets hygiene, HMAC, branch protection.
 - `/observability` — OTel wiring, metrics definitions, security events, alert rules, notifiers, telemetry retention.
