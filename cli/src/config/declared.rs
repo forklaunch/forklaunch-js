@@ -33,7 +33,7 @@ use termcolor::{StandardStream, WriteColor};
 
 use crate::core::{
     ast::infrastructure::env::find_all_env_vars,
-    env::{find_workspace_root, get_modules_path, parse_env_items_from_str},
+    env::{EnvFileItem, find_workspace_root, get_modules_path, parse_env_items_from_str},
     rendered_template::RenderedTemplatesCache,
     string::closest_matches,
 };
@@ -51,8 +51,8 @@ pub(crate) fn names_in_pulled_config(content: &str) -> HashSet<String> {
     parse_env_items_from_str(content)
         .into_iter()
         .filter_map(|item| match item {
-            crate::core::env::EnvFileItem::KeyValue(key, _) => Some(key),
-            crate::core::env::EnvFileItem::SectionHeader(_) => None,
+            EnvFileItem::KeyValue(key, _) => Some(key),
+            EnvFileItem::SectionHeader(_) => None,
         })
         .collect()
 }
