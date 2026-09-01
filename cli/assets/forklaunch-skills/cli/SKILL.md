@@ -615,9 +615,16 @@ forklaunch deploy create --release <version> --environment <name> --region <regi
 # Examples:
 forklaunch deploy create --release 1.2.0 --environment staging --region us-east-1
 forklaunch deploy create --release 1.2.0 --environment production --region us-east-1 --dry-run
-forklaunch deploy info -v <version>      # status of a deployment
+forklaunch deploy info -d <id>           # status of a deployment (omit -d for the latest)
+forklaunch deploy logs                   # logs of the latest deployment for this env/region
+forklaunch deploy logs <id> --all        # the whole log for one deployment
+forklaunch deploy logs -l error          # only the error lines — start here on a failed deploy
 forklaunch deploy destroy ...            # tear down application infrastructure
 ```
+
+`deploy logs` reads the deployment's own log (what Pulumi and the container build
+emitted while deploying). For the logs a running service emits afterwards, use
+`forklaunch observe logs`.
 
 ### 5. Environment Commands (`environment`)
 
