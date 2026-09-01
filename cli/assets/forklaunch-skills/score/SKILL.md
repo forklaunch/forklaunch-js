@@ -26,13 +26,45 @@ offline, in about a second — and is honest about the part that needs judgement
 forklaunch score
 ```
 
-That is a **read-only** command. It runs the same deterministic checks as
-`forklaunch compliance audit`, presents them on the shared report-card
-contract, and prints JSON. No network, no auth, no writes.
+This scores through the platform's analysis API, so you get a real **five-rail
+agent-scored card** and a shareable link — not a number that vanishes with your
+scrollback.
+
+It packs the workspace, uploads it, polls the job, prints the card, and mints a
+revocable share link:
+
+```
+Enterprise Readiness  72/100
+…
+Report card: https://forklaunch.com/report-card/<token>
+```
+
+**What it costs.** Analysis is metered — a free tier per account, then credits —
+and takes minutes rather than seconds. It needs `forklaunch login`. So this is a
+milestone action, not something to run after every edit.
+
+**What it uploads.** A zip of the workspace. `.gitignore` is honoured, and
+`.git`, `node_modules`, `target`, `dist` and friends are dropped regardless — so
+a repo that forgot to ignore something large or secret does not silently send
+it. Files over 2 MB are skipped.
+
+### The offline escape hatch
+
+```bash
+forklaunch score --offline
+```
+
+No upload, no auth, no cost, about a second. It runs the same deterministic
+checks as `forklaunch compliance audit` and scores **compliance and security
+only** — the other three rails need judgement a source read cannot supply and
+come back `pending`. Use this in the tight edit loop, and in CI where you have
+no credentials.
 
 | flag | what it does |
 |---|---|
-| *(none)* | a readable terminal summary — the default |
+| *(none)* | upload, score, print the summary and a share link |
+| `--offline` | deterministic checks only — no upload, no auth, no cost, two rails |
+| `--no-share` | score but skip minting the link |
 | `--json` | the raw report card, for tooling |
 | `--pretty` | pretty-print the JSON |
 | `--min-score N` | exit non-zero if `overall` is below N — for CI |

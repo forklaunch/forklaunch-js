@@ -39,9 +39,9 @@ opened a terminal.
   1. PLAN      conversation → agreed plan → SCORE it, close gaps by Q&A
   2. SCAFFOLD  forklaunch init application / init service
   3. PASS      generate or edit code
-  4. CHECK     forklaunch score     ← after EVERY pass
+  4. CHECK     forklaunch score --offline   ← after EVERY pass (free, ~1s)
   5. repeat 3–4 until the plan is delivered
-  6. MILESTONE full analyze, compared against the plan's score, then deploy
+  6. MILESTONE forklaunch score (uploads, agent-scored, shareable link), then deploy
 ```
 
 Steps 3 and 4 are one unit. Never run a pass without the check after it.
@@ -140,11 +140,13 @@ choice and its consequence before you commit to it.
 After **every** codegen or edit pass, run the deterministic analysis:
 
 ```bash
-forklaunch score
+forklaunch score --offline
 ```
 
-Read-only, no network, about a second. It runs the same checks as
-`forklaunch compliance audit` and returns a scored card.
+`--offline` matters here. Without it, `score` uploads the workspace and runs a
+metered agent analysis — minutes and credits per run, which is unaffordable
+per-pass and needs network and a login. Offline is read-only, free, and about a
+second, covering the compliance and security rails from static checks.
 
 Act on it immediately:
 
@@ -179,12 +181,13 @@ and time where the per-pass check costs neither.
 > just the two the fast check covers, and produces a shareable report card."
 
 ```bash
-forklaunch score                  # fast, deterministic, 2 rails
-forklaunch score --min-score 70   # same, as a CI gate
+forklaunch score --offline                 # fast, free, 2 rails — the per-pass check
+forklaunch score --offline --min-score 70  # same, as a CI gate (no credentials needed)
+forklaunch score                           # the real thing: 5 rails + a shareable link
 forklaunch compliance audit --risk-score --dpia   # full compliance surface
 ```
 
-The fast check scores **compliance** and **security** only. Governance,
+The offline check scores **compliance** and **security** only. Governance,
 scalability and observability need judgement a source read cannot supply and
 come back `pending` rather than zero. Quote the card's `caveat` whenever you
 report a number. `/score` covers reading one properly.
