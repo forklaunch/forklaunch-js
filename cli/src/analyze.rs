@@ -21,11 +21,9 @@ use serde_json::json;
 
 use crate::{
     CliCommand,
-    compliance::checks::run_local_checks,
     core::{
         command::command,
         manifest::ProjectType,
-        report_card::build_local_report_card,
         static_analysis::{
             EntityAnalyzer, SchemaAnalyzer,
             entity_analyzer::{EntityProperty, RelationType},
@@ -73,24 +71,6 @@ impl CliCommand for AnalyzeCommand {
                 .help("Pretty-print JSON output")
                 .action(clap::ArgAction::SetTrue),
         )
-        .arg(
-            Arg::new("report_card")
-                .long("report-card")
-                .help(
-                    "Emit an Enterprise-Readiness Report Card built from deterministic checks \
-                     instead of the structural snapshot",
-                )
-                .action(clap::ArgAction::SetTrue),
-        )
-        .arg(
-            Arg::new("min_score")
-                .long("min-score")
-                .help(
-                    "With --report-card, exit non-zero if the overall score is below this \
-                     (0-100). For CI gating.",
-                )
-                .value_parser(clap::value_parser!(u32).range(0..=100)),
-        )
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
@@ -104,38 +84,6 @@ impl CliCommand for AnalyzeCommand {
             &manifest.projects,
             module_filter.as_deref(),
         )?;
-
-        if matches.get_flag("report_card") {
-            // The deterministic checks are the same ones `forklaunch compliance
-            // audit` runs; this presents them on the shared report-card contract
-            // so plan, build and audit surfaces all speak one shape.
-            let modules_root = app_root.join(&manifest.modules_path);
-            let findings = run_local_checks(&modules_root)?;
-            let card = build_local_report_card(
-                &manifest.app_name,
-                modules.len(),
-                &findings,
-                iso8601_now(),
-            );
-
-            let serialized = if pretty {
-                serde_json::to_string_pretty(&json!(card))?
-            } else {
-                serde_json::to_string(&json!(card))?
-            };
-            println!("{}", serialized);
-
-            if let Some(min) = matches.get_one::<u32>("min_score")
-                && card.overall < *min
-            {
-                anyhow::bail!(
-                    "report card overall score {} is below the required minimum of {}",
-                    card.overall,
-                    min
-                );
-            }
-            return Ok(());
-        }
 
         let doc = AnalyzeDocument {
             app_name: manifest.app_name.clone(),
@@ -447,59 +395,4 @@ pub(crate) fn analyze_workspace(
 #[allow(dead_code)]
 pub(crate) fn module_dir(app_root: &Path, modules_path: &str, module: &str) -> PathBuf {
     app_root.join(modules_path).join(module)
-}
-
-/// UTC timestamp for the card's `generatedAt`, without pulling in a date crate.
-fn iso8601_now() -> String {
-    let secs = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|d| d.as_secs())
-        .unwrap_or(0);
-
-    // Days since epoch -> civil date (Howard Hinnant's algorithm).
-    let days = (secs / 86_400) as i64;
-    let rem = secs % 86_400;
-    let z = days + 719_468;
-    let era = z.div_euclid(146_097);
-    let doe = z.rem_euclid(146_097);
-    let yoe = (doe - doe / 1_460 + doe / 36_524 - doe / 146_096) / 365;
-    let y = yoe + era * 400;
-    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
-    let mp = (5 * doy + 2) / 153;
-    let d = doy - (153 * mp + 2) / 5 + 1;
-    let m = if mp < 10 { mp + 3 } else { mp - 9 };
-    let y = if m <= 2 { y + 1 } else { y };
-
-    format!(
-        "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z",
-        y,
-        m,
-        d,
-        rem / 3_600,
-        (rem % 3_600) / 60,
-        rem % 60
-    )
-}
-
-#[cfg(test)]
-mod timestamp_tests {
-    use super::iso8601_now;
-
-    #[test]
-    fn emits_a_well_formed_utc_timestamp() {
-        // Hand-rolled civil-date maths is easy to get subtly wrong, and a bad
-        // `generatedAt` would corrupt every card this command emits.
-        let stamp = iso8601_now();
-        assert_eq!(stamp.len(), 20, "{stamp}");
-        assert!(stamp.ends_with('Z'), "{stamp}");
-
-        let (date, time) = stamp[..19].split_once('T').expect("T separator");
-        let parts: Vec<u32> = date.split('-').map(|p| p.parse().unwrap()).collect();
-        assert!(parts[0] >= 2026, "year looks wrong: {stamp}");
-        assert!((1..=12).contains(&parts[1]), "month out of range: {stamp}");
-        assert!((1..=31).contains(&parts[2]), "day out of range: {stamp}");
-
-        let t: Vec<u32> = time.split(':').map(|p| p.parse().unwrap()).collect();
-        assert!(t[0] < 24 && t[1] < 60 && t[2] < 60, "time out of range: {stamp}");
-    }
 }

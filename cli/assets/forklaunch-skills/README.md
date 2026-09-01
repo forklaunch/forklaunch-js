@@ -89,7 +89,7 @@ Full version in `AGENTS.md` and `CLAUDE.md`.
 - `/imports-and-structure` — Import layers, module structure, file naming. **Always import from `@{{app-name}}/core`.**
 - `/websockets-and-mappers` — WebSockets, real-time, log streaming, requestMapper/responseMapper.
 - `/compliance` — fp property builder, defineComplianceEntity, access levels, audit CLI, encryption, tenant isolation.
-- `/report-card` — Enterprise-Readiness Report Card: generate one from the CLI, read the five rails, gate CI on a minimum score, and know what deterministic checks can and cannot judge.
+- `/score` — Enterprise-Readiness Report Card: generate one from the CLI, read the five rails, gate CI on a minimum score, and know what deterministic checks can and cannot judge.
 - `/score-self-heal` — run the ForkLaunch Score during development, fix the lowest-scoring criteria from their `fix`es, re-score until the threshold passes.
 - `/security` — Auth surfaces, device flow, rate limiting, security events, secrets hygiene, HMAC, branch protection.
 - `/observability` — OTel wiring, metrics definitions, security events, alert rules, notifiers, telemetry retention.
@@ -110,6 +110,8 @@ Full version in `AGENTS.md` and `CLAUDE.md`.
 - `/plan` — 4-phase plan pipeline: CEO review, eng review, diagrams, plan doc.
 - `/plan-ceo-review` — CEO/founder scope challenge and premise audit.
 - `/plan-eng-review` — Engineering architecture, code quality, tests, performance review.
+- `/plan-design-review` — Design and UX critique of a plan before it is built.
+- `/plan-devex-review` — Developer-experience critique: ergonomics, naming, failure modes.
 
 ## Critical Rules
 

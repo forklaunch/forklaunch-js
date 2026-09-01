@@ -26,6 +26,7 @@
 
 use serde::Serialize;
 
+
 use crate::compliance::checks::{LocalFinding, Severity};
 
 /// Bump only alongside the TypeScript `REPORT_CARD_SCHEMA_VERSION`.
@@ -290,8 +291,8 @@ pub(crate) fn build_local_report_card(
         caveat: "Deterministic checks only. Compliance and security are scored from static \
                  analysis; governance, scalability and observability need judgement a source \
                  read cannot supply and are left unassessed rather than scored zero. The \
-                 overall score is weighted across the scored rails only. Run with --upload \
-                 for the full agent-scored card."
+                 overall score is weighted across the scored rails only. All five rails need \
+                 an agent's judgement, which the studio surface provides."
             .to_string(),
         phase: "audit".to_string(),
         step: "audit".to_string(),
@@ -444,9 +445,56 @@ mod tests {
         let card = build_local_report_card("demo", 1, &[], at());
         assert_eq!(card.schema_version, SCHEMA_VERSION);
         assert_eq!(card.phase, "audit");
+        // The caveat is the only thing standing between a partial score and
+        // someone quoting it as a full readiness number, so it must say both
+        // that rails were skipped and where the rest come from -- without
+        // naming a flag this command does not have.
         assert!(
-            card.caveat.contains("--upload"),
-            "the caveat must say how to get the rails this cannot score"
+            card.caveat.contains("unassessed"),
+            "the caveat must say some rails were not scored: {}",
+            card.caveat
+        );
+        assert!(
+            card.caveat.contains("studio"),
+            "the caveat must say where the remaining rails come from: {}",
+            card.caveat
+        );
+        assert!(
+            !card.caveat.contains("--upload"),
+            "the caveat must not name a flag `score` does not accept"
         );
     }
 }
+
+/// UTC timestamp for the card's `generatedAt`, without pulling in a date crate.
+pub(crate) fn iso8601_now() -> String {
+    let secs = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+
+    // Days since epoch -> civil date (Howard Hinnant's algorithm).
+    let days = (secs / 86_400) as i64;
+    let rem = secs % 86_400;
+    let z = days + 719_468;
+    let era = z.div_euclid(146_097);
+    let doe = z.rem_euclid(146_097);
+    let yoe = (doe - doe / 1_460 + doe / 36_524 - doe / 146_096) / 365;
+    let y = yoe + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    let y = if m <= 2 { y + 1 } else { y };
+
+    format!(
+        "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z",
+        y,
+        m,
+        d,
+        rem / 3_600,
+        (rem % 3_600) / 60,
+        rem % 60
+    )
+}
+

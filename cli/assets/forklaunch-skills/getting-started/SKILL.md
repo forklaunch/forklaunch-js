@@ -39,7 +39,7 @@ opened a terminal.
   1. PLAN      conversation → agreed plan → SCORE it, close gaps by Q&A
   2. SCAFFOLD  forklaunch init application / init service
   3. PASS      generate or edit code
-  4. CHECK     forklaunch analyze --report-card     ← after EVERY pass
+  4. CHECK     forklaunch score     ← after EVERY pass
   5. repeat 3–4 until the plan is delivered
   6. MILESTONE full analyze, compared against the plan's score, then deploy
 ```
@@ -140,7 +140,7 @@ choice and its consequence before you commit to it.
 After **every** codegen or edit pass, run the deterministic analysis:
 
 ```bash
-forklaunch analyze --report-card
+forklaunch score
 ```
 
 Read-only, no network, about a second. It runs the same checks as
@@ -158,7 +158,7 @@ Act on it immediately:
 Why every pass and not at the end: these checks catch defects whose failure mode
 is *silent* — code that returns correct-looking results and fails only in
 production with real tenant data. Ten passes of drift is a bisect; one pass is a
-glance. See `/compliance` and `/report-card`.
+glance. See `/compliance` and `/score`.
 
 The structural snapshot from the same command is also the index the studio
 planner consumes — same `appName` / `modules[]` / `entities` / `schemas` /
@@ -179,15 +179,15 @@ and time where the per-pass check costs neither.
 > just the two the fast check covers, and produces a shareable report card."
 
 ```bash
-forklaunch analyze --report-card --pretty         # fast, deterministic, 2 rails
-forklaunch analyze --report-card --min-score 70   # same, as a CI gate
+forklaunch score                  # fast, deterministic, 2 rails
+forklaunch score --min-score 70   # same, as a CI gate
 forklaunch compliance audit --risk-score --dpia   # full compliance surface
 ```
 
 The fast check scores **compliance** and **security** only. Governance,
 scalability and observability need judgement a source read cannot supply and
 come back `pending` rather than zero. Quote the card's `caveat` whenever you
-report a number. `/report-card` covers reading one properly.
+report a number. `/score` covers reading one properly.
 
 **Compare the milestone card against the plan's score from step 1.** They use
 the same five rails, so they are directly comparable — that comparison is the
@@ -205,7 +205,7 @@ saying so explicitly rather than reporting the second number alone.
 | looking something up fast | `/quick-reference` |
 | writing handlers, services, entities | `/backend-patterns`, `/common-tasks` |
 | classifying fields, encryption, tenants | `/compliance` ← read before any entity with personal data |
-| reading or gating on a readiness score | `/report-card` |
+| reading or gating on a readiness score | `/score` |
 | iterating until a score passes | `/score-self-heal` |
 | building UI | `/frontend-patterns`, `/design-system`, `/tanstack` |
 | deploying a frontend | `/vercel-frontend` |
@@ -241,7 +241,7 @@ half-done, say so; "I couldn't confirm the deploy finished" beats silence.
 ## Related
 
 - `SETUP.md` — installing everything, for a non-technical reader
-- `/report-card` — generating and reading a readiness score
+- `/score` — generating and reading a readiness score
 - `/compliance` — classification, encryption, tenant isolation
 - `/cli` — every command
 - `/plan` — heavyweight planning pipeline

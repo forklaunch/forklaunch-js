@@ -1,6 +1,6 @@
 ---
-name: report-card
-description: "Enterprise-Readiness Report Card: generate one from the CLI, read the five rails, gate CI on a minimum score, and know what deterministic checks can and cannot judge."
+name: score
+description: "forklaunch score: generate an Enterprise-Readiness Report Card, read the five rails, gate CI on a minimum score, and know what deterministic checks can and cannot judge."
 user-invokable: true
 ---
 
@@ -23,7 +23,7 @@ offline, in about a second — and is honest about the part that needs judgement
 ## Generate one
 
 ```bash
-forklaunch analyze --report-card --pretty
+forklaunch score
 ```
 
 That is a **read-only** command. It runs the same deterministic checks as
@@ -32,16 +32,16 @@ contract, and prints JSON. No network, no auth, no writes.
 
 | flag | what it does |
 |---|---|
-| `--report-card` | emit a card instead of the structural snapshot |
-| `--pretty` | human-readable JSON |
+| *(none)* | a readable terminal summary — the default |
+| `--json` | the raw report card, for tooling |
+| `--pretty` | pretty-print the JSON |
 | `--min-score N` | exit non-zero if `overall` is below N — for CI |
-| `-m, --module <name>` | limit the structural half to one module |
 | `-p, --path <dir>` | app root (defaults to the manifest in the current directory) |
 
 Gate a pipeline:
 
 ```bash
-forklaunch analyze --report-card --min-score 70
+forklaunch score --min-score 70
 ```
 
 Exit code 1 with `report card overall score N is below the required minimum of 70`.
@@ -116,7 +116,7 @@ Work the `findings` in severity order and apply each `fix` verbatim — they are
 specific instructions, not categories. Then re-run:
 
 ```bash
-forklaunch analyze --report-card --pretty
+forklaunch score
 ```
 
 The score moves immediately, because these checks are deterministic. If a score
@@ -132,7 +132,7 @@ Run the fast, deterministic pass after **every** codegen pass — it is cheap an
 catches drift immediately:
 
 ```bash
-forklaunch analyze --report-card
+forklaunch score
 ```
 
 Run the full agent-scored analyze at milestones, not every pass. See
