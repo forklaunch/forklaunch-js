@@ -145,9 +145,15 @@ PII/PHI/PCI fields may be automatically encrypted/decrypted by
 
 - **Algorithm**: AES-256-GCM
 - **Key derivation**: HKDF-SHA256 with per-tenant salt
-- **Format**: `v1:base64(iv):base64(authTag):base64(ciphertext)`
+- **Format**: `v2:base64(iv):base64(authTag):base64(ciphertext)`. The version prefix
+  encodes the **IV scheme**, not the key or the tenant: `v1` used a random IV, `v2`
+  derives it deterministically so an encrypted column can still be matched in a WHERE
+  clause. Both decrypt; new writes are `v2`.
 - **Triggered automatically** on persist/load — no manual encryption needed
-- **Blocks `nativeInsert`** to prevent bypassing encryption
+- **Blocks the native query escape hatches** — `nativeInsert`, `nativeUpdate`,
+  `nativeDelete` and `execute` — so encryption cannot be bypassed by dropping to raw
+  SQL. Note `nativeInsert` no longer exists on MikroORM v7's EntityManager; the other
+  three do, and `nativeUpdate` in particular is **not** a safe way around the encryptor.
 
 Configuration:
 
@@ -230,7 +236,7 @@ if (context?.tenantId) {
 return em;
 ```
 
-`forklaunch audit` flags this as `tenant-context-half-wired`. If you are adding
+`forklaunch compliance audit` flags this as `tenant-context-half-wired`. If you are adding
 a guard of your own, assert that any `registrations.ts` containing
 `setFilterParams('tenant'` also contains `wrapEmWithTenantContext` — that one
 check catches the whole class.
