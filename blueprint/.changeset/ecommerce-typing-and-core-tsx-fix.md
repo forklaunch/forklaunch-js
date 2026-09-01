@@ -1,5 +1,4 @@
 ---
-"@forklaunch/blueprint-core": patch
 "@forklaunch/blueprint-ecommerce-stripe": patch
 ---
 
