@@ -48,9 +48,11 @@ fn header_matches_scope(header: &str, scope: &str) -> bool {
 /// key would quietly switch off the gate for every unfilled variable sharing
 /// its scope.
 ///
-/// Leaving those lines out is safe in both directions: a key with no record
-/// yet stays absent, and a key that already has one is untouched by the push,
-/// which only clears records for keys it knows about.
+/// Dropping them loses nothing. Only entries with no value are dropped, so
+/// nothing that has a value to lose ever leaves the payload. A dropped key
+/// with no record yet stays absent instead of gaining a tombstone, and a
+/// dropped key that already has one is swept to unset by the push — the same
+/// state an empty pushed value would have produced anyway.
 fn drop_valueless_entries(items: Vec<EnvFileItem>, keep: &str) -> Vec<EnvFileItem> {
     items
         .into_iter()
