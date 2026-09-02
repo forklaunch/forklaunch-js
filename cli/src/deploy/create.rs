@@ -1083,6 +1083,8 @@ impl CliCommand for CreateCommand {
                     stream_deployment_status(
                         &auth_mode,
                         &deployment.id,
+                        Some(&environment),
+                        Some(region.as_str()),
                         &mut stdout,
                     )?;
                     writeln!(stdout)?;

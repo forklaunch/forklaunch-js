@@ -134,6 +134,112 @@ pub(crate) fn remediation_commands(
         .collect()
 }
 
+/// A prompt the user can copy straight into a coding agent.
+///
+/// A failed deploy leaves a person holding an error and a decision they may not
+/// be equipped to make. The commands under "To unblock" say what to run but not
+/// what to put in it, and the missing piece is usually knowledge — which value,
+/// from where, and whether it is a secret. Handing them a paste-able prompt turns
+/// the dead end into a next step, and carries the context (app, environment,
+/// region, component, keys) that they would otherwise have to retype from a
+/// terminal or a screenshot.
+///
+/// Deliberately instructs the agent NOT to invent values: the failure mode this
+/// prevents is a blocked deploy becoming a crash loop, which is strictly harder
+/// to diagnose than the block was.
+pub(crate) fn remediation_prompt(
+    blocked: &[BlockedComponent],
+    environment: Option<&str>,
+    region: Option<&str>,
+) -> Option<String> {
+    if blocked.is_empty() {
+        return None;
+    }
+    let environment = environment.unwrap_or("<environment>");
+    let region = region.unwrap_or("<region>");
+
+    let needs = blocked
+        .iter()
+        .map(|component| {
+            format!(
+                "{} '{}' needs {}",
+                component.component_type,
+                component.name,
+                component.missing_keys.join(", ")
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("; ");
+
+    Some(format!(
+        "My ForkLaunch deploy to {environment} ({region}) was blocked because \
+configuration is missing: {needs}. Read the /investigator skill, then run \
+`forklaunch deploy info -e {environment} -r {region} --json` to confirm. Help me \
+work out the correct value for each key — ask me for anything only I would know, \
+and do not invent or guess a value — then set them with `forklaunch config set` \
+scoped to the component that needs them, and redeploy."
+    ))
+}
+
+/// Render the "here is what went wrong and what to do" block shared by
+/// `deploy info` and the failure path of a streamed deploy. A person watching a
+/// deploy fail should not have to run a second command to find out why.
+pub(crate) fn print_remediation(
+    out: &mut StandardStream,
+    error_message: &str,
+    environment: Option<&str>,
+    region: Option<&str>,
+) -> Result<()> {
+    let blocked = parse_blocked_components(error_message);
+    if blocked.is_empty() {
+        return Ok(());
+    }
+    let commands = remediation_commands(&blocked, environment, region);
+
+    writeln!(out)?;
+    out.set_color(ColorSpec::new().set_bold(true))?;
+    writeln!(out, "  To unblock:")?;
+    out.reset()?;
+    for command in &commands {
+        writeln!(out, "    {}", command)?;
+    }
+
+    if let Some(prompt) = remediation_prompt(&blocked, environment, region) {
+        writeln!(out)?;
+        out.set_color(ColorSpec::new().set_bold(true))?;
+        writeln!(out, "  Copy this to your coding agent:")?;
+        out.reset()?;
+        writeln!(out)?;
+        // Printed unadorned so it survives a copy: no box drawing, no leading
+        // pipes, nothing a selection would drag in.
+        for line in wrap_prompt(&prompt, 76) {
+            writeln!(out, "    {}", line)?;
+        }
+    }
+    writeln!(out)?;
+    Ok(())
+}
+
+/// Word-wrap for the copyable block. Kept naive on purpose — the prompt is
+/// plain ASCII prose and command names, and a wrapped command still pastes.
+fn wrap_prompt(text: &str, width: usize) -> Vec<String> {
+    let mut lines = Vec::new();
+    let mut current = String::new();
+    for word in text.split_whitespace() {
+        if !current.is_empty() && current.len() + 1 + word.len() > width {
+            lines.push(std::mem::take(&mut current));
+        }
+        if !current.is_empty() {
+            current.push(' ');
+        }
+        current.push_str(word);
+    }
+    if !current.is_empty() {
+        lines.push(current);
+    }
+    lines
+}
+
 fn print_field(out: &mut StandardStream, label: &str, value: &Option<String>) -> Result<()> {
     if let Some(v) = value {
         out.set_color(ColorSpec::new().set_bold(true))?;
@@ -350,19 +456,12 @@ impl CliCommand for InfoCommand {
             print_field(&mut stdout, "Completed:", &deployment.completed_at)?;
             print_field(&mut stdout, "Error:", &deployment.error_message)?;
             if let Some(error_message) = deployment.error_message.as_deref() {
-                let blocked = parse_blocked_components(error_message);
-                let commands = remediation_commands(
-                    &blocked,
+                print_remediation(
+                    &mut stdout,
+                    error_message,
                     deployment.environment.as_deref(),
                     deployment.region.as_deref(),
-                );
-                if !commands.is_empty() {
-                    writeln!(stdout)?;
-                    writeln!(stdout, "  To unblock:")?;
-                    for command in &commands {
-                        writeln!(stdout, "    {}", command)?;
-                    }
-                }
+                )?;
             }
             print_service_urls(&mut stdout, &deployment.metadata)?;
         }
@@ -447,6 +546,44 @@ mod tests {
     }
 
     #[test]
+    fn the_agent_prompt_carries_the_context_a_user_would_have_to_retype() {
+        let blocked = parse_blocked_components(REAL_BLOCKED);
+        let prompt = remediation_prompt(&blocked, Some("production"), Some("us-west-2")).unwrap();
+        // Everything the agent needs to act without going back to the user.
+        assert!(prompt.contains("production"), "{prompt}");
+        assert!(prompt.contains("us-west-2"), "{prompt}");
+        assert!(prompt.contains("managed-apps-worker"), "{prompt}");
+        assert!(prompt.contains("TEMPLATE_BUILD_ORG_ID"), "{prompt}");
+        assert!(prompt.contains("deploy info"), "{prompt}");
+        assert!(prompt.contains("config set"), "{prompt}");
+    }
+
+    /// The single most important line in the prompt. An agent that guesses a
+    /// value converts a blocked deploy into a crash loop, which is harder to
+    /// diagnose than the block it replaced.
+    #[test]
+    fn the_agent_prompt_forbids_inventing_a_value() {
+        let blocked = parse_blocked_components(REAL_BLOCKED);
+        let prompt = remediation_prompt(&blocked, Some("production"), Some("us-west-2")).unwrap();
+        assert!(prompt.contains("do not invent"), "{prompt}");
+    }
+
+    #[test]
+    fn no_blocked_components_means_no_prompt_at_all() {
+        // A deploy that failed for some other reason gets no prompt — a generic
+        // "ask your agent" would be noise, and would imply a fix that isn't one.
+        assert!(remediation_prompt(&[], Some("production"), Some("us-west-2")).is_none());
+    }
+
+    #[test]
+    fn the_prompt_wraps_without_losing_words() {
+        let text = "alpha beta gamma delta epsilon zeta eta theta iota kappa";
+        let wrapped = wrap_prompt(text, 20);
+        assert!(wrapped.iter().all(|line| line.len() <= 20), "{wrapped:?}");
+        assert_eq!(wrapped.join(" "), text);
+    }
+
+    #[test]
     fn missing_environment_and_region_render_as_placeholders_not_omissions() {
         let blocked = parse_blocked_components(REAL_BLOCKED);
         let commands = remediation_commands(&blocked, None, None);
@@ -504,5 +641,26 @@ mod tests {
             }
         }));
         assert!(print_service_urls(&mut stdout, &metadata).is_ok());
+    }
+}
+
+#[cfg(test)]
+mod render_preview {
+    use super::*;
+    use termcolor::{ColorChoice, StandardStream};
+
+    /// Not an assertion — prints the block so its shape can be reviewed with
+    /// `cargo test render_the_block -- --nocapture`. The value of this output is
+    /// whether a person can select and paste it, which no assertion checks.
+    #[test]
+    fn render_the_block() {
+        let mut out = StandardStream::stdout(ColorChoice::Never);
+        print_remediation(
+            &mut out,
+            "Deployment blocked due to missing configuration: worker 'managed-apps-worker' missing keys: TEMPLATE_BUILD_ORG_ID",
+            Some("production"),
+            Some("us-west-2"),
+        )
+        .unwrap();
     }
 }
