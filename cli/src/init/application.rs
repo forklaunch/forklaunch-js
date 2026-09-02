@@ -6,7 +6,7 @@ use std::{
     path::Path,
 };
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use convert_case::{Case, Casing};
 use rustyline::{Editor, history::DefaultHistory};
@@ -575,6 +575,7 @@ impl CliCommand for ApplicationCommand {
             ecommerce: None,
             messaging: None,
             cac: None,
+            relay: None,
             };
         let mut modules: Vec<Module> = if matches.get_many::<String>("modules").is_none()
             && std::io::stdin().is_terminal()
@@ -587,6 +588,7 @@ impl CliCommand for ApplicationCommand {
                     ecommerce: None,
                     messaging: None,
                     cac: None,
+                    relay: None,
                     };
                 modules_to_test = prompt_comma_separated_list(
                     &mut line_editor,
@@ -620,6 +622,18 @@ impl CliCommand for ApplicationCommand {
             modules_to_test
         };
 
+        // Relay is not a standalone service - it injects into an existing iam
+        // service and so cannot be part of a fresh application scaffold. Point
+        // the user at the module surface instead of scaffolding a broken
+        // "relay" project.
+        if modules.contains(&Module::Relay) {
+            bail!(
+                "The 'relay' module extends an existing iam service and cannot be added during \
+                 `init application`. Scaffold the app first, then run \
+                 `forklaunch init module -m relay -p <app>`."
+            );
+        }
+
         modules.sort_by_key(|module| {
             match module {
                 Module::BaseIam | Module::BetterAuthIam => 0,
@@ -627,6 +641,7 @@ impl CliCommand for ApplicationCommand {
                 Module::StripeEcommerce => 2,
                 Module::BaseMessaging | Module::TwilioMessaging => 3,
                 Module::BaseCac => 4,
+                Module::Relay => 5,
             }
         });
 
