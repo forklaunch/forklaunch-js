@@ -327,13 +327,23 @@ fn api_error(status: u16, body: &str) -> anyhow::Error {
 /// Terminal rendering. Default output, because a wall of JSON is not an answer
 /// to "how ready is this" — the checklist and the unmet items are.
 fn print_summary(card: &Value) {
+    print!("{}", render_summary(card));
+}
+
+/// Built as a string rather than printed directly so the rendering rules below
+/// — which are the whole point of this command's default output — can be
+/// asserted rather than eyeballed.
+fn render_summary(card: &Value) -> String {
+    use std::fmt::Write as _;
+    let mut out = String::new();
+
     let overall = card.get("overall").and_then(Value::as_u64).unwrap_or(0);
-    println!();
-    println!("  {}  {}/100", bold("Enterprise Readiness"), overall);
+    let _ = writeln!(out);
+    let _ = writeln!(out, "  {}  {}/100", bold("Enterprise Readiness"), overall);
     if let Some(headline) = card.get("headline").and_then(Value::as_str) {
-        println!("  {}", dim(headline));
+        let _ = writeln!(out, "  {}", dim(headline));
     }
-    println!();
+    let _ = writeln!(out);
 
     if let Some(dimensions) = card.get("dimensions").and_then(Value::as_object) {
         let mut keys: Vec<&String> = dimensions.keys().collect();
@@ -349,33 +359,100 @@ fn print_summary(card: &Value) {
             };
 
             if rail.get("pending").and_then(Value::as_bool).unwrap_or(false) {
-                println!("  {:<16} {}", label, dim("not assessed"));
+                let _ = writeln!(out, "  {:<16} {}", label, dim("not assessed"));
                 continue;
             }
 
             let score = rail.get("score").and_then(Value::as_u64).unwrap_or(0);
-            println!("  {:<16} {}/100", label, score);
+            let items = rail.get("items").and_then(Value::as_array);
 
-            if let Some(items) = rail.get("items").and_then(Value::as_array) {
+            // A rail can score 100 and still have unmet items: only findings
+            // cost points, and an `info` finding costs none. A bare "100/100"
+            // therefore reads as "nothing left to do" on an app that has work
+            // left — and it is the number a non-technical reader takes away.
+            // So the outstanding count travels with the score, always.
+            let outstanding = items
+                .map(|items| {
+                    items
+                        .iter()
+                        .filter(|item| {
+                            item.get("status").and_then(Value::as_str) == Some("unmet")
+                        })
+                        .count()
+                })
+                .unwrap_or(0);
+            if outstanding > 0 {
+                let _ = writeln!(
+                    out,
+                    "  {:<16} {}/100  {}",
+                    label,
+                    score,
+                    dim(&format!(
+                        "({} item{} outstanding)",
+                        outstanding,
+                        if outstanding == 1 { "" } else { "s" }
+                    ))
+                );
+            } else {
+                let _ = writeln!(out, "  {:<16} {}/100", label, score);
+            }
+
+            if let Some(items) = items {
                 for item in items.iter().take(8) {
                     let met = item.get("status").and_then(Value::as_str) == Some("met");
                     let text = item.get("label").and_then(Value::as_str).unwrap_or("");
-                    println!("      {} {}", if met { "+" } else { "-" }, text);
+                    let _ = writeln!(out, "      {} {}", if met { "+" } else { "-" }, text);
                 }
             }
             if let Some(findings) = rail.get("findings").and_then(Value::as_array)
                 && !findings.is_empty()
             {
-                println!("      {}", dim(&format!("{} finding(s)", findings.len())));
+                // The same check firing once per module produces N identical
+                // titles. Listing "7 finding(s)" for one repeated problem
+                // overstates the work; collapse them and say how many times.
+                let mut unique: Vec<(&str, usize)> = Vec::new();
+                for finding in findings {
+                    let title = finding.get("title").and_then(Value::as_str).unwrap_or("");
+                    match unique.iter_mut().find(|(seen, _)| *seen == title) {
+                        Some((_, count)) => *count += 1,
+                        None => unique.push((title, 1)),
+                    }
+                }
+                let _ = writeln!(
+                    out,
+                    "      {}",
+                    dim(&format!(
+                        "{} finding(s){}",
+                        unique.len(),
+                        if unique.len() == findings.len() {
+                            String::new()
+                        } else {
+                            format!(", {} total", findings.len())
+                        }
+                    ))
+                );
+                for (title, count) in unique.iter().take(5) {
+                    if title.is_empty() {
+                        continue;
+                    }
+                    let suffix = if *count > 1 {
+                        format!(" (×{count})")
+                    } else {
+                        String::new()
+                    };
+                    let _ = writeln!(out, "        {}", dim(&format!("{title}{suffix}")));
+                }
             }
-            println!();
+            let _ = writeln!(out);
         }
     }
 
     if let Some(caveat) = card.get("caveat").and_then(Value::as_str) {
-        println!("  {}", dim(caveat));
-        println!();
+        let _ = writeln!(out, "  {}", dim(caveat));
+        let _ = writeln!(out);
     }
+
+    out
 }
 
 fn bold(s: &str) -> String {
@@ -428,5 +505,98 @@ mod tests {
             "overall": 72,
             "dimensions": { "security": { "score": 80, "items": [], "findings": [] } }
         }));
+    }
+
+    /// The scaffold case: a perfect rail with work still on it. Only findings
+    /// cost points and an `info` finding costs none, so 100 alongside an unmet
+    /// item is arithmetically correct and, unqualified, misleading.
+    #[test]
+    fn a_perfect_rail_still_reports_its_unmet_items() {
+        let rendered = render_summary(&json!({
+            "overall": 100,
+            "dimensions": {
+                "compliance": {
+                    "score": 100,
+                    "items": [
+                        { "status": "met", "label": "Field encryptor is registered" },
+                        { "status": "unmet", "label": "Sensitive fields are classified" }
+                    ],
+                    "findings": []
+                }
+            }
+        }));
+        assert!(rendered.contains("100/100"), "{rendered}");
+        assert!(rendered.contains("1 item outstanding"), "{rendered}");
+    }
+
+    #[test]
+    fn a_rail_with_nothing_outstanding_says_nothing_extra() {
+        let rendered = render_summary(&json!({
+            "overall": 100,
+            "dimensions": {
+                "security": {
+                    "score": 100,
+                    "items": [{ "status": "met", "label": "Tenant isolation filter is installed" }],
+                    "findings": []
+                }
+            }
+        }));
+        assert!(!rendered.contains("outstanding"), "{rendered}");
+    }
+
+    /// One check firing once per module is one problem, not seven. Reporting
+    /// the raw count overstates the work and buries what the problem is.
+    #[test]
+    fn repeated_findings_collapse_to_one_line_with_a_count() {
+        let repeated: Vec<serde_json::Value> = (0..7)
+            .map(|_| json!({ "title": "Sensitive fields are classified (iam)" }))
+            .collect();
+        let rendered = render_summary(&json!({
+            "overall": 100,
+            "dimensions": {
+                "compliance": { "score": 100, "items": [], "findings": repeated }
+            }
+        }));
+        assert!(rendered.contains("1 finding(s), 7 total"), "{rendered}");
+        assert!(rendered.contains("(×7)"), "{rendered}");
+    }
+
+    #[test]
+    fn distinct_findings_are_not_collapsed() {
+        let rendered = render_summary(&json!({
+            "overall": 60,
+            "dimensions": {
+                "compliance": {
+                    "score": 60,
+                    "items": [],
+                    "findings": [
+                        { "title": "Field encryptor is not registered" },
+                        { "title": "Retention policies are missing" }
+                    ]
+                }
+            }
+        }));
+        assert!(rendered.contains("2 finding(s)"), "{rendered}");
+        // Nothing was collapsed, so there is no "of N" tail to add.
+        assert!(!rendered.contains("total"), "{rendered}");
+    }
+
+    /// A rail the CLI cannot judge must stay "not assessed" — never 0/100, and
+    /// never carry an outstanding count it did not compute.
+    #[test]
+    fn a_pending_rail_is_not_given_a_score() {
+        let rendered = render_summary(&json!({
+            "overall": 100,
+            "dimensions": { "governance": { "score": 0, "pending": true } }
+        }));
+        assert!(rendered.contains("not assessed"), "{rendered}");
+        // Asserted on the rail's own line: the overall header legitimately
+        // reads "100/100", which contains "0/100" as a substring.
+        let governance_line = rendered
+            .lines()
+            .find(|line| line.contains("Governance"))
+            .expect("governance rail should render");
+        assert!(!governance_line.contains("/100"), "{governance_line}");
+        assert!(!governance_line.contains("outstanding"), "{governance_line}");
     }
 }

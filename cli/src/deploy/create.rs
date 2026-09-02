@@ -40,11 +40,49 @@ struct CreateDeploymentRequest {
     #[serde(rename = "clusterType")]
     #[serde(skip_serializing_if = "Option::is_none")]
     cluster_type: Option<String>,
+    /// Deploy a managed-mode application down the single-app pipeline anyway.
+    /// The control plane refuses this by default; `--force` is the deliberate
+    /// override. Omitted entirely when not set, so an older control plane that
+    /// does not know the field is unaffected.
+    #[serde(rename = "forceSingleAppDeploy")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    force_single_app_deploy: Option<bool>,
 }
 
 #[derive(Debug, Deserialize)]
 struct CreateDeploymentResponse {
     id: String,
+}
+
+/// What a placement means for isolation, as the control plane computes it.
+///
+/// The server has always sent this; the CLI used to drop it on the floor and
+/// print only the price. That left the terminal user choosing between $2 and
+/// $108 a month with no statement of what the difference buys — and the
+/// difference is whether their containers share a host with another
+/// organization's workloads.
+#[derive(Debug, Deserialize)]
+struct ClusterCompliance {
+    /// Hosts shared with workloads belonging to OTHER organizations.
+    #[serde(rename = "crossTenantHosts", default)]
+    cross_tenant_hosts: bool,
+    /// May host compliance-scoped workloads.
+    #[serde(rename = "complianceCapable", default)]
+    compliance_capable: bool,
+    /// Factual isolation properties, rendered under the option.
+    #[serde(default)]
+    notes: Vec<String>,
+    #[serde(default)]
+    frameworks: Vec<FrameworkVerdict>,
+}
+
+#[derive(Debug, Deserialize)]
+struct FrameworkVerdict {
+    framework: String,
+    /// "ok" | "blocked" | "review" | "not-affected"
+    impact: String,
+    #[allow(dead_code)]
+    reason: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -58,6 +96,37 @@ struct ClusterOption {
     unavailable_reason: Option<String>,
     #[serde(rename = "estimatedMonthlyUsd")]
     estimated_monthly_usd: f64,
+    /// Absent on an older control plane, which is why this is optional rather
+    /// than defaulted — "not reported" and "reported as unrestricted" are
+    /// different claims and must not render the same.
+    #[serde(default)]
+    compliance: Option<ClusterCompliance>,
+}
+
+impl ClusterOption {
+    /// One line naming what this placement does to isolation, or `None` when
+    /// the control plane did not report a profile.
+    fn isolation_line(&self) -> Option<String> {
+        let compliance = self.compliance.as_ref()?;
+        let blocked: Vec<&str> = compliance
+            .frameworks
+            .iter()
+            .filter(|verdict| verdict.impact == "blocked")
+            .map(|verdict| verdict.framework.as_str())
+            .collect();
+
+        let mut line = if compliance.cross_tenant_hosts {
+            String::from("Shares hosts with other organizations")
+        } else {
+            String::from("Hosts are not shared outside your organization")
+        };
+        if !blocked.is_empty() {
+            line.push_str(&format!("; cannot host {}", blocked.join(", ")));
+        } else if compliance.compliance_capable {
+            line.push_str("; can host compliance-scoped workloads");
+        }
+        Some(line)
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -757,6 +826,7 @@ impl CliCommand for CreateCommand {
             ),
             force_refresh: if matches.get_flag("full") { Some(true) } else { None },
             cluster_type: matches.get_one::<String>("cluster-type").cloned(),
+            force_single_app_deploy: if force { Some(true) } else { None },
         };
 
         if dry_run {
@@ -1013,6 +1083,8 @@ impl CliCommand for CreateCommand {
                     stream_deployment_status(
                         &auth_mode,
                         &deployment.id,
+                        Some(&environment),
+                        Some(region.as_str()),
                         &mut stdout,
                     )?;
                     writeln!(stdout)?;
@@ -1032,11 +1104,36 @@ impl CliCommand for CreateCommand {
                         format!("Failed to parse cluster selection response: {}", error_text)
                     })?;
 
+                // The control plane sends two different 428s down this path, and
+                // they mean opposite things to the user:
+                //   cluster_selection_required — nothing has been chosen yet
+                //   cluster_unavailable        — a choice WAS made and is refused
+                // Printing the same "this is the first deployment" header for both
+                // told a user who had already chosen at `app create` that they had
+                // never chosen, and silently dropped the server's explanation.
+                let rejected_choice =
+                    selection_required.message.starts_with("cluster_unavailable");
+
                 writeln!(stdout)?;
-                log_header!(stdout, Color::Cyan, "First deploy — choose a cluster");
-                writeln!(stdout)?;
-                writeln!(stdout, "  This is the first deployment of this application to {} ({}).", environment, region)?;
-                writeln!(stdout, "  Pick where its compute should run (estimates are monthly, compute only):")?;
+                if rejected_choice {
+                    log_header!(stdout, Color::Yellow, "That cluster isn't available for this app");
+                    writeln!(stdout)?;
+                    writeln!(
+                        stdout,
+                        "  {}",
+                        selection_required
+                            .message
+                            .trim_start_matches("cluster_unavailable:")
+                            .trim()
+                    )?;
+                    writeln!(stdout)?;
+                    writeln!(stdout, "  Pick another placement for {} ({}):", environment, region)?;
+                } else {
+                    log_header!(stdout, Color::Cyan, "First deploy — choose a cluster");
+                    writeln!(stdout)?;
+                    writeln!(stdout, "  This is the first deployment of this application to {} ({}).", environment, region)?;
+                    writeln!(stdout, "  Pick where its compute should run (estimates are monthly, compute only):")?;
+                }
                 writeln!(stdout)?;
                 for opt in &selection_required.cluster_options {
                     let availability = if opt.available {
@@ -1046,6 +1143,11 @@ impl CliCommand for CreateCommand {
                     };
                     writeln!(stdout, "  • {:<32} {}", opt.label, availability)?;
                     writeln!(stdout, "      {}", opt.description)?;
+                    // The isolation consequence, not just the price — this is the
+                    // half of the tradeoff the price alone cannot express.
+                    if let Some(isolation) = opt.isolation_line() {
+                        writeln!(stdout, "      {}", isolation)?;
+                    }
                     if let Some(reason) = &opt.unavailable_reason {
                         writeln!(stdout, "      ({})", reason)?;
                     }
@@ -1362,5 +1464,90 @@ impl CliCommand for CreateCommand {
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod cluster_option_tests {
+    use super::*;
+
+    fn option_json(compliance: &str) -> String {
+        format!(
+            r#"{{
+                "clusterType": "platform-shared",
+                "label": "Platform shared cluster",
+                "description": "Packed onto ForkLaunch-managed shared hosts.",
+                "available": true,
+                "estimatedMonthlyUsd": 2.0,
+                "compliance": {compliance}
+            }}"#
+        )
+    }
+
+    #[test]
+    fn cross_tenant_hosting_is_stated_outright() {
+        let option: ClusterOption = serde_json::from_str(&option_json(
+            r#"{"crossTenantHosts": true, "complianceCapable": false,
+                "notes": [], "frameworks": []}"#,
+        ))
+        .unwrap();
+        assert_eq!(
+            option.isolation_line().unwrap(),
+            "Shares hosts with other organizations"
+        );
+    }
+
+    #[test]
+    fn blocked_frameworks_are_named_rather_than_implied() {
+        let option: ClusterOption = serde_json::from_str(&option_json(
+            r#"{"crossTenantHosts": true, "complianceCapable": false, "notes": [],
+                "frameworks": [
+                  {"framework": "HIPAA", "impact": "blocked", "reason": "cross-tenant"},
+                  {"framework": "GDPR", "impact": "not-affected", "reason": "n/a"},
+                  {"framework": "SOC 2", "impact": "blocked", "reason": "cross-tenant"}
+                ]}"#,
+        ))
+        .unwrap();
+        let line = option.isolation_line().unwrap();
+        assert!(line.contains("cannot host HIPAA, SOC 2"), "got: {line}");
+        // A framework the placement does not affect must not be listed as blocked.
+        assert!(!line.contains("GDPR"), "got: {line}");
+    }
+
+    #[test]
+    fn a_compliance_capable_placement_says_so() {
+        let option: ClusterOption = serde_json::from_str(&option_json(
+            r#"{"crossTenantHosts": false, "complianceCapable": true, "notes": [],
+                "frameworks": [{"framework": "HIPAA", "impact": "ok", "reason": "boundary holds"}]}"#,
+        ))
+        .unwrap();
+        assert_eq!(
+            option.isolation_line().unwrap(),
+            "Hosts are not shared outside your organization; can host compliance-scoped workloads"
+        );
+    }
+
+    /// An older control plane sends no `compliance` object. That must render as
+    /// nothing at all — inventing "no restrictions" from a missing field would
+    /// be a compliance claim the server never made.
+    #[test]
+    fn a_missing_compliance_profile_renders_nothing() {
+        let option: ClusterOption = serde_json::from_str(
+            r#"{"clusterType": "dedicated", "label": "Dedicated", "description": "d",
+                "available": true, "estimatedMonthlyUsd": 108.0}"#,
+        )
+        .unwrap();
+        assert!(option.isolation_line().is_none());
+    }
+
+    /// The two 428s mean opposite things to a user; the CLI distinguishes them
+    /// on the server's message prefix, so that prefix is load-bearing.
+    #[test]
+    fn the_two_gate_messages_are_distinguishable() {
+        let rejected = "cluster_unavailable: This application is scoped to HIPAA";
+        let first_deploy =
+            "cluster_selection_required: this is the first deployment of this application";
+        assert!(rejected.starts_with("cluster_unavailable"));
+        assert!(!first_deploy.starts_with("cluster_unavailable"));
     }
 }
