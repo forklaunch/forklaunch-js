@@ -16,10 +16,12 @@ use crate::{
         command::command,
         env::extract_env_value,
         env_scope::is_pulumi_injected,
+        hmac::AuthMode,
         http_client,
         validate::{require_active_account, require_integration, require_manifest, resolve_auth},
     },
     deploy::utils::stream_deployment_status,
+    managed::detect::{ManagedDetection, detect_managed_template},
 };
 
 #[derive(Debug, Serialize)]
@@ -485,6 +487,32 @@ fn collect_app_var_keys(blocked_error: &DeploymentBlockedError) -> HashSet<Strin
 }
 
 
+/// Best-effort check for whether this application has any prior deployment. Used only to
+/// decide whether to print the one-line managed-mode hint on a first deploy, so any
+/// uncertainty (request failure, unexpected shape) resolves to `false` and the hint is
+/// never shown spuriously.
+fn has_no_prior_deployments(auth_mode: &AuthMode, application_id: &str) -> bool {
+    let url = format!(
+        "{}/deployments/?applicationId={}&limit=1",
+        get_platform_management_api_url(),
+        application_id
+    );
+    let Ok(response) = http_client::get_with_auth(auth_mode, &url) else {
+        return false;
+    };
+    if !response.status().is_success() {
+        return false;
+    }
+    let Ok(value) = response.json::<serde_json::Value>() else {
+        return false;
+    };
+    value
+        .get("deployments")
+        .and_then(|deployments| deployments.as_array())
+        .map(|deployments| deployments.is_empty())
+        .unwrap_or(false)
+}
+
 #[derive(Debug)]
 pub(crate) struct CreateCommand;
 
@@ -561,6 +589,12 @@ impl CliCommand for CreateCommand {
                     .value_parser(["production", "development"])
                     .help("NODE_ENV for this deployment (production or development)"),
             )
+            .arg(
+                Arg::new("force")
+                    .long("force")
+                    .action(clap::ArgAction::SetTrue)
+                    .help("Deploy even if this app is a managed template (bypasses the managed-template guard)"),
+            )
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
@@ -586,6 +620,48 @@ impl CliCommand for CreateCommand {
 
         let wait = !matches.get_flag("no-wait");
         let dry_run = matches.get_flag("dry-run");
+        let force = matches.get_flag("force");
+
+        // Managed-template guard. Whether an app is "managed" is a control-plane fact
+        // (a template keyed by its source repository), not a manifest flag, so ask the
+        // control plane. A managed template must be instantiated per customer via
+        // `managed instance create`, never sent down the single-app deploy pipeline.
+        // Detection is best-effort: it never fails the deploy on its own account.
+        match detect_managed_template(&auth_mode, manifest.git_repository.as_deref()) {
+            ManagedDetection::MatchedTemplate(slug) if !force => {
+                bail!(
+                    "This app is a managed template ({slug}). Launch customer instances with \
+                     `forklaunch managed instance create --template {slug} --region {region}`, \
+                     not `deploy create`. Pass --force to deploy it down the single-app pipeline anyway."
+                );
+            }
+            ManagedDetection::MatchedTemplate(slug) => {
+                log_warn!(
+                    stdout,
+                    "This app matches managed template ({}); deploying it as a single app because --force was given.",
+                    slug
+                );
+                writeln!(stdout)?;
+            }
+            ManagedDetection::ManagedModeAvailableNoMatch => {
+                // First deploy only: a one-line, non-blocking nudge that managed mode
+                // exists, for the case where the user meant to publish a template.
+                if has_no_prior_deployments(&auth_mode, &application_id) {
+                    log_info!(
+                        stdout,
+                        "Managed mode is available here. If this app is meant to be launched per customer, see `forklaunch managed template --help`. Continuing with a single-app deploy."
+                    );
+                    writeln!(stdout)?;
+                }
+            }
+            ManagedDetection::Inconclusive => {
+                if std::env::var("FORKLAUNCH_DEBUG").is_ok() {
+                    eprintln!(
+                        "debug: managed-template detection was inconclusive (no /managed-mode route, non-session auth, or request failed); proceeding as a single-app deploy"
+                    );
+                }
+            }
+        }
 
         let config_pull_url = format!(
             "{}/config/pull?applicationId={}&region={}&environment={}",
