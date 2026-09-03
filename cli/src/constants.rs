@@ -396,6 +396,11 @@ choice! {
             id: "cac-base",
             description: Some("computer-assisted coding hooks only"),
             exclusive_files: Some(&["cac-base"]),
+        },
+        Relay = Choice {
+            id: "relay",
+            description: Some("managed-apps OAuth relay session-ingest endpoint (adds to an existing iam service)"),
+            exclusive_files: Some(&["relay"]),
         }
     }
 
@@ -584,6 +589,11 @@ pub(crate) fn get_service_module_name(service_type: &Module) -> String {
         Module::StripeEcommerce => "ecommerce".to_string(),
         Module::BaseMessaging | Module::TwilioMessaging => "messaging".to_string(),
         Module::BaseCac => "cac".to_string(),
+        // Relay does not scaffold its own service - it injects the
+        // session-ingest endpoint into the existing iam service (see
+        // init/relay.rs). This name is only used for conflict detection, so it
+        // gets its own class rather than colliding with "iam".
+        Module::Relay => "relay".to_string(),
     }
 }
 
@@ -598,6 +608,7 @@ pub(crate) fn get_service_module_description(name: &str, service_type: &Module) 
             Module::StripeEcommerce => "ecommerce service APIs",
             Module::BaseMessaging | Module::TwilioMessaging => "messaging service APIs",
             Module::BaseCac => "computer-assisted coding service APIs",
+            Module::Relay => "the managed-apps OAuth relay session-ingest endpoint",
         }
     )
 }
