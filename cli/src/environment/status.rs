@@ -189,6 +189,29 @@ pub(crate) fn classify(
     }
 }
 
+/// Which platform state to ask about, if any.
+///
+/// `--environment` and `--region` only mean something together: a variable is
+/// stored for an environment *in* a region, so one flag without the other
+/// names nothing the platform can answer for. Given just one, the earlier code
+/// fell through to local state and carried on — reporting `set` from a local
+/// file, and exiting zero, for a caller that believed it had checked
+/// production. Partial input is refused rather than quietly downgraded, for the
+/// same reason a failed platform lookup is warned about rather than swallowed:
+/// this tool's exit code is a gate, and a gate must not open because the
+/// question was malformed.
+pub(crate) fn platform_selector<'a>(
+    environment: Option<&'a String>,
+    region: Option<&'a String>,
+) -> Result<Option<(&'a str, &'a str)>> {
+    match (environment, region) {
+        (Some(env), Some(reg)) => Ok(Some((env.as_str(), reg.as_str()))),
+        (None, None) => Ok(None),
+        (Some(_), None) => bail!("--environment was given without --region; pass both to ask the platform, or neither for local state"),
+        (None, Some(_)) => bail!("--region was given without --environment; pass both to ask the platform, or neither for local state"),
+    }
+}
+
 #[derive(Debug)]
 pub(crate) struct StatusCommand;
 
@@ -311,8 +334,8 @@ impl CliCommand for StatusCommand {
         let environment = matches.get_one::<String>("environment");
         let region = matches.get_one::<String>("region");
 
-        let platform = match (environment, region) {
-            (Some(env), Some(reg)) => {
+        let platform = match platform_selector(environment, region)? {
+            Some((env, reg)) => {
                 match fetch_platform_status(&manifest, env, reg) {
                     Ok(rows) => rows,
                     Err(error) => {
@@ -325,7 +348,7 @@ impl CliCommand for StatusCommand {
                     }
                 }
             }
-            _ => None,
+            None => None,
         };
 
         let mut source = StatusSource::LocalOnly;
@@ -460,6 +483,36 @@ mod tests {
             classify(is_pulumi_injected("MONITORING_URL", &from_scan), false, None),
             Classification::NeedsValue
         );
+    }
+
+    #[test]
+    fn both_selector_flags_ask_the_platform() {
+        let env = "production".to_string();
+        let reg = "us-east-1".to_string();
+        assert_eq!(
+            platform_selector(Some(&env), Some(&reg)).unwrap(),
+            Some(("production", "us-east-1"))
+        );
+    }
+
+    #[test]
+    fn neither_selector_flag_means_local_state() {
+        assert_eq!(platform_selector(None, None).unwrap(), None);
+    }
+
+    #[test]
+    fn a_partial_selector_is_refused_rather_than_downgraded() {
+        // One flag without the other used to fall through to local state and
+        // exit zero — a gate opening because the question was malformed. Both
+        // partial shapes must error, and the error must name the missing flag.
+        let env = "production".to_string();
+        let reg = "us-east-1".to_string();
+
+        let missing_region = platform_selector(Some(&env), None).unwrap_err();
+        assert!(missing_region.to_string().contains("--region"));
+
+        let missing_env = platform_selector(None, Some(&reg)).unwrap_err();
+        assert!(missing_env.to_string().contains("--environment"));
     }
 
     #[test]
