@@ -7,7 +7,8 @@
 //! readiness, generalized so the only app-specific decision is one hook.
 //!
 //! The generic ~80% it writes: the HMAC-verified ingest controller + route, the
-//! nonce single-use replay guard (a unique-column handoff entity + migration),
+//! nonce single-use replay guard (a unique-column handoff entity, whose
+//! migration the app generates via `migrate:init`/`migrate:create`),
 //! the one-time handoff ticket + better-auth session-cookie minting, and the
 //! root-relative redirect sanitizer. The app-specific ~20% is left as a single
 //! clearly-marked hook (`establishSessionFromRelayTokens`) with a TODO.
@@ -439,7 +440,11 @@ fn print_next_steps(stdout: &mut StandardStream, is_better_auth: bool) -> Result
     )?;
     writeln!(
         stdout,
-        "  3. Apply the migration (iam/migrations) or regenerate it for a non-postgres db."
+        "  3. Generate + apply the handoff-table migration: from iam/, run `migrate:create`"
+    )?;
+    writeln!(
+        stdout,
+        "     then `migrate:up` (a fresh scaffold's `database:setup` does this for you)."
     )?;
     if !is_better_auth {
         log_header!(stdout, Color::Yellow, "Heads up:");
@@ -530,11 +535,7 @@ mod tests {
         )
         .unwrap();
         assert!(inject_relay_into_server_ts(&iam).unwrap().is_none());
-        assert!(
-            inject_relay_into_registrations_ts(&iam)
-                .unwrap()
-                .is_none()
-        );
+        assert!(inject_relay_into_registrations_ts(&iam).unwrap().is_none());
         assert!(inject_relay_into_entities_index(&iam).unwrap().is_none());
 
         remove_dir_all(&tmp).ok();
