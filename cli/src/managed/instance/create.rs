@@ -58,6 +58,16 @@ impl CliCommand for CreateCommand {
                 .help("Region to provision the instance in (for example: us-west-2)"),
         )
         .arg(
+            Arg::new("instance-size")
+                .long("instance-size")
+                .value_parser([
+                    "pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge",
+                ])
+                .help(
+                    "Compute tier for the instance's services. Omitted => the managed default (pico, ~0.1 vCPU / 256 MB). Use a larger tier to give the instance more compute.",
+                ),
+        )
+        .arg(
             Arg::new("no-wait")
                 .long("no-wait")
                 .help(
@@ -88,8 +98,12 @@ impl CliCommand for CreateCommand {
         let region = matches
             .get_one::<String>("region")
             .context("--region is required")?;
+        let instance_size = matches.get_one::<String>("instance-size");
 
-        let body = json!({ "templateSlug": template, "region": region });
+        let mut body = json!({ "templateSlug": template, "region": region });
+        if let Some(size) = instance_size {
+            body["instanceSize"] = json!(size);
+        }
 
         if matches.get_flag("dryrun") {
             return print_dryrun("POST", "/instances", Some(&body));
