@@ -251,7 +251,18 @@ impl CliCommand for StatusCommand {
         // every project that uses a name, so a variable required anywhere is
         // reported required here.
         let scoped = determine_env_var_scopes(&project_env_vars, &manifest)?;
-        let project_names: Vec<String> = project_env_vars.keys().cloned().collect();
+
+        // Every project the manifest declares, not just those the scan found
+        // variables in. A project with no environment variables of its own is
+        // absent from `project_env_vars`, and taking names from there would
+        // stop another service's URL for it being recognised as
+        // platform-injected — reporting it as needing a person, and exiting
+        // non-zero, for a value the platform supplies.
+        let project_names: Vec<String> = manifest
+            .projects
+            .iter()
+            .map(|project| project.name.clone())
+            .collect();
 
         let mut statuses: Vec<VariableStatus> = Vec::new();
 
@@ -266,10 +277,17 @@ impl CliCommand for StatusCommand {
             // Precedence mirrors the platform's: ownership first, then a stored
             // value, then declared optionality. A variable the platform injects
             // is nobody's task whatever the code declared about it.
+            // An unreadable or malformed local env file is not the same as an
+            // unset variable: swallowing the error reports `needs a value` for
+            // something that may well be set, and hides the real fault.
+            let stored_locally = match var.value.is_some() {
+                true => true,
+                false => is_env_var_defined(&project_path, &var.name)?,
+            };
+
             let classification = classify(
                 is_pulumi_injected(&var.name, &project_names),
-                var.value.is_some()
-                    || is_env_var_defined(&project_path, &var.name).unwrap_or(false),
+                stored_locally,
                 var.optional,
             );
 
@@ -405,6 +423,44 @@ fn render_table(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_project_without_env_vars_still_owns_its_url() {
+        // The scan only yields projects that have environment-variable
+        // sightings, so a project declaring none is absent from its keys.
+        // Taking project names from there rather than from the manifest makes
+        // that project's inter-service URL unrecognisable, and the command
+        // reports a platform-supplied value as needing a person -- and exits
+        // non-zero on it.
+        let from_manifest = vec![
+            "billing".to_string(),
+            "monitoring".to_string(),
+            "iam".to_string(),
+        ];
+        // `monitoring` declares no variables of its own, so a scan-derived
+        // list would omit it.
+        let from_scan = vec!["billing".to_string(), "iam".to_string()];
+
+        assert!(
+            is_pulumi_injected("MONITORING_URL", &from_manifest),
+            "a manifest project's URL must be recognised as platform-injected"
+        );
+        assert!(
+            !is_pulumi_injected("MONITORING_URL", &from_scan),
+            "guard-the-guard: this is precisely what the scan-derived list \
+             misses, so the assertion above is meaningful"
+        );
+
+        // And the classification that follows from each.
+        assert_eq!(
+            classify(is_pulumi_injected("MONITORING_URL", &from_manifest), false, None),
+            Classification::PlatformManaged
+        );
+        assert_eq!(
+            classify(is_pulumi_injected("MONITORING_URL", &from_scan), false, None),
+            Classification::NeedsValue
+        );
+    }
 
     #[test]
     fn platform_ownership_wins_over_everything() {
