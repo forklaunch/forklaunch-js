@@ -26,55 +26,35 @@ offline, in about a second — and is honest about the part that needs judgement
 forklaunch score
 ```
 
-This scores through the platform's analysis API, so you get a real **five-rail
-agent-scored card** and a shareable link — not a number that vanishes with your
-scrollback.
-
-It packs the workspace, uploads it, polls the job, prints the card, and mints a
-revocable share link:
-
-```
-Enterprise Readiness  72/100
-…
-Report card: https://forklaunch.com/report-card/<token>
-```
-
-**What it costs.** Analysis is metered — a free tier per account, then credits —
-and takes minutes rather than seconds. It needs `forklaunch login`. So this is a
-milestone action, not something to run after every edit.
-
-**What it uploads.** A zip of the workspace. `.gitignore` is honoured, and
-`.git`, `node_modules`, `target`, `dist` and friends are dropped regardless — so
-a repo that forgot to ignore something large or secret does not silently send
-it. Files over 2 MB are skipped.
-
-### The offline escape hatch
-
-```bash
-forklaunch score --offline
-```
-
-No upload, no auth, no cost, about a second. It runs the same deterministic
-checks as `forklaunch compliance audit` and scores **compliance and security
-only** — the other three rails need judgement a source read cannot supply and
-come back `pending`. Use this in the tight edit loop, and in CI where you have
-no credentials.
+That is a **read-only** command — it never writes to your workspace. Whether it
+touches the network depends on the version: on CLI 1.10.0 and earlier it is
+purely local; on newer CLIs the bare command uploads the workspace for agent
+scoring unless you pass `--offline`. Either way it runs the same deterministic
+checks as `forklaunch compliance audit` and presents them on the shared
+report-card contract.
 
 | flag | what it does |
 |---|---|
-| *(none)* | upload, score, print the summary and a share link |
-| `--offline` | deterministic checks only — no upload, no auth, no cost, two rails |
-| `--no-share` | score but skip minting the link |
+| *(none)* | a readable terminal summary — the default |
+| `--offline` | deterministic checks only: no upload, no auth, no cost (newer CLIs) |
+| `--no-share` | score online but skip minting the share link (newer CLIs) |
 | `--json` | the raw report card, for tooling |
 | `--pretty` | pretty-print the JSON |
 | `--min-score N` | exit non-zero if `overall` is below N — for CI |
 | `-p, --path <dir>` | app root (defaults to the manifest in the current directory) |
 
+**In a build loop, use `--offline`.** The per-pass check is supposed to be free
+and instant; on a newer CLI the bare command uploads and bills. `--offline` is
+also the only form that works with no network or no account.
+
 Gate a pipeline:
 
 ```bash
-forklaunch score --min-score 70
+forklaunch score --offline --min-score 70
 ```
+
+`--offline` matters in CI: without it a newer CLI needs credentials and spends
+credits on every pipeline run.
 
 Exit code 1 with `report card overall score N is below the required minimum of 70`.
 
@@ -100,8 +80,19 @@ rather than scored zero. That distinction matters: zeroes would cap every card
 at 50 and read as *failure* when the truth is *absence*. `overall` is the
 weighted mean of the rails that were actually scored.
 
-To get all five, use `--upload` (agent-scored, needs auth and network) or the
-studio surface. The card's own `caveat` field says which mode produced it —
+**How you get the other three depends on your CLI version, so check it.**
+
+- **CLI 1.10.0 and earlier**: there is no way. The command has exactly four
+  options — `--json`, `--pretty`, `--min-score`, `--path` — all offline, two
+  rails, full stop. (Older docs mention `--upload`; that flag never existed.)
+- **Newer CLIs**: `forklaunch score` **uploads by default** and scores all five
+  with an agent, which needs auth and costs credits, and mints a shareable link.
+  `--offline` is the opt-out that gives you the old deterministic-only behaviour,
+  and `--no-share` keeps the upload but skips the link.
+
+Run `forklaunch score --help` before assuming which one you have — the default
+changed from free-and-offline to paid-and-online, which is not a difference to
+discover by accident. The card's own `caveat` field says which mode produced it;
 read it before quoting a number at anyone.
 
 ## Reading a card
@@ -170,10 +161,38 @@ forklaunch score
 Run the full agent-scored analyze at milestones, not every pass. See
 `/getting-started` for where each fits in the loop.
 
+## A 100 is not necessarily clean
+
+A freshly scaffolded app scores **100/100** while its own checklist shows an
+unmet item and its headline reports findings:
+
+```
+Enterprise Readiness  100/100
+linkjar: 7 deterministic finding(s) across 7 module(s)
+
+Compliance  100/100
+    + Field encryptor is registered
+    - Sensitive fields are classified     <- unmet, still 100
+```
+
+The arithmetic is right — `info` findings cost 0 points — but the number on its
+own is misleading, and it is the number a non-technical reader will take away.
+
+**Never report the score alone.** Report it with the unmet items:
+
+> "It scores 100 on the two areas the fast check can judge. One item is still
+> open — no fields have been marked as sensitive yet, which matters as soon as
+> we add anything personal."
+
+The same applies to using it as a baseline: a 100 at scaffold time is a 100 on an
+app with no data model, so a later drop is expected rather than alarming.
+
 ## Honest limits
 
 - **Absence of findings is not proof of readiness.** Eight checks, over two
   rails. A clean card means those eight passed.
+- **A perfect rail can still have unmet items.** See above — check `items` for
+  `unmet`, not just `score`.
 - **`frameworks` is empty from the CLI.** Deciding whether HIPAA or SOC 2
   applies to a domain is judgement; guessing would be worse than saying nothing.
 - **The overall score is renormalised.** A 100 from the CLI is "100 on the two
