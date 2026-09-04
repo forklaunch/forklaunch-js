@@ -1,5 +1,28 @@
 # @forklaunch/hyper-express
 
+## 1.2.43
+
+### Patch Changes
+
+- Release the framework set together so every package depends on the same
+  `@forklaunch/core`.
+
+  `core` was bumped to pin `@mikro-orm/*` exactly, but `express`, `hyper-express`,
+  `ws` and the `infrastructure-*` packages were still published against the
+  previous `core`. A consumer therefore resolved two copies of
+  `@forklaunch/core`, and through them two copies of `@mikro-orm/core` — which is
+  the duplication the `core` bump exists to remove. `EntityManager` and
+  `EntitySchema` carry a `#private` brand, so two copies are structurally
+  incompatible and the consumer stops compiling.
+
+  No source changes here; these packages move so the set stays internally
+  consistent.
+
+- Updated dependencies
+  - @forklaunch/common@1.2.26
+  - @forklaunch/validator@1.2.27
+  - @forklaunch/ws@1.2.41
+
 ## 1.2.42
 
 ### Patch Changes
