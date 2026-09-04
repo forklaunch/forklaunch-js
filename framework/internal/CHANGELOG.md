@@ -1,5 +1,32 @@
 # @forklaunch/internal
 
+## 1.2.28
+
+### Patch Changes
+
+- Pin `@mikro-orm/*` to an exact version instead of a caret range.
+
+  These three packages ranged on `^7.1.14` while `@forklaunch/interfaces-*` and
+  `@forklaunch/implementation-*-base` pinned `7.1.14` exactly. When MikroORM
+  published 7.1.15 the carets took it and the exact pins did not, so every
+  consumer resolved **two copies of `@mikro-orm/core`**.
+
+  That is not a harmless duplication. `EntityManager` and `EntitySchema` carry a
+  `#private` field, which TypeScript treats as a per-class brand, so the same
+  class coming from two copies is structurally incompatible and every generated
+  app stops compiling:
+
+      error TS2741: Property '#private' is missing in type
+        'PostgreSqlEntityManager<PostgreSqlDriver>' but required in 'EntityManager'
+      error TS2883: The inferred type of 'ci' cannot be named without a reference
+        to 'Connection' from '.bun/@mikro-orm+core@7.1.14/node_modules/@mikro-orm/core'
+
+  7.1.15 itself is not a breaking change — `EntityName` and `EntitySchema` are
+  byte-identical to 7.1.14. Only the duplication broke.
+
+  An exact pin here matches what the rest of the family already does, so a future
+  MikroORM patch cannot split the tree again by moving one half of it.
+
 ## 1.2.27
 
 ### Patch Changes
