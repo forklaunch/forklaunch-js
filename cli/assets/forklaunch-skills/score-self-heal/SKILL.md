@@ -17,8 +17,8 @@ is a work queue, not just a grade.
 Preferred — the CLI (renders the card; `--json` for machine reading):
 
 ```bash
-forklaunch score --path . --json > /tmp/score.json
-forklaunch score --path . --threshold 70   # exit 1 = does not pass
+forklaunch score --offline --path . --json > /tmp/score.json
+forklaunch score --offline --path . --min-score 70   # exit 1 = does not pass
 ```
 
 Fallback — the analyzer endpoint directly (studio/dev harness where the orchestrator can read

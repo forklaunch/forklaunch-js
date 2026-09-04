@@ -27,24 +27,38 @@ docker ps             # a container runtime that is actually running
 git config user.email # git identity set
 ```
 
-If any of those is missing, the setup walkthrough covers installing each one in
-plain language, including the accounts and permissions a non-technical user has
-to click through: **`SETUP.md`** in this pack. Send someone there rather than
-improvising install instructions — it is written for a reader who has never
-opened a terminal.
+If any of those is missing, go to **`/prereqs`**. That skill installs them for
+you — detection first, one confirmation, then per-platform installs (OrbStack
+rather than Docker Desktop on a Mac), and it names the failure modes that look
+like broken installs but aren't. **`SETUP.md`** in this pack is the same ground
+written for the user to follow by hand; send them there instead if they would
+rather do it themselves. Either way, do not improvise install instructions.
+
+Two of these are needed earlier than people expect: `forklaunch init` and
+`forklaunch release create` both shell out to `pnpm`, so Node is required to
+*build and ship*, not just to run locally. The container runtime is the one
+thing you can skip — the platform builds images itself, so it is only needed to
+run the app on this machine.
 
 ## The loop
 
 ```
+  0. READY     /prereqs — a machine that can build at all
   1. PLAN      conversation → agreed plan → SCORE it, close gaps by Q&A
   2. SCAFFOLD  forklaunch init application / init service
   3. PASS      generate or edit code
-  4. CHECK     forklaunch score --offline   ← after EVERY pass (free, ~1s)
+  4. CHECK     forklaunch score --offline   ← after EVERY pass
   5. repeat 3–4 until the plan is delivered
-  6. MILESTONE forklaunch score (uploads, agent-scored, shareable link), then deploy
+  6. MILESTONE full analyze, compared against the plan's score
+  7. REGISTER  forklaunch app create — placement, compliance, managed: once
+  8. SHIP      release create → deploy create → first-deploy cluster gate
 ```
 
 Steps 3 and 4 are one unit. Never run a pass without the check after it.
+
+Steps 7 and 8 are where the session starts costing money. They are covered
+below, and in `/deploy-mode` and `/cli` — do not stop at step 6 and leave the
+user holding a scored local app with no idea what comes next.
 
 ### 1. Plan — the studio planning surface, as a conversation
 
@@ -129,11 +143,24 @@ the cost of a wrong foundation is high, not for a first small app.
 ### 2. Scaffold
 
 `/cli` has every command and flag. **Supply all flags** — the CLI drops into an
-interactive prompt otherwise, which hangs a non-interactive session.
+interactive prompt otherwise, which hangs a non-interactive session. `--path` is
+one of them: `--help` calls it optional, but omitting it off a TTY dies with
+`Error: EOF`.
 
 Foundational choices (module preset, database, auth provider) are expensive to
 undo: changing one usually means re-scaffolding, not editing a file. State the
 choice and its consequence before you commit to it.
+
+**Then know where things landed.** The manifest sits at the app root; the
+workspace sits inside the modules path:
+
+```
+my-app/.forklaunch/manifest.toml    <- run `forklaunch` commands here
+my-app/src/modules/package.json     <- run `pnpm` commands here
+```
+
+`cd my-app && pnpm install` fails with `ERR_PNPM_NO_PKG_MANIFEST`, which reads
+like a broken scaffold and is not one. Application names must be letters only.
 
 ### 3–4. Pass, then check — every time
 
@@ -143,10 +170,10 @@ After **every** codegen or edit pass, run the deterministic analysis:
 forklaunch score --offline
 ```
 
-`--offline` matters here. Without it, `score` uploads the workspace and runs a
-metered agent analysis — minutes and credits per run, which is unaffordable
-per-pass and needs network and a login. Offline is read-only, free, and about a
-second, covering the compliance and security rails from static checks.
+Read-only, no network, no cost, about a second. **Pass `--offline`**: on newer
+CLIs the bare command uploads the workspace for agent scoring, which needs an
+account and spends credits — not what you want after every pass. It runs the same checks as
+`forklaunch compliance audit` and returns a scored card.
 
 Act on it immediately:
 
@@ -181,13 +208,14 @@ and time where the per-pass check costs neither.
 > just the two the fast check covers, and produces a shareable report card."
 
 ```bash
-forklaunch score --offline                 # fast, free, 2 rails — the per-pass check
-forklaunch score --offline --min-score 70  # same, as a CI gate (no credentials needed)
-forklaunch score                           # the real thing: 5 rails + a shareable link
+forklaunch score --offline                  # fast, deterministic, 2 rails, free
+forklaunch score --offline --min-score 70   # same, as a CI gate
+forklaunch score                            # all 5 rails, agent-scored (newer CLIs;
+                                            # needs auth, costs credits, mints a link)
 forklaunch compliance audit --risk-score --dpia   # full compliance surface
 ```
 
-The offline check scores **compliance** and **security** only. Governance,
+The fast check scores **compliance** and **security** only. Governance,
 scalability and observability need judgement a source read cannot supply and
 come back `pending` rather than zero. Quote the card's `caveat` whenever you
 report a number. `/score` covers reading one properly.
@@ -197,6 +225,123 @@ the same five rails, so they are directly comparable — that comparison is the
 whole reason for scoring the plan. A rail that the plan scored 80 and the built
 app scores 40 means the build drifted from what was agreed, and it is worth
 saying so explicitly rather than reporting the second number alone.
+
+### 7. Register — three decisions, made once
+
+Before anything can be deployed, the app needs a record on the platform. That
+record settles **three independent questions**, and the point of settling them
+here is that the first deploy then has nothing to ask:
+
+```bash
+forklaunch app create \
+  --name "Clinic Portal" \
+  --cluster-type dedicated \
+  --compliance-framework HIPAA
+```
+
+| flag | the question | why it is decided here |
+|---|---|---|
+| `--cluster-type` | **where** it runs | shared hosts are ~50× cheaper than a dedicated cluster |
+| `--compliance-framework` | **what rules** its data is under | it removes placements that cannot hold that data |
+| `--managed` | **how many** of it run | one shared app, or a private copy per customer |
+
+Ask all three in plain language, and connect them to what the user already told
+you in step 1:
+
+> "You said this holds patient records. That means it can't run on the cheapest
+> shared option — those hosts are shared with other companies. Your realistic
+> choices are your organization's own hosts (~$31/mo) or a cluster just for this
+> app (~$108/mo). Which fits?"
+
+> "Will every customer get their own private copy of this — their own database,
+> their own web address — or does everyone share one system? Most apps share
+> one. Per-customer copies is a different product shape, and it's much harder to
+> change later than to choose now."
+
+Leaving `--compliance-framework` off means **"not assessed"**, which is not the
+same as "none apply" — an undeclared app is unconstrained, and will be offered
+placements a regulated app should never take. So ask rather than defaulting.
+
+`app create` links the local checkout at the same time. If the application
+already exists, `forklaunch integrate --app <id>` links without creating.
+
+### 8. Ship
+
+```bash
+forklaunch release create --version 0.1.0 --local --yes
+forklaunch deploy create --release 0.1.0 --environment staging --region us-west-2 \
+  --node-env production
+```
+
+**`release create` needs the Node toolchain** — it runs `pnpm install` and
+exports OpenAPI specs. **Both flags matter off a TTY**: without `--local` or
+`--git` it prompts for a mode and dies with `Error: IO error: not a terminal`.
+
+**A release can fail too, for different reasons than a deploy** — a missing
+toolchain, the wrong directory, or a plan limit on component count or instance
+size. Nothing is deployed at that point, so there are no logs: read the error.
+`/investigator` has the table. A plan limit in particular is not something to
+engineer around — say which limit was hit rather than quietly dropping a
+component to fit under it.
+
+**If placement was not settled in step 7, the first deploy asks.** The platform
+answers with the three options and a monthly estimate for each, and refuses to
+proceed until one is chosen. On a terminal you get a menu; without one you get
+the flag to re-run with. Do not pick for the user — this is a real cost decision
+and it is the one moment they are guaranteed to see it.
+
+Read the estimates out loud, and say what the money buys: shared placements pack
+the app onto hosts alongside other workloads; a dedicated cluster gives it its
+own load balancer and network path. An option can also come back **unavailable**
+— no compute pool in that region, too few apps in the org to amortize a shared
+host, or the compliance frameworks the app declared. The reason is printed;
+relay it rather than just retrying.
+
+Before running `deploy create`, get explicit agreement on the exact release,
+environment and region. It provisions real infrastructure and starts costing
+money. `--dry-run` previews without deploying — but note it does **not** exercise
+the cluster gate, so a clean dry-run is not evidence that the deploy will go
+through unprompted.
+
+If the deploy is refused for plan limits — component count, monthly deploys,
+instance size — that is a billing wall, not a bug. Say which limit was hit and
+that changing it means upgrading the plan in the dashboard.
+
+### Then confirm it actually came up — this is not optional
+
+`deploy create` returning is not the same as the app running. **Always check,
+and go read the logs when it did not work.** Reporting a deploy as done without
+looking is the single easiest way to hand someone a broken app.
+
+```bash
+forklaunch deploy info -e <environment> -r <region>
+```
+
+Two failures need handling rather than reporting:
+
+- **Blocked before deploying, on missing environment variables.** The platform
+  lists each component and the keys it needs. On a terminal the CLI prompts; off
+  one it bails with "Deployment blocked due to missing environment variables".
+  Ask for it as data rather than reading the sentence — `forklaunch deploy info
+  -e <env> -r <region> --json` returns a `blocked` array and a `remediation`
+  list of the exact `config set` commands. Run them once you have the values
+  (ask the user; never invent one) — but never hand-set the platform-injected ones
+  (`DATABASE_URL`, `REDIS_URL`, `HMAC_SECRET_KEY`, `BETTER_AUTH_SECRET`,
+  `ENCRYPTION_KEY`, inter-service URLs); those come from the deploy itself.
+- **Deployed, then the container died.** The deploy reports success and nothing
+  is up. Read the logs, and **pass `--source cloudwatch`** — the default source
+  is the app's own telemetry, which a container that dies at startup never got
+  to send, so it will look misleadingly empty:
+
+  ```bash
+  forklaunch observe logs -e <environment> --deployment <id> --source cloudwatch
+  ```
+
+  A repeating startup trace is a crash loop; `Invalid API Key` means the value is
+  set but wrong.
+
+`/investigator` covers both in full, plus everything else that goes wrong after a
+deploy. Go there rather than guessing at logs.
 
 ## Which skill, when
 
@@ -212,14 +357,20 @@ saying so explicitly rather than reporting the second number alone.
 | iterating until a score passes | `/score-self-heal` |
 | building UI | `/frontend-patterns`, `/design-system`, `/tanstack` |
 | deploying a frontend | `/vercel-frontend` |
+| registering the app on the platform | `/deploy-mode`, then `/cli` |
+| first deploy, or choosing where it runs | `/deploy-mode` ← read before the first deploy |
+| selling one private copy per customer | `/managed-apps` |
+| connecting GitHub, Stripe, any provider key | `/integrations` |
+| a machine with nothing installed | `/prereqs` |
 | deploying or operating infra | `/infra`, `/platform-architecture` |
+| a release or deploy failed, or deployed and didn't come up | `/investigator` ← read the error, don't guess |
 | something is broken in a running app | `/investigator` ← start here for "it's down" |
 | auth, secrets, rate limits | `/security` |
 | logs, metrics, alerts | `/observability` |
 
-Two are worth reading unprompted: **`/compliance`** before defining any entity
-that holds personal data, and **`/investigator`** the moment something deployed
-misbehaves.
+Three are worth reading unprompted: **`/compliance`** before defining any entity
+that holds personal data, **`/deploy-mode`** before the first deploy, and
+**`/investigator`** the moment something deployed misbehaves.
 
 ## Keep the pack current
 
@@ -237,7 +388,8 @@ guessing at flags — the instructions you are holding may simply be stale.
 ## Close in plain language
 
 Every session ends with a summary a non-technical person could read: what you
-built, what the check said, what still needs their input. No paths, no stack
+built, what the check said, whether the deploy actually came up, and what still
+needs their input. No paths, no stack
 traces, no jargon — those belong above it. If something is uncertain or
 half-done, say so; "I couldn't confirm the deploy finished" beats silence.
 

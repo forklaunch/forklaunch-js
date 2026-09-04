@@ -220,7 +220,7 @@ Adds a shared library under `src/modules/<name>/` — no server, just exports.
 
 ### `forklaunch init module`
 
-Adds a preconfigured module (billing or IAM) to an existing application:
+Adds a preconfigured module (billing, IAM, or the relay callback listener) to an existing application:
 
 ```bash
 forklaunch init module <name> --path <app-path> --module <module-type> --database <db>
@@ -230,10 +230,17 @@ forklaunch init module <name> --path <app-path> --module <module-type> --databas
 # billing-stripe  — Stripe billing implementation
 # iam-base        — IAM authorization only (no auth provider)
 # iam-better-auth — Better Auth implementation for IAM
+# relay           — Managed-mode relay callback listener. Scaffolds a signed,
+#                   universal callback-acceptor endpoint into the app's iam
+#                   service: the platform relay forwards a verified provider
+#                   callback (Epic OAuth today; any per-instance event) to it,
+#                   and it replay-guards, dispatches, and hands back a session.
+#                   Injects into iam, so no -d/--database. See the /managed-relay skill.
 
 # Example:
 forklaunch init module billing --path ./src/modules --module billing-stripe --database postgresql
 forklaunch init module iam --path ./src/modules --module iam-better-auth --database postgresql
+forklaunch init module -m relay -p ./src/modules   # adds the relay callback listener to iam
 ```
 
 **`iam-base` has no login or session flow at all** — it's user/role/permission CRUD, not
@@ -329,11 +336,34 @@ forklaunch init app <app_name>
 --test-framework <type>  # vitest, jest
 --formatter <type>       # prettier, biome
 --linter <type>          # eslint, oxlint
---modules <module>       # billing-base, billing-stripe, iam-base, iam-better-auth (can repeat -m)
+--modules <module>       # billing-base, billing-stripe, iam-base, iam-better-auth,
+                         # ecommerce-stripe, messaging-base, messaging-twilio, cac-base
+--path <path>            # REQUIRED in practice — see below
+--modules-path <path>    # src/modules | modules
 
 # Example:
-forklaunch init app my-platform --runtime bun --http-framework express
+forklaunch init application my-platform --path . --modules-path src/modules \
+  --runtime bun --http-framework express ...
 ```
+
+**`--path` is effectively required.** `--help` calls it optional because the CLI
+will prompt for it — which means that off a TTY, omitting it dies with
+`Error: EOF`. Always pass it.
+
+**Know where the workspace lands.** The manifest goes to the app root; the
+pnpm/bun workspace goes **inside** `--modules-path`:
+
+```
+my-app/.forklaunch/manifest.toml       <- app root, and where forklaunch commands run
+my-app/src/modules/package.json        <- workspace root, and where pnpm commands run
+my-app/src/modules/pnpm-workspace.yaml
+my-app/src/modules/<service>/          <- each module
+```
+
+So `cd my-app && pnpm install` fails with `ERR_PNPM_NO_PKG_MANIFEST`. Run
+`forklaunch` commands from the app root and `pnpm` commands from
+`<app>/<modules-path>`. Application names must be letters only — no digits, no
+spaces.
 
 #### Initialize Service
 
@@ -611,6 +641,7 @@ forklaunch deploy create --release <version> --environment <name> --region <regi
 
 # There is no --auto-approve; a missing required env var (e.g. ENCRYPTION_KEY) can still drop the
 # command into a blocking interactive prompt on a real TTY — see the ENCRYPTION_KEY notes below.
+# --node-env <production|development> avoids one such prompt on a first deploy.
 
 # Examples:
 forklaunch deploy create --release 1.2.0 --environment staging --region us-east-1
@@ -622,9 +653,50 @@ forklaunch deploy logs -l error          # only the error lines — start here o
 forklaunch deploy destroy ...            # tear down application infrastructure
 ```
 
+**The first deploy asks where the app should run.** The first deployment of an
+application to a given environment × region is gated: the platform answers `428`
+with the three placements and a monthly cost estimate for each, and the deploy
+does not proceed until one is chosen.
+
+```
+First deploy — choose a cluster
+  • Platform shared cluster       ~$2.00/mo
+  • Organization shared cluster   ~$31.00/mo
+  • Dedicated cluster             ~$108.00/mo
+```
+
+- On a terminal, the CLI prompts. Without one it exits telling you the flag to
+  re-run with — so **in a non-interactive session, pass `--cluster-type`**, or
+  settle it earlier with `forklaunch app create --cluster-type`.
+- A placement chosen at `app create` satisfies the gate; it is not asked twice.
+- Options can come back **unavailable** with a reason: no org compute pool in the
+  region, fewer than two apps in the org to amortize a shared host, or the app's
+  declared compliance frameworks forbidding cross-tenant compute.
+- The estimates are compute only, per month. They are the honest reason to ask —
+  the spread between the cheapest and the most isolated option is roughly 50×.
+
+Explain the tradeoff before the user picks. Shared placements are cheaper because
+the app's containers share hosts; a dedicated cluster gives it its own load
+balancer and network path. See `/deploy-mode`, which covers this decision and the
+single-app-vs-managed one together.
+
+**After any deploy, check it — and read the logs when it failed.**
+
+```bash
+forklaunch deploy info -e <env> -r <region>
+forklaunch observe logs -e <env> --deployment <id> --source cloudwatch --limit 200
+```
+
 `deploy logs` reads the deployment's own log (what Pulumi and the container build
 emitted while deploying). For the logs a running service emits afterwards, use
 `forklaunch observe logs`.
+
+`--source cloudwatch` is not optional for a startup failure: the default `otel`
+source only carries what the app's telemetry pipeline flushed, and a container
+that dies before it starts flushes nothing — so the logs look empty when they are
+not. Missing environment variables are the most common cause, in two shapes (a
+pre-flight block that names the keys, and a runtime crash loop). `/investigator`
+covers both.
 
 ### 5. Environment Commands (`environment`)
 
@@ -657,52 +729,146 @@ forklaunch environment show production
 
 Create and manage application releases.
 
+`release` has four subcommands: `create`, `info`, `list`, `eject`. There is no
+`release show` or `release rollback` — rollback lives on
+`forklaunch deploy rollback`. (`release list` is recent; older CLIs have only
+the first two and `eject`. Check `forklaunch release --help` if unsure.)
+
 ```bash
-# Create release from current state
-forklaunch release create
+forklaunch release create --version <version> --local --yes
 
 # Options:
---version <version>    # Release version (semantic versioning)
---message "Release message"
---git-ref <ref>       # Git commit/branch/tag
+-v, --version <version>   # REQUIRED. Release version, e.g. 1.0.0 (aliases: -r, --release)
+-n, --notes <notes>       # Release notes (optional)
+    --local               # Package local code and upload to S3
+    --git                 # Use the git-based release flow
+    --skip-sync           # Skip syncing projects with the manifest first
+    --dry-run             # Simulate without uploading
+-y, --yes                 # Skip confirmation prompts
+-p, --path <base_path>
 
-# List releases
-forklaunch release list
-
-# Show release details
-forklaunch release show <version>
-
-# Rollback to previous release
-forklaunch release rollback <version>
-
-# Examples:
-forklaunch release create --version 1.2.3 --message "Add user authentication"
-forklaunch release list
-forklaunch release show 1.2.3
-forklaunch release rollback 1.2.2
+forklaunch release info                  # details for a release
+forklaunch release list                  # releases for this application
+forklaunch release eject                 # emit the Pulumi IaC a release would deploy
 ```
+
+**Non-interactive callers must pass a mode and `--yes`.** With neither `--local`
+nor `--git`, the command prompts for the release mode and dies with
+`Error: IO error: not a terminal` off a TTY. The working form is:
+
+```bash
+forklaunch release create --version 0.1.0 --local --yes
+```
+
+`release create` **runs `pnpm install` and exports OpenAPI specs via `tsx`**, so
+it needs the Node toolchain present even though the CLI itself does not. See
+`/prereqs`.
 
 ### 7. Integrate Commands (`integrate`)
 
-Integrate with external services and tools.
+`integrate` links a **local checkout to an existing platform application**. That is
+its entire job — it takes no service name.
 
 ```bash
-forklaunch integrate <service>
+forklaunch integrate --app <platform-application-id>
 
-# Supported integrations:
-# - github        # GitHub repository integration
-# - stripe        # Stripe billing
-# - aws           # AWS services
-# - datadog       # Datadog monitoring
-# - sentry        # Sentry error tracking
+# Options:
+-a, --app <app>         # Platform application ID to link to (REQUIRED)
+-p, --path <base_path>  # Path to application root (optional)
+```
 
-# Options vary by service
+It writes `platform_application_id` and `platform_organization_id` into
+`.forklaunch/manifest.toml`. `forklaunch app create` runs this step for you, so
+`integrate` on its own is for linking to an application that already exists —
+one created in the dashboard, or created earlier with `--no-integrate`.
+
+**There is no `integrate github`, `integrate stripe`, `integrate aws`,
+`integrate datadog` or `integrate sentry`.** Third-party providers go two other
+ways:
+
+- **GitHub** — the `forklaunch github` family (section 7a below).
+- **Everything else** — credentials are environment variables, set with
+  `forklaunch config set`. See `/integrations` for the full runbook, including
+  the exact Stripe variable names.
+
+### 7a. GitHub Commands (`github`)
+
+Connect an application to a repository and configure push-to-deploy.
+
+```bash
+forklaunch github status      # installation + this app's repo connection
+forklaunch github install     # prints an installation link — a human must open it
+forklaunch github connect --repo <url> [options]
+forklaunch github disconnect
+
+# connect options:
+-r, --repo <url>                       # REQUIRED, e.g. https://github.com/org/repo
+    --default-branch <branch>          # default: main
+    --auto-deploy                      # release + deploy on every push
+    --release-environment <env>        # environment autodeploys target
+    --region <region>                  # region autodeploys target
+    --branch-mapping <BRANCH=ENV>      # repeatable
+-p, --path <base_path>
 
 # Examples:
-forklaunch integrate github --repo owner/repo-name
-forklaunch integrate stripe --api-key sk_test_...
-forklaunch integrate aws --access-key-id ... --secret-access-key ...
+forklaunch github connect --repo https://github.com/acme/portal --default-branch main
+forklaunch github connect --repo https://github.com/acme/portal --default-branch main \
+  --auto-deploy --release-environment staging --region us-west-2
 ```
+
+`install` cannot complete on its own — GitHub requires a human to grant the App
+access. Print the link, wait, then confirm with `status`.
+
+`--auto-deploy` spends money on every push with no further confirmation. Get
+explicit agreement before enabling it on a production branch.
+
+### 7b. Application Commands (`app`)
+
+Create and inspect the **platform** application record — the control-plane object
+your local checkout links to.
+
+```bash
+forklaunch app create [options]     # create + integrate in one step
+forklaunch app services             # list services and workers
+forklaunch app domain               # inspect the custom domain
+forklaunch app resize ...           # resize components (cuts a release + deploys)
+forklaunch app route <id>           # route details
+forklaunch app controller <id>      # controller details
+```
+
+`app create` settles **three independent decisions** at registration, so the
+first deploy has nothing to ask:
+
+```bash
+forklaunch app create \
+  --name "Clinic Portal" \
+  --description "Patient records for dental practices" \
+  --cluster-type dedicated \
+  --compliance-framework HIPAA \
+  --managed
+
+# Options:
+-n, --name <name>                       # defaults to app_name from manifest.toml
+-D, --description <description>
+    --cluster-type <type>               # WHERE it runs: platform-shared | org-shared | dedicated
+    --compliance-framework <framework>  # WHAT RULES its data is under; repeatable
+                                        # HIPAA | PCI-DSS | "SOC 2" | GDPR | CCPA
+    --managed                           # HOW MANY run: one instance per customer
+    --no-integrate                      # create the platform app without linking this checkout
+-p, --path <base_path>
+```
+
+The three are orthogonal — a managed app still has a placement and still declares
+its frameworks. They interact in one direction only: **a compliance-scoped app
+cannot run on cross-tenant compute**, so declaring HIPAA, SOC 2 or PCI-DSS
+removes `platform-shared` from the available placements.
+
+Omitting `--cluster-type` is fine — the first deploy will ask instead. Omitting
+`--compliance-framework` means "not assessed", which is *not* the same as "none
+apply": an undeclared app is unconstrained. Ask the user rather than leaving it
+blank by default.
+
+There is no `app delete`. Removing an application record is a dashboard action.
 
 ### 8. OpenAPI Commands (`openapi`)
 
@@ -1202,6 +1368,66 @@ cache = "redis"
 [projects.resources]
 cache = "bullmq"
 ```
+
+**Where a component runs — and who decides.**
+
+"Hosting type" means two different things, and conflating them is the fastest way
+to a wrong answer. Both end up in the same `hostingType` column:
+
+| you mean | vocabulary | who decides |
+|---|---|---|
+| which **substrate** the app sits on | `platform-shared` / `org-shared` / `dedicated` — a **cluster type** | the control plane, at `app create` or first deploy |
+| which **compute host** one component needs | `ecs-fargate` / `ecs-ec2` — a **hosting type** | the manifest seeds it; the control plane owns it after |
+
+**The control plane is authoritative.** Cluster placement is recorded on the
+application record — set with `forklaunch app create --cluster-type`, or chosen at
+the first deploy to an environment/region — and it maps onto every component's
+hosting row. The local manifest does not override it and cannot fight it on each
+deploy.
+
+**The manifest seeds the initial value.** A component's `[projects.metadata]`
+entry is read **when the platform first learns about that component**, and then
+the control plane owns it:
+
+```toml
+[projects.metadata]
+type = "bullmq"
+hostingType = "ecs-ec2"   # optional; seeds the component's initial hosting type.
+                          # Absent means "inherit the app's cluster placement".
+privileged = true         # optional; only valid with "ecs-ec2" (Fargate forbids
+                          # privileged mode). Needed when the container must build
+                          # images or run a sandboxed build (Docker/nsjail).
+```
+
+- `hostingType` (alias `hosting_type`): `"ecs-fargate"` or `"ecs-ec2"`. Use
+  `ecs-ec2` for a worker that must build container images locally — the same
+  reason the deployment-agent-worker is EC2-hosted.
+- `privileged`: boolean, absent means false, only honored on `ecs-ec2`.
+
+Editing the value in `manifest.toml` **after** the platform already knows the
+component does nothing — the seed has already been taken. Change it with the
+knob instead.
+
+**Changing placement after the fact.** A placement change is *recorded* now and
+*enacted by the next deployment* — nothing moves the moment you change it.
+
+- Before the first deploy, the record is all there is: the change is free and the
+  first deploy places the app there.
+- After the app is deployed, recording the change needs `--confirm-downtime`,
+  because the next deployment will copy its data to the new substrate and cut
+  over. That deployment does not deploy your release directly; it hands off to
+  the migration, which redeploys on the target when the copy completes.
+
+Either way it is one command against the control plane, never a manifest edit:
+
+```bash
+forklaunch app hosting                             # current placement, and whether a change is free
+forklaunch app hosting --cluster-type dedicated \
+  --region us-west-2 [--confirm-downtime]          # record the change
+```
+
+None of this is a Pulumi or generator change: the pulumi-generator already
+branches on the resolved value.
 
 ### 8. Testing Patterns
 
