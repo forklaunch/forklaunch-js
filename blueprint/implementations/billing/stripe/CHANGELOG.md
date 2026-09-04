@@ -1,5 +1,38 @@
 # @forklaunch/implementation-billing-stripe
 
+## 1.2.5
+
+### Patch Changes
+
+- Pin `@mikro-orm/*` to an exact 7.1.15 so only one copy of `@mikro-orm/core`
+  resolves in a consumer's tree.
+
+  `interfaces-*` and `implementation-*-base` pinned `@mikro-orm/core` at exactly
+  `7.1.14`, while `@forklaunch/core`, `internal` and `testing` ranged on
+  `^7.1.14`. When MikroORM published 7.1.15 the carets took it and these exact
+  pins did not, so every generated app installed **two copies of
+  `@mikro-orm/core`** and stopped compiling:
+
+      error TS2741: Property '#private' is missing in type
+        'PostgreSqlEntityManager<PostgreSqlDriver>' but required in 'EntityManager'
+      error TS2345: Argument of type 'EntitySchemaWithMeta<"Plan", ...>' is not
+        assignable to parameter of type 'EntityName<any>'
+
+  `EntityManager` and `EntitySchema` carry a `#private` field, which TypeScript
+  treats as a per-class brand, so the same class from two copies is structurally
+  incompatible. Both errors are duplicated-package reports rather than real type
+  errors -- `EntityName` and `EntitySchema` are byte-identical between 7.1.14 and
+  7.1.15, and nothing in the source needed to change.
+
+  Every `@mikro-orm/*` spec across framework and blueprint is now the same exact
+  version, so a future MikroORM patch cannot split the tree by moving one half of
+  it. Released together with `@forklaunch/core` 1.5.18, `internal` 1.2.28 and
+  `testing` 1.2.31, which carry the same pin.
+
+- Updated dependencies
+  - @forklaunch/implementation-billing-base@1.0.35
+  - @forklaunch/interfaces-billing@1.0.34
+
 ## 1.2.4
 
 ### Patch Changes

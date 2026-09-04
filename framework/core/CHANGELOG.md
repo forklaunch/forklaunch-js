@@ -1,5 +1,20 @@
 # @forklaunch/core
 
+## 1.5.19
+
+### Patch Changes
+
+- Re-emit the intra-framework dependency ranges so `core` and `internal` track
+  the rest of the set.
+
+  Both declare `@forklaunch/common` and `@forklaunch/validator` as `workspace:^`,
+  which is frozen into a concrete range at publish time. They were published one
+  wave ahead of `common` and `validator`, so they went out pinned to the previous
+  pair. A consumer then resolved two copies of each — and duplicated packages are
+  the whole class of bug this release exists to remove.
+
+  No source changes; this republishes them against the current set.
+
 ## 1.5.18
 
 ### Patch Changes

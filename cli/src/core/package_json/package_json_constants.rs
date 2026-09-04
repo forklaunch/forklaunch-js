@@ -230,68 +230,68 @@ pub(crate) const APP_MONITORING_VERSION: &str = "workspace:*";
 // @forklaunch/bunrun
 pub(crate) const BUNRUN_VERSION: &str = "~0.0.2";
 // @forklaunch/common
-pub(crate) const COMMON_VERSION: &str = "~1.2.25";
+pub(crate) const COMMON_VERSION: &str = "~1.2.26";
 // @forklaunch/core
-pub(crate) const CORE_VERSION: &str = "~1.5.17";
+pub(crate) const CORE_VERSION: &str = "~1.5.19";
 // @forklaunch/express
-pub(crate) const EXPRESS_VERSION: &str = "~1.2.42";
+pub(crate) const EXPRESS_VERSION: &str = "~1.2.43";
 // @forklaunch/hyper-express
-pub(crate) const HYPER_EXPRESS_VERSION: &str = "~1.2.42";
+pub(crate) const HYPER_EXPRESS_VERSION: &str = "~1.2.43";
 // uWebSockets.js — a peer of @forklaunch/hyper-express rather than one of its
 // dependencies, so generated projects must declare it themselves. pnpm 11
 // blocks git-resolved SUBdependencies (ERR_PNPM_EXOTIC_SUBDEP); a direct one is
 // fine, and uWebSockets.js ships only from GitHub.
 pub(crate) const UWEBSOCKETS_VERSION: &str = "github:uNetworking/uWebSockets.js#v20.52.0";
 // @forklaunch/implementation-billing-base
-pub(crate) const BILLING_BASE_VERSION: &str = "~1.0.34";
+pub(crate) const BILLING_BASE_VERSION: &str = "~1.0.35";
 // @forklaunch/implementation-billing-stripe
-pub(crate) const BILLING_STRIPE_VERSION: &str = "~1.2.4";
+pub(crate) const BILLING_STRIPE_VERSION: &str = "~1.2.5";
 // @forklaunch/implementation-ecommerce-base
-pub(crate) const ECOMMERCE_BASE_VERSION: &str = "~1.0.7";
+pub(crate) const ECOMMERCE_BASE_VERSION: &str = "~1.0.8";
 // @forklaunch/implementation-ecommerce-paypal
-pub(crate) const ECOMMERCE_PAYPAL_VERSION: &str = "~1.0.2";
+pub(crate) const ECOMMERCE_PAYPAL_VERSION: &str = "~1.0.3";
 // @forklaunch/implementation-ecommerce-stripe
-pub(crate) const ECOMMERCE_STRIPE_VERSION: &str = "~1.0.2";
+pub(crate) const ECOMMERCE_STRIPE_VERSION: &str = "~1.0.3";
 // @forklaunch/implementation-iam-base
-pub(crate) const IAM_BASE_VERSION: &str = "~1.0.34";
+pub(crate) const IAM_BASE_VERSION: &str = "~1.0.35";
 // @forklaunch/implementation-messaging-base
-pub(crate) const MESSAGING_BASE_VERSION: &str = "~1.1.1";
+pub(crate) const MESSAGING_BASE_VERSION: &str = "~1.1.2";
 // @forklaunch/implementation-messaging-twilio
-pub(crate) const MESSAGING_TWILIO_VERSION: &str = "~1.1.1";
+pub(crate) const MESSAGING_TWILIO_VERSION: &str = "~1.1.2";
 // @forklaunch/implementation-cac-base
-pub(crate) const CAC_BASE_VERSION: &str = "~0.2.1";
+pub(crate) const CAC_BASE_VERSION: &str = "~0.2.2";
 // @forklaunch/implementation-worker-bullmq
 pub(crate) const WORKER_BULLMQ_VERSION: &str = "~1.0.33";
 // @forklaunch/implementation-worker-redis
 pub(crate) const WORKER_REDIS_VERSION: &str = "~1.0.33";
 // @forklaunch/implementation-worker-database
-pub(crate) const WORKER_DATABASE_VERSION: &str = "~1.0.34";
+pub(crate) const WORKER_DATABASE_VERSION: &str = "~1.0.35";
 // @forklaunch/implementation-worker-kafka
 pub(crate) const WORKER_KAFKA_VERSION: &str = "~1.0.33";
 // @forklaunch/infrastructure-redis
-pub(crate) const INFRASTRUCTURE_REDIS_VERSION: &str = "~1.4.12";
+pub(crate) const INFRASTRUCTURE_REDIS_VERSION: &str = "~1.4.13";
 // @forklaunch/infrastructure-s3
-pub(crate) const INFRASTRUCTURE_S3_VERSION: &str = "~1.4.12";
+pub(crate) const INFRASTRUCTURE_S3_VERSION: &str = "~1.4.13";
 // @forklaunch/interfaces-billing
-pub(crate) const BILLING_INTERFACES_VERSION: &str = "~1.0.33";
+pub(crate) const BILLING_INTERFACES_VERSION: &str = "~1.0.34";
 // @forklaunch/interfaces-ecommerce
-pub(crate) const ECOMMERCE_INTERFACES_VERSION: &str = "~1.0.7";
+pub(crate) const ECOMMERCE_INTERFACES_VERSION: &str = "~1.0.8";
 // @forklaunch/interfaces-iam
-pub(crate) const IAM_INTERFACES_VERSION: &str = "~1.0.32";
+pub(crate) const IAM_INTERFACES_VERSION: &str = "~1.0.33";
 // @forklaunch/interfaces-messaging
-pub(crate) const MESSAGING_INTERFACES_VERSION: &str = "~1.1.1";
+pub(crate) const MESSAGING_INTERFACES_VERSION: &str = "~1.1.2";
 // @forklaunch/interfaces-cac
-pub(crate) const CAC_INTERFACES_VERSION: &str = "~0.2.1";
+pub(crate) const CAC_INTERFACES_VERSION: &str = "~0.2.2";
 // @forklaunch/interfaces-worker
 pub(crate) const WORKER_INTERFACES_VERSION: &str = "~1.0.31";
 // @forklaunch/internal
-pub(crate) const INTERNAL_VERSION: &str = "~1.2.27";
+pub(crate) const INTERNAL_VERSION: &str = "~1.2.29";
 // @forklaunch/testing
-pub(crate) const TESTING_VERSION: &str = "~1.2.30";
+pub(crate) const TESTING_VERSION: &str = "~1.2.31";
 // @forklaunch/universal-sdk
-pub(crate) const UNIVERSAL_SDK_VERSION: &str = "~1.2.26";
+pub(crate) const UNIVERSAL_SDK_VERSION: &str = "~1.2.27";
 // @forklaunch/validator
-pub(crate) const VALIDATOR_VERSION: &str = "~1.2.26";
+pub(crate) const VALIDATOR_VERSION: &str = "~1.2.27";
 // @mikro-orm/core
 pub(crate) const MIKRO_ORM_CORE_VERSION: &str = "7.1.15";
 // @mikro-orm/migrations

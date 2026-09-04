@@ -39,13 +39,13 @@
   "dependencies": {
     "@forklaunch/blueprint-core": "workspace:^",
     "@forklaunch/blueprint-monitoring": "workspace:^",
-    "@forklaunch/common": "^1.2.25",
-    "@forklaunch/core": "^1.5.17",
-    "@forklaunch/express": "^1.2.42",
-    "@forklaunch/hyper-express": "^1.2.42",
+    "@forklaunch/common": "^1.2.26",
+    "@forklaunch/core": "^1.5.19",
+    "@forklaunch/express": "^1.2.43",
+    "@forklaunch/hyper-express": "^1.2.43",
     "@forklaunch/implementation-cac-base": "workspace:^",
     "@forklaunch/interfaces-cac": "workspace:^",
-    "@forklaunch/validator": "^1.2.26",
+    "@forklaunch/validator": "^1.2.27",
     "@mikro-orm/core": "7.1.15",
     "@mikro-orm/migrations": "7.1.15",
     "@mikro-orm/mongodb": "7.1.15",
@@ -63,7 +63,7 @@
     "zod": "^4.5.4"
   },
   "devDependencies": {
-    "@forklaunch/testing": "^1.2.30",
+    "@forklaunch/testing": "^1.2.31",
     "@mikro-orm/cli": "7.1.15",
     "@types/express": "^5.0.6",
     "@types/express-serve-static-core": "^5.1.3",
