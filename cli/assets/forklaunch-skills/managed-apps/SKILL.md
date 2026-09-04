@@ -237,7 +237,18 @@ the code in dev when no Twilio creds are configured.)
 
 ```bash
 forklaunch managed instance create --template clinic-portal --region us-west-2
+# override the compute tier (default is pico):
+forklaunch managed instance create --template clinic-portal --region us-west-2 --instance-size micro
 ```
+
+**Compute size.** Managed instances are usually tiny single-tenant apps, so they
+default to the **`pico`** tier (~0.1 vCPU / 256 MB per service) on the shared-org
+EC2 pool — much smaller than the platform-wide `micro` default. `pico` is
+EC2-only (below AWS Fargate's 256-CPU floor), which is exactly where managed
+instances run. Pass `--instance-size <pico|nano|micro|small|…>` to pin an
+instance higher; a template may also opt an individual service higher in its
+manifest (the per-service size wins). The size is stamped onto every service in
+the deployable manifest at provision time.
 
 The template must be **published** and have a **built** version. The call
 returns immediately with the instance in `provisioning`; the actual work runs in
