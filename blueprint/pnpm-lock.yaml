@@ -121,26 +121,26 @@ importers:
         specifier: ^1.2.26
         version: 1.2.26
       '@mikro-orm/core':
-        specifier: 7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
       '@mikro-orm/migrations':
-        specifier: 7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/mongodb':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/mysql':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)(@types/node@26.4.0)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)(@types/node@26.4.0)
       '@mikro-orm/postgresql':
-        specifier: 7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/seeder':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/sqlite':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@sinclair/typebox':
         specifier: ^0.34.52
         version: 0.34.52
@@ -170,8 +170,8 @@ importers:
         specifier: ^1.2.30
         version: 1.2.30(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.4.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.4.0)(esbuild@0.27.7)(tsx@4.23.13)(yaml@2.9.0)))
       '@mikro-orm/cli':
-        specifier: ^7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
       '@types/express':
         specifier: ^5.0.6
         version: 5.0.6
@@ -245,26 +245,26 @@ importers:
         specifier: ^1.2.26
         version: 1.2.26
       '@mikro-orm/core':
-        specifier: 7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
       '@mikro-orm/migrations':
-        specifier: 7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/mongodb':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/mysql':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)(@types/node@26.4.0)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)(@types/node@26.4.0)
       '@mikro-orm/postgresql':
-        specifier: 7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/seeder':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/sqlite':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@sinclair/typebox':
         specifier: ^0.34.52
         version: 0.34.52
@@ -297,8 +297,8 @@ importers:
         specifier: ^1.2.30
         version: 1.2.30(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.4.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.4.0)(esbuild@0.27.7)(tsx@4.23.13)(yaml@2.9.0)))
       '@mikro-orm/cli':
-        specifier: ^7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
       '@types/express':
         specifier: ^5.0.6
         version: 5.0.6
@@ -366,26 +366,26 @@ importers:
         specifier: ^1.2.26
         version: 1.2.26
       '@mikro-orm/core':
-        specifier: ^7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
       '@mikro-orm/migrations':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/mongodb':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/mysql':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)(@types/node@26.4.0)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)(@types/node@26.4.0)
       '@mikro-orm/postgresql':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/seeder':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/sqlite':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@sinclair/typebox':
         specifier: ^0.34.52
         version: 0.34.52
@@ -415,8 +415,8 @@ importers:
         specifier: ^1.2.30
         version: 1.2.30(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.4.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.4.0)(esbuild@0.27.7)(tsx@4.23.13)(yaml@2.9.0)))
       '@mikro-orm/cli':
-        specifier: ^7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
       '@types/express':
         specifier: ^5.0.6
         version: 5.0.6
@@ -461,7 +461,7 @@ importers:
         version: 1.2.26
       better-auth:
         specifier: ^1.7.2
-        version: 1.7.2(@opentelemetry/api@1.9.1)(mongodb@7.6.0)(mysql2@3.24.2(@types/node@26.4.0))(pg@8.23.0)(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.4.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.4.0)(esbuild@0.27.7)(tsx@4.23.13)(yaml@2.9.0)))
+        version: 1.7.2(@opentelemetry/api@1.9.1)(mongodb@7.6.0)(mysql2@3.24.3(@types/node@26.4.0))(pg@8.23.0)(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.4.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.4.0)(esbuild@0.27.7)(tsx@4.23.13)(yaml@2.9.0)))
     devDependencies:
       '@forklaunch/blueprint-billing-base':
         specifier: workspace:^
@@ -506,11 +506,11 @@ importers:
         specifier: ^1.2.26
         version: 1.2.26
       '@mikro-orm/core':
-        specifier: 7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
       '@mikro-orm/mongodb':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@sinclair/typebox':
         specifier: ^0.34.52
         version: 0.34.52
@@ -585,26 +585,26 @@ importers:
         specifier: ^1.2.26
         version: 1.2.26
       '@mikro-orm/core':
-        specifier: 7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
       '@mikro-orm/migrations':
-        specifier: 7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/mongodb':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/mysql':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)(@types/node@26.4.0)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)(@types/node@26.4.0)
       '@mikro-orm/postgresql':
-        specifier: 7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/seeder':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/sqlite':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@sinclair/typebox':
         specifier: ^0.34.52
         version: 0.34.52
@@ -637,8 +637,8 @@ importers:
         specifier: ^1.2.30
         version: 1.2.30(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.4.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.4.0)(esbuild@0.27.7)(tsx@4.23.13)(yaml@2.9.0)))
       '@mikro-orm/cli':
-        specifier: ^7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
       '@types/express':
         specifier: ^5.0.6
         version: 5.0.6
@@ -700,26 +700,26 @@ importers:
         specifier: ^1.2.26
         version: 1.2.26
       '@mikro-orm/core':
-        specifier: 7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
       '@mikro-orm/migrations':
-        specifier: 7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/mongodb':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/mysql':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)(@types/node@26.4.0)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)(@types/node@26.4.0)
       '@mikro-orm/postgresql':
-        specifier: 7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/seeder':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/sqlite':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@sinclair/typebox':
         specifier: ^0.34.52
         version: 0.34.52
@@ -749,8 +749,8 @@ importers:
         specifier: ^1.2.30
         version: 1.2.30(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.4.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.4.0)(esbuild@0.27.7)(tsx@4.23.13)(yaml@2.9.0)))
       '@mikro-orm/cli':
-        specifier: ^7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
       '@types/express':
         specifier: ^5.0.6
         version: 5.0.6
@@ -786,7 +786,7 @@ importers:
     dependencies:
       '@forklaunch/better-auth-mikro-orm-fork':
         specifier: ^0.5.9
-        version: 0.5.9(@mikro-orm/core@7.1.14)(better-auth@1.7.2(@opentelemetry/api@1.9.1)(mongodb@7.6.0)(mysql2@3.24.2(@types/node@26.4.0))(pg@8.23.0)(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.4.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.4.0)(esbuild@0.27.7)(tsx@4.23.13)(yaml@2.9.0))))
+        version: 0.5.9(@mikro-orm/core@7.1.15)(better-auth@1.7.2(@opentelemetry/api@1.9.1)(mongodb@7.6.0)(mysql2@3.24.3(@types/node@26.4.0))(pg@8.23.0)(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.4.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.4.0)(esbuild@0.27.7)(tsx@4.23.13)(yaml@2.9.0))))
       '@forklaunch/blueprint-core':
         specifier: workspace:^
         version: link:../core
@@ -806,26 +806,26 @@ importers:
         specifier: workspace:^
         version: link:../interfaces/iam
       '@mikro-orm/core':
-        specifier: 7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
       '@mikro-orm/migrations':
-        specifier: 7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/mongodb':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/mysql':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)(@types/node@26.4.0)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)(@types/node@26.4.0)
       '@mikro-orm/postgresql':
-        specifier: 7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/seeder':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/sqlite':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@opentelemetry/api':
         specifier: ^1.9.1
         version: 1.9.1
@@ -834,7 +834,7 @@ importers:
         version: 0.34.52
       better-auth:
         specifier: ^1.7.2
-        version: 1.7.2(@opentelemetry/api@1.9.1)(mongodb@7.6.0)(mysql2@3.24.2(@types/node@26.4.0))(pg@8.23.0)(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.4.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.4.0)(esbuild@0.27.7)(tsx@4.23.13)(yaml@2.9.0)))
+        version: 1.7.2(@opentelemetry/api@1.9.1)(mongodb@7.6.0)(mysql2@3.24.3(@types/node@26.4.0))(pg@8.23.0)(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.4.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.4.0)(esbuild@0.27.7)(tsx@4.23.13)(yaml@2.9.0)))
       dotenv:
         specifier: ^17.4.2
         version: 17.4.2
@@ -855,8 +855,8 @@ importers:
         specifier: ^1.2.30
         version: 1.2.30(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.4.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.4.0)(esbuild@0.27.7)(tsx@4.23.13)(yaml@2.9.0)))
       '@mikro-orm/cli':
-        specifier: ^7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
       '@types/express':
         specifier: ^5.0.6
         version: 5.0.6
@@ -906,8 +906,8 @@ importers:
         specifier: ^1.2.26
         version: 1.2.26
       '@mikro-orm/core':
-        specifier: 7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
       '@sinclair/typebox':
         specifier: ^0.34.52
         version: 0.34.52
@@ -952,8 +952,8 @@ importers:
         specifier: ^1.2.26
         version: 1.2.26
       '@mikro-orm/core':
-        specifier: 7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
       '@sinclair/typebox':
         specifier: ^0.34.52
         version: 0.34.52
@@ -968,8 +968,8 @@ importers:
         version: 4.5.4
     devDependencies:
       '@mikro-orm/sqlite':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       depcheck:
         specifier: ^1.4.7
         version: 1.4.7
@@ -1004,8 +1004,8 @@ importers:
         specifier: ^1.2.26
         version: 1.2.26
       '@mikro-orm/core':
-        specifier: ^7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
     devDependencies:
       depcheck:
         specifier: ^1.4.7
@@ -1038,8 +1038,8 @@ importers:
         specifier: ^1.2.26
         version: 1.2.26
       '@mikro-orm/core':
-        specifier: 7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
       '@sinclair/typebox':
         specifier: ^0.34.52
         version: 0.34.52
@@ -1084,8 +1084,8 @@ importers:
         specifier: ^1.2.26
         version: 1.2.26
       '@mikro-orm/core':
-        specifier: 7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
       '@sinclair/typebox':
         specifier: ^0.34.52
         version: 0.34.52
@@ -1130,8 +1130,8 @@ importers:
         specifier: ^1.2.26
         version: 1.2.26
       '@mikro-orm/core':
-        specifier: 7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
       '@sinclair/typebox':
         specifier: ^0.34.52
         version: 0.34.52
@@ -1176,8 +1176,8 @@ importers:
         specifier: ^1.2.26
         version: 1.2.26
       '@mikro-orm/core':
-        specifier: 7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
       '@sinclair/typebox':
         specifier: ^0.34.52
         version: 0.34.52
@@ -1222,8 +1222,8 @@ importers:
         specifier: ^1.2.26
         version: 1.2.26
       '@mikro-orm/core':
-        specifier: 7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
       '@sinclair/typebox':
         specifier: ^0.34.52
         version: 0.34.52
@@ -1268,8 +1268,8 @@ importers:
         specifier: ^1.2.26
         version: 1.2.26
       '@mikro-orm/core':
-        specifier: 7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
       '@sinclair/typebox':
         specifier: ^0.34.52
         version: 0.34.52
@@ -1281,8 +1281,8 @@ importers:
         version: 4.5.4
     devDependencies:
       '@mikro-orm/sqlite':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       depcheck:
         specifier: ^1.4.7
         version: 1.4.7
@@ -1351,8 +1351,8 @@ importers:
         specifier: ^1.2.27
         version: 1.2.27
       '@mikro-orm/core':
-        specifier: 7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
       '@sinclair/typebox':
         specifier: ^0.34.52
         version: 0.34.52
@@ -1462,8 +1462,8 @@ importers:
         specifier: ^1.2.25
         version: 1.2.25
       '@mikro-orm/core':
-        specifier: 7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
     devDependencies:
       depcheck:
         specifier: ^1.4.7
@@ -1484,8 +1484,8 @@ importers:
         specifier: ^1.2.25
         version: 1.2.25
       '@mikro-orm/core':
-        specifier: ^7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
     devDependencies:
       depcheck:
         specifier: ^1.4.7
@@ -1506,8 +1506,8 @@ importers:
         specifier: ^1.2.25
         version: 1.2.25
       '@mikro-orm/core':
-        specifier: 7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
     devDependencies:
       depcheck:
         specifier: ^1.4.7
@@ -1528,8 +1528,8 @@ importers:
         specifier: ^1.2.25
         version: 1.2.25
       '@mikro-orm/core':
-        specifier: 7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
     devDependencies:
       depcheck:
         specifier: ^1.4.7
@@ -1550,8 +1550,8 @@ importers:
         specifier: ^1.2.25
         version: 1.2.25
       '@mikro-orm/core':
-        specifier: 7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
     devDependencies:
       depcheck:
         specifier: ^1.4.7
@@ -1620,26 +1620,26 @@ importers:
         specifier: ^1.2.26
         version: 1.2.26
       '@mikro-orm/core':
-        specifier: 7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
       '@mikro-orm/migrations':
-        specifier: 7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/mongodb':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/mysql':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)(@types/node@26.4.0)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)(@types/node@26.4.0)
       '@mikro-orm/postgresql':
-        specifier: 7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/seeder':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/sqlite':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@sinclair/typebox':
         specifier: ^0.34.52
         version: 0.34.52
@@ -1669,8 +1669,8 @@ importers:
         specifier: ^1.2.30
         version: 1.2.30(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.4.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.4.0)(esbuild@0.27.7)(tsx@4.23.13)(yaml@2.9.0)))
       '@mikro-orm/cli':
-        specifier: ^7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
       '@types/express':
         specifier: ^5.0.6
         version: 5.0.6
@@ -1741,26 +1741,26 @@ importers:
         specifier: ^1.2.26
         version: 1.2.26
       '@mikro-orm/core':
-        specifier: 7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
       '@mikro-orm/migrations':
-        specifier: 7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/mongodb':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/mysql':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)(@types/node@26.4.0)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)(@types/node@26.4.0)
       '@mikro-orm/postgresql':
-        specifier: 7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/seeder':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/sqlite':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@sinclair/typebox':
         specifier: ^0.34.52
         version: 0.34.52
@@ -1790,8 +1790,8 @@ importers:
         specifier: ^1.2.30
         version: 1.2.30(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.4.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.4.0)(esbuild@0.27.7)(tsx@4.23.13)(yaml@2.9.0)))
       '@mikro-orm/cli':
-        specifier: ^7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
       '@types/express':
         specifier: ^5.0.6
         version: 5.0.6
@@ -1875,35 +1875,35 @@ importers:
         specifier: ^1.2.26
         version: 1.2.26
       '@mikro-orm/core':
-        specifier: 7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
       '@mikro-orm/libsql':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/mariadb':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)(@types/node@26.4.0)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)(@types/node@26.4.0)
       '@mikro-orm/migrations':
-        specifier: 7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/mongodb':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/mssql':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/mysql':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)(@types/node@26.4.0)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)(@types/node@26.4.0)
       '@mikro-orm/postgresql':
-        specifier: 7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/seeder':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@mikro-orm/sqlite':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@sinclair/typebox':
         specifier: ^0.34.52
         version: 0.34.52
@@ -1939,8 +1939,8 @@ importers:
         specifier: ^1.2.30
         version: 1.2.30(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.4.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.4.0)(esbuild@0.27.7)(tsx@4.23.13)(yaml@2.9.0)))
       '@mikro-orm/cli':
-        specifier: ^7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
       '@types/express':
         specifier: ^5.0.6
         version: 5.0.6
@@ -3180,13 +3180,13 @@ packages:
     resolution: {integrity: sha512-6QEf6yqFbETdwGITKq57aYoPfX/3K8XFNwsAlx0C1M7o8cb79sv1M3w+tWuWvIcSbNqrLF7OD7YpZMVVz335hQ==}
     engines: {node: '>=20.0.0'}
 
-  '@mikro-orm/cli@7.1.14':
-    resolution: {integrity: sha512-JnkkmMie0KwzuIPjlnpRdWZZUV3DzQvcKY0fjJJOZSSmJK7rM+QDhMrcSTNIxhNWxDaXdOuhZDK7Vpwqcck69w==}
+  '@mikro-orm/cli@7.1.15':
+    resolution: {integrity: sha512-VMR0+A/654ZNK8mx+okQw4Kjg+tsdMoOlRo2+XsQ09nuPaj/g3TkhWg8fNOS5i+xByP015gwD4Mg87fSR13KEQ==}
     engines: {node: '>= 22.17.0'}
     hasBin: true
 
-  '@mikro-orm/core@7.1.14':
-    resolution: {integrity: sha512-q/2UWNX7Z9ZLgwkG6yHtKki3RnQ/ETygrSLXfvBXnaXPQvOY/G9PK/RJLoclo7UtHiHIOmbh/iiwiXiErfpBaQ==}
+  '@mikro-orm/core@7.1.15':
+    resolution: {integrity: sha512-2u7UuZ3IXRsqEnOVNxh1Lf8R3rzTj1Uqem/Xdo/iEpeRls3QUOAIar3Qm0LjpaSyaRIVOrohXFg2Wk+acJEbeA==}
     engines: {node: '>= 22.17.0'}
     peerDependencies:
       dataloader: 2.2.3
@@ -3194,65 +3194,65 @@ packages:
       dataloader:
         optional: true
 
-  '@mikro-orm/libsql@7.1.14':
-    resolution: {integrity: sha512-IrMwfA9C+4m+l2hnZQcc7JQ5tjw+u5nIpKE0DE+yl63U9+V16tgniENw9ilB52GChuWahrIyorvpBEEUmauSHg==}
+  '@mikro-orm/libsql@7.1.15':
+    resolution: {integrity: sha512-vIj5vVUtCVlW/NTKuEYQxZiUCIy6uDifno7Ns46nH5fSwP3AvDVXZ9u5V8OT5h09xmagSETYrT91O0Dzbtq7ww==}
     engines: {node: '>= 22.17.0'}
     peerDependencies:
-      '@mikro-orm/core': 7.1.14
+      '@mikro-orm/core': 7.1.15
 
-  '@mikro-orm/mariadb@7.1.14':
-    resolution: {integrity: sha512-XMNjkHRrc2oYVy926vFHd+0oayXj8BEEf/SoSYk3Z4zBN26L8A/JVwkJJ+saxDTXEgIcG4T9LudvyCtKgmdt3w==}
+  '@mikro-orm/mariadb@7.1.15':
+    resolution: {integrity: sha512-8UetcbtgvjUTFPs+yiEgUPwxZHIb5WyJTRbTTVOg3mqgmdgY/IvpHYIaCrqTac4s5A8TmrbFX7jscTdeNgpcQw==}
     engines: {node: '>= 22.17.0'}
     peerDependencies:
-      '@mikro-orm/core': 7.1.14
+      '@mikro-orm/core': 7.1.15
 
-  '@mikro-orm/migrations@7.1.14':
-    resolution: {integrity: sha512-9+N1t11hOwalyCb/bSkAkCNKCXrT9MXmmoftu+oqLFLBEGkWsjH4/mvm53I0UGX1uBemYmtY1pWMnyP5iBW/xA==}
+  '@mikro-orm/migrations@7.1.15':
+    resolution: {integrity: sha512-ublCLE5kpmGvtZJaJJyjioDuCy9lS18Q6pp+BMBIYGEzlYcwdpp9br3js3gYDMNr86VZgnZBkByLAg0X5Yu+SA==}
     engines: {node: '>= 22.17.0'}
     peerDependencies:
-      '@mikro-orm/core': 7.1.14
+      '@mikro-orm/core': 7.1.15
 
-  '@mikro-orm/mongodb@7.1.14':
-    resolution: {integrity: sha512-pikC8VzZbQq5lseULGd1bsF534BNIM6iz4wblLpBKv5mdsqXllrQJ8r791sGTMGJViM0eazKCSR6RwahEoIaVA==}
+  '@mikro-orm/mongodb@7.1.15':
+    resolution: {integrity: sha512-thdNkrQr0KrJt327/6Q8JwmYiUTu7LaH2AIq/YheKDuQiX0vuAtXhxLcMa2b9SMwFUJgM5SaM4iSZ3Z4RHbi7A==}
     engines: {node: '>= 22.17.0'}
     peerDependencies:
-      '@mikro-orm/core': 7.1.14
+      '@mikro-orm/core': 7.1.15
 
-  '@mikro-orm/mssql@7.1.14':
-    resolution: {integrity: sha512-10Ykqlpr3ZkJfApmUKC8qhiGuxROy6viiOyNnzxXdTPRMLRJIFn49022S28HyRanAqmrUpeTajOylGvscgGiNw==}
+  '@mikro-orm/mssql@7.1.15':
+    resolution: {integrity: sha512-qN7VxDs5fz1l5RrznQa4hmITR3NYrKFdPrxH8T6oUZm91rYkgYN5nvLKuzYb0961F9p7GJGjedQ87SDJf56wqA==}
     engines: {node: '>= 22.17.0'}
     peerDependencies:
-      '@mikro-orm/core': 7.1.14
+      '@mikro-orm/core': 7.1.15
 
-  '@mikro-orm/mysql@7.1.14':
-    resolution: {integrity: sha512-qeLHgX9x2fiOUAnG0d/VPty7Yo+LHKlHdtJHlKN+ULk+kH/Nvs0luOc02X9dNLq2WAVcYvTYkyq+VhLwyrrPUg==}
+  '@mikro-orm/mysql@7.1.15':
+    resolution: {integrity: sha512-2NujFmbqJ72cqCO3Ihw4QukbtraUv0pNizEJ0UODNOf9cWeFn8KOzU3XzBVaZFF9z4d9mT/hd3Kx7m07jOu6HA==}
     engines: {node: '>= 22.17.0'}
     peerDependencies:
-      '@mikro-orm/core': 7.1.14
+      '@mikro-orm/core': 7.1.15
 
-  '@mikro-orm/postgresql@7.1.14':
-    resolution: {integrity: sha512-O5vZLezOQD881z/qmyFv4F93lWy8kvbS8XsugNF/BWM6Ar4Amgs/YHwVhhibDNIla8rqqU50UeTaDHv2WhzBsw==}
+  '@mikro-orm/postgresql@7.1.15':
+    resolution: {integrity: sha512-cyRnOGwgt6YfD9v0B6o84ypEemguadRgCw6BtrYysP56VBu9j629rahrcRfQma+OVwmeVYS2kEDmH+TKam6Igg==}
     engines: {node: '>= 22.17.0'}
     peerDependencies:
-      '@mikro-orm/core': 7.1.14
+      '@mikro-orm/core': 7.1.15
 
-  '@mikro-orm/seeder@7.1.14':
-    resolution: {integrity: sha512-xy54kvCPSbl5fswMbNUbiXIm52PAy5dV4NcfbGiwvdWmiZSAGcUqrRyRBKtHdsa0GkDh1fHhpdC6fkI6LA4IUw==}
+  '@mikro-orm/seeder@7.1.15':
+    resolution: {integrity: sha512-8m1PMHr4w2b5ReTCEbSaLW9eK88WI54cUQyYbQbL2wCG17qJd+xictLh33Gj4LZgUwXtSgpsq8D8PYVGxySRSA==}
     engines: {node: '>= 22.17.0'}
     peerDependencies:
-      '@mikro-orm/core': 7.1.14
+      '@mikro-orm/core': 7.1.15
 
-  '@mikro-orm/sql@7.1.14':
-    resolution: {integrity: sha512-4deS9ep+CVPx48z6AdE6KUPdUbMRNvCsaA4XQPU8YRf3D501z6SIxwk/9JyIWtR3r1DwHYGdwfYUjckPSC9BmQ==}
+  '@mikro-orm/sql@7.1.15':
+    resolution: {integrity: sha512-5vuPeOC381j2sTH3xiHqKSolq9f0T4CHkQaGmEGO4a8PHyUUkExd7uZ41q50+9azgrMBdtP7vlmNVatB0/ntKQ==}
     engines: {node: '>= 22.17.0'}
     peerDependencies:
-      '@mikro-orm/core': 7.1.14
+      '@mikro-orm/core': 7.1.15
 
-  '@mikro-orm/sqlite@7.1.14':
-    resolution: {integrity: sha512-tfjpB3knnkvfxBUVZotKleAUYX1rWzxsJsjvflgLjSr4LZpyhEgab2Rz8YZ2QpywPApbMwdd9YBgTtt66e+8Cw==}
+  '@mikro-orm/sqlite@7.1.15':
+    resolution: {integrity: sha512-dX2i3vC2rnfVlyM19QFvt9ZMi4Fp0cuxOfs2jsS013lRnioImCNgwa5sOgGXUDB0vRJh/c38ukyz0ATSurgdYw==}
     engines: {node: '>= 22.17.0'}
     peerDependencies:
-      '@mikro-orm/core': 7.1.14
+      '@mikro-orm/core': 7.1.15
 
   '@modelcontextprotocol/client@2.0.0':
     resolution: {integrity: sha512-8f1OghQ2rjzIOfqgUCP+8GiUWqRs89njoWLNqAe8kWmDePv3s1fZXseej+QXemssEuuOvLLmLO/kqM3IQHtISw==}
@@ -6853,8 +6853,8 @@ packages:
     resolution: {integrity: sha512-PXwfBhYu0hBCPw8Dn0E+WDYb7af3dSLVWKi3HGv84IdF4TyFoC0ysxFd0Goxw7nSv4T/PzEJQxsYsEiFCKo2BA==}
     engines: {node: '>=8.6'}
 
-  mikro-orm@7.1.14:
-    resolution: {integrity: sha512-2HEwjJqldBN2dSlpr+mc/gDUbsDlZTd6nZ4Y0Bv2TIkj/AlsL/UTZryjAr2B4rL0rqUIb13fc3IAFXYlFhPOlQ==}
+  mikro-orm@7.1.15:
+    resolution: {integrity: sha512-q6dWO1IrX3n41itJlkprr2VH850oxMXoIez9pRRP48hCU028HQoEdq90wRQ/vlMLWx5P3VThM4l6AotI4eCM2Q==}
     engines: {node: '>= 22.17.0'}
 
   mime-db@1.52.0:
@@ -6974,8 +6974,8 @@ packages:
     resolution: {integrity: sha512-ypMKuglUrZUD99Tk2bUQ+xNQj43lPEfAeX2o9cTteAmShXy2VHDJpuwu1o0xqoKCt9jLVAvwyFKdLTPXKAfJyA==}
     engines: {node: '>=10'}
 
-  mysql2@3.24.2:
-    resolution: {integrity: sha512-l9kXeKGwd6VCbSjmpO/bLWb+YCYpbvE4whte8ec6InXebvCNyEEydyRCnRU+TSHNqRLJ8B+Tk1uWb+vMCJgJzA==}
+  mysql2@3.24.3:
+    resolution: {integrity: sha512-OKfWHkMAg9v06neq8FmSyhbxPQKABN9PAW5G9/bDTXzJBO5xXtkKL0V27vju7HQWk9UD4Od5BZsvCtBTB1CPEw==}
     engines: {node: '>= 8.0'}
     peerDependencies:
       '@types/node': '>= 8'
@@ -9525,10 +9525,10 @@ snapshots:
       '@eslint/core': 1.2.1
       levn: 0.4.1
 
-  '@forklaunch/better-auth-mikro-orm-fork@0.5.9(@mikro-orm/core@7.1.14)(better-auth@1.7.2(@opentelemetry/api@1.9.1)(mongodb@7.6.0)(mysql2@3.24.2(@types/node@26.4.0))(pg@8.23.0)(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.4.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.4.0)(esbuild@0.27.7)(tsx@4.23.13)(yaml@2.9.0))))':
+  '@forklaunch/better-auth-mikro-orm-fork@0.5.9(@mikro-orm/core@7.1.15)(better-auth@1.7.2(@opentelemetry/api@1.9.1)(mongodb@7.6.0)(mysql2@3.24.3(@types/node@26.4.0))(pg@8.23.0)(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.4.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.4.0)(esbuild@0.27.7)(tsx@4.23.13)(yaml@2.9.0))))':
     dependencies:
-      '@mikro-orm/core': 7.1.14
-      better-auth: 1.7.2(@opentelemetry/api@1.9.1)(mongodb@7.6.0)(mysql2@3.24.2(@types/node@26.4.0))(pg@8.23.0)(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.4.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.4.0)(esbuild@0.27.7)(tsx@4.23.13)(yaml@2.9.0)))
+      '@mikro-orm/core': 7.1.15
+      better-auth: 1.7.2(@opentelemetry/api@1.9.1)(mongodb@7.6.0)(mysql2@3.24.3(@types/node@26.4.0))(pg@8.23.0)(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.4.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.4.0)(esbuild@0.27.7)(tsx@4.23.13)(yaml@2.9.0)))
       dset: 3.1.4
 
   '@forklaunch/common@1.2.25': {}
@@ -9539,8 +9539,8 @@ snapshots:
       '@forklaunch/common': 1.2.25
       '@forklaunch/opentelemetry-instrumentation-hyper-express': 0.0.5(@opentelemetry/api@1.9.1)
       '@forklaunch/validator': 1.2.26
-      '@mikro-orm/core': 7.1.14
-      '@mikro-orm/mongodb': 7.1.14(@mikro-orm/core@7.1.14)
+      '@mikro-orm/core': 7.1.15
+      '@mikro-orm/mongodb': 7.1.15(@mikro-orm/core@7.1.15)
       '@opentelemetry/api': 1.9.1
       '@opentelemetry/api-logs': 0.221.0
       '@opentelemetry/exporter-logs-otlp-http': 0.221.0(@opentelemetry/api@1.9.1)
@@ -9731,7 +9731,7 @@ snapshots:
     dependencies:
       '@forklaunch/common': 1.2.25
       '@forklaunch/validator': 1.2.26
-      '@mikro-orm/core': 7.1.14
+      '@mikro-orm/core': 7.1.15
     transitivePeerDependencies:
       - dataloader
 
@@ -9747,7 +9747,7 @@ snapshots:
 
   '@forklaunch/testing@1.2.30(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.4.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.4.0)(esbuild@0.27.7)(tsx@4.23.13)(yaml@2.9.0)))':
     dependencies:
-      '@mikro-orm/core': 7.1.14
+      '@mikro-orm/core': 7.1.15
       ioredis: 6.0.0
       testcontainers: 12.1.0
       vitest: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.4.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.4.0)(esbuild@0.27.7)(tsx@4.23.13)(yaml@2.9.0))
@@ -10140,39 +10140,39 @@ snapshots:
       tinyglobby: 0.2.17
       yaml: 2.9.0
 
-  '@mikro-orm/cli@7.1.14':
+  '@mikro-orm/cli@7.1.15':
     dependencies:
-      '@mikro-orm/core': 7.1.14
-      mikro-orm: 7.1.14
+      '@mikro-orm/core': 7.1.15
+      mikro-orm: 7.1.15
       yargs: 17.7.2
     transitivePeerDependencies:
       - dataloader
 
-  '@mikro-orm/core@7.1.14': {}
+  '@mikro-orm/core@7.1.15': {}
 
-  '@mikro-orm/libsql@7.1.14(@mikro-orm/core@7.1.14)':
+  '@mikro-orm/libsql@7.1.15(@mikro-orm/core@7.1.15)':
     dependencies:
-      '@mikro-orm/core': 7.1.14
-      '@mikro-orm/sql': 7.1.14(@mikro-orm/core@7.1.14)
+      '@mikro-orm/core': 7.1.15
+      '@mikro-orm/sql': 7.1.15(@mikro-orm/core@7.1.15)
       kysely: 0.29.5
       libsql: 0.5.29
 
-  '@mikro-orm/mariadb@7.1.14(@mikro-orm/core@7.1.14)(@types/node@26.4.0)':
+  '@mikro-orm/mariadb@7.1.15(@mikro-orm/core@7.1.15)(@types/node@26.4.0)':
     dependencies:
-      '@mikro-orm/core': 7.1.14
-      '@mikro-orm/mysql': 7.1.14(@mikro-orm/core@7.1.14)(@types/node@26.4.0)
+      '@mikro-orm/core': 7.1.15
+      '@mikro-orm/mysql': 7.1.15(@mikro-orm/core@7.1.15)(@types/node@26.4.0)
       kysely: 0.29.5
     transitivePeerDependencies:
       - '@types/node'
 
-  '@mikro-orm/migrations@7.1.14(@mikro-orm/core@7.1.14)':
+  '@mikro-orm/migrations@7.1.15(@mikro-orm/core@7.1.15)':
     dependencies:
-      '@mikro-orm/core': 7.1.14
-      '@mikro-orm/sql': 7.1.14(@mikro-orm/core@7.1.14)
+      '@mikro-orm/core': 7.1.15
+      '@mikro-orm/sql': 7.1.15(@mikro-orm/core@7.1.15)
 
-  '@mikro-orm/mongodb@7.1.14(@mikro-orm/core@7.1.14)':
+  '@mikro-orm/mongodb@7.1.15(@mikro-orm/core@7.1.15)':
     dependencies:
-      '@mikro-orm/core': 7.1.14
+      '@mikro-orm/core': 7.1.15
       mongodb: 7.6.0
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
@@ -10183,10 +10183,10 @@ snapshots:
       - snappy
       - socks
 
-  '@mikro-orm/mssql@7.1.14(@mikro-orm/core@7.1.14)':
+  '@mikro-orm/mssql@7.1.15(@mikro-orm/core@7.1.15)':
     dependencies:
-      '@mikro-orm/core': 7.1.14
-      '@mikro-orm/sql': 7.1.14(@mikro-orm/core@7.1.14)
+      '@mikro-orm/core': 7.1.15
+      '@mikro-orm/sql': 7.1.15(@mikro-orm/core@7.1.15)
       kysely: 0.29.5
       tarn: 3.1.2
       tedious: 20.0.0
@@ -10194,20 +10194,20 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@mikro-orm/mysql@7.1.14(@mikro-orm/core@7.1.14)(@types/node@26.4.0)':
+  '@mikro-orm/mysql@7.1.15(@mikro-orm/core@7.1.15)(@types/node@26.4.0)':
     dependencies:
-      '@mikro-orm/core': 7.1.14
-      '@mikro-orm/sql': 7.1.14(@mikro-orm/core@7.1.14)
+      '@mikro-orm/core': 7.1.15
+      '@mikro-orm/sql': 7.1.15(@mikro-orm/core@7.1.15)
       kysely: 0.29.5
-      mysql2: 3.24.2(@types/node@26.4.0)
+      mysql2: 3.24.3(@types/node@26.4.0)
       sqlstring: 2.3.3
     transitivePeerDependencies:
       - '@types/node'
 
-  '@mikro-orm/postgresql@7.1.14(@mikro-orm/core@7.1.14)':
+  '@mikro-orm/postgresql@7.1.15(@mikro-orm/core@7.1.15)':
     dependencies:
-      '@mikro-orm/core': 7.1.14
-      '@mikro-orm/sql': 7.1.14(@mikro-orm/core@7.1.14)
+      '@mikro-orm/core': 7.1.15
+      '@mikro-orm/sql': 7.1.15(@mikro-orm/core@7.1.15)
       kysely: 0.29.5
       pg: 8.23.0
       pg-cursor: 2.22.0(pg@8.23.0)
@@ -10217,19 +10217,19 @@ snapshots:
     transitivePeerDependencies:
       - pg-native
 
-  '@mikro-orm/seeder@7.1.14(@mikro-orm/core@7.1.14)':
+  '@mikro-orm/seeder@7.1.15(@mikro-orm/core@7.1.15)':
     dependencies:
-      '@mikro-orm/core': 7.1.14
+      '@mikro-orm/core': 7.1.15
 
-  '@mikro-orm/sql@7.1.14(@mikro-orm/core@7.1.14)':
+  '@mikro-orm/sql@7.1.15(@mikro-orm/core@7.1.15)':
     dependencies:
-      '@mikro-orm/core': 7.1.14
+      '@mikro-orm/core': 7.1.15
       kysely: 0.29.5
 
-  '@mikro-orm/sqlite@7.1.14(@mikro-orm/core@7.1.14)':
+  '@mikro-orm/sqlite@7.1.15(@mikro-orm/core@7.1.15)':
     dependencies:
-      '@mikro-orm/core': 7.1.14
-      '@mikro-orm/sql': 7.1.14(@mikro-orm/core@7.1.14)
+      '@mikro-orm/core': 7.1.15
+      '@mikro-orm/sql': 7.1.15(@mikro-orm/core@7.1.15)
       better-sqlite3: 13.0.3
       kysely: 0.29.5
 
@@ -10980,7 +10980,7 @@ snapshots:
 
   '@stoplight/json-ref-readers@1.2.2':
     dependencies:
-      node-fetch: 2.6.7
+      node-fetch: 2.7.0
       tslib: 1.14.1
     transitivePeerDependencies:
       - encoding
@@ -11899,7 +11899,7 @@ snapshots:
     dependencies:
       tweetnacl: 0.14.5
 
-  better-auth@1.7.2(@opentelemetry/api@1.9.1)(mongodb@7.6.0)(mysql2@3.24.2(@types/node@26.4.0))(pg@8.23.0)(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.4.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.4.0)(esbuild@0.27.7)(tsx@4.23.13)(yaml@2.9.0))):
+  better-auth@1.7.2(@opentelemetry/api@1.9.1)(mongodb@7.6.0)(mysql2@3.24.3(@types/node@26.4.0))(pg@8.23.0)(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.4.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.4.0)(esbuild@0.27.7)(tsx@4.23.13)(yaml@2.9.0))):
     dependencies:
       '@better-auth/core': 1.7.2(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.5.4))(jose@6.2.10)(kysely@0.29.5)(nanostores@1.5.2)
       '@better-auth/drizzle-adapter': 1.7.2(@better-auth/core@1.7.2(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.5.4))(jose@6.2.10)(kysely@0.29.5)(nanostores@1.5.2))(@better-auth/utils@0.4.2)
@@ -11920,7 +11920,7 @@ snapshots:
       zod: 4.5.4
     optionalDependencies:
       mongodb: 7.6.0
-      mysql2: 3.24.2(@types/node@26.4.0)
+      mysql2: 3.24.3(@types/node@26.4.0)
       pg: 8.23.0
       vitest: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.4.0)(vite@8.0.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@26.4.0)(esbuild@0.27.7)(tsx@4.23.13)(yaml@2.9.0))
     transitivePeerDependencies:
@@ -14026,7 +14026,7 @@ snapshots:
       braces: 3.0.3
       picomatch: 2.3.2
 
-  mikro-orm@7.1.14: {}
+  mikro-orm@7.1.15: {}
 
   mime-db@1.52.0: {}
 
@@ -14129,7 +14129,7 @@ snapshots:
       arrify: 2.0.1
       minimatch: 3.1.5
 
-  mysql2@3.24.2(@types/node@26.4.0):
+  mysql2@3.24.3(@types/node@26.4.0):
     dependencies:
       '@types/node': 26.4.0
       aws-ssl-profiles: 1.1.2

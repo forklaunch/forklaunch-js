@@ -118,11 +118,11 @@ importers:
         specifier: workspace:^
         version: link:../validator
       '@mikro-orm/core':
-        specifier: ^7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
       '@mikro-orm/mongodb':
-        specifier: ^7.1.14
-        version: 7.1.14(@mikro-orm/core@7.1.14)
+        specifier: 7.1.15
+        version: 7.1.15(@mikro-orm/core@7.1.15)
       '@opentelemetry/api':
         specifier: ^1.9.1
         version: 1.9.1
@@ -616,8 +616,8 @@ importers:
         specifier: workspace:^
         version: link:../validator
       '@mikro-orm/core':
-        specifier: ^7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
     devDependencies:
       '@eslint/js':
         specifier: ^10.0.1
@@ -653,8 +653,8 @@ importers:
   testing:
     dependencies:
       '@mikro-orm/core':
-        specifier: ^7.1.14
-        version: 7.1.14
+        specifier: 7.1.15
+        version: 7.1.15
       ioredis:
         specifier: ^6.0.0
         version: 6.0.0
@@ -1738,8 +1738,8 @@ packages:
     resolution: {integrity: sha512-6QEf6yqFbETdwGITKq57aYoPfX/3K8XFNwsAlx0C1M7o8cb79sv1M3w+tWuWvIcSbNqrLF7OD7YpZMVVz335hQ==}
     engines: {node: '>=20.0.0'}
 
-  '@mikro-orm/core@7.1.14':
-    resolution: {integrity: sha512-q/2UWNX7Z9ZLgwkG6yHtKki3RnQ/ETygrSLXfvBXnaXPQvOY/G9PK/RJLoclo7UtHiHIOmbh/iiwiXiErfpBaQ==}
+  '@mikro-orm/core@7.1.15':
+    resolution: {integrity: sha512-2u7UuZ3IXRsqEnOVNxh1Lf8R3rzTj1Uqem/Xdo/iEpeRls3QUOAIar3Qm0LjpaSyaRIVOrohXFg2Wk+acJEbeA==}
     engines: {node: '>= 22.17.0'}
     peerDependencies:
       dataloader: 2.2.3
@@ -1747,11 +1747,11 @@ packages:
       dataloader:
         optional: true
 
-  '@mikro-orm/mongodb@7.1.14':
-    resolution: {integrity: sha512-pikC8VzZbQq5lseULGd1bsF534BNIM6iz4wblLpBKv5mdsqXllrQJ8r791sGTMGJViM0eazKCSR6RwahEoIaVA==}
+  '@mikro-orm/mongodb@7.1.15':
+    resolution: {integrity: sha512-thdNkrQr0KrJt327/6Q8JwmYiUTu7LaH2AIq/YheKDuQiX0vuAtXhxLcMa2b9SMwFUJgM5SaM4iSZ3Z4RHbi7A==}
     engines: {node: '>= 22.17.0'}
     peerDependencies:
-      '@mikro-orm/core': 7.1.14
+      '@mikro-orm/core': 7.1.15
 
   '@modelcontextprotocol/client@2.0.0':
     resolution: {integrity: sha512-8f1OghQ2rjzIOfqgUCP+8GiUWqRs89njoWLNqAe8kWmDePv3s1fZXseej+QXemssEuuOvLLmLO/kqM3IQHtISw==}
@@ -7502,11 +7502,11 @@ snapshots:
       tinyglobby: 0.2.17
       yaml: 2.9.0
 
-  '@mikro-orm/core@7.1.14': {}
+  '@mikro-orm/core@7.1.15': {}
 
-  '@mikro-orm/mongodb@7.1.14(@mikro-orm/core@7.1.14)':
+  '@mikro-orm/mongodb@7.1.15(@mikro-orm/core@7.1.15)':
     dependencies:
-      '@mikro-orm/core': 7.1.14
+      '@mikro-orm/core': 7.1.15
       mongodb: 7.6.0
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
@@ -8178,7 +8178,7 @@ snapshots:
 
   '@stoplight/json-ref-readers@1.2.2':
     dependencies:
-      node-fetch: 2.6.7
+      node-fetch: 2.7.0
       tslib: 1.14.1
     transitivePeerDependencies:
       - encoding

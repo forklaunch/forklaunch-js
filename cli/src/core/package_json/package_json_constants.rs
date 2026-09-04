@@ -293,13 +293,13 @@ pub(crate) const UNIVERSAL_SDK_VERSION: &str = "~1.2.26";
 // @forklaunch/validator
 pub(crate) const VALIDATOR_VERSION: &str = "~1.2.26";
 // @mikro-orm/core
-pub(crate) const MIKRO_ORM_CORE_VERSION: &str = "^7.1.14";
+pub(crate) const MIKRO_ORM_CORE_VERSION: &str = "7.1.15";
 // @mikro-orm/migrations
-pub(crate) const MIKRO_ORM_MIGRATIONS_VERSION: &str = "^7.1.14";
+pub(crate) const MIKRO_ORM_MIGRATIONS_VERSION: &str = "7.1.15";
 // @mikro-orm/postgresql,@mikro-orm/mongodb,@mikro-orm/mysql,@mikro-orm/sqlite,@mikro-orm/mariadb,@mikro-orm/libsql,@mikro-orm/mssql
-pub(crate) const MIKRO_ORM_DATABASE_VERSION: &str = "^7.1.14";
+pub(crate) const MIKRO_ORM_DATABASE_VERSION: &str = "7.1.15";
 // @mikro-orm/seeder
-pub(crate) const MIKRO_ORM_SEEDER_VERSION: &str = "^7.1.14";
+pub(crate) const MIKRO_ORM_SEEDER_VERSION: &str = "7.1.15";
 // @opentelemetry/api
 pub(crate) const OPENTELEMETRY_API_VERSION: &str = "^1.9.1";
 // @sinclair/typebox
@@ -327,7 +327,7 @@ pub(crate) const ZOD_VERSION: &str = "^4.5.4";
 
 // Project package.json devDependencies constants
 // @mikro-orm/cli
-pub(crate) const MIKRO_ORM_CLI_VERSION: &str = "^7.1.14";
+pub(crate) const MIKRO_ORM_CLI_VERSION: &str = "7.1.15";
 // @types/express
 pub(crate) const TYPES_EXPRESS_VERSION: &str = "^5.0.6";
 // @types/express-serve-static-core
