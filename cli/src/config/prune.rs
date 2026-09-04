@@ -41,10 +41,7 @@ use clap::{Arg, ArgAction, ArgMatches, Command};
 use serde_json::{Value, json};
 use termcolor::{ColorChoice, StandardStream, WriteColor};
 
-use super::{
-    CliCommand,
-    unset::{ScopeTarget, classify_scope},
-};
+use super::{CliCommand, unset::ScopeTarget};
 use crate::{
     constants::{ERROR_FAILED_TO_SEND_REQUEST, get_platform_management_api_url},
     core::{
@@ -105,6 +102,36 @@ pub(crate) fn project_of_scope(scope: &str) -> String {
         .or_else(|| scope.strip_suffix("-worker"))
         .unwrap_or(scope)
         .to_string()
+}
+
+/// Which endpoint owns a pulled scope. The manifest names a project once
+/// (`payments`), while the pulled config names its deployed components
+/// (`payments-service`, `payments-worker`), so both suffixes must resolve —
+/// the `unset` resolver only knew the bare name and `-worker`.
+pub(crate) fn scope_target_from<'a>(
+    projects: impl IntoIterator<Item = (&'a str, &'a ProjectType)>,
+    scope: &str,
+    id: String,
+) -> Option<ScopeTarget> {
+    let base = project_of_scope(scope);
+    let (_, kind) = projects.into_iter().find(|(name, _)| *name == base)?;
+    match kind {
+        ProjectType::Library => None,
+        _ if scope.ends_with("-worker") => Some(ScopeTarget::Worker(id)),
+        _ => Some(ScopeTarget::Service(id)),
+    }
+}
+
+pub(crate) fn scope_target(
+    projects: &[ProjectEntry],
+    scope: &str,
+    id: String,
+) -> Option<ScopeTarget> {
+    scope_target_from(
+        projects.iter().map(|p| (p.name.as_str(), &p.r#type)),
+        scope,
+        id,
+    )
 }
 
 /// Keys the platform generates on every deploy. Deleting a stored copy is
@@ -560,7 +587,7 @@ impl CliCommand for PruneCommand {
                 let id = id.clone().ok_or_else(|| {
                     anyhow::anyhow!("scope '{}' has no platform id in the pulled config", scope)
                 })?;
-                classify_scope(&manifest.projects, scope, id).ok_or_else(|| {
+                scope_target(&manifest.projects, scope, id).ok_or_else(|| {
                     anyhow::anyhow!(
                         "scope '{}' is not a service or worker in this application's manifest",
                         scope
@@ -720,6 +747,30 @@ mod tests {
             ),
             Verdict::Orphan
         );
+    }
+
+    #[test]
+    fn scope_target_resolves_service_and_worker_suffixes() {
+        let projects = [
+            ("managed-apps", ProjectType::Worker),
+            ("iam", ProjectType::Service),
+            ("core", ProjectType::Library),
+        ];
+        let it = || projects.iter().map(|(n, t)| (*n, t));
+        assert!(matches!(
+            scope_target_from(it(), "managed-apps-service", "s".into()),
+            Some(ScopeTarget::Service(_))
+        ));
+        assert!(matches!(
+            scope_target_from(it(), "managed-apps-worker", "w".into()),
+            Some(ScopeTarget::Worker(_))
+        ));
+        assert!(matches!(
+            scope_target_from(it(), "iam", "i".into()),
+            Some(ScopeTarget::Service(_))
+        ));
+        assert!(scope_target_from(it(), "core", "c".into()).is_none());
+        assert!(scope_target_from(it(), "nope-service", "n".into()).is_none());
     }
 
     #[test]
