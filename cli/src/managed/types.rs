@@ -46,6 +46,8 @@ pub(super) struct AppTemplate {
     pub(super) source_repo: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(super) cluster_type: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(super) frontend_domain: Option<String>,
 }
 
 /// Where a template's instances run. Same vocabulary as `forklaunch app hosting`

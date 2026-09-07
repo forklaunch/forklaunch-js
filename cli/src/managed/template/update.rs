@@ -27,6 +27,7 @@ pub(super) struct TemplateUpdate<'a> {
     pub(super) status: Option<&'a str>,
     pub(super) stripe_product: Option<&'a String>,
     pub(super) cluster_type: Option<&'a String>,
+    pub(super) frontend_domain: Option<&'a String>,
     pub(super) dryrun: bool,
     pub(super) json: bool,
 }
@@ -95,6 +96,11 @@ impl CliCommand for UpdateCommand {
                 .help("Where instances of this template run: org-shared (your org's shared hosts), platform-shared, or dedicated. Applies to instances launched from now on"),
         )
         .arg(
+            Arg::new("frontend_domain")
+                .long("frontend-domain")
+                .help("Domain the product's frontend is served from (e.g. app.example.com). Each instance's UI is <hostPrefix>.<domain>; the claim page and `instance list` hand that URL out"),
+        )
+        .arg(
             Arg::new("dryrun")
                 .long("dryrun")
                 .help("Print the request that would be sent without sending it")
@@ -121,6 +127,7 @@ impl CliCommand for UpdateCommand {
                 status: matches.get_one::<String>("status").map(String::as_str),
                 stripe_product: matches.get_one::<String>("stripe_product"),
                 cluster_type: matches.get_one::<String>("cluster_type"),
+                frontend_domain: matches.get_one::<String>("frontend_domain"),
                 dryrun: matches.get_flag("dryrun"),
                 json: matches.get_flag("json"),
             },
@@ -148,6 +155,9 @@ pub(super) fn update_template(slug: &str, update: TemplateUpdate<'_>) -> Result<
     if let Some(cluster_type) = update.cluster_type {
         body.insert("clusterType".to_string(), json!(cluster_type));
     }
+    if let Some(frontend_domain) = update.frontend_domain {
+        body.insert("frontendDomain".to_string(), json!(frontend_domain));
+    }
 
     // An empty PATCH is accepted by the control plane and changes nothing, so it would
     // report success while having done nothing at all. Refuse instead — someone who
@@ -156,8 +166,8 @@ pub(super) fn update_template(slug: &str, update: TemplateUpdate<'_>) -> Result<
     if body.is_empty() {
         bail!(
             "nothing to update — pass at least one of --name, --description, --status, \
-             --stripe-product, or --cluster-type (to publish a template, `forklaunch managed \
-             template publish-template --slug {}` is the shorthand)",
+             --stripe-product, --cluster-type, or --frontend-domain (to publish a template, \
+             `forklaunch managed template publish-template --slug {}` is the shorthand)",
             slug
         );
     }
@@ -246,6 +256,7 @@ mod tests {
         assert!(update.description.is_none());
         assert!(update.stripe_product.is_none());
         assert!(update.cluster_type.is_none());
+        assert!(update.frontend_domain.is_none());
     }
 
     #[test]
