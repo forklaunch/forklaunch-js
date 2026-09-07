@@ -1,8 +1,6 @@
-import {
+import { forklaunchExpress, forklaunchRouter, handlers } from '@forklaunch/express';
+import type {
   ExpressApplicationOptions,
-  forklaunchExpress,
-  forklaunchRouter,
-  handlers,
   NextFunction,
   Request,
   Response
