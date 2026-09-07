@@ -2,8 +2,13 @@ import { Migration } from '@mikro-orm/migrations';
 
 export class Migration00000000000000 extends Migration {
   override async up(): Promise<void> {
+    // date_of_birth is "text", not "timestamptz" — dateOfBirth is
+    // compliance('phi') on the entity, and PHI compliance forces
+    // EncryptedType (ciphertext is always a string) regardless of the
+    // property's logical type. A plain timestamptz column can't hold that
+    // ciphertext; every patient insert failed outright until this matched.
     this.addSql(
-      `create table "patient" ("id" uuid not null, "created_at" timestamptz not null, "updated_at" timestamptz not null, "retention_anonymized_at" timestamptz null, "organization_id" uuid not null, "mrn" text not null, "first_name" text not null, "last_name" text not null, "date_of_birth" timestamptz not null, "address_line1" text null, "city" text null, "state" text null, "postal_code" text null, "phone_number" text null, "email" text null, "ssn" text null, constraint "patient_pkey" primary key ("id"));`
+      `create table "patient" ("id" uuid not null, "created_at" timestamptz not null, "updated_at" timestamptz not null, "retention_anonymized_at" timestamptz null, "organization_id" uuid not null, "mrn" text not null, "first_name" text not null, "last_name" text not null, "date_of_birth" text not null, "address_line1" text null, "city" text null, "state" text null, "postal_code" text null, "phone_number" text null, "email" text null, "ssn" text null, constraint "patient_pkey" primary key ("id"));`
     );
     this.addSql(
       `alter table "patient" add constraint "patient_mrn_unique" unique ("mrn");`
