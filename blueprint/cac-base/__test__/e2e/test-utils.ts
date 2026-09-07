@@ -351,6 +351,26 @@ export async function seedEncounter(
     organizationId?: string;
   }
 ): Promise<string> {
+  return seedEncounterWithCharges(em, {
+    mrn: opts.mrn,
+    icd10Code: opts.icd10Code,
+    organizationId: opts.organizationId,
+    charges: [{ procedureCode: opts.procedureCode, units: opts.units }]
+  });
+}
+
+// Same as seedEncounter, but takes multiple charge lines on one encounter —
+// needed for NCCI PTP, which only fires when two procedure codes land on
+// the same claim (a single-charge encounter can never trigger it).
+export async function seedEncounterWithCharges(
+  em: EntityManager,
+  opts: {
+    mrn: string;
+    icd10Code: string | string[];
+    charges: Array<{ procedureCode: string; units?: number }>;
+    organizationId?: string;
+  }
+): Promise<string> {
   const { Patient } = await import('../../persistence/entities/patient.entity');
   const { Encounter } = await import(
     '../../persistence/entities/encounter.entity'
@@ -377,19 +397,26 @@ export async function seedEncounter(
     visitDate: new Date()
   });
 
-  em.create(Diagnosis, {
-    organizationId,
-    encounter,
-    icd10Code: opts.icd10Code
-  });
+  const icd10Codes = Array.isArray(opts.icd10Code)
+    ? opts.icd10Code
+    : [opts.icd10Code];
+  for (const icd10Code of icd10Codes) {
+    em.create(Diagnosis, {
+      organizationId,
+      encounter,
+      icd10Code
+    });
+  }
 
-  em.create(Charge, {
-    organizationId,
-    encounter,
-    procedureCode: opts.procedureCode,
-    units: opts.units ?? 1,
-    amount: 125.0
-  });
+  for (const charge of opts.charges) {
+    em.create(Charge, {
+      organizationId,
+      encounter,
+      procedureCode: charge.procedureCode,
+      units: charge.units ?? 1,
+      amount: 125.0
+    });
+  }
 
   await em.persist([patient, encounter]).flush();
   return encounter.id;

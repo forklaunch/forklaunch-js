@@ -27,6 +27,7 @@ import {
   cleanupTestDatabase,
   clearDatabase,
   seedEncounter,
+  seedEncounterWithCharges,
   setTestPermissions,
   setupTestDatabase,
   signTestJwt,
@@ -154,6 +155,59 @@ describe('cac-base end-to-end (real Postgres + Redis via testcontainers)', () =>
           expect.objectContaining({ category: 'ncci_mue' })
         ])
       });
+    });
+
+    it('two procedures that conflict under NCCI PTP get flagged together', async () => {
+      const em = setup.orm!.em.fork();
+      // PROC-001 + PROC-002 is a mock PTP conflict pair
+      // (MOCK_NCCI_PTP_CONFLICTS) — each diagnosis justifies its own
+      // procedure per the mock LCD/NCD crosswalk, so PTP is the only
+      // finding this should produce.
+      const encounterId = await seedEncounterWithCharges(em, {
+        mrn: 'E2E-PTP-001',
+        icd10Code: ['J06.9', 'Z00.00'],
+        charges: [{ procedureCode: 'PROC-001' }, { procedureCode: 'PROC-002' }]
+      });
+
+      const built = await call(baseUrl, '/claim/build', {
+        method: 'POST',
+        body: { encounterId },
+        token: jwt
+      });
+      const claimId = (built.body as { id: string }).id;
+      const scrubbed = await call(baseUrl, `/claim/${claimId}/scrub`, {
+        method: 'POST',
+        token: jwt
+      });
+
+      expect(scrubbed.body).toEqual({
+        status: 'denied',
+        denials: [{ carcCode: 'CO-97', category: 'ncci_ptp' }]
+      });
+    });
+
+    it('procedures that do not conflict under NCCI PTP scrub clean', async () => {
+      const em = setup.orm!.em.fork();
+      // PROC-001 + PROC-003 is not a mock PTP conflict pair — the negative
+      // case, proving the check is pair-specific and not "any two charges."
+      const encounterId = await seedEncounterWithCharges(em, {
+        mrn: 'E2E-PTP-NEGATIVE-001',
+        icd10Code: ['J06.9', 'R73.09'],
+        charges: [{ procedureCode: 'PROC-001' }, { procedureCode: 'PROC-003' }]
+      });
+
+      const built = await call(baseUrl, '/claim/build', {
+        method: 'POST',
+        body: { encounterId },
+        token: jwt
+      });
+      const claimId = (built.body as { id: string }).id;
+      const scrubbed = await call(baseUrl, `/claim/${claimId}/scrub`, {
+        method: 'POST',
+        token: jwt
+      });
+
+      expect(scrubbed.body).toEqual({ status: 'ready', denials: [] });
     });
   });
 
