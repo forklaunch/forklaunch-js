@@ -45,6 +45,9 @@ export const listDenials = handlers.get(
       jwt: {
         jwksPublicKeyUrl: JWKS_PUBLIC_KEY_URL
       },
+      sessionSchema: {
+        organizationId: string
+      },
       allowedPermissions: VIEW_DENIALS_PERMISSIONS
     },
     query: {
@@ -57,11 +60,12 @@ export const listDenials = handlers.get(
   },
   async (req, res) => {
     const { claimId, worklistStatus } = req.query;
+    const organizationId = req.session?.organizationId;
     openTelemetryCollector.debug('Listing denials', {
       claimId,
       worklistStatus
     });
-    const denials = await serviceFactory().listDenials({
+    const denials = await serviceFactory().listDenials(organizationId, {
       claimId,
       worklistStatus: worklistStatus as WorklistStatus | undefined
     });
@@ -89,6 +93,9 @@ export const getDenial = handlers.get(
       jwt: {
         jwksPublicKeyUrl: JWKS_PUBLIC_KEY_URL
       },
+      sessionSchema: {
+        organizationId: string
+      },
       allowedPermissions: VIEW_DENIALS_PERMISSIONS
     },
     params: {
@@ -101,7 +108,8 @@ export const getDenial = handlers.get(
   },
   async (req, res) => {
     const { id } = req.params;
-    const denial = await serviceFactory().getDenial(id);
+    const organizationId = req.session?.organizationId;
+    const denial = await serviceFactory().getDenial(organizationId, id);
 
     if (!denial) {
       res.status(404).send(`Denial '${id}' not found`);
@@ -130,6 +138,9 @@ export const resolveDenial = handlers.post(
       jwt: {
         jwksPublicKeyUrl: JWKS_PUBLIC_KEY_URL
       },
+      sessionSchema: {
+        organizationId: string
+      },
       allowedPermissions: MANAGE_DENIALS_PERMISSIONS
     },
     params: {
@@ -142,7 +153,8 @@ export const resolveDenial = handlers.post(
   },
   async (req, res) => {
     const { id } = req.params;
-    const denial = await serviceFactory().resolveDenial(id);
+    const organizationId = req.session?.organizationId;
+    const denial = await serviceFactory().resolveDenial(organizationId, id);
 
     if (!denial) {
       res.status(404).send(`Denial '${id}' not found`);

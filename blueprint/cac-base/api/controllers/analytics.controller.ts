@@ -33,6 +33,9 @@ export const getClaimAnalyticsSummary = handlers.get(
       jwt: {
         jwksPublicKeyUrl: JWKS_PUBLIC_KEY_URL
       },
+      sessionSchema: {
+        organizationId: string
+      },
       allowedPermissions: VIEW_ANALYTICS_PERMISSIONS
     },
     query: {
@@ -51,6 +54,7 @@ export const getClaimAnalyticsSummary = handlers.get(
   },
   async (req, res) => {
     const { since, until } = req.query;
+    const organizationId = req.session?.organizationId;
     openTelemetryCollector.debug('Computing claim analytics summary', {
       since,
       until
@@ -66,7 +70,7 @@ export const getClaimAnalyticsSummary = handlers.get(
       return;
     }
 
-    const summary = await serviceFactory().getClaimSummary({
+    const summary = await serviceFactory().getClaimSummary(organizationId, {
       since: sinceDate,
       until: untilDate
     });

@@ -31,10 +31,15 @@ export class ClaimService {
     private readonly otel: OpenTelemetryCollector<MetricsDefinition>
   ) {}
 
-  async buildClaim(encounterId: string): Promise<Claim> {
+  async buildClaim(organizationId: string, encounterId: string): Promise<Claim> {
+    // organizationId is part of the lookup, not just the write — without it
+    // here, any caller who knows (or guesses) another organization's
+    // encounterId could build a claim from it, tagged with that OTHER
+    // organization's id (copied from the encounter), not their own. Scoping
+    // the read to the caller's own org turns that into a real 404 instead.
     const encounter = await this.em.findOneOrFail(
       Encounter,
-      { id: encounterId },
+      { id: encounterId, organizationId },
       { populate: ['charges', 'diagnoses', 'patient'] }
     );
 
@@ -55,10 +60,13 @@ export class ClaimService {
     return claim;
   }
 
-  async scrubClaim(claimId: string): Promise<ScrubClaimResult> {
+  async scrubClaim(
+    organizationId: string,
+    claimId: string
+  ): Promise<ScrubClaimResult> {
     const claim = await this.em.findOneOrFail(
       Claim,
-      { id: claimId },
+      { id: claimId, organizationId },
       { populate: ['encounter', 'encounter.charges', 'encounter.diagnoses'] }
     );
 

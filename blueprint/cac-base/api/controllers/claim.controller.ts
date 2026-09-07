@@ -21,10 +21,17 @@ const MANAGE_CLAIMS_PERMISSIONS = new Set(['coder:manage_claims']);
 // PR 3 scope (plan/cac/MEDICAL-CODING-IMPLEMENTATION-PLAN.md §10, §14).
 // Protected + JWT, not internal/HMAC — these are the actual coder-facing
 // actions a real adopter's front-end calls on behalf of a logged-in coder
-// (RBAC verification pass, §14 PR 5; matches the pattern
-// billing-base/billingPortal.controller.ts already uses for its own
-// non-IAM-owning protected routes — no custom session/decodeResource
-// wiring needed, tenant scoping stays automatic per §9).
+// (RBAC verification pass, §14 PR 5).
+//
+// sessionSchema + explicit organizationId passed into every service call —
+// NOT "tenant scoping stays automatic," which this comment used to claim.
+// The framework's own MikroORM tenant filter fails OPEN when no tenant
+// context is set (its own source comment: "safe: tenant-scoped endpoints
+// always set filter params before querying" — which nothing here was
+// doing), and no service method filtered by organizationId itself either.
+// Found via the e2e suite: a valid token for one organization could read
+// and resolve another organization's claims/denials. See
+// plan/cac/MEDICAL-CODING-IMPLEMENTATION-PLAN.md §12 for the writeup.
 export const buildClaim = handlers.post(
   schemaValidator,
   '/build',
@@ -36,6 +43,9 @@ export const buildClaim = handlers.post(
     auth: {
       jwt: {
         jwksPublicKeyUrl: JWKS_PUBLIC_KEY_URL
+      },
+      sessionSchema: {
+        organizationId: string
       },
       allowedPermissions: MANAGE_CLAIMS_PERMISSIONS
     },
@@ -51,8 +61,9 @@ export const buildClaim = handlers.post(
   },
   async (req, res) => {
     const { encounterId } = req.body;
+    const organizationId = req.session?.organizationId;
     openTelemetryCollector.debug('Building claim', { encounterId });
-    const claim = await serviceFactory().buildClaim(encounterId);
+    const claim = await serviceFactory().buildClaim(organizationId, encounterId);
     res.status(200).json({ id: claim.id, status: claim.status });
   }
 );
@@ -68,6 +79,9 @@ export const scrubClaim = handlers.post(
     auth: {
       jwt: {
         jwksPublicKeyUrl: JWKS_PUBLIC_KEY_URL
+      },
+      sessionSchema: {
+        organizationId: string
       },
       allowedPermissions: MANAGE_CLAIMS_PERMISSIONS
     },
@@ -86,8 +100,9 @@ export const scrubClaim = handlers.post(
   },
   async (req, res) => {
     const { id } = req.params;
+    const organizationId = req.session?.organizationId;
     openTelemetryCollector.debug('Scrubbing claim', { id });
-    const result = await serviceFactory().scrubClaim(id);
+    const result = await serviceFactory().scrubClaim(organizationId, id);
     res.status(200).json({
       status: result.status,
       denials: result.denials.map((denial) => ({

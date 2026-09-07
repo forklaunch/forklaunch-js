@@ -22,8 +22,15 @@ export class DenialWorklistService {
     private readonly otel: OpenTelemetryCollector<MetricsDefinition>
   ) {}
 
-  async listDenials(filter?: DenialListFilter): Promise<Denial[]> {
-    const where: { claim?: string; worklistStatus?: WorklistStatus } = {};
+  async listDenials(
+    organizationId: string,
+    filter?: DenialListFilter
+  ): Promise<Denial[]> {
+    const where: {
+      organizationId: string;
+      claim?: string;
+      worklistStatus?: WorklistStatus;
+    } = { organizationId };
     if (filter?.claimId) where.claim = filter.claimId;
     if (filter?.worklistStatus) where.worklistStatus = filter.worklistStatus;
 
@@ -34,12 +41,15 @@ export class DenialWorklistService {
     return denials;
   }
 
-  async getDenial(id: string): Promise<Denial | null> {
-    return this.em.findOne(Denial, { id });
+  async getDenial(organizationId: string, id: string): Promise<Denial | null> {
+    return this.em.findOne(Denial, { id, organizationId });
   }
 
-  async resolveDenial(id: string): Promise<Denial | null> {
-    const denial = await this.em.findOne(Denial, { id });
+  async resolveDenial(
+    organizationId: string,
+    id: string
+  ): Promise<Denial | null> {
+    const denial = await this.em.findOne(Denial, { id, organizationId });
     if (!denial) return null;
 
     denial.worklistStatus = WorklistStatus.RESOLVED;

@@ -33,16 +33,19 @@ export class AnalyticsService {
   ) {}
 
   async getClaimSummary(
+    organizationId: string,
     range?: AnalyticsDateRange
   ): Promise<ClaimAnalyticsSummary> {
     const createdAtFilter = buildDateFilter(range);
 
     const [readyCount, deniedCount, denials] = await Promise.all([
       this.em.count(Claim, {
+        organizationId,
         status: ClaimStatus.READY,
         ...(createdAtFilter ? { createdAt: createdAtFilter } : {})
       }),
       this.em.count(Claim, {
+        organizationId,
         status: ClaimStatus.DENIED,
         ...(createdAtFilter ? { createdAt: createdAtFilter } : {})
       }),
@@ -51,10 +54,10 @@ export class AnalyticsService {
       // another, and this must stay in the same date window as
       // readyCount/deniedCount above or denialsByCategory silently drifts
       // out of sync with deniedCount.
-      this.em.find(
-        Denial,
-        createdAtFilter ? { claim: { createdAt: createdAtFilter } } : {}
-      )
+      this.em.find(Denial, {
+        organizationId,
+        ...(createdAtFilter ? { claim: { createdAt: createdAtFilter } } : {})
+      })
     ]);
 
     const totalScrubbedClaims = readyCount + deniedCount;
