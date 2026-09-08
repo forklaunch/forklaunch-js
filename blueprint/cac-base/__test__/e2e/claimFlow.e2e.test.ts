@@ -209,6 +209,56 @@ describe('cac-base end-to-end (real Postgres + Redis via testcontainers)', () =>
 
       expect(scrubbed.body).toEqual({ status: 'ready', denials: [] });
     });
+
+    it('a claim with no diagnosis codes gets flagged as required_fields', async () => {
+      const em = setup.orm!.em.fork();
+      const encounterId = await seedEncounterWithCharges(em, {
+        mrn: 'E2E-REQFIELDS-NODIAG-001',
+        icd10Code: [], // no diagnoses on this encounter at all
+        charges: [{ procedureCode: 'PROC-999' }] // no LCD/NCD crosswalk entry either
+      });
+
+      const built = await call(baseUrl, '/claim/build', {
+        method: 'POST',
+        body: { encounterId },
+        token: jwt
+      });
+      const claimId = (built.body as { id: string }).id;
+      const scrubbed = await call(baseUrl, `/claim/${claimId}/scrub`, {
+        method: 'POST',
+        token: jwt
+      });
+
+      expect(scrubbed.body).toEqual({
+        status: 'denied',
+        denials: [{ carcCode: 'CO-16', category: 'required_fields' }]
+      });
+    });
+
+    it('a charge line with an invalid unit count gets flagged as required_fields', async () => {
+      const em = setup.orm!.em.fork();
+      const encounterId = await seedEncounterWithCharges(em, {
+        mrn: 'E2E-REQFIELDS-UNITS-001',
+        icd10Code: 'J06.9',
+        charges: [{ procedureCode: 'PROC-001', units: 0 }]
+      });
+
+      const built = await call(baseUrl, '/claim/build', {
+        method: 'POST',
+        body: { encounterId },
+        token: jwt
+      });
+      const claimId = (built.body as { id: string }).id;
+      const scrubbed = await call(baseUrl, `/claim/${claimId}/scrub`, {
+        method: 'POST',
+        token: jwt
+      });
+
+      expect(scrubbed.body).toEqual({
+        status: 'denied',
+        denials: [{ carcCode: 'CO-16', category: 'required_fields' }]
+      });
+    });
   });
 
   describe('denial worklist', () => {

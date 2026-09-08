@@ -119,5 +119,7 @@ function mapMockCategory(
       return DenialReasonCategory.NCCI_MUE;
     case 'lcd_ncd':
       return DenialReasonCategory.LCD_NCD;
+    case 'required_fields':
+      return DenialReasonCategory.REQUIRED_FIELDS;
   }
 }

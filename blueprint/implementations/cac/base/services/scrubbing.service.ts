@@ -4,7 +4,11 @@ import {
 } from '../domain/mockLcdCrosswalk';
 import { isPtpConflict, MOCK_NCCI_MUE_CAPS } from '../domain/mockNcciRules';
 
-export type DenialReasonCategory = 'ncci_ptp' | 'ncci_mue' | 'lcd_ncd';
+export type DenialReasonCategory =
+  | 'ncci_ptp'
+  | 'ncci_mue'
+  | 'lcd_ncd'
+  | 'required_fields';
 
 export interface ScrubClaimLine {
   procedureCode: string;
@@ -35,6 +39,37 @@ export class ScrubbingService {
     diagnosisCodes: ReadonlyArray<string>
   ): ScrubbingResult {
     const findings: ScrubbingFinding[] = [];
+
+    // Required fields — structural completeness (CO-16: "claim/service lacks
+    // information", always paired with a RARC naming what's missing), not
+    // medical necessity. Checked first since it's a precondition the other
+    // three layers don't themselves verify: NCCI PTP/MUE only look at
+    // procedure codes that ARE present, and LCD/NCD only fires for a
+    // procedure that has a mock crosswalk entry at all — a claim with zero
+    // diagnoses and an uncrosswalked procedure would otherwise scrub clean.
+    if (diagnosisCodes.length === 0) {
+      findings.push({
+        category: 'required_fields',
+        carcCode: 'CO-16',
+        message: 'Claim has no diagnosis codes'
+      });
+    }
+    lines.forEach((line, index) => {
+      if (line.procedureCode.trim() === '') {
+        findings.push({
+          category: 'required_fields',
+          carcCode: 'CO-16',
+          message: `Charge line ${index + 1} is missing a procedure code`
+        });
+      }
+      if (!Number.isInteger(line.units) || line.units < 1) {
+        findings.push({
+          category: 'required_fields',
+          carcCode: 'CO-16',
+          message: `Charge line ${index + 1} has an invalid unit count (${line.units}); must be a positive integer`
+        });
+      }
+    });
 
     // NCCI PTP — procedure-to-procedure conflicts. CPT/HCPCS <-> CPT/HCPCS
     // only, never diagnosis codes.

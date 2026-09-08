@@ -85,6 +85,58 @@ describe('ScrubbingService', () => {
     );
   });
 
+  it('flags required_fields when a claim has no diagnosis codes at all', () => {
+    const result = scrubbing.scrub(
+      [{ procedureCode: 'PROC-999', units: 1 }], // no LCD/NCD crosswalk entry
+      []
+    );
+
+    expect(result.clean).toBe(false);
+    expect(result.findings).toContainEqual(
+      expect.objectContaining({
+        category: 'required_fields',
+        carcCode: 'CO-16',
+        message: 'Claim has no diagnosis codes'
+      })
+    );
+  });
+
+  it('flags required_fields when a charge line is missing a procedure code', () => {
+    const result = scrubbing.scrub([{ procedureCode: '', units: 1 }], ['J06.9']);
+
+    expect(result.clean).toBe(false);
+    expect(result.findings).toContainEqual(
+      expect.objectContaining({
+        category: 'required_fields',
+        carcCode: 'CO-16',
+        message: 'Charge line 1 is missing a procedure code'
+      })
+    );
+  });
+
+  it('flags required_fields for a non-positive unit count', () => {
+    const result = scrubbing.scrub(
+      [{ procedureCode: 'PROC-001', units: 0 }],
+      ['J06.9']
+    );
+
+    expect(result.clean).toBe(false);
+    expect(result.findings).toContainEqual(
+      expect.objectContaining({ category: 'required_fields', carcCode: 'CO-16' })
+    );
+  });
+
+  it('does not flag required_fields for a complete, valid claim', () => {
+    const result = scrubbing.scrub(
+      [{ procedureCode: 'PROC-001', units: 1 }],
+      ['J06.9']
+    );
+
+    expect(
+      result.findings.some((f) => f.category === 'required_fields')
+    ).toBe(false);
+  });
+
   it('can return multiple findings for a single line at once', () => {
     const result = scrubbing.scrub(
       [{ procedureCode: 'PROC-001', units: 5 }],
