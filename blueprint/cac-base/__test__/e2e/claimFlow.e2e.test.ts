@@ -23,15 +23,18 @@
  * against in-memory data.
  */
 import {
+  activateCptLicense,
   ALL_CAC_PERMISSIONS,
   cleanupTestDatabase,
   clearDatabase,
+  getClaimCodeSetType,
   seedEncounter,
   seedEncounterWithCharges,
   setTestPermissions,
   setupTestDatabase,
   signTestJwt,
   startTestServer,
+  TEST_ORGANIZATION_ID,
   TestSetupResult
 } from './test-utils';
 
@@ -384,6 +387,91 @@ describe('cac-base end-to-end (real Postgres + Redis via testcontainers)', () =>
 
       const listedAsTestOrg = await call(baseUrl, '/denial', { token: jwt }); // TEST_ORGANIZATION_ID, not the other org
       expect(listedAsTestOrg.body).toEqual([]);
+    });
+  });
+
+  describe('code-set feature gate (§5)', () => {
+    it('describes the mock provider when no CPT license is active', async () => {
+      const described = await call(baseUrl, '/codeSet', { token: jwt });
+      expect(described.status).toBe(200);
+      expect(described.body).toEqual({ codeSetType: 'mock', licensed: false });
+    });
+
+    it('describes the real CPT provider once the organization license is active', async () => {
+      const em = setup.orm!.em.fork();
+      await activateCptLicense(em);
+
+      const described = await call(baseUrl, '/codeSet', { token: jwt });
+      expect(described.body).toEqual({ codeSetType: 'cpt', licensed: true });
+    });
+  });
+
+  describe('code-set cutover (§5)', () => {
+    it('claims built before a license activation stay on mock after it, only new claims pick up CPT', async () => {
+      const em = setup.orm!.em.fork();
+
+      // 1. Build a claim under the organization's default (unlicensed) state.
+      const encounterBefore = await seedEncounter(em, {
+        mrn: 'E2E-CUTOVER-BEFORE-001',
+        icd10Code: 'J06.9',
+        procedureCode: 'PROC-001'
+      });
+      const builtBefore = await call(baseUrl, '/claim/build', {
+        method: 'POST',
+        body: { encounterId: encounterBefore },
+        token: jwt
+      });
+      expect(
+        (builtBefore.body as { codeSetType: string }).codeSetType
+      ).toBe('mock');
+      const claimBeforeId = (builtBefore.body as { id: string }).id;
+
+      // 2. Flip the organization's CPT license to active.
+      await activateCptLicense(em);
+
+      // 3. A new encounter's claim, built after the flip, picks up CPT.
+      const encounterAfter = await seedEncounter(em, {
+        mrn: 'E2E-CUTOVER-AFTER-001',
+        icd10Code: 'J06.9',
+        procedureCode: 'PROC-001'
+      });
+      const builtAfter = await call(baseUrl, '/claim/build', {
+        method: 'POST',
+        body: { encounterId: encounterAfter },
+        token: jwt
+      });
+      expect(
+        (builtAfter.body as { codeSetType: string }).codeSetType
+      ).toBe('cpt');
+
+      // 4. The earlier claim is never retroactively recoded — still 'mock'.
+      const codeSetTypeAfterFlip = await getClaimCodeSetType(
+        setup.orm!.em.fork(),
+        claimBeforeId
+      );
+      expect(codeSetTypeAfterFlip).toBe('mock');
+    });
+
+    it('a license active for one organization never affects another organization\'s claims', async () => {
+      const em = setup.orm!.em.fork();
+      const otherOrgId = '88888888-8888-8888-8888-888888888888';
+
+      await activateCptLicense(em, TEST_ORGANIZATION_ID);
+
+      const otherOrgEncounter = await seedEncounter(em, {
+        mrn: 'E2E-CUTOVER-OTHERORG-001',
+        icd10Code: 'J06.9',
+        procedureCode: 'PROC-001',
+        organizationId: otherOrgId
+      });
+      const otherOrgJwt = await signTestJwt({ organizationId: otherOrgId });
+      const built = await call(baseUrl, '/claim/build', {
+        method: 'POST',
+        body: { encounterId: otherOrgEncounter },
+        token: otherOrgJwt
+      });
+
+      expect((built.body as { codeSetType: string }).codeSetType).toBe('mock');
     });
   });
 });

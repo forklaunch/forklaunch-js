@@ -266,6 +266,7 @@ export async function startTestServer(): Promise<string> {
   );
   const { analyticsRouter } = await import('../../api/routes/analytics.routes');
   const { claimRouter } = await import('../../api/routes/claim.routes');
+  const { codeSetRouter } = await import('../../api/routes/codeSet.routes');
   const { denialRouter } = await import('../../api/routes/denial.routes');
 
   const openTelemetryCollector = ci.resolve(tokens.OtelCollector);
@@ -290,6 +291,7 @@ export async function startTestServer(): Promise<string> {
 
   app.use(analyticsRouter);
   app.use(claimRouter);
+  app.use(codeSetRouter);
   app.use(denialRouter);
 
   await new Promise<void>((resolve) => {
@@ -420,4 +422,41 @@ export async function seedEncounterWithCharges(
 
   await em.persist([patient, encounter]).flush();
   return encounter.id;
+}
+
+// Flips an organization's real-CPT feature gate on (§5) — the same
+// CodeSetLicense row CodeSetProviderResolver looks up directly, no cross-
+// service call. No cpt_code rows are needed alongside it: buildClaim only
+// calls resolve() + describe(), never lookupProcedureCode(), so CptCodeProvider
+// is never asked to actually look anything up in these tests.
+export async function activateCptLicense(
+  em: EntityManager,
+  organizationId: string = TEST_ORGANIZATION_ID
+): Promise<void> {
+  const { CodeSetLicense } = await import(
+    '../../persistence/entities/codeSetLicense.entity'
+  );
+  const { CodeSetType } = await import('../../domain/enum/codeSetType.enum');
+  const { LicenseStatus } = await import('../../domain/enum/licenseStatus.enum');
+
+  const license = em.create(CodeSetLicense, {
+    organizationId,
+    codeSetType: CodeSetType.CPT,
+    status: LicenseStatus.ACTIVE,
+    signedAt: new Date()
+  });
+  await em.persist(license).flush();
+}
+
+// Reads a claim's codeSetType directly off the DB — buildClaim's response
+// already returns it too, but this is how a *previously built* claim's
+// stored value is checked after a later CodeSetLicense flip, since there's
+// no GET /claim/:id endpoint to ask the API for it.
+export async function getClaimCodeSetType(
+  em: EntityManager,
+  claimId: string
+): Promise<string> {
+  const { Claim } = await import('../../persistence/entities/claim.entity');
+  const claim = await em.findOneOrFail(Claim, { id: claimId });
+  return claim.codeSetType;
 }

@@ -6,11 +6,13 @@ import { ScrubbingService } from '@forklaunch/implementation-cac-base/services';
 import type { DenialReasonCategory as MockDenialReasonCategory } from '@forklaunch/implementation-cac-base/services';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { ClaimStatus } from '../domain/enum/claimStatus.enum';
+import { CodeSetProviderType } from '../domain/enum/codeSetProviderType.enum';
 import { DenialReasonCategory } from '../domain/enum/denialReasonCategory.enum';
 import { WorklistStatus } from '../domain/enum/worklistStatus.enum';
 import { Claim } from '../persistence/entities/claim.entity';
 import { Denial } from '../persistence/entities/denial.entity';
 import { Encounter } from '../persistence/entities/encounter.entity';
+import { CodeSetProviderResolver } from './codeSetProviderResolver.service';
 
 export interface ScrubClaimResult {
   status: ClaimStatus;
@@ -28,6 +30,7 @@ export class ClaimService {
   constructor(
     private readonly em: EntityManager,
     private readonly scrubbingService: ScrubbingService,
+    private readonly codeSetProviderResolver: CodeSetProviderResolver,
     private readonly otel: OpenTelemetryCollector<MetricsDefinition>
   ) {}
 
@@ -43,18 +46,31 @@ export class ClaimService {
       { populate: ['charges', 'diagnoses', 'patient'] }
     );
 
+    // Resolved once, here, and never again for this claim (§5's "historical
+    // claims are never retroactively recoded" rule) — a CodeSetLicense flip
+    // to active only affects claims built *after* the flip. scrubClaim
+    // reads this stored value back rather than re-resolving it.
+    const codeSetProvider =
+      await this.codeSetProviderResolver.resolve(organizationId);
+    const codeSetType =
+      codeSetProvider.describe().codeSetType === 'cpt'
+        ? CodeSetProviderType.CPT
+        : CodeSetProviderType.MOCK;
+
     const claim = this.em.create(Claim, {
       organizationId: encounter.organizationId,
       patient: encounter.patient,
       encounter,
-      status: ClaimStatus.DRAFT
+      status: ClaimStatus.DRAFT,
+      codeSetType
     });
 
     await this.em.persist(claim).flush();
 
     this.otel.info('Built claim from encounter', {
       claimId: claim.id,
-      encounterId
+      encounterId,
+      codeSetType
     });
 
     return claim;

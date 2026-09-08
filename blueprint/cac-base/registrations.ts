@@ -186,8 +186,18 @@ const serviceDependencies = runtimeDependencies.chain({
   ClaimService: {
     lifetime: Lifetime.Scoped,
     type: ClaimService,
-    factory: ({ EntityManager, ScrubbingService, OtelCollector }) =>
-      new ClaimService(EntityManager, ScrubbingService, OtelCollector)
+    factory: ({
+      EntityManager,
+      ScrubbingService,
+      CodeSetProviderResolver,
+      OtelCollector
+    }) =>
+      new ClaimService(
+        EntityManager,
+        ScrubbingService,
+        CodeSetProviderResolver,
+        OtelCollector
+      )
   },
   DenialWorklistService: {
     lifetime: Lifetime.Scoped,

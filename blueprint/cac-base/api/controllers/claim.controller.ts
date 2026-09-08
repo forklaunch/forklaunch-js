@@ -55,7 +55,8 @@ export const buildClaim = handlers.post(
     responses: {
       200: {
         id: string,
-        status: string
+        status: string,
+        codeSetType: string
       }
     }
   },
@@ -64,7 +65,9 @@ export const buildClaim = handlers.post(
     const organizationId = req.session?.organizationId;
     openTelemetryCollector.debug('Building claim', { encounterId });
     const claim = await serviceFactory().buildClaim(organizationId, encounterId);
-    res.status(200).json({ id: claim.id, status: claim.status });
+    res
+      .status(200)
+      .json({ id: claim.id, status: claim.status, codeSetType: claim.codeSetType });
   }
 );
 
